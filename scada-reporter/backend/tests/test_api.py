@@ -126,3 +126,46 @@ async def test_current_values_alarm_state(client: AsyncClient):
     for item in r.json():
         assert "alarm_state" in item
         assert item["alarm_state"] in (None, "overflow", "min", "max")
+
+
+@pytest.mark.asyncio
+async def test_report_history(client: AsyncClient):
+    await client.post(
+        "/api/auth/register",
+        json={
+            "username": "histuser",
+            "email": "h@test.com",
+            "password": "test123",
+            "role": "admin",
+        },
+    )
+    token_r = await client.post(
+        "/api/auth/token", data={"username": "histuser", "password": "test123"}
+    )
+    headers = {"Authorization": f"Bearer {token_r.json()['access_token']}"}
+
+    # History starts empty
+    hist_r = await client.get("/api/reports/history", headers=headers)
+    assert hist_r.status_code == 200
+    assert hist_r.json() == []
+
+    # Generate a JSON report
+    gen_r = await client.post(
+        "/api/reports/generate",
+        json={
+            "tag_ids": [],
+            "start": "2026-01-01T00:00:00",
+            "end": "2026-01-02T00:00:00",
+            "interval": "hourly",
+            "format": "json",
+        },
+        headers=headers,
+    )
+    assert gen_r.status_code == 200
+
+    # History now has 1 entry
+    hist_r2 = await client.get("/api/reports/history", headers=headers)
+    assert len(hist_r2.json()) == 1
+    entry = hist_r2.json()[0]
+    assert entry["format"] == "json"
+    assert entry["interval"] == "hourly"
