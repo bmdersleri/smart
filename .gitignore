@@ -33,6 +33,11 @@ Thumbs.db
 .remember/
 .agents/
 *.log
+*.db
+*.db-shm
+*.db-wal
+scada-reporter/backend/reports/
+.superpowers/
 
 # Claude local/sensitive
 .claude/logs/
