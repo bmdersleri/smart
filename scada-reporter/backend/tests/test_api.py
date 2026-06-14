@@ -101,3 +101,28 @@ async def test_patch_tag_alarm_thresholds(client: AsyncClient):
     assert patch_r2.status_code == 200
     assert patch_r2.json()["unit"] == "bar"
     assert patch_r2.json()["max_alarm"] == 5000.0  # unchanged
+
+
+@pytest.mark.asyncio
+async def test_current_values_alarm_state(client: AsyncClient):
+    # Register + login
+    await client.post(
+        "/api/auth/register",
+        json={
+            "username": "alarmuser",
+            "email": "a@test.com",
+            "password": "test123",
+            "role": "admin",
+        },
+    )
+    token_r = await client.post(
+        "/api/auth/token", data={"username": "alarmuser", "password": "test123"}
+    )
+    headers = {"Authorization": f"Bearer {token_r.json()['access_token']}"}
+
+    r = await client.get("/api/dashboard/current-values", headers=headers)
+    assert r.status_code == 200
+    # Each item must have alarm_state key
+    for item in r.json():
+        assert "alarm_state" in item
+        assert item["alarm_state"] in (None, "overflow", "min", "max")
