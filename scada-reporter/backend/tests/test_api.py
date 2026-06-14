@@ -56,8 +56,48 @@ async def test_me(client: AsyncClient):
     )
     token = login_resp.json()["access_token"]
 
-    resp = await client.get(
-        "/api/auth/me", headers={"Authorization": f"Bearer {token}"}
-    )
+    resp = await client.get("/api/auth/me", headers={"Authorization": f"Bearer {token}"})
     assert resp.status_code == 200
     assert resp.json()["username"] == "meuser"
+
+
+@pytest.mark.asyncio
+async def test_patch_tag_alarm_thresholds(client: AsyncClient):
+    # Create a tag first
+    await client.post(
+        "/api/auth/register",
+        json={
+            "username": "patchuser",
+            "email": "p@test.com",
+            "password": "test123",
+            "role": "admin",
+        },
+    )
+    token_r = await client.post(
+        "/api/auth/token", data={"username": "patchuser", "password": "test123"}
+    )
+    token = token_r.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    tag_r = await client.post(
+        "/api/tags/",
+        json={"node_id": "DB99,REAL0", "name": "PatchTest", "unit": "m3/h"},
+        headers=headers,
+    )
+    assert tag_r.status_code == 201
+    tag_id = tag_r.json()["id"]
+
+    # PATCH alarm thresholds
+    patch_r = await client.patch(
+        f"/api/tags/{tag_id}", json={"min_alarm": 0.0, "max_alarm": 5000.0}, headers=headers
+    )
+    assert patch_r.status_code == 200
+    data = patch_r.json()
+    assert data["min_alarm"] == 0.0
+    assert data["max_alarm"] == 5000.0
+
+    # PATCH unit only
+    patch_r2 = await client.patch(f"/api/tags/{tag_id}", json={"unit": "bar"}, headers=headers)
+    assert patch_r2.status_code == 200
+    assert patch_r2.json()["unit"] == "bar"
+    assert patch_r2.json()["max_alarm"] == 5000.0  # unchanged

@@ -1,11 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select, and_
-from sqlalchemy.ext.asyncio import AsyncSession
-from pydantic import BaseModel
 from datetime import datetime
-from typing import Optional
-from app.core.database import get_db
+
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
+from sqlalchemy import and_, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.api.auth import get_current_user, require_role
+from app.core.database import get_db
 from app.models.tag import Tag, TagReading
 
 router = APIRouter(prefix="/tags", tags=["tags"])
@@ -20,6 +21,16 @@ class TagCreate(BaseModel):
     device: str = ""
 
 
+class TagUpdate(BaseModel):
+    name: str | None = None
+    unit: str | None = None
+    device: str | None = None
+    channel: str | None = None
+    description: str | None = None
+    min_alarm: float | None = None
+    max_alarm: float | None = None
+
+
 class TagResponse(BaseModel):
     id: int
     node_id: str
@@ -29,6 +40,8 @@ class TagResponse(BaseModel):
     channel: str
     device: str
     is_active: bool
+    min_alarm: float | None
+    max_alarm: float | None
 
     model_config = {"from_attributes": True}
 
@@ -72,11 +85,29 @@ async def delete_tag(
     await db.commit()
 
 
+@router.patch("/{tag_id}", response_model=TagResponse)
+async def update_tag(
+    tag_id: int,
+    data: TagUpdate,
+    db: AsyncSession = Depends(get_db),
+    _=Depends(require_role("admin", "operator")),
+):
+    result = await db.execute(select(Tag).where(Tag.id == tag_id))
+    tag = result.scalar_one_or_none()
+    if not tag:
+        raise HTTPException(status_code=404, detail="Tag bulunamadi")
+    for field, value in data.model_dump(exclude_unset=True).items():
+        setattr(tag, field, value)
+    await db.commit()
+    await db.refresh(tag)
+    return tag
+
+
 @router.get("/{tag_id}/readings")
 async def get_readings(
     tag_id: int,
-    start: Optional[datetime] = None,
-    end: Optional[datetime] = None,
+    start: datetime | None = None,
+    end: datetime | None = None,
     limit: int = 1000,
     db: AsyncSession = Depends(get_db),
     _=Depends(get_current_user),
@@ -94,7 +125,4 @@ async def get_readings(
         .limit(limit)
     )
     readings = result.scalars().all()
-    return [
-        {"timestamp": r.timestamp, "value": r.value, "quality": r.quality}
-        for r in readings
-    ]
+    return [{"timestamp": r.timestamp, "value": r.value, "quality": r.quality} for r in readings]
