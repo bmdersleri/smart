@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { getTags, createTag, deleteTag } from '../api/client'
+import { getTags, createTag, deleteTag, updateTag } from '../api/client'
 import type { Tag } from '../api/client'
 import { useAuth } from '../context/AuthContext'
 
@@ -47,6 +47,85 @@ function AddTagModal({ onClose }: { onClose: () => void }) {
   )
 }
 
+function EditTagModal({ tag, onClose }: { tag: Tag; onClose: () => void }) {
+  const qc = useQueryClient()
+  const [minAlarm, setMinAlarm] = useState(tag.min_alarm != null ? String(tag.min_alarm) : '')
+  const [maxAlarm, setMaxAlarm] = useState(tag.max_alarm != null ? String(tag.max_alarm) : '')
+  const [unit, setUnit] = useState(tag.unit)
+  const [device, setDevice] = useState(tag.device)
+  const [channel, setChannel] = useState(tag.channel)
+  const [validationErr, setValidationErr] = useState('')
+
+  const mut = useMutation({
+    mutationFn: (payload: Parameters<typeof updateTag>[1]) => updateTag(tag.id, payload),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['tags'] }); onClose() },
+  })
+
+  const save = () => {
+    const min = minAlarm !== '' ? parseFloat(minAlarm) : null
+    const max = maxAlarm !== '' ? parseFloat(maxAlarm) : null
+    if (min !== null && max !== null && min >= max) {
+      setValidationErr('Min değer Max\'tan küçük olmalı')
+      return
+    }
+    setValidationErr('')
+    mut.mutate({ unit, device, channel, min_alarm: min, max_alarm: max })
+  }
+
+  const inputCls = 'w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500'
+
+  return (
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+      <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-lg p-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-white">{tag.name} — Düzenle</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-white">✕</button>
+        </div>
+
+        <div>
+          <label className="text-xs text-gray-400 mb-1 block">S7 Adresi (değiştirilemez)</label>
+          <div className="bg-gray-800/50 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-500 font-mono">{tag.node_id}</div>
+        </div>
+
+        {[
+          { label: 'Birim', value: unit, set: setUnit, ph: 'm³/h' },
+          { label: 'Cihaz', value: device, set: setDevice, ph: 'PLC_1500' },
+          { label: 'Kanal', value: channel, set: setChannel, ph: 'Channel1' },
+        ].map(({ label, value, set, ph }) => (
+          <div key={label}>
+            <label className="text-xs text-gray-400 mb-1 block">{label}</label>
+            <input className={inputCls} value={value} onChange={(e) => set(e.target.value)} placeholder={ph} />
+          </div>
+        ))}
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="text-xs text-gray-400 mb-1 block">Min Alarm (boş = yok)</label>
+            <input className={inputCls} type="number" value={minAlarm} onChange={(e) => setMinAlarm(e.target.value)} placeholder="0" />
+          </div>
+          <div>
+            <label className="text-xs text-gray-400 mb-1 block">Max Alarm (boş = yok)</label>
+            <input className={inputCls} type="number" value={maxAlarm} onChange={(e) => setMaxAlarm(e.target.value)} placeholder="5000" />
+          </div>
+        </div>
+
+        {validationErr && <p className="text-red-400 text-sm">{validationErr}</p>}
+        {mut.isError && <p className="text-red-400 text-sm">Kayıt hatası.</p>}
+
+        <div className="flex gap-3 pt-2">
+          <button onClick={onClose} className="flex-1 py-2 rounded-lg border border-gray-700 text-gray-300 hover:bg-gray-800 text-sm transition-colors">İptal</button>
+          <button
+            onClick={save} disabled={mut.isPending}
+            className="flex-1 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-medium transition-colors"
+          >
+            {mut.isPending ? 'Kaydediliyor...' : 'Kaydet'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function FormatGuideModal({ onClose }: { onClose: () => void }) {
   const examples = [
     { addr: 'DB1,REAL0', desc: 'DB1, REAL (32-bit float), offset 0' },
@@ -82,11 +161,34 @@ export default function Tags() {
   const { user } = useAuth()
   const qc = useQueryClient()
   const [showAdd, setShowAdd] = useState(false)
-  const [showBrowse, setShowBrowse] = useState(false)
-  const { data: tags = [], isLoading } = useQuery({ queryKey: ['tags'], queryFn: () => getTags().then((r) => r.data) })
-  const delMut = useMutation({ mutationFn: deleteTag, onSuccess: () => qc.invalidateQueries({ queryKey: ['tags'] }) })
+  const [showFormat, setShowFormat] = useState(false)
+  const [editTag, setEditTag] = useState<Tag | null>(null)
+  const [search, setSearch] = useState('')
+
+  const { data: tags = [], isLoading } = useQuery({
+    queryKey: ['tags'],
+    queryFn: () => getTags().then((r) => r.data),
+  })
+  const delMut = useMutation({
+    mutationFn: deleteTag,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['tags'] }),
+  })
 
   const canEdit = user?.role === 'admin' || user?.role === 'operator'
+  const filtered = search
+    ? tags.filter((t) =>
+        t.name.toLowerCase().includes(search.toLowerCase()) ||
+        t.device.toLowerCase().includes(search.toLowerCase())
+      )
+    : tags
+
+  const alarmLabel = (t: Tag) => {
+    if (t.min_alarm == null && t.max_alarm == null) return '—'
+    const parts: string[] = []
+    if (t.min_alarm != null) parts.push(`${t.min_alarm}`)
+    if (t.max_alarm != null) parts.push(`${t.max_alarm}`)
+    return `${parts.join('–')}${t.unit ? ' ' + t.unit : ''}`
+  }
 
   return (
     <div className="p-6 space-y-4">
@@ -94,8 +196,8 @@ export default function Tags() {
         <h1 className="text-xl font-bold text-white">Tag Yönetimi</h1>
         {canEdit && (
           <div className="flex gap-2">
-            <button onClick={() => setShowBrowse(true)} className="px-3 py-2 text-sm bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg border border-gray-700 transition-colors">
-              Format ?
+            <button onClick={() => setShowFormat(true)} className="px-3 py-2 text-sm bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg border border-gray-700 transition-colors">
+              Format
             </button>
             <button onClick={() => setShowAdd(true)} className="px-3 py-2 text-sm bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors">
               + Tag Ekle
@@ -104,30 +206,37 @@ export default function Tags() {
         )}
       </div>
 
+      <input
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder="Tag veya cihaz adı ara..."
+        className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-500"
+      />
+
       <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
         {isLoading ? (
           <div className="py-12 text-center text-gray-500">Yükleniyor...</div>
-        ) : tags.length === 0 ? (
+        ) : filtered.length === 0 ? (
           <div className="py-12 text-center">
-            <p className="text-gray-400">Henüz tag yok.</p>
-            <p className="text-gray-500 text-sm mt-1">Tag Ekle ile S7 adresini girin (örn: DB1,REAL0).</p>
+            <p className="text-gray-400">{search ? 'Eşleşen tag bulunamadı.' : 'Henüz tag yok.'}</p>
           </div>
         ) : (
           <table className="w-full">
             <thead className="border-b border-gray-800">
               <tr className="text-xs text-gray-500 uppercase tracking-wide">
-                {['Cihaz', 'Tag Adı', 'Node ID', 'Birim', 'Durum', ''].map((h) => (
+                {['Cihaz', 'Tag Adı', 'Node ID', 'Birim', 'Alarm', 'Durum', ''].map((h) => (
                   <th key={h} className="px-4 py-3 text-left">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {tags.map((t: Tag) => (
+              {filtered.map((t: Tag) => (
                 <tr key={t.id} className="border-t border-gray-800 hover:bg-gray-800/40">
                   <td className="px-4 py-3 text-sm text-gray-400">{t.device}</td>
                   <td className="px-4 py-3 text-sm font-medium text-white">{t.name}</td>
                   <td className="px-4 py-3 text-xs font-mono text-gray-500">{t.node_id}</td>
                   <td className="px-4 py-3 text-sm text-gray-300">{t.unit}</td>
+                  <td className="px-4 py-3 text-sm text-gray-400">{alarmLabel(t)}</td>
                   <td className="px-4 py-3">
                     <span className={`text-xs px-2 py-0.5 rounded-full ${t.is_active ? 'bg-green-900/50 text-green-400' : 'bg-gray-800 text-gray-500'}`}>
                       {t.is_active ? 'Aktif' : 'Pasif'}
@@ -135,12 +244,10 @@ export default function Tags() {
                   </td>
                   <td className="px-4 py-3 text-right">
                     {canEdit && (
-                      <button
-                        onClick={() => delMut.mutate(t.id)}
-                        className="text-xs text-gray-500 hover:text-red-400 transition-colors"
-                      >
-                        Sil
-                      </button>
+                      <div className="flex gap-3 justify-end">
+                        <button onClick={() => setEditTag(t)} className="text-xs text-gray-500 hover:text-blue-400 transition-colors" title="Düzenle">✏</button>
+                        <button onClick={() => delMut.mutate(t.id)} className="text-xs text-gray-500 hover:text-red-400 transition-colors" title="Sil">🗑</button>
+                      </div>
                     )}
                   </td>
                 </tr>
@@ -151,7 +258,8 @@ export default function Tags() {
       </div>
 
       {showAdd && <AddTagModal onClose={() => setShowAdd(false)} />}
-      {showBrowse && <FormatGuideModal onClose={() => setShowBrowse(false)} />}
+      {showFormat && <FormatGuideModal onClose={() => setShowFormat(false)} />}
+      {editTag && <EditTagModal tag={editTag} onClose={() => setEditTag(null)} />}
     </div>
   )
 }
