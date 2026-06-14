@@ -28,6 +28,14 @@ format-check:
 format:
     ruff format scada-reporter/backend/app/
 
+# S7 PLC tag'lerini veritabanina ekle
+seed-tags:
+    cd scada-reporter/backend && {{venv}}\Scripts\python app/seed_tags.py
+
+# S7 PLC'ye baglanti testi
+test-plc:
+    cd scada-reporter/backend && {{venv}}\Scripts\python -c "import snap7; c=snap7.Client(); c.connect('192.168.112.50',0,1); print('PLC baglanti BASARILI'); print('CPU state:', c.get_cpu_state()); c.disconnect(); c.destroy()"
+
 # Type check
 typecheck:
     cd scada-reporter/backend && {{venv}}/Scripts/mypy app/
