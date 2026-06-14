@@ -1,12 +1,92 @@
 venv := "scada-reporter/backend/.venv"
+be := "scada-reporter/backend"
+fe := "scada-reporter/frontend"
 
-# Projeyi bash ile çalıştır (backend)
+# ── Geliştirme ──────────────────────────────────────────────────────────────
+
+# Backend + frontend paralel başlat
+dev:
+    just run-backend & just run-frontend
+
+# Backend başlat (hot reload)
 run-backend:
-    cd scada-reporter/backend && {{venv}}/Scripts/uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+    cd {{be}} && {{venv}}/Scripts/uvicorn app.main:app --reload --host 0.0.0.0 --port 8001
 
-# Bağımlılıkları yükle
+# Frontend başlat (Vite dev server)
+run-frontend:
+    cd {{fe}} && pnpm dev
+
+# Bağımlılıkları yükle (backend + frontend)
 install:
-    cd scada-reporter/backend && uv pip install -r requirements.txt
+    cd {{be}} && uv pip install -r requirements.txt
+    cd {{fe}} && pnpm install
+
+# ── Test ─────────────────────────────────────────────────────────────────────
+
+# Testleri çalıştır
+test:
+    cd {{be}} && {{venv}}/Scripts/pytest tests/ -v
+
+# Test + coverage raporu
+test-cov:
+    cd {{be}} && {{venv}}/Scripts/pytest tests/ -v --cov=app --cov-report=term-missing --cov-report=html
+
+# TDD hot reload (dosya değişince otomatik test)
+test-watch:
+    cd {{be}} && {{venv}}/Scripts/ptw tests/ -- -v
+
+# ── Veritabanı ───────────────────────────────────────────────────────────────
+
+# Alembic: migration oluştur
+makemigration msg="auto":
+    cd {{be}} && {{venv}}/Scripts/alembic revision --autogenerate -m "{{msg}}"
+
+# Alembic: migration uygula
+migrate:
+    cd {{be}} && {{venv}}/Scripts/alembic upgrade head
+
+# Alembic: son migration'ı geri al
+migrate-down:
+    cd {{be}} && {{venv}}/Scripts/alembic downgrade -1
+
+# Alembic: migration geçmişi
+migrate-history:
+    cd {{be}} && {{venv}}/Scripts/alembic history --verbose
+
+# S7 PLC tag'lerini veritabanına ekle
+seed-tags:
+    cd {{be}} && {{venv}}\Scripts\python app/seed_tags.py
+
+# ── Kalite ───────────────────────────────────────────────────────────────────
+
+# Python lint
+lint:
+    ruff check {{be}}/app/
+
+# Python lint + otomatik düzelt
+lint-fix:
+    ruff check --fix {{be}}/app/
+
+# Python format kontrol
+format-check:
+    ruff format --check {{be}}/app/
+
+# Python otomatik formatla
+format:
+    ruff format {{be}}/app/
+
+# Type check
+typecheck:
+    cd {{be}} && {{venv}}/Scripts/mypy app/
+
+# Tüm kontroller (CI benzeri)
+check: lint format-check typecheck test
+
+# ── Araçlar ──────────────────────────────────────────────────────────────────
+
+# S7 PLC'ye bağlantı testi
+test-plc:
+    cd {{be}} && {{venv}}\Scripts\python -c "import snap7; c=snap7.Client(); c.connect('192.168.112.50',0,1); print('PLC BASARILI'); print('CPU:', c.get_cpu_state()); c.disconnect(); c.destroy()"
 
 # Docker altyapısını başlat (PostgreSQL + Redis)
 docker-up:
@@ -16,37 +96,10 @@ docker-up:
 docker-down:
     cd scada-reporter/docker && docker compose down
 
-# Python lint
-lint:
-    ruff check scada-reporter/backend/app/
-
-# Python format kontrol
-format-check:
-    ruff format --check scada-reporter/backend/app/
-
-# Python otomatik formatla
-format:
-    ruff format scada-reporter/backend/app/
-
-# S7 PLC tag'lerini veritabanina ekle
-seed-tags:
-    cd scada-reporter/backend && {{venv}}\Scripts\python app/seed_tags.py
-
-# S7 PLC'ye baglanti testi
-test-plc:
-    cd scada-reporter/backend && {{venv}}\Scripts\python -c "import snap7; c=snap7.Client(); c.connect('192.168.112.50',0,1); print('PLC baglanti BASARILI'); print('CPU state:', c.get_cpu_state()); c.disconnect(); c.destroy()"
-
-# Type check
-typecheck:
-    cd scada-reporter/backend && {{venv}}/Scripts/mypy app/
-
-# Tüm kontroller
-check: lint format-check typecheck
-
-# Sanal ortamı aktif et
-activate:
-    echo "Run: .venv\Scripts\activate"
+# OpenAPI'den TypeScript client üret
+gen-client:
+    cd {{fe}} && pnpm openapi-ts
 
 # Proje yapısını göster
 tree:
-    eza --tree --git-ignore --level=3
+    eza --tree --git-ignore --level=3 --ignore-glob=".venv|node_modules|__pycache__|dist"
