@@ -4,7 +4,12 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel
 from app.core.database import get_db
-from app.core.security import verify_password, create_access_token, decode_token, hash_password
+from app.core.security import (
+    verify_password,
+    create_access_token,
+    decode_token,
+    hash_password,
+)
 from app.models.user import User
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -30,24 +35,33 @@ async def get_current_user(
 ) -> User:
     payload = decode_token(token)
     if not payload:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Gecersiz token")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Gecersiz token"
+        )
     result = await db.execute(select(User).where(User.username == payload.get("sub")))
     user = result.scalar_one_or_none()
     if not user or not user.is_active:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Kullanici bulunamadi")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Kullanici bulunamadi"
+        )
     return user
 
 
 def require_role(*roles: str):
     async def _check(user: User = Depends(get_current_user)):
         if user.role not in roles:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Yetki yok")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, detail="Yetki yok"
+            )
         return user
+
     return _check
 
 
 @router.post("/token", response_model=TokenResponse)
-async def login(form: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)):
+async def login(
+    form: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)
+):
     result = await db.execute(select(User).where(User.username == form.username))
     user = result.scalar_one_or_none()
     if not user or not verify_password(form.password, user.hashed_password):
@@ -75,4 +89,9 @@ async def register(data: UserCreate, db: AsyncSession = Depends(get_db)):
 
 @router.get("/me")
 async def me(user: User = Depends(get_current_user)):
-    return {"id": user.id, "username": user.username, "role": user.role, "full_name": user.full_name}
+    return {
+        "id": user.id,
+        "username": user.username,
+        "role": user.role,
+        "full_name": user.full_name,
+    }

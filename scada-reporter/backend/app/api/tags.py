@@ -35,7 +35,7 @@ class TagResponse(BaseModel):
 
 @router.get("/browse")
 async def browse_tags(_=Depends(get_current_user)):
-    """KEPServerEX tag ağacını tarar."""
+    """S7-1500 OPC UA tag agacini tarar."""
     try:
         tags = await collector.browse_tags()
         return {"tags": tags, "count": len(tags)}
@@ -98,4 +98,7 @@ async def get_readings(
         .limit(limit)
     )
     readings = result.scalars().all()
-    return [{"timestamp": r.timestamp, "value": r.value, "quality": r.quality} for r in readings]
+    return [
+        {"timestamp": r.timestamp, "value": r.value, "quality": r.quality}
+        for r in readings
+    ]

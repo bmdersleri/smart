@@ -2,10 +2,10 @@
 OPC UA client certificate generator for KEPServerEX compatibility.
 Matches properties of the existing trusted cert in KEPServerEX PKI store.
 """
+
 import datetime
+import hashlib
 import os
-import struct
-import sys
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -20,11 +20,13 @@ os.makedirs(OUT, exist_ok=True)
 # 2048-bit RSA key
 key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
 
-subject = x509.Name([
-    x509.NameAttribute(NameOID.COMMON_NAME, "SCADA Reporter OPC UA Client"),
-    x509.NameAttribute(NameOID.ORGANIZATION_NAME, "SCADA Reporter"),
-    x509.NameAttribute(NameOID.ORGANIZATIONAL_UNIT_NAME, "Engineering"),
-])
+subject = x509.Name(
+    [
+        x509.NameAttribute(NameOID.COMMON_NAME, "SCADA Reporter OPC UA Client"),
+        x509.NameAttribute(NameOID.ORGANIZATION_NAME, "SCADA Reporter"),
+        x509.NameAttribute(NameOID.ORGANIZATIONAL_UNIT_NAME, "Engineering"),
+    ]
+)
 
 now = datetime.datetime.utcnow()
 cert = (
@@ -52,10 +54,12 @@ cert = (
     )
     # Both serverAuth and clientAuth (matching existing cert)
     .add_extension(
-        x509.ExtendedKeyUsage([
-            ExtendedKeyUsageOID.SERVER_AUTH,
-            ExtendedKeyUsageOID.CLIENT_AUTH,
-        ]),
+        x509.ExtendedKeyUsage(
+            [
+                ExtendedKeyUsageOID.SERVER_AUTH,
+                ExtendedKeyUsageOID.CLIENT_AUTH,
+            ]
+        ),
         critical=False,
     )
     # CA:True (since key_cert_sign=True)
@@ -65,11 +69,13 @@ cert = (
     )
     # OPC UA requires URI in SAN
     .add_extension(
-        x509.SubjectAlternativeName([
-            x509.UniformResourceIdentifier(APP_URI),
-            x509.DNSName("localhost"),
-            x509.DNSName(HOSTNAME),
-        ]),
+        x509.SubjectAlternativeName(
+            [
+                x509.UniformResourceIdentifier(APP_URI),
+                x509.DNSName("localhost"),
+                x509.DNSName(HOSTNAME),
+            ]
+        ),
         critical=False,
     )
     .add_extension(
@@ -92,21 +98,23 @@ with open(pem_path, "wb") as f:
     f.write(cert.public_bytes(serialization.Encoding.PEM))
 
 with open(key_path, "wb") as f:
-    f.write(key.private_bytes(
-        serialization.Encoding.PEM,
-        serialization.PrivateFormat.TraditionalOpenSSL,
-        serialization.NoEncryption(),
-    ))
+    f.write(
+        key.private_bytes(
+            serialization.Encoding.PEM,
+            serialization.PrivateFormat.TraditionalOpenSSL,
+            serialization.NoEncryption(),
+        )
+    )
 
 with open(der_path, "wb") as f:
     f.write(cert.public_bytes(serialization.Encoding.DER))
 
 # Calculate SHA1 thumbprint for KEPServerEX
 der_bytes = cert.public_bytes(serialization.Encoding.DER)
-import hashlib
+
 thumbprint = hashlib.sha1(der_bytes).hexdigest()
 
-print(f"Certificate generated:")
+print("Certificate generated:")
 print(f"  PEM: {pem_path}")
 print(f"  Key: {key_path}")
 print(f"  DER: {der_path}")

@@ -1,11 +1,11 @@
 import asyncio
 import logging
 from sqlalchemy import select
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from app.collector.opc_client import collector
 from app.core.database import AsyncSessionLocal
 from app.core.config import settings
 from app.models.tag import Tag, TagReading
-from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +17,7 @@ async def poll_loop():
     while True:
         try:
             async with AsyncSessionLocal() as db:
-                result = await db.execute(select(Tag).where(Tag.is_active == True))
+                result = await db.execute(select(Tag).where(Tag.is_active))
                 tags = result.scalars().all()
 
             if not tags:
@@ -31,13 +31,17 @@ async def poll_loop():
 
             async with AsyncSessionLocal() as db:
                 for node_id, value, quality, ts in readings_data:
-                    reading = TagReading(
-                        tag_id=tag_map[node_id],
-                        value=value,
-                        quality=quality,
-                        timestamp=ts,
+                    stmt = (
+                        pg_insert(TagReading)
+                        .values(
+                            tag_id=tag_map[node_id],
+                            value=value,
+                            quality=quality,
+                            timestamp=ts,
+                        )
+                        .on_conflict_do_nothing()
                     )
-                    db.add(reading)
+                    await db.execute(stmt)
                 await db.commit()
 
             logger.debug("%d tag okundu", len(readings_data))

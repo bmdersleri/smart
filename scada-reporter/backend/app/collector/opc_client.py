@@ -1,4 +1,3 @@
-import asyncio
 import logging
 from datetime import datetime
 from asyncua import Client, Node
@@ -31,14 +30,16 @@ class OpcUaCollector:
             await self.client.disconnect()
             logger.info("OPC UA baglantisi kapatildi")
 
-    async def browse_tags(self, node_id: str = "ns=2;s=.") -> list[dict]:
-        """KEPServerEX tag agacini tarar."""
+    async def browse_tags(self, node_id: str = "ns=0;i=85") -> list[dict]:
+        """S7-1500 OPC UA tag agacini tarar. ns=0;i=85 = Objects klasoru."""
         if not self.client:
             raise RuntimeError("OPC UA baglantisi yok")
         node = self.client.get_node(node_id)
         return await self._browse_recursive(node, depth=0, max_depth=4)
 
-    async def _browse_recursive(self, node: Node, depth: int, max_depth: int) -> list[dict]:
+    async def _browse_recursive(
+        self, node: Node, depth: int, max_depth: int
+    ) -> list[dict]:
         if depth > max_depth:
             return []
         results = []
@@ -51,11 +52,13 @@ class OpcUaCollector:
                     node_id_str = child.nodeid.to_string()
 
                     if node_class.name == "Variable":
-                        results.append({
-                            "node_id": node_id_str,
-                            "name": name,
-                            "depth": depth,
-                        })
+                        results.append(
+                            {
+                                "node_id": node_id_str,
+                                "name": name,
+                                "depth": depth,
+                            }
+                        )
                     else:
                         results.extend(
                             await self._browse_recursive(child, depth + 1, max_depth)

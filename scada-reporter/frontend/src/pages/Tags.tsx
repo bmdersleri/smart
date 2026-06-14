@@ -58,11 +58,11 @@ function BrowseModal({ onSelect, onClose }: { onSelect: (t: { node_id: string; n
           <button onClick={onClose} className="text-gray-400 hover:text-white">✕</button>
         </div>
         <div className="flex-1 overflow-auto p-4">
-          {isLoading && <p className="text-gray-400 text-center py-8">KEPServerEX taranıyor...</p>}
+          {isLoading && <p className="text-gray-400 text-center py-8">S7-1500 OPC UA taranıyor...</p>}
           {error && (
             <div className="text-center py-8">
               <p className="text-red-400">OPC UA bağlantısı kurulamadı.</p>
-              <p className="text-gray-500 text-sm mt-1">KEPServerEX'te None güvenlik modunu etkinleştirin.</p>
+              <p className="text-gray-500 text-sm mt-1">TIA Portal'da OPC UA sunucusunu etkinleştirin (port 4840).</p>
             </div>
           )}
           {data?.tags.map((t) => (
@@ -114,7 +114,7 @@ export default function Tags() {
         ) : tags.length === 0 ? (
           <div className="py-12 text-center">
             <p className="text-gray-400">Henüz tag yok.</p>
-            <p className="text-gray-500 text-sm mt-1">OPC Tara ile KEPServerEX'ten tag seçin veya elle ekleyin.</p>
+            <p className="text-gray-500 text-sm mt-1">OPC Tara ile S7-1500'den tag seçin veya elle ekleyin.</p>
           </div>
         ) : (
           <table className="w-full">
