@@ -1,9 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel
-from datetime import datetime, timedelta
+from datetime import datetime
 from io import BytesIO
 import openpyxl
 from app.core.database import get_db
@@ -18,7 +18,7 @@ class ReportRequest(BaseModel):
     start: datetime
     end: datetime
     interval: str = "hourly"  # hourly, daily
-    format: str = "excel"     # excel, json
+    format: str = "excel"  # excel, json
 
 
 async def _fetch_aggregated(
@@ -33,12 +33,14 @@ async def _fetch_aggregated(
 
     result = await db.execute(
         select(
-            Tag.id, Tag.name, Tag.unit,
+            Tag.id,
+            Tag.name,
+            Tag.unit,
             period_expr.label("period"),
             func.avg(TagReading.value).label("avg_val"),
             func.min(TagReading.value).label("min_val"),
             func.max(TagReading.value).label("max_val"),
-            func.count(TagReading.id).label("count"),
+            func.count(TagReading.timestamp).label("count"),
         )
         .join(TagReading, Tag.id == TagReading.tag_id)
         .where(
@@ -56,13 +58,15 @@ async def _fetch_aggregated(
         key = f"{name} ({unit})" if unit else name
         if key not in data:
             data[key] = []
-        data[key].append({
-            "period": period,
-            "avg": round(avg, 3) if avg else None,
-            "min": round(mn, 3) if mn else None,
-            "max": round(mx, 3) if mx else None,
-            "count": cnt,
-        })
+        data[key].append(
+            {
+                "period": period,
+                "avg": round(avg, 3) if avg else None,
+                "min": round(mn, 3) if mn else None,
+                "max": round(mx, 3) if mx else None,
+                "count": cnt,
+            }
+        )
     return data
 
 
@@ -75,7 +79,12 @@ async def generate_report(
     data = await _fetch_aggregated(req.tag_ids, req.start, req.end, req.interval, db)
 
     if req.format == "json":
-        return {"period": req.interval, "start": req.start, "end": req.end, "data": data}
+        return {
+            "period": req.interval,
+            "start": req.start,
+            "end": req.end,
+            "data": data,
+        }
 
     # Excel raporu
     wb = openpyxl.Workbook()
@@ -91,16 +100,23 @@ async def generate_report(
         ws = wb.create_sheet(title=tag_name[:31])
         ws.append(["Donem", "Ortalama", "Minimum", "Maksimum", "Okuma Sayisi"])
         for row in rows:
-            ws.append([
-                row["period"] if row["period"] else "",
-                row["avg"], row["min"], row["max"], row["count"],
-            ])
+            ws.append(
+                [
+                    row["period"] if row["period"] else "",
+                    row["avg"],
+                    row["min"],
+                    row["max"],
+                    row["count"],
+                ]
+            )
 
     buf = BytesIO()
     wb.save(buf)
     buf.seek(0)
 
-    filename = f"scada_rapor_{req.start.strftime('%Y%m%d')}_{req.end.strftime('%Y%m%d')}.xlsx"
+    filename = (
+        f"scada_rapor_{req.start.strftime('%Y%m%d')}_{req.end.strftime('%Y%m%d')}.xlsx"
+    )
     return StreamingResponse(
         buf,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",

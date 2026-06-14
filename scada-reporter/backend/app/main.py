@@ -1,15 +1,30 @@
 import asyncio
 import logging
 from contextlib import asynccontextmanager
+import sentry_sdk
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from app.core.config import settings
 from app.core.database import engine, Base
+from app.core.timescaledb import init_timescaledb
 from app.api import auth, tags, dashboard, reports
 from app.collector.opc_client import collector
 from app.collector.poller import poll_loop
+from app.collector.opcua_server import opcua_server
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s"
+)
 logger = logging.getLogger(__name__)
+
+
+if settings.SENTRY_DSN:
+    sentry_sdk.init(
+        dsn=settings.SENTRY_DSN,
+        send_default_pii=False,
+        traces_sample_rate=0.1,
+    )
+    logger.info("Sentry initialized")
 
 
 @asynccontextmanager
@@ -17,19 +32,28 @@ async def lifespan(app: FastAPI):
     # Veritabanı tablolarını oluştur
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        await init_timescaledb(conn)
     logger.info("Veritabani tablolari hazir")
 
-    # OPC UA bağlantısı kur
+    # S7 bağlantısı kur
     try:
         await collector.connect()
         poll_task = asyncio.create_task(poll_loop())
-        logger.info("OPC UA collector baslatildi")
+        logger.info("S7 collector baslatildi")
     except Exception as e:
-        logger.warning("OPC UA baglantisi kurulamadi (simülasyon modunda devam): %s", e)
+        logger.warning("S7 baglantisi kurulamadi (simulasyon modunda devam): %s", e)
         poll_task = None
+
+    # Dahili OPC UA server
+    try:
+        await opcua_server.start()
+        logger.info("OPC UA server baslatildi")
+    except Exception as e:
+        logger.warning("OPC UA server baslatilamadi: %s", e)
 
     yield
 
+    await opcua_server.stop()
     if poll_task:
         poll_task.cancel()
     await collector.disconnect()

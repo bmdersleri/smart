@@ -6,33 +6,63 @@ Su/Atıksu tesisi SCADA veri toplama ve raporlama sistemi.
 
 ```
 scada-reporter/
-├── backend/       # Python FastAPI backend
+├── backend/       # Python FastAPI backend (:8001)
 │   ├── app/
-│   │   ├── api/        # REST API endpoints
-│   │   ├── collector/  # OPC UA veri toplayıcı
-│   │   ├── core/       # Config, DB, güvenlik
+│   │   ├── api/        # REST API endpoints (auth/dashboard/tags/reports)
+│   │   ├── collector/  # S7 snap7 PLC toplayıcı + dahili OPC UA server
+│   │   ├── core/       # Config, DB, güvenlik (JWT)
 │   │   ├── models/     # SQLAlchemy modelleri
 │   │   └── reports/    # Rapor üretimi
-│   ├── .venv/          # Python venv (uv ile yönetilir)
+│   ├── tests/          # pytest async test paketi
+│   ├── alembic/        # DB migration dosyaları
+│   ├── pyproject.toml  # pytest/ruff/mypy config
+│   ├── .venv/          # Python venv (uv ile yönetilir, Python 3.14)
 │   └── requirements.txt
-├── frontend/      # Henüz oluşturulmadı
-└── docker/        # TimescaleDB + Redis
+├── frontend/      # React + Vite + Tailwind + TanStack Query (:5173)
+│   ├── src/
+│   ├── openapi-ts.config.ts  # TypeScript API client üretici
+│   └── package.json
+└── docker/        # TimescaleDB + Redis + Grafana
 ```
 
 ## Komutlar
 
-- **Backend başlat:** `just run-backend`
+### Geliştirme
+- **Backend + Frontend paralel:** `just dev`
+- **Sadece backend:** `just run-backend`
+- **Sadece frontend:** `just run-frontend`
 - **Bağımlılıkları yükle:** `just install`
-- **Docker altyapı:** `just docker-up` / `just docker-down`
+
+### Test
+- **Testleri çalıştır:** `just test`
+- **Coverage raporu:** `just test-cov`
+- **TDD hot reload:** `just test-watch`
+
+### Veritabanı
+- **Migration uygula:** `just migrate`
+- **Migration oluştur:** `just makemigration msg="açıklama"`
+- **Migration geri al:** `just migrate-down`
+- **Migration geçmişi:** `just migrate-history`
+- **PLC tag'lerini ekle:** `just seed-tags`
+
+### Kalite
 - **Lint:** `just lint`
+- **Lint + otomatik düzelt:** `just lint-fix`
 - **Format:** `just format`
 - **Type check:** `just typecheck`
-- **Tüm kontroller:** `just check`
+- **Tüm kontroller (CI):** `just check`
+
+### Araçlar
+- **TS API client üret:** `just gen-client` *(backend çalışırken)*
+- **PLC bağlantı testi:** `just test-plc`
+- **Docker başlat/durdur:** `just docker-up` / `just docker-down`
+- **Proje ağacı:** `just tree`
 
 ## Veritabanı
 
-- PostgreSQL (TimescaleDB) + Redis (Docker ile)
-- Docker olmadan backend çalışır ancak DB bağlantısı olmaz
+- Dev/test: SQLite (`scada_reporter.db`) — Docker gerekmez
+- Prod: PostgreSQL (TimescaleDB) + Redis (Docker ile)
+- `.env.example` → `.env` kopyalayıp env var'ları ayarla
 
 ## Mevcut Araçlar
 
@@ -70,5 +100,7 @@ scada-reporter/
 ## Notlar
 
 - WeasyPrint PDF üretimi için GTK runtime gerekir (Windows'da)
-- Backend başlatmak için önce `.venv\Scripts\activate` yap
+- Backend başlatmak için `.venv\Scripts\activate` veya `just run-backend`
 - `uv pip install ...` ile hızlı paket yükleme
+- pre-commit hooks aktif — her commit'te ruff + mypy + format kontrolleri çalışır
+- Frontend TS client güncelle: backend çalışırken `just gen-client`

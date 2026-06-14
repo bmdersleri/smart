@@ -1,0 +1,15 @@
+apiVersion: 1
+
+datasources:
+  - name: TimescaleDB
+    type: postgres
+    access: proxy
+    url: db:5432
+    database: scada_reporter
+    user: scada
+    secureJsonData:
+      password: scada123
+    jsonData:
+      sslmode: disable
+      postgresVersion: 1600
+      timescaledb: true

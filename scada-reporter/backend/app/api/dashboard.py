@@ -12,10 +12,10 @@ router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 @router.get("/overview")
 async def overview(db: AsyncSession = Depends(get_db), _=Depends(get_current_user)):
     """Toplam tag sayısı, son okuma zamanı gibi genel bilgiler."""
-    tag_count = await db.scalar(select(func.count(Tag.id)).where(Tag.is_active == True))
+    tag_count = await db.scalar(select(func.count(Tag.id)).where(Tag.is_active))
     last_reading = await db.scalar(select(func.max(TagReading.timestamp)))
     reading_count_24h = await db.scalar(
-        select(func.count(TagReading.id)).where(
+        select(func.count(TagReading.timestamp)).where(
             TagReading.timestamp >= datetime.utcnow() - timedelta(hours=24)
         )
     )
@@ -53,7 +53,9 @@ async def trend(
 
 
 @router.get("/current-values")
-async def current_values(db: AsyncSession = Depends(get_db), _=Depends(get_current_user)):
+async def current_values(
+    db: AsyncSession = Depends(get_db), _=Depends(get_current_user)
+):
     """Her aktif tag için en son değer."""
     subq = (
         select(TagReading.tag_id, func.max(TagReading.timestamp).label("max_ts"))
@@ -61,17 +63,34 @@ async def current_values(db: AsyncSession = Depends(get_db), _=Depends(get_curre
         .subquery()
     )
     result = await db.execute(
-        select(Tag.id, Tag.name, Tag.unit, Tag.device, TagReading.value, TagReading.timestamp, TagReading.quality)
+        select(
+            Tag.id,
+            Tag.name,
+            Tag.unit,
+            Tag.device,
+            TagReading.value,
+            TagReading.timestamp,
+            TagReading.quality,
+        )
         .join(subq, Tag.id == subq.c.tag_id)
-        .join(TagReading, (TagReading.tag_id == subq.c.tag_id) & (TagReading.timestamp == subq.c.max_ts))
-        .where(Tag.is_active == True)
+        .join(
+            TagReading,
+            (TagReading.tag_id == subq.c.tag_id)
+            & (TagReading.timestamp == subq.c.max_ts),
+        )
+        .where(Tag.is_active)
         .order_by(Tag.device, Tag.name)
     )
     rows = result.all()
     return [
         {
-            "tag_id": r[0], "name": r[1], "unit": r[2], "device": r[3],
-            "value": r[4], "timestamp": r[5], "quality_ok": r[6] == 192,
+            "tag_id": r[0],
+            "name": r[1],
+            "unit": r[2],
+            "device": r[3],
+            "value": r[4],
+            "timestamp": r[5],
+            "quality_ok": r[6] == 192,
         }
         for r in rows
     ]

@@ -1,0 +1,38 @@
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { AuthProvider, useAuth } from './context/AuthContext'
+import Layout from './components/Layout'
+import Login from './pages/Login'
+import Dashboard from './pages/Dashboard'
+import Tags from './pages/Tags'
+import Trend from './pages/Trend'
+import Reports from './pages/Reports'
+import './index.css'
+
+const qc = new QueryClient({ defaultOptions: { queries: { staleTime: 10000, retry: 1 } } })
+
+function PrivateRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth()
+  if (loading) return <div className="min-h-screen bg-gray-950 flex items-center justify-center text-gray-400">Yükleniyor...</div>
+  return user ? <>{children}</> : <Navigate to="/login" replace />
+}
+
+export default function App() {
+  return (
+    <QueryClientProvider client={qc}>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/" element={<PrivateRoute><Layout /></PrivateRoute>}>
+              <Route index element={<Dashboard />} />
+              <Route path="tags" element={<Tags />} />
+              <Route path="trend" element={<Trend />} />
+              <Route path="reports" element={<Reports />} />
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
+    </QueryClientProvider>
+  )
+}

@@ -1,92 +1,102 @@
-import asyncio
 import logging
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
-from asyncua import Client, Node
+import snap7
+from snap7.util import get_real, get_int, get_bool, get_dint, get_word
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
+_executor = ThreadPoolExecutor(max_workers=2, thread_name_prefix="snap7")
 
-class OpcUaCollector:
+_TYPE_SIZES = {"REAL": 4, "INT": 2, "DINT": 4, "WORD": 2, "BOOL": 1}
+
+
+def _parse_address(address: str) -> tuple[int, str, int, int]:
+    """'DB1,REAL0' veya 'DB3,BOOL8.3' → (db_num, type, byte_offset, bit)"""
+    db_part, rest = address.upper().split(",", 1)
+    db_num = int(db_part[2:])
+    for t in _TYPE_SIZES:
+        if rest.startswith(t):
+            suffix = rest[len(t) :]
+            if "." in suffix:
+                byte_off, bit = suffix.split(".", 1)
+                return db_num, t, int(byte_off), int(bit)
+            return db_num, t, int(suffix), 0
+    raise ValueError(f"Bilinmeyen S7 tipi: {rest}")
+
+
+def _read_sync(client: snap7.client.Client, address: str) -> float | None:
+    db_num, type_name, offset, bit = _parse_address(address)
+    data = client.db_read(db_num, offset, _TYPE_SIZES[type_name])
+    if type_name == "REAL":
+        return float(get_real(data, 0))
+    if type_name == "INT":
+        return float(get_int(data, 0))
+    if type_name == "DINT":
+        return float(get_dint(data, 0))
+    if type_name == "WORD":
+        return float(get_word(data, 0))
+    if type_name == "BOOL":
+        return float(get_bool(data, 0, bit))
+    return None
+
+
+class S7Collector:
     def __init__(self):
-        self.client: Client | None = None
-        self.subscriptions: dict = {}
+        self.client: snap7.client.Client | None = None
         self._running = False
 
     async def connect(self):
-        self.client = Client(url=settings.OPC_UA_URL, timeout=10)
-        if settings.OPC_UA_USERNAME:
-            self.client.set_user(settings.OPC_UA_USERNAME)
-            self.client.set_password(settings.OPC_UA_PASSWORD)
-        try:
-            await self.client.connect()
-            self._running = True
-            logger.info("OPC UA baglantisi kuruldu: %s", settings.OPC_UA_URL)
-        except Exception:
-            self.client = None
-            raise
+        loop = asyncio.get_event_loop()
+        client = snap7.client.Client()
+        await loop.run_in_executor(
+            _executor,
+            lambda: client.connect(
+                settings.S7_HOST, settings.S7_RACK, settings.S7_SLOT
+            ),
+        )
+        self.client = client
+        self._running = True
+        logger.info(
+            "S7 baglantisi kuruldu: %s rack=%d slot=%d",
+            settings.S7_HOST,
+            settings.S7_RACK,
+            settings.S7_SLOT,
+        )
 
     async def disconnect(self):
         if self.client:
-            await self.client.disconnect()
-            logger.info("OPC UA baglantisi kapatildi")
+            loop = asyncio.get_event_loop()
+            await loop.run_in_executor(_executor, self.client.disconnect)
+            self.client = None
+            self._running = False
+            logger.info("S7 baglantisi kapatildi")
 
-    async def browse_tags(self, node_id: str = "ns=2;s=.") -> list[dict]:
-        """KEPServerEX tag agacini tarar."""
+    async def browse_tags(self, node_id: str = "") -> list[dict]:
+        """S7/snap7 ile otomatik tag kesfi desteklenmez — bos liste doner."""
+        return []
+
+    async def read_tag(self, address: str) -> tuple[float | None, int, datetime]:
         if not self.client:
-            raise RuntimeError("OPC UA baglantisi yok")
-        node = self.client.get_node(node_id)
-        return await self._browse_recursive(node, depth=0, max_depth=4)
-
-    async def _browse_recursive(self, node: Node, depth: int, max_depth: int) -> list[dict]:
-        if depth > max_depth:
-            return []
-        results = []
+            return None, 0, datetime.utcnow()
+        loop = asyncio.get_event_loop()
         try:
-            children = await node.get_children()
-            for child in children:
-                try:
-                    name = (await child.read_browse_name()).Name
-                    node_class = await child.read_node_class()
-                    node_id_str = child.nodeid.to_string()
-
-                    if node_class.name == "Variable":
-                        results.append({
-                            "node_id": node_id_str,
-                            "name": name,
-                            "depth": depth,
-                        })
-                    else:
-                        results.extend(
-                            await self._browse_recursive(child, depth + 1, max_depth)
-                        )
-                except Exception:
-                    continue
+            value = await loop.run_in_executor(
+                _executor, _read_sync, self.client, address
+            )
+            return value, 192, datetime.utcnow()
         except Exception as e:
-            logger.warning("Browse hatasi: %s", e)
+            logger.warning("Tag okuma hatasi %s: %s", address, e)
+            return None, 0, datetime.utcnow()
+
+    async def read_tags_bulk(self, addresses: list[str]) -> list[tuple]:
+        results = []
+        for addr in addresses:
+            value, quality, ts = await self.read_tag(addr)
+            results.append((addr, value, quality, ts))
         return results
 
-    async def read_tag(self, node_id: str) -> tuple[float | None, int, datetime]:
-        """Tek tag okur. (value, quality, timestamp) döner."""
-        node = self.client.get_node(node_id)
-        dv = await node.read_data_value()
-        value = float(dv.Value.Value) if dv.Value.Value is not None else None
-        quality = dv.StatusCode.value
-        ts = dv.SourceTimestamp or datetime.utcnow()
-        return value, quality, ts
 
-    async def read_tags_bulk(self, node_ids: list[str]) -> list[tuple]:
-        """Toplu tag okuma."""
-        nodes = [self.client.get_node(nid) for nid in node_ids]
-        data_values = await self.client.read_values(nodes)
-        result = []
-        for nid, dv in zip(node_ids, data_values):
-            try:
-                value = float(dv) if dv is not None else None
-                result.append((nid, value, 192, datetime.utcnow()))
-            except (TypeError, ValueError):
-                result.append((nid, None, 0, datetime.utcnow()))
-        return result
-
-
-collector = OpcUaCollector()
+collector = S7Collector()
