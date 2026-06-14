@@ -1,4 +1,5 @@
 import json
+import mimetypes
 import os
 import uuid
 from datetime import datetime
@@ -89,18 +90,22 @@ async def _save_history(req: ReportRequest, file_path: str, db: AsyncSession) ->
         file_path=file_path,
     )
     db.add(record)
-    await db.flush()  # get the ID
 
-    # Keep only the 10 most recent
+    # Keep only the 10 most recent — collect paths BEFORE commit
     result = await db.execute(select(ReportHistory).order_by(ReportHistory.created_at.asc()))
     all_records = result.scalars().all()
+    paths_to_delete: list[str] = []
     if len(all_records) > 10:
         for old in all_records[:-10]:
-            if os.path.exists(old.file_path):
-                os.remove(old.file_path)
+            paths_to_delete.append(old.file_path)
             await db.delete(old)
 
     await db.commit()
+
+    # Delete files only after successful commit
+    for p in paths_to_delete:
+        if os.path.exists(p):
+            os.remove(p)
 
 
 @router.post("/generate")
@@ -120,7 +125,6 @@ async def generate_report(
             "data": data,
         }
         file_path = os.path.join(REPORTS_DIR, f"{file_id}.json")
-        os.makedirs(REPORTS_DIR, exist_ok=True)
         with open(file_path, "w", encoding="utf-8") as f:
             json.dump(payload, f, default=str)
         await _save_history(req, file_path, db)
@@ -155,7 +159,6 @@ async def generate_report(
     buf.seek(0)
 
     file_path = os.path.join(REPORTS_DIR, f"{file_id}.xlsx")
-    os.makedirs(REPORTS_DIR, exist_ok=True)
     with open(file_path, "wb") as f:
         f.write(buf.getvalue())
     await _save_history(req, file_path, db)
@@ -201,4 +204,9 @@ async def download_history(
     record = result.scalar_one_or_none()
     if not record or not os.path.exists(record.file_path):
         raise HTTPException(status_code=404, detail="Rapor bulunamadi")
-    return FileResponse(record.file_path)
+    media_type, _ = mimetypes.guess_type(record.file_path)
+    return FileResponse(
+        record.file_path,
+        media_type=media_type or "application/octet-stream",
+        filename=os.path.basename(record.file_path),
+    )
