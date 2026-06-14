@@ -3,10 +3,10 @@ from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel
 from datetime import datetime
+from typing import Optional
 from app.core.database import get_db
 from app.api.auth import get_current_user, require_role
 from app.models.tag import Tag, TagReading
-from app.collector.opc_client import collector
 
 router = APIRouter(prefix="/tags", tags=["tags"])
 
@@ -35,12 +35,8 @@ class TagResponse(BaseModel):
 
 @router.get("/browse")
 async def browse_tags(_=Depends(get_current_user)):
-    """S7-1500 OPC UA tag agacini tarar."""
-    try:
-        tags = await collector.browse_tags()
-        return {"tags": tags, "count": len(tags)}
-    except Exception as e:
-        raise HTTPException(status_code=503, detail=f"OPC UA baglantisi hatasi: {e}")
+    """snap7 ile otomatik tag kesfi desteklenmez — bos liste doner."""
+    return {"tags": [], "count": 0}
 
 
 @router.get("/", response_model=list[TagResponse])
@@ -79,8 +75,8 @@ async def delete_tag(
 @router.get("/{tag_id}/readings")
 async def get_readings(
     tag_id: int,
-    start: datetime = None,
-    end: datetime = None,
+    start: Optional[datetime] = None,
+    end: Optional[datetime] = None,
     limit: int = 1000,
     db: AsyncSession = Depends(get_db),
     _=Depends(get_current_user),

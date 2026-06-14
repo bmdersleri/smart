@@ -21,7 +21,9 @@ class Tag(Base):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str] = mapped_column(Text, default="")
     unit: Mapped[str] = mapped_column(String(50), default="")
-    channel: Mapped[str] = mapped_column(String(255), default="")  # OPC UA channel/group
+    channel: Mapped[str] = mapped_column(
+        String(255), default=""
+    )  # OPC UA channel/group
     device: Mapped[str] = mapped_column(String(255), default="")  # PLC adı
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)

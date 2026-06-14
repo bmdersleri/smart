@@ -26,9 +26,7 @@ async def init_timescaledb(conn: AsyncConnection):
             logger.info("Hypertable already exists or failed: %s - %s", table, e)
 
         try:
-            await conn.execute(
-                text(f"ALTER TABLE {table} SET (timescaledb.compress)")
-            )
+            await conn.execute(text(f"ALTER TABLE {table} SET (timescaledb.compress)"))
             logger.info("Compression enabled: %s", table)
         except Exception as e:
             logger.info("Compression already set: %s - %s", table, e)

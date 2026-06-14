@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { getTags, createTag, deleteTag, browseOpcTags } from '../api/client'
+import { getTags, createTag, deleteTag } from '../api/client'
 import type { Tag } from '../api/client'
 import { useAuth } from '../context/AuthContext'
 
@@ -18,7 +18,7 @@ function AddTagModal({ onClose }: { onClose: () => void }) {
       <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-lg p-6 space-y-4">
         <h2 className="text-lg font-semibold text-white">Yeni Tag Ekle</h2>
         {[
-          { k: 'node_id', label: 'OPC Node ID', ph: 'ns=2;s=Channel1.PLC.Debi' },
+          { k: 'node_id', label: 'S7 Adresi', ph: 'DB1,REAL0' },
           { k: 'name', label: 'Tag Adı', ph: 'Hat Debisi' },
           { k: 'unit', label: 'Birim', ph: 'm³/h' },
           { k: 'device', label: 'Cihaz (PLC)', ph: 'PLC_1500' },
@@ -47,36 +47,32 @@ function AddTagModal({ onClose }: { onClose: () => void }) {
   )
 }
 
-function BrowseModal({ onSelect, onClose }: { onSelect: (t: { node_id: string; name: string }) => void; onClose: () => void }) {
-  const { data, isLoading, error } = useQuery({ queryKey: ['browse-opc'], queryFn: () => browseOpcTags().then((r) => r.data) })
-
+function FormatGuideModal({ onClose }: { onClose: () => void }) {
+  const examples = [
+    { addr: 'DB1,REAL0', desc: 'DB1, REAL (32-bit float), offset 0' },
+    { addr: 'DB2,INT4', desc: 'DB2, INT (16-bit signed), offset 4' },
+    { addr: 'DB3,DINT8', desc: 'DB3, DINT (32-bit signed), offset 8' },
+    { addr: 'DB4,WORD6', desc: 'DB4, WORD (16-bit unsigned), offset 6' },
+    { addr: 'DB5,BOOL10.3', desc: 'DB5, BOOL, byte 10, bit 3' },
+  ]
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-2xl max-h-[80vh] flex flex-col">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-800">
-          <h2 className="text-lg font-semibold text-white">OPC UA Tag Tarayıcı</h2>
+      <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-lg p-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-white">S7 Adres Formatı</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-white">✕</button>
         </div>
-        <div className="flex-1 overflow-auto p-4">
-          {isLoading && <p className="text-gray-400 text-center py-8">S7-1500 OPC UA taranıyor...</p>}
-          {error && (
-            <div className="text-center py-8">
-              <p className="text-red-400">OPC UA bağlantısı kurulamadı.</p>
-              <p className="text-gray-500 text-sm mt-1">TIA Portal'da OPC UA sunucusunu etkinleştirin (port 4840).</p>
+        <p className="text-gray-400 text-sm">Node ID alanına aşağıdaki formatta girin:</p>
+        <div className="bg-gray-800 rounded-lg p-4 space-y-2">
+          {examples.map(({ addr, desc }) => (
+            <div key={addr} className="flex items-baseline gap-3">
+              <span className="text-blue-400 font-mono text-sm w-32 flex-shrink-0">{addr}</span>
+              <span className="text-gray-500 text-xs">{desc}</span>
             </div>
-          )}
-          {data?.tags.map((t) => (
-            <button
-              key={t.node_id}
-              onClick={() => onSelect(t)}
-              className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-800 transition-colors flex items-center gap-3"
-              style={{ paddingLeft: `${(t.depth + 1) * 12}px` }}
-            >
-              <span className="text-gray-500 text-xs font-mono flex-shrink-0">{t.node_id.split(';s=')[1] ?? t.node_id}</span>
-              <span className="text-white text-sm">{t.name}</span>
-            </button>
           ))}
         </div>
+        <p className="text-gray-600 text-xs">Desteklenen tipler: REAL · INT · DINT · WORD · BOOL</p>
+        <button onClick={onClose} className="w-full py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium transition-colors">Tamam</button>
       </div>
     </div>
   )
@@ -99,7 +95,7 @@ export default function Tags() {
         {canEdit && (
           <div className="flex gap-2">
             <button onClick={() => setShowBrowse(true)} className="px-3 py-2 text-sm bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg border border-gray-700 transition-colors">
-              OPC Tara
+              Format ?
             </button>
             <button onClick={() => setShowAdd(true)} className="px-3 py-2 text-sm bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors">
               + Tag Ekle
@@ -114,7 +110,7 @@ export default function Tags() {
         ) : tags.length === 0 ? (
           <div className="py-12 text-center">
             <p className="text-gray-400">Henüz tag yok.</p>
-            <p className="text-gray-500 text-sm mt-1">OPC Tara ile S7-1500'den tag seçin veya elle ekleyin.</p>
+            <p className="text-gray-500 text-sm mt-1">Tag Ekle ile S7 adresini girin (örn: DB1,REAL0).</p>
           </div>
         ) : (
           <table className="w-full">
@@ -155,12 +151,7 @@ export default function Tags() {
       </div>
 
       {showAdd && <AddTagModal onClose={() => setShowAdd(false)} />}
-      {showBrowse && (
-        <BrowseModal
-          onSelect={(_t) => { setShowBrowse(false); setShowAdd(true) }}
-          onClose={() => setShowBrowse(false)}
-        />
-      )}
+      {showBrowse && <FormatGuideModal onClose={() => setShowBrowse(false)} />}
     </div>
   )
 }

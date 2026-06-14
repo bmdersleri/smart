@@ -72,7 +72,7 @@
 | alembic | 1.14.0 | DB migrations |
 | anyio | 4.13.0 | Async runtime |
 | asyncpg | 0.31.0 | Async PostgreSQL |
-| asyncua | 2.0 | OPC UA client/server |
+| asyncua | 2.0 | OPC UA client/server (dahili server `app/collector/opcua_server.py`) |
 | bcrypt | 4.3.0 | Password hashing |
 | python-snap7 | 3.0.0 | S7 PLC communication (pure Python, no DLL) |
 | pandas | 3.0.3 | Data analysis & reporting |
