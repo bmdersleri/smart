@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Node
+node_modules/
+.pnpm-store/
+
+# Env files
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project-specific
+.codegraph/
+.remember/
+.agents/
+*.log
+
+# Claude local/sensitive
+.claude/logs/
+.claude/settings.local.json
+.claude/projects/
+.claude/todos/
+.claude/skills/
+.claude/hooks/
+.claude/workspace/
+.claude/agents/
+.claude/knowledge-base.md
+.claude/knowledge-nominations.md
+.claude/memory.md
+
+# Docker volumes
+docker/data/
