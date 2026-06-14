@@ -95,6 +95,7 @@
 | pytest | 9.1.0 | Test framework |
 | pytest-asyncio | 1.4.0 | Async test support |
 | pytest-cov | 7.1.0 | Test coverage |
+| pytest-watch | 4.2.0 | TDD hot reload (`ptw`) |
 | python-jose | 3.3.0 | JWT tokens |
 | python-multipart | 0.0.12 | Form parsing |
 | pytz | 2026.2 | Timezone |
@@ -116,6 +117,21 @@
 | opencode-ai | 1.17.6 |
 | prettier | 3.8.4 |
 | typescript | 6.0.3 |
+
+## Frontend (scada-reporter/frontend — pnpm)
+| Package | Version | Purpose |
+|---------|---------|---------|
+| react | 19.x | UI framework |
+| react-dom | 19.x | DOM renderer |
+| react-router-dom | 7.x | Routing |
+| @tanstack/react-query | 5.x | Server state / data fetching |
+| axios | 1.x | HTTP client |
+| recharts | 3.x | Chart library |
+| lucide-react | 1.x | Icon set |
+| date-fns | 4.x | Date utilities |
+| tailwindcss | 4.x | CSS framework |
+| vite | 8.x | Dev server + bundler |
+| @hey-api/openapi-ts | 0.98.x | TypeScript client gen from OpenAPI spec (`pnpm gen-client`) |
 
 ## CLI Utilities
 | Tool | Version | Description |
@@ -160,7 +176,8 @@
 | Tool | Location | Notes |
 |------|----------|-------|
 | Alembic | `backend/alembic/` | Async migration (`env.py` async engine) |
-| pre-commit | `.pre-commit-config.yaml` | `ruff`, `mypy`, `trailing-whitespace`, `end-of-file-fixer` |
+| pre-commit | `.pre-commit-config.yaml` | Hooks **aktif** (`.git/hooks/pre-commit`); `ruff`, `ruff-format`, `mypy`, `trailing-whitespace`, `end-of-file-fixer`, `check-yaml/json/toml` |
+| pyproject.toml | `backend/pyproject.toml` | pytest `asyncio_mode=auto`, ruff `line-length=100`, mypy config |
 
 ## Build Tools
 | Tool | Version | Notes |
