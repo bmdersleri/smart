@@ -23,17 +23,21 @@ def test_health_no_api():
 
 
 def test_list_tags_no_auth():
-    """Token olmadan tags list calismali (token varsa da calisir)."""
-    result = runner.invoke(cli, ["tags", "list"])
+    """Token olmadan tags list auth hatasi vermeli."""
+    _clear_token()
+    with patch("scada_reporter_cli.commands.tags.get_token", return_value=None):
+        result = runner.invoke(cli, ["tags", "list"])
     assert result.exit_code == 0
-    assert result.output.strip()
+    assert "login" in result.output.lower()
 
 
 def test_dashboard_overview_no_auth():
-    """Token olmadan dashboard overview calismali."""
-    result = runner.invoke(cli, ["dashboard", "overview"])
+    """Token olmadan dashboard overview auth hatasi vermeli."""
+    _clear_token()
+    with patch("scada_reporter_cli.commands.dashboard.get_token", return_value=None):
+        result = runner.invoke(cli, ["dashboard", "overview"])
     assert result.exit_code == 0
-    assert result.output.strip()
+    assert "login" in result.output.lower()
 
 
 def test_repl_help():

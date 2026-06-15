@@ -52,7 +52,7 @@ _ALARM_LABELS = {"overflow": "OVERFLOW", "max": "MAX AŞIMI", "min": "MIN ALTI"}
 @click.option(
     "--watch",
     "watch_interval",
-    type=int,
+    type=click.IntRange(min=0),
     default=0,
     metavar="SANIYE",
     help="Her N saniyede bir yenile (0=devre dışı). Ctrl+C ile çık.",
