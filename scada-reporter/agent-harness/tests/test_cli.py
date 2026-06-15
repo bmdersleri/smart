@@ -496,3 +496,96 @@ def test_reports_download_history_saves_file(tmp_path):
     with open(out_file, "rb") as f:
         assert f.read() == b"PK\x03\x04fake-xlsx"
     mock_client.download_report_history.assert_called_once_with(3)
+
+
+_SAMPLE_TAGS_FOR_EXPLORE = [
+    {
+        "id": 1,
+        "name": "Hat1_Debi",
+        "node_id": "DB171,REAL0",
+        "unit": "m3/h",
+        "device": "Hat1",
+        "channel": "Ch1",
+        "is_active": True,
+        "min_alarm": None,
+        "max_alarm": 3000.0,
+    },
+    {
+        "id": 2,
+        "name": "Hat1_Basinc",
+        "node_id": "DB172,REAL0",
+        "unit": "bar",
+        "device": "Hat1",
+        "channel": "Ch1",
+        "is_active": True,
+        "min_alarm": 0.5,
+        "max_alarm": 6.0,
+    },
+    {
+        "id": 3,
+        "name": "Havuz_Seviye",
+        "node_id": "DB180,REAL0",
+        "unit": "mm",
+        "device": "Havuz",
+        "channel": "Ch2",
+        "is_active": True,
+        "min_alarm": None,
+        "max_alarm": None,
+    },
+]
+
+
+def test_explore_tags_groups_by_device():
+    """explore tags groups output by device."""
+    mock_client = MagicMock()
+    mock_client.list_tags.return_value = _SAMPLE_TAGS_FOR_EXPLORE
+    with (
+        patch("scada_reporter_cli.commands.explore.get_token", return_value="tok"),
+        patch(
+            "scada_reporter_cli.commands.explore.ScadaClient", return_value=mock_client
+        ),
+    ):
+        result = runner.invoke(cli, ["explore", "tags"])
+    assert result.exit_code == 0
+    assert "Hat1" in result.output
+    assert "Havuz" in result.output
+    assert "Hat1_Debi" in result.output
+    assert "Hat1_Basinc" in result.output
+    assert "Havuz_Seviye" in result.output
+
+
+def test_explore_tags_shows_alarm_info():
+    """explore tags shows alarm threshold when set."""
+    mock_client = MagicMock()
+    mock_client.list_tags.return_value = _SAMPLE_TAGS_FOR_EXPLORE
+    with (
+        patch("scada_reporter_cli.commands.explore.get_token", return_value="tok"),
+        patch(
+            "scada_reporter_cli.commands.explore.ScadaClient", return_value=mock_client
+        ),
+    ):
+        result = runner.invoke(cli, ["explore", "tags"])
+    assert result.exit_code == 0
+    # Hat1_Debi has max_alarm=3000 → should show alarm info
+    assert "3000" in result.output
+
+
+def test_explore_tags_json():
+    """explore tags --json-output returns grouped structure."""
+    import json
+
+    mock_client = MagicMock()
+    mock_client.list_tags.return_value = _SAMPLE_TAGS_FOR_EXPLORE
+    with (
+        patch("scada_reporter_cli.commands.explore.get_token", return_value="tok"),
+        patch(
+            "scada_reporter_cli.commands.explore.ScadaClient", return_value=mock_client
+        ),
+    ):
+        result = runner.invoke(cli, ["explore", "tags", "--json-output"])
+    assert result.exit_code == 0
+    data = json.loads(result.output)
+    assert data["total"] == 3
+    assert "by_device" in data
+    assert "Hat1" in data["by_device"]
+    assert len(data["by_device"]["Hat1"]) == 2

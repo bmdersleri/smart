@@ -86,3 +86,56 @@ def summary(json_output: bool):
             q_rows = [{"quality": k, "count": v} for k, v in quality.items()]
             click.echo(fmt_table(q_rows, ["quality", "count"]))
     client.close()
+
+
+@explore_cmd.command(name="tags")
+@click.option("--json-output", is_flag=True, help="JSON çıktı")
+def explore_tags(json_output: bool):
+    """Tag kataloğu: cihaz grupları, birimler, alarm eşikleri."""
+    from collections import defaultdict
+
+    client, ok = _get_client()
+    if not ok:
+        return
+    tags = client.list_tags()
+    client.close()
+
+    if isinstance(tags, list) and tags and "error" in tags[0]:
+        click.echo(error(f"Hata: {tags[0].get('detail', 'bilinmeyen hata')}"))
+        return
+
+    if json_output:
+        by_device: dict[str, list] = {}
+        for t in tags:
+            d = t.get("device") or "—"
+            by_device.setdefault(d, []).append(
+                {
+                    "id": t["id"],
+                    "name": t["name"],
+                    "unit": t.get("unit", ""),
+                    "min_alarm": t.get("min_alarm"),
+                    "max_alarm": t.get("max_alarm"),
+                    "is_active": t.get("is_active", True),
+                }
+            )
+        click.echo(fmt_json({"total": len(tags), "by_device": by_device}))
+        return
+
+    grouped: dict[str, list] = defaultdict(list)
+    for t in tags:
+        grouped[t.get("device") or "—"].append(t)
+
+    click.echo(f"Toplam {len(tags)} tag · {len(grouped)} cihaz\n")
+    for device, dtags in sorted(grouped.items()):
+        click.echo(info(f"▸ {device}  ({len(dtags)} tag)"))
+        for t in dtags:
+            alarm_parts: list[str] = []
+            if t.get("min_alarm") is not None:
+                alarm_parts.append(f"min={t['min_alarm']}")
+            if t.get("max_alarm") is not None:
+                alarm_parts.append(f"max={t['max_alarm']}")
+            alarm_str = f"  ⚠ {', '.join(alarm_parts)}" if alarm_parts else ""
+            status = "●" if t.get("is_active") else "○"
+            unit_str = f" [{t['unit']}]" if t.get("unit") else ""
+            click.echo(f"  {status} {t['name']}{unit_str}  (id:{t['id']}){alarm_str}")
+    click.echo()
