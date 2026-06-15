@@ -48,6 +48,7 @@ scada-reporter/backend/reports/
 .claude/hooks/
 .claude/workspace/
 .claude/agents/
+.claude/agent-memory/
 .claude/knowledge-base.md
 .claude/knowledge-nominations.md
 .claude/memory.md
