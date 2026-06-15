@@ -4,7 +4,7 @@ import os
 import pytest
 from click.testing import CliRunner
 from scada_reporter_cli.cli import cli
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 from scada_reporter_cli.client import ScadaClient
 
 
@@ -197,3 +197,109 @@ def test_client_download_report_history():
 
     assert result["content"] == b"fake-excel-bytes"
     assert result["filename"] == "report.xlsx"
+
+
+def test_tags_update_success():
+    """tags update calls update_tag and prints confirmation."""
+    mock_client = MagicMock()
+    mock_client.update_tag.return_value = {
+        "id": 1,
+        "node_id": "DB1,REAL0",
+        "name": "Test",
+        "unit": "bar",
+        "device": "PLC",
+        "channel": "Ch1",
+        "is_active": True,
+        "min_alarm": 0.0,
+        "max_alarm": 5000.0,
+    }
+    with (
+        patch("scada_reporter_cli.commands.tags.get_token", return_value="tok"),
+        patch("scada_reporter_cli.commands.tags.ScadaClient", return_value=mock_client),
+    ):
+        result = runner.invoke(
+            cli,
+            [
+                "tags",
+                "update",
+                "1",
+                "--unit",
+                "bar",
+                "--min-alarm",
+                "0",
+                "--max-alarm",
+                "5000",
+            ],
+        )
+    assert result.exit_code == 0
+    assert "güncellendi" in result.output or "1" in result.output
+    mock_client.update_tag.assert_called_once_with(
+        1,
+        unit="bar",
+        device=None,
+        channel=None,
+        description=None,
+        min_alarm=0.0,
+        max_alarm=5000.0,
+    )
+
+
+def test_tags_update_validation_error():
+    """tags update blocks min >= max without hitting the API."""
+    mock_client = MagicMock()
+    with (
+        patch("scada_reporter_cli.commands.tags.get_token", return_value="tok"),
+        patch("scada_reporter_cli.commands.tags.ScadaClient", return_value=mock_client),
+    ):
+        result = runner.invoke(
+            cli,
+            [
+                "tags",
+                "update",
+                "1",
+                "--min-alarm",
+                "5000",
+                "--max-alarm",
+                "0",
+            ],
+        )
+    assert result.exit_code == 0
+    assert "min" in result.output.lower() or "küçük" in result.output.lower()
+    mock_client.update_tag.assert_not_called()
+
+
+def test_tags_update_json_output():
+    """tags update --json-output prints the full tag JSON."""
+    import json
+
+    mock_client = MagicMock()
+    mock_client.update_tag.return_value = {
+        "id": 2,
+        "node_id": "DB2,REAL0",
+        "name": "Hat2",
+        "unit": "m3/h",
+        "device": "Hat2",
+        "channel": "Ch1",
+        "is_active": True,
+        "min_alarm": None,
+        "max_alarm": None,
+    }
+    with (
+        patch("scada_reporter_cli.commands.tags.get_token", return_value="tok"),
+        patch("scada_reporter_cli.commands.tags.ScadaClient", return_value=mock_client),
+    ):
+        result = runner.invoke(
+            cli,
+            [
+                "tags",
+                "update",
+                "2",
+                "--unit",
+                "m3/h",
+                "--json-output",
+            ],
+        )
+    assert result.exit_code == 0
+    data = json.loads(result.output)
+    assert data["id"] == 2
+    assert data["unit"] == "m3/h"
