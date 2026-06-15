@@ -79,6 +79,15 @@ export const addWatchlist = (tag_id: number) => api.post(`/dashboard/watchlist/$
 export const removeWatchlist = (tag_id: number) => api.delete(`/dashboard/watchlist/${tag_id}`)
 export const getDashboardTags = (p: DashboardTagsParams) =>
   api.get<DashboardTagsResponse>('/dashboard/tags', { params: p })
+// PLC Yönetimi
+export interface PlcEntry {
+  name: string; ip: string; rack: number; slot: number
+  tag_count: number; connected: boolean
+}
+export interface PlcUpdate { ip: string; rack?: number; slot?: number }
+export const listPlcs = () => api.get<PlcEntry[]>('/plc/')
+export const updatePlc = (name: string, data: PlcUpdate) => api.patch<{ updated: boolean }>(`/plc/${encodeURIComponent(name)}`, data)
+
 export const getTrend = (tagIds: number[], hours: number) =>
   api.get<{ tag_id: number; name: string; unit: string; data: { t: string; v: number }[] }[]>(
     `/dashboard/trend?${tagIds.map((id) => `tag_ids=${id}`).join('&')}&hours=${hours}`

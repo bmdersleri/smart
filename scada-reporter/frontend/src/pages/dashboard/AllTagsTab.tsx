@@ -49,11 +49,12 @@ export default function AllTagsTab({ active }: { active: boolean }) {
     page_size: 50,
   }), [device, search, quality, daily, page])
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error } = useQuery({
     queryKey: ['dashboard-tags', params],
     queryFn: () => getDashboardTags(params).then((r) => r.data),
     refetchInterval: 5000,
     enabled: active,
+    retry: 1,
   })
 
   const { data: devices = [] } = useQuery({
@@ -124,6 +125,12 @@ export default function AllTagsTab({ active }: { active: boolean }) {
       {/* Table */}
       {isLoading ? (
         <div className="text-center py-16 text-gray-500">Yükleniyor...</div>
+      ) : isError ? (
+        <div className="text-center py-16 bg-gray-900 rounded-xl border border-red-900">
+          <p className="text-red-400 font-medium">Veri yüklenemedi</p>
+          <p className="text-gray-500 text-sm mt-1">{String(error)}</p>
+          <p className="text-gray-600 text-xs mt-2">Backend çalışıyor mu? Yeniden başlatmayı deneyin.</p>
+        </div>
       ) : items.length === 0 ? (
         <div className="text-center py-16 bg-gray-900 rounded-xl border border-gray-800">
           <p className="text-gray-400">Eşleşen tag bulunamadı.</p>

@@ -3,8 +3,8 @@ import { format, parseISO } from 'date-fns'
 import { tr } from 'date-fns/locale'
 import { getDashboardDevices, getOverview } from '../../api/client'
 
-interface HealthPlc { name: string; ip: string; connected: boolean }
-interface HealthResp { plc_connected?: number; plc_total?: number; plcs?: HealthPlc[] }
+// /health returns { plc_connected, plc_total, plcs: { [ip]: connected } }
+interface HealthResp { plc_connected?: number; plc_total?: number; plcs?: Record<string, boolean> }
 
 function StatCard({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
   return (
@@ -51,7 +51,7 @@ export default function OverviewTab({ active }: { active: boolean }) {
         <StatCard label="PLC Bağlantı" value={plcLabel} sub="bağlı / toplam" />
       </div>
 
-      {health?.plcs && health.plcs.length > 0 && (
+      {health?.plcs && Object.keys(health.plcs).length > 0 && (
         <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
           <div className="px-4 py-3 border-b border-gray-800">
             <h2 className="text-sm font-semibold text-white">PLC Durumu</h2>
@@ -59,20 +59,18 @@ export default function OverviewTab({ active }: { active: boolean }) {
           <table className="w-full">
             <thead>
               <tr className="text-xs text-gray-500 uppercase tracking-wide">
-                <th className="px-4 py-2 text-left">Cihaz</th>
                 <th className="px-4 py-2 text-left">IP</th>
                 <th className="px-4 py-2 text-left">Durum</th>
               </tr>
             </thead>
             <tbody>
-              {health.plcs.map((plc) => (
-                <tr key={plc.ip} className="border-t border-gray-800 hover:bg-gray-800/40">
-                  <td className="px-4 py-2 text-sm text-white">{plc.name}</td>
-                  <td className="px-4 py-2 text-sm text-gray-400 font-mono">{plc.ip}</td>
+              {Object.entries(health.plcs).map(([ip, connected]) => (
+                <tr key={ip} className="border-t border-gray-800 hover:bg-gray-800/40">
+                  <td className="px-4 py-2 text-sm text-gray-300 font-mono">{ip}</td>
                   <td className="px-4 py-2">
-                    <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-full ${plc.connected ? 'bg-green-900/40 text-green-400' : 'bg-red-900/40 text-red-400'}`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${plc.connected ? 'bg-green-400' : 'bg-red-400'}`} />
-                      {plc.connected ? 'Bağlı' : 'Bağlantı Yok'}
+                    <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-full ${connected ? 'bg-green-900/40 text-green-400' : 'bg-red-900/40 text-red-400'}`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${connected ? 'bg-green-400' : 'bg-red-400'}`} />
+                      {connected ? 'Bağlı' : 'Bağlantı Yok'}
                     </span>
                   </td>
                 </tr>
