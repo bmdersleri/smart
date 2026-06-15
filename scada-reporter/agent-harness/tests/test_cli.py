@@ -392,3 +392,107 @@ def test_current_values_json_includes_alarm_state():
     assert any("alarm_state" in item for item in data)
     overflow_items = [i for i in data if i["alarm_state"] == "overflow"]
     assert len(overflow_items) == 1
+
+
+_SAMPLE_HISTORY = [
+    {
+        "id": 3,
+        "format": "excel",
+        "interval": "daily",
+        "tag_ids": [1, 2, 3],
+        "created_at": "2026-06-15T22:07:00",
+        "start": "2026-06-08T00:00:00",
+        "end": "2026-06-15T22:00:00",
+    },
+    {
+        "id": 2,
+        "format": "json",
+        "interval": "hourly",
+        "tag_ids": [4, 5],
+        "created_at": "2026-06-14T18:30:00",
+        "start": "2026-06-14T00:00:00",
+        "end": "2026-06-14T18:00:00",
+    },
+]
+
+
+def test_reports_list_history_table():
+    """list-history prints a table with id, date, tag count, interval, format."""
+    mock_client = MagicMock()
+    mock_client.list_report_history.return_value = _SAMPLE_HISTORY
+    with (
+        patch("scada_reporter_cli.commands.reports.get_token", return_value="tok"),
+        patch(
+            "scada_reporter_cli.commands.reports.ScadaClient", return_value=mock_client
+        ),
+    ):
+        result = runner.invoke(cli, ["reports", "list-history"])
+    assert result.exit_code == 0
+    assert "excel" in result.output
+    assert "json" in result.output
+    assert "3" in result.output  # id
+
+
+def test_reports_list_history_empty():
+    """list-history shows empty message when no history."""
+    mock_client = MagicMock()
+    mock_client.list_report_history.return_value = []
+    with (
+        patch("scada_reporter_cli.commands.reports.get_token", return_value="tok"),
+        patch(
+            "scada_reporter_cli.commands.reports.ScadaClient", return_value=mock_client
+        ),
+    ):
+        result = runner.invoke(cli, ["reports", "list-history"])
+    assert result.exit_code == 0
+    assert "rapor yok" in result.output.lower() or "yok" in result.output
+
+
+def test_reports_list_history_json():
+    """list-history --json-output returns raw JSON array."""
+    import json
+
+    mock_client = MagicMock()
+    mock_client.list_report_history.return_value = _SAMPLE_HISTORY
+    with (
+        patch("scada_reporter_cli.commands.reports.get_token", return_value="tok"),
+        patch(
+            "scada_reporter_cli.commands.reports.ScadaClient", return_value=mock_client
+        ),
+    ):
+        result = runner.invoke(cli, ["reports", "list-history", "--json-output"])
+    assert result.exit_code == 0
+    data = json.loads(result.output)
+    assert len(data) == 2
+    assert data[0]["id"] == 3
+
+
+def test_reports_download_history_saves_file(tmp_path):
+    """download-history writes bytes to file."""
+    mock_client = MagicMock()
+    mock_client.download_report_history.return_value = {
+        "content": b"PK\x03\x04fake-xlsx",
+        "filename": "report.xlsx",
+    }
+    out_file = str(tmp_path / "out.xlsx")
+    with (
+        patch("scada_reporter_cli.commands.reports.get_token", return_value="tok"),
+        patch(
+            "scada_reporter_cli.commands.reports.ScadaClient", return_value=mock_client
+        ),
+    ):
+        result = runner.invoke(
+            cli,
+            [
+                "reports",
+                "download-history",
+                "3",
+                "--output",
+                out_file,
+            ],
+        )
+    assert result.exit_code == 0
+    assert "indirildi" in result.output.lower() or out_file in result.output
+    with open(out_file, "rb") as f:
+        assert f.read() == b"PK\x03\x04fake-xlsx"
+    mock_client.download_report_history.assert_called_once_with(3)

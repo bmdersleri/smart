@@ -3,7 +3,7 @@ from __future__ import annotations
 import click
 from scada_reporter_cli.client import ScadaClient
 from scada_reporter_cli.utils.config import get_api_url, get_token
-from scada_reporter_cli.utils.repl_skin import success, error, info, fmt_json
+from scada_reporter_cli.utils.repl_skin import success, error, info, fmt_json, fmt_table
 
 
 @click.group(name="reports")
@@ -83,4 +83,72 @@ def generate(
             for tag_name, rows in data.items():
                 click.echo(info(tag_name))
                 click.echo(f"  {len(rows)} dilim")
+    client.close()
+
+
+@reports_cmd.command(name="list-history")
+@click.option("--json-output", is_flag=True, help="JSON çıktı")
+def list_history(json_output: bool):
+    """Son 10 raporu listele."""
+    client, ok = _get_client()
+    if not ok:
+        return
+    result = client.list_report_history()
+    if (
+        isinstance(result, list)
+        and result
+        and isinstance(result[0], dict)
+        and result[0].get("error")
+    ):
+        click.echo(error(f"Hata: {result[0].get('detail', 'bilinmeyen hata')}"))
+        client.close()
+        return
+    if json_output:
+        click.echo(fmt_json(result))
+    else:
+        if not result:
+            click.echo("(henüz rapor yok)")
+        else:
+            rows = [
+                {
+                    "id": r["id"],
+                    "tarih": r["created_at"][:16].replace("T", " "),
+                    "tag sayısı": len(r.get("tag_ids", [])),
+                    "aralık": r["interval"],
+                    "format": r["format"],
+                }
+                for r in result
+            ]
+            click.echo(
+                fmt_table(rows, ["id", "tarih", "tag sayısı", "aralık", "format"])
+            )
+    client.close()
+
+
+@reports_cmd.command(name="download-history")
+@click.argument("history-id", type=int)
+@click.option(
+    "--output", default=None, help="Çıktı dosyası (varsayılan: sunucudan alınan ad)"
+)
+@click.option("--json-output", is_flag=True, help="JSON meta çıktı")
+def download_history(history_id: int, output: str | None, json_output: bool):
+    """Geçmiş raporu tekrar indir."""
+    client, ok = _get_client()
+    if not ok:
+        return
+    result = client.download_report_history(history_id)
+    if isinstance(result, dict) and result.get("error"):
+        click.echo(error(f"İndirme hatası: {result.get('detail', 'bilinmeyen hata')}"))
+        client.close()
+        return
+    content: bytes = result["content"]
+    filename: str = output or result.get("filename", f"scada_rapor_{history_id}.bin")
+    with open(filename, "wb") as f:
+        f.write(content)
+    if json_output:
+        click.echo(
+            fmt_json({"file": filename, "size": len(content), "history_id": history_id})
+        )
+    else:
+        click.echo(success(f"Rapor indirildi: {filename} ({len(content):,} byte)"))
     client.close()
