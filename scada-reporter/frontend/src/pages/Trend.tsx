@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { getTags, getTrend } from '../api/client'
+import { getTags, getTrend, generateReport } from '../api/client'
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Brush, ResponsiveContainer,
 } from 'recharts'
@@ -35,6 +35,7 @@ export default function Trend() {
   const [hours, setHours] = useState(24)
   const [tagSearch, setTagSearch] = useState('')
   const [toast, setToast] = useState('')
+  const [exporting, setExporting] = useState(false)
   const [presets, setPresets] = useState<Preset[]>(loadPresets)
   const [savingName, setSavingName] = useState<string | null>(null)
   const [brushIndices, setBrushIndices] = useState<[number, number] | null>(null)
@@ -127,6 +128,41 @@ export default function Trend() {
     setBrushIndices([newStart, newEnd])
   }
 
+  const exportReport = async () => {
+    if (!selected.length || exporting) return
+    setExporting(true)
+    try {
+      const now = new Date()
+      const end = now.toISOString()
+      const start = new Date(now.getTime() - hours * 60 * 60 * 1000).toISOString()
+      const res = await generateReport({
+        tag_ids: selected,
+        start,
+        end,
+        interval: 'hourly',
+        format: 'excel',
+      })
+      const blob = new Blob([res.data as unknown as BlobPart], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `trend-rapor-${format(new Date(), 'yyyyMMdd-HHmm')}.xlsx`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      setToast('Excel raporu indirildi')
+      setTimeout(() => setToast(''), 3000)
+    } catch {
+      setToast('Rapor oluşturulamadı')
+      setTimeout(() => setToast(''), 3000)
+    } finally {
+      setExporting(false)
+    }
+  }
+
   const exportPNG = () => {
     const container = chartContainerRef.current
     if (!container) return
@@ -186,6 +222,16 @@ export default function Trend() {
               title="Grafiği PNG olarak indir"
             >
               ↓ PNG
+            </button>
+          )}
+          {selected.length > 0 && (
+            <button
+              onClick={exportReport}
+              disabled={exporting}
+              className="px-3 py-1.5 text-xs rounded-lg bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white disabled:opacity-50 transition-colors"
+              title="Seçili tag'leri Excel raporuna aktar"
+            >
+              {exporting ? '...' : '↓ Excel'}
             </button>
           )}
           {brushIndices !== null && chartData.length > 0 && (
