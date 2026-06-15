@@ -29,12 +29,13 @@ export default function OverviewTab({ active }: { active: boolean }) {
     refetchInterval: 10000,
     enabled: active,
   })
-  const { data: deviceCount } = useQuery({
+  const { data: devices = [] } = useQuery({
     queryKey: ['dashboard-devices'],
-    queryFn: () => getDashboardDevices().then((r) => r.data.length),
+    queryFn: () => getDashboardDevices().then((r) => r.data),
     staleTime: 60000,
     enabled: active,
   })
+  const deviceCount = devices.length || undefined
 
   const plcLabel = health == null ? '...' : `${health.plc_connected ?? 0}/${health.plc_total ?? 0}`
 
