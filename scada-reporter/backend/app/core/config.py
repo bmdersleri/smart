@@ -11,7 +11,9 @@ class Settings(BaseSettings):
     S7_HOST: str = "192.168.112.50"
     S7_RACK: int = 0
     S7_SLOT: int = 1
-    S7_POLL_INTERVAL: int = 5  # saniye
+    S7_POLL_INTERVAL: int = 5  # saniye (poller tick alt sınırı)
+    S7_READ_TIMEOUT: int = 3  # saniye (tag ekleme anlık okuma zaman aşımı)
+    S7_MAX_WORKERS: int = 16  # snap7 executor thread sayısı (çoklu PLC)
 
     # Dahili OPC UA server
     OPCUA_SERVER_PORT: int = 4840

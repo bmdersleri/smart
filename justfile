@@ -1,3 +1,6 @@
+set shell := ["pwsh", "-NoProfile", "-Command"]
+set windows-shell := ["pwsh", "-NoProfile", "-Command"]
+
 venv := "scada-reporter/backend/.venv"
 be := "scada-reporter/backend"
 fe := "scada-reporter/frontend"
@@ -6,7 +9,7 @@ fe := "scada-reporter/frontend"
 
 # Backend + frontend paralel başlat
 dev:
-    just run-backend & just run-frontend
+    Start-Process powershell -ArgumentList "-NoProfile -Command just run-backend"; just run-frontend
 
 # Backend başlat (hot reload)
 run-backend:
@@ -53,9 +56,13 @@ migrate-down:
 migrate-history:
     cd {{be}} && {{venv}}/Scripts/alembic history --verbose
 
-# S7 PLC tag'lerini veritabanına ekle
+# S7 PLC tag'lerini veritabanına ekle (eski demo seti)
 seed-tags:
     cd {{be}} && {{venv}}\Scripts\python app/seed_tags.py
+
+# WinCC export'larından uzun-süre tag kataloğunu yükle (xlsx/ klasöründen)
+seed-catalog *args:
+    cd {{be}} && {{venv}}\Scripts\python -m app.seed_catalog {{args}}
 
 # ── Kalite ───────────────────────────────────────────────────────────────────
 

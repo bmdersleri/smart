@@ -25,6 +25,19 @@ class Tag(Base):
     unit: Mapped[str] = mapped_column(String(50), default="")
     channel: Mapped[str] = mapped_column(String(255), default="")  # OPC UA channel/group
     device: Mapped[str] = mapped_column(String(255), default="")  # PLC adı
+
+    # Çoklu-PLC + mutlak adres (WinCC export'tan)
+    plc_name: Mapped[str] = mapped_column(String(255), default="")  # bağlantı adı (CAMUR_DRYER1)
+    plc_ip: Mapped[str | None] = mapped_column(String(45), nullable=True, index=True)
+    plc_rack: Mapped[int] = mapped_column(Integer, server_default="0", default=0)
+    plc_slot: Mapped[int] = mapped_column(Integer, server_default="1", default=1)
+    # WinCC operand adresi, ör. DB301,DD7890 veya Q254.1
+    s7_address: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    data_type: Mapped[str] = mapped_column(String(32), default="")  # float32 / uint16 / Binary
+    sample_interval: Mapped[int] = mapped_column(Integer, server_default="5", default=5)  # saniye
+    long_term: Mapped[bool] = mapped_column(Boolean, server_default="0", default=False)
+    daily_tracking: Mapped[bool] = mapped_column(Boolean, server_default="0", default=False)
+
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     min_alarm: Mapped[float | None] = mapped_column(Float, nullable=True)
     max_alarm: Mapped[float | None] = mapped_column(Float, nullable=True)

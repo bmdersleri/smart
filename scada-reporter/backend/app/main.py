@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api import advanced_reports, auth, dashboard, explore, query, reports, tags
 from app.collector.opcua_server import opcua_server
 from app.collector.poller import poll_loop
-from app.collector.s7_collector import collector
+from app.collector.s7_collector import plc_manager
 from app.core.config import settings
 from app.core.database import Base, engine
 from app.core.timescaledb import init_timescaledb
@@ -45,14 +45,9 @@ async def lifespan(app: FastAPI):
     await start_scheduler(settings.DATABASE_URL)
     logger.info("APScheduler baslatildi")
 
-    # S7 bağlantısı kur
-    try:
-        await collector.connect()
-        poll_task = asyncio.create_task(poll_loop())
-        logger.info("S7 collector baslatildi")
-    except Exception as e:
-        logger.warning("S7 baglantisi kurulamadi (simulasyon modunda devam): %s", e)
-        poll_task = None
+    # Çoklu-PLC poller (PLC'lere lazy bağlanır, erişilemezse simülasyon modu)
+    poll_task = asyncio.create_task(poll_loop())
+    logger.info("S7 poller baslatildi (coklu PLC, lazy connect)")
 
     # Dahili OPC UA server
     try:
@@ -69,7 +64,7 @@ async def lifespan(app: FastAPI):
     await opcua_server.stop()
     if poll_task:
         poll_task.cancel()
-    await collector.disconnect()
+    await plc_manager.disconnect_all()
 
 
 app = FastAPI(
@@ -98,4 +93,10 @@ app.include_router(advanced_reports.router, prefix="/api")
 
 @app.get("/health")
 async def health():
-    return {"status": "ok", "opc_connected": collector.client is not None}
+    plc_status = plc_manager.status()
+    return {
+        "status": "ok",
+        "plc_connected": sum(1 for v in plc_status.values() if v),
+        "plc_total": len(plc_status),
+        "plcs": plc_status,
+    }
