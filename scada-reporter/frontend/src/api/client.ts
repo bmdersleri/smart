@@ -84,9 +84,12 @@ export interface PlcEntry {
   name: string; ip: string; rack: number; slot: number
   tag_count: number; connected: boolean
 }
+export interface PlcCreate { name: string; ip?: string; rack?: number; slot?: number }
 export interface PlcUpdate { ip: string; rack?: number; slot?: number }
 export const listPlcs = () => api.get<PlcEntry[]>('/plc/')
+export const createPlc = (data: PlcCreate) => api.post<PlcEntry>('/plc/', data)
 export const updatePlc = (name: string, data: PlcUpdate) => api.patch<{ updated: boolean }>(`/plc/${encodeURIComponent(name)}`, data)
+export const deletePlc = (name: string) => api.delete(`/plc/${encodeURIComponent(name)}`)
 
 export const getTrend = (tagIds: number[], hours: number) =>
   api.get<{ tag_id: number; name: string; unit: string; data: { t: string; v: number }[] }[]>(
