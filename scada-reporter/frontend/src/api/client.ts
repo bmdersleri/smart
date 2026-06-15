@@ -52,9 +52,33 @@ export const importTags = (file: File) => {
 }
 
 // Dashboard
-export interface CurrentValue { tag_id: number; name: string; unit: string; device: string; value: number | null; timestamp: string; quality_ok: boolean }
-export const getCurrentValues = () => api.get<CurrentValue[]>('/dashboard/current-values')
+export interface WatchlistItem {
+  tag_id: number; name: string; device: string; unit: string
+  value: number | null; timestamp: string | null; quality_ok: boolean
+}
+
+export interface DashboardTag {
+  tag_id: number; name: string; device: string; unit: string
+  value: number | null; timestamp: string | null; quality_ok: boolean
+}
+
+export interface DashboardTagsParams {
+  device?: string; search?: string; quality?: 'good' | 'bad' | 'stale'
+  daily?: boolean; page?: number; page_size?: number
+}
+
+export interface DashboardTagsResponse {
+  items: DashboardTag[]; total: number; page: number
+  page_size: number; total_pages: number
+}
+
 export const getOverview = () => api.get<{ active_tags: number; last_reading: string | null; readings_24h: number }>('/dashboard/overview')
+export const getDashboardDevices = () => api.get<string[]>('/dashboard/devices')
+export const getWatchlist = () => api.get<WatchlistItem[]>('/dashboard/watchlist')
+export const addWatchlist = (tag_id: number) => api.post(`/dashboard/watchlist/${tag_id}`)
+export const removeWatchlist = (tag_id: number) => api.delete(`/dashboard/watchlist/${tag_id}`)
+export const getDashboardTags = (p: DashboardTagsParams) =>
+  api.get<DashboardTagsResponse>('/dashboard/tags', { params: p })
 export const getTrend = (tagIds: number[], hours: number) =>
   api.get<{ tag_id: number; name: string; unit: string; data: { t: string; v: number }[] }[]>(
     `/dashboard/trend?${tagIds.map((id) => `tag_ids=${id}`).join('&')}&hours=${hours}`

@@ -11,6 +11,7 @@ import app.models.report_template  # noqa: F401
 import app.models.scheduled_report  # noqa: F401
 import app.models.tag  # noqa: F401 — registers Tag + TagReading with Base.metadata
 import app.models.user  # noqa: F401 — registers User with Base.metadata
+import app.models.watchlist  # noqa: F401 — registers Watchlist with Base.metadata
 from alembic import context
 from app.core.config import settings
 from app.core.database import Base
