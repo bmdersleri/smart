@@ -169,9 +169,12 @@ export default function Trend() {
     const container = chartContainerRef.current
     if (!container) return
 
+    const rect = container.getBoundingClientRect()
     toPng(container, {
       backgroundColor: '#111827',
       pixelRatio: 2,
+      width: rect.width,
+      height: rect.height,
     }).then((dataUrl) => {
       const a = document.createElement('a')
       a.download = `trend-${format(new Date(), 'yyyyMMdd-HHmm')}.png`
