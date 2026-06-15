@@ -145,6 +145,10 @@ def update(
             parts.append(f"birim={unit}")
         if device:
             parts.append(f"cihaz={device}")
+        if channel:
+            parts.append(f"kanal={channel}")
+        if description:
+            parts.append(f"açıklama={description}")
         if min_alarm is not None:
             parts.append(f"min_alarm={min_alarm}")
         if max_alarm is not None:

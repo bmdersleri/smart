@@ -232,7 +232,7 @@ def test_tags_update_success():
             ],
         )
     assert result.exit_code == 0
-    assert "güncellendi" in result.output or "1" in result.output
+    assert "Tag 1 güncellendi" in result.output
     mock_client.update_tag.assert_called_once_with(
         1,
         unit="bar",
