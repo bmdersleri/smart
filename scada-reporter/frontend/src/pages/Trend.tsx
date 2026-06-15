@@ -40,6 +40,7 @@ export default function Trend() {
   const [presets, setPresets] = useState<Preset[]>(loadPresets)
   const [savingName, setSavingName] = useState<string | null>(null)
   const [brushIndices, setBrushIndices] = useState<[number, number] | null>(null)
+  const [panelOpen, setPanelOpen] = useState(true)
   const chartContainerRef = useRef<HTMLDivElement>(null)
 
   const { data: tags = [] } = useQuery({
@@ -192,6 +193,13 @@ export default function Trend() {
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-white">Trend Grafik</h1>
         <div className="flex gap-2">
+          <button
+            onClick={() => setPanelOpen((v) => !v)}
+            className="px-2 py-1 text-xs rounded-lg bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors"
+            title={panelOpen ? 'Paneli kapat' : 'Paneli aç'}
+          >
+            {panelOpen ? '⟨ Gizle' : '⟩ Taglar'}
+          </button>
           {HOURS.map(({ v, l }) => (
             <button
               key={v}
@@ -234,9 +242,9 @@ export default function Trend() {
         </div>
       </div>
 
-      <div className="flex gap-4">
+      <div className="flex gap-4 min-h-0">
         {/* Tag selector */}
-        <div className="w-52 bg-gray-900 border border-gray-800 rounded-xl p-3 flex-shrink-0 space-y-2">
+        <div className={`bg-gray-900 border border-gray-800 rounded-xl flex-shrink-0 space-y-2 overflow-hidden transition-all duration-200 ${panelOpen ? 'w-52 p-3' : 'w-0 p-0 border-0'}`}>
           <input
             value={tagSearch}
             onChange={(e) => setTagSearch(e.target.value)}
@@ -349,24 +357,25 @@ export default function Trend() {
         {/* Chart */}
         <div
           ref={chartContainerRef}
-          className="flex-1 bg-gray-900 border border-gray-800 rounded-xl p-4"
+          className="flex-1 bg-gray-900 border border-gray-800 rounded-xl p-4 flex flex-col"
           onWheel={handleWheel}
-          style={{ userSelect: 'none' }}
+          style={{ userSelect: 'none', minHeight: 'calc(100vh - 180px)' }}
         >
           {selected.length === 0 ? (
-            <div className="h-80 flex items-center justify-center text-gray-500 text-sm">
+            <div className="flex-1 flex items-center justify-center text-gray-500 text-sm">
               Sol panelden tag seçin
             </div>
           ) : isLoading ? (
-            <div className="h-80 flex items-center justify-center text-gray-500 text-sm">
+            <div className="flex-1 flex items-center justify-center text-gray-500 text-sm">
               Yükleniyor...
             </div>
           ) : chartData.length === 0 ? (
-            <div className="h-80 flex items-center justify-center text-gray-500 text-sm">
+            <div className="flex-1 flex items-center justify-center text-gray-500 text-sm">
               Bu aralıkta veri yok.
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height={380}>
+            <div className="flex-1 min-h-0">
+            <ResponsiveContainer width="100%" height="100%">
               <LineChart data={chartData} margin={{ top: 4, right: 16, left: axisLeftMargin, bottom: 4 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
                 <XAxis dataKey="t" tick={{ fontSize: 11, fill: '#6b7280' }} interval="preserveStartEnd" />
@@ -434,6 +443,7 @@ export default function Trend() {
                 ))}
               </LineChart>
             </ResponsiveContainer>
+            </div>
           )}
         </div>
       </div>
