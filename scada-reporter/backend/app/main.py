@@ -49,18 +49,22 @@ async def lifespan(app: FastAPI):
     poll_task = asyncio.create_task(poll_loop())
     logger.info("S7 poller baslatildi (coklu PLC, lazy connect)")
 
-    # Dahili OPC UA server
-    try:
-        await opcua_server.start()
-        logger.info("OPC UA server baslatildi")
-    except Exception as e:
-        logger.warning("OPC UA server baslatilamadi: %s", e)
+    # Dahili OPC UA server — arka planda başlat (binlerce tag node'u HTTP'yi bloklamasın)
+    async def _start_opcua() -> None:
+        try:
+            await opcua_server.start()
+            logger.info("OPC UA server baslatildi")
+        except Exception as e:
+            logger.warning("OPC UA server baslatilamadi: %s", e)
+
+    opcua_task = asyncio.create_task(_start_opcua())
 
     yield
 
     sched = get_scheduler()
     if sched:
         sched.shutdown(wait=False)
+    opcua_task.cancel()
     await opcua_server.stop()
     if poll_task:
         poll_task.cancel()

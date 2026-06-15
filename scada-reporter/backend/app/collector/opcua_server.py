@@ -1,10 +1,8 @@
 import asyncio
 import logging
-from datetime import datetime
 
 from asyncua import Server, ua
-from sqlalchemy import select, func
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import func, select
 
 from app.core.config import settings
 from app.core.database import AsyncSessionLocal
@@ -19,6 +17,7 @@ class OpcUaServer:
         self._task: asyncio.Task | None = None
         self._idx: int | None = None
         self._tag_nodes: dict[int, ua.Node] = {}
+        self._device_folders: dict[str, ua.Node] = {}
 
     async def start(self) -> None:
         await self.server.init()
@@ -33,10 +32,12 @@ class OpcUaServer:
             result = await db.execute(select(Tag).where(Tag.is_active))
             tags = result.scalars().all()
 
-            for tag in tags:
+            for n, tag in enumerate(tags):
                 device_folder = await self._ensure_device(tags_folder, tag.device)
                 var = await device_folder.add_variable(
-                    self._idx, tag.name, 0.0,
+                    self._idx,
+                    tag.name,
+                    0.0,
                 )
                 await var.set_writable(False)
                 if tag.unit:
@@ -45,6 +46,9 @@ class OpcUaServer:
                         ua.LocalizedText(f"{tag.name} [{tag.unit}]"),
                     )
                 self._tag_nodes[tag.id] = var
+                # Çok sayıda tag'de event loop'u aç tut (HTTP responsive kalsın)
+                if n % 100 == 0:
+                    await asyncio.sleep(0)
 
         logger.info(
             "OPC UA server baslatildi: opc.tcp://0.0.0.0:%d | %d tag yayinda",
@@ -54,15 +58,17 @@ class OpcUaServer:
         self._task = asyncio.create_task(self._update_loop())
 
     async def _ensure_device(
-        self, parent: ua.Node, device: str,
+        self,
+        parent: ua.Node,
+        device: str,
     ) -> ua.Node:
-        # Find or create device folder
-        children = await parent.get_children()
-        for child in children:
-            name = await child.read_browse_name()
-            if name.Name == device:
-                return child
-        return await parent.add_object(self._idx, device)
+        # Cihaz klasörünü cache'le (get_children() O(n^2) taramasını önle)
+        key = device or "—"
+        node = self._device_folders.get(key)
+        if node is None:
+            node = await parent.add_object(self._idx, key)
+            self._device_folders[key] = node
+        return node
 
     async def _update_loop(self) -> None:
         while True:
@@ -77,8 +83,7 @@ class OpcUaServer:
                         .subquery()
                     )
                     result = await db.execute(
-                        select(TagReading)
-                        .join(
+                        select(TagReading).join(
                             subq,
                             (TagReading.tag_id == subq.c.tag_id)
                             & (TagReading.timestamp == subq.c.max_ts),
@@ -88,9 +93,9 @@ class OpcUaServer:
 
                 for reading in latest_readings:
                     node = self._tag_nodes.get(reading.tag_id)
-                    if node is not None:
+                    if node is not None and reading.value is not None:
                         await node.write_value(
-                            ua.Variant(reading.value, ua.VariantType.Float),
+                            ua.Variant(float(reading.value), ua.VariantType.Double),
                         )
             except Exception as e:
                 logger.error("OPC UA guncelleme hatasi: %s", e)

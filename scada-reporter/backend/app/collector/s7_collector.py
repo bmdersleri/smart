@@ -19,7 +19,7 @@ from datetime import UTC, datetime
 
 import snap7
 from snap7.type import Areas
-from snap7.util import get_bool, get_dint, get_int, get_real, get_word
+from snap7.util import get_bool, get_byte, get_dint, get_int, get_real, get_word
 
 from app.core.config import settings
 
@@ -38,6 +38,7 @@ _OPERAND_SIZES = {
     "DBW": 2,  # DB word
     "DBB": 1,  # DB byte
     "DBX": 1,  # DB bit
+    "D": 1,  # DB bit (WinCC kısa form: DBxxx,D<byte>.<bit>)
     # legacy (eski seed formatı, geri uyum)
     "REAL": 4,
     "DINT": 4,
@@ -64,6 +65,11 @@ _DTYPE_MAP = {
     "BINARY": ("BOOL", 1),
     "BINARY TAG": ("BOOL", 1),
     "BOOL": ("BOOL", 1),
+    "BYTE": ("BYTE", 1),
+    "SINT": ("BYTE", 1),
+    "USINT": ("BYTE", 1),
+    "SIGNED 8-BIT VALUE": ("BYTE", 1),
+    "UNSIGNED 8-BIT VALUE": ("BYTE", 1),
 }
 
 _DB_RE = re.compile(r"^DB(\d+),([A-Z]+)(\d+)(?:\.(\d+))?$")
@@ -92,8 +98,8 @@ def _decoder_for(operand: str, data_type: str | None) -> tuple[str, int]:
     if operand in ("DW", "DBW", "WORD"):
         return "WORD", 2
     if operand == "DBB":
-        return "INT", 1
-    if operand in ("DBX", "BOOL"):
+        return "BYTE", 1
+    if operand in ("DBX", "BOOL", "D"):
         return "BOOL", 1
     if operand in ("REAL", "INT", "DINT"):
         return operand, _OPERAND_SIZES[operand]
@@ -133,6 +139,8 @@ def _decode(spec: ReadSpec, data: bytearray) -> float | None:
         return float(get_dint(data, 0))
     if spec.decoder == "WORD":
         return float(get_word(data, 0))
+    if spec.decoder == "BYTE":
+        return float(get_byte(data, 0))
     if spec.decoder == "BOOL":
         return float(get_bool(data, 0, spec.bit))
     return None
@@ -207,8 +215,19 @@ class PLCConnection:
                         )
                     results.append((_decode(spec, data), GOOD))
                 except Exception as e:
-                    logger.warning("Okuma hatasi %s @%s: %s", self.ip, spec, e)
-                    # bağlantı koptu sayılır -> kalan tümünü BAD yap
+                    # Bağlantı hâlâ ayakta mı? Ayakta ise bu tek tag'in veri hatası
+                    # (adres yok / geçersiz) -> sadece bu tag'i BAD yap, devam et.
+                    still_up = False
+                    try:
+                        still_up = bool(client.get_connected())
+                    except Exception:
+                        still_up = False
+                    if still_up:
+                        logger.warning("Tag okuma hatasi %s @%s: %s", self.ip, spec, e)
+                        results.append((None, BAD))
+                        continue
+                    # gerçek bağlantı kopması -> kalan tümünü BAD yap, yeniden bağlan
+                    logger.warning("PLC baglanti koptu %s @%s: %s", self.ip, spec, e)
                     self._connected = False
                     self._client = None
                     results.extend([(None, BAD)] * (len(specs) - i))
