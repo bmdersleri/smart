@@ -13,6 +13,13 @@ const HOURS = [
   { v: 24, l: 'Son 24 saat' },
   { v: 168, l: 'Son 7 gün' },
 ]
+const PRESET_KEY = 'trend_presets'
+
+interface Preset { name: string; tag_ids: number[]; hours: number }
+
+function loadPresets(): Preset[] {
+  try { return JSON.parse(localStorage.getItem(PRESET_KEY) ?? '[]') } catch { return [] }
+}
 
 function Toast({ message, onClose }: { message: string; onClose: () => void }) {
   return (
@@ -28,6 +35,8 @@ export default function Trend() {
   const [hours, setHours] = useState(24)
   const [tagSearch, setTagSearch] = useState('')
   const [toast, setToast] = useState('')
+  const [presets, setPresets] = useState<Preset[]>(loadPresets)
+  const [savingName, setSavingName] = useState<string | null>(null)
 
   const { data: tags = [] } = useQuery({
     queryKey: ['tags'],
@@ -49,7 +58,6 @@ export default function Trend() {
       )
     : tags
 
-  // Determine Y-axis assignment by unit
   const selectedUnits: string[] = []
   const unitToAxis: Record<string, 'left' | 'right'> = {}
   series.forEach((s) => {
@@ -61,7 +69,7 @@ export default function Trend() {
         unitToAxis[s.unit] = 'right'
         selectedUnits.push(s.unit)
       } else if (!selectedUnits.includes(s.unit)) {
-        unitToAxis[s.unit] = 'left' // fallback (shouldn't reach — blocked in toggle)
+        unitToAxis[s.unit] = 'left'
       }
     }
   })
@@ -87,7 +95,31 @@ export default function Trend() {
     setSelected((s) => [...s, id])
   }
 
-  // Merge all series into flat timeline for Recharts
+  const savePreset = () => {
+    const name = (savingName ?? '').trim()
+    if (!name) return
+    const updated = [
+      { name, tag_ids: selected, hours },
+      ...presets.filter((p) => p.name !== name),
+    ]
+    localStorage.setItem(PRESET_KEY, JSON.stringify(updated))
+    setPresets(updated)
+    setSavingName(null)
+    setToast(`"${name}" kaydedildi`)
+    setTimeout(() => setToast(''), 3000)
+  }
+
+  const loadPreset = (p: Preset) => {
+    setSelected(p.tag_ids.filter((id) => tags.some((t) => t.id === id)))
+    setHours(p.hours)
+  }
+
+  const deletePreset = (name: string) => {
+    const updated = presets.filter((p) => p.name !== name)
+    localStorage.setItem(PRESET_KEY, JSON.stringify(updated))
+    setPresets(updated)
+  }
+
   const timeline: Record<string, Record<string, number | string>> = {}
   series.forEach((s) => {
     s.data.forEach(({ t, v }) => {
@@ -130,6 +162,80 @@ export default function Trend() {
             placeholder="Ara..."
             className="w-full bg-gray-800 border border-gray-700 rounded-lg px-2 py-1.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-blue-500"
           />
+
+          {/* Save / clear actions */}
+          {selected.length > 0 && savingName === null && (
+            <div className="flex gap-1.5">
+              <button
+                onClick={() => setSavingName('')}
+                className="flex-1 px-2 py-1 text-xs bg-blue-700/40 hover:bg-blue-700/60 text-blue-300 rounded-lg transition-colors"
+              >
+                Kaydet
+              </button>
+              <button
+                onClick={() => setSelected([])}
+                className="flex-1 px-2 py-1 text-xs bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-red-400 rounded-lg transition-colors"
+              >
+                Tümünü Kaldır
+              </button>
+            </div>
+          )}
+
+          {/* Save name input */}
+          {savingName !== null && (
+            <div className="space-y-1">
+              <input
+                autoFocus
+                value={savingName}
+                onChange={(e) => setSavingName(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') savePreset(); if (e.key === 'Escape') setSavingName(null) }}
+                placeholder="Seçim adı..."
+                className="w-full bg-gray-800 border border-blue-600 rounded-lg px-2 py-1.5 text-xs text-white placeholder-gray-600 focus:outline-none"
+              />
+              <div className="flex gap-1">
+                <button
+                  onClick={savePreset}
+                  disabled={!savingName.trim()}
+                  className="flex-1 px-2 py-1 text-xs bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white rounded-lg transition-colors"
+                >
+                  Kaydet
+                </button>
+                <button
+                  onClick={() => setSavingName(null)}
+                  className="px-2 py-1 text-xs bg-gray-800 hover:bg-gray-700 text-gray-400 rounded-lg transition-colors"
+                >
+                  İptal
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Saved presets */}
+          {presets.length > 0 && (
+            <div className="space-y-1">
+              <p className="text-xs text-gray-500 uppercase tracking-wide px-1">Kayıtlı</p>
+              {presets.map((p) => (
+                <div key={p.name} className="flex items-center gap-1 group">
+                  <button
+                    onClick={() => loadPreset(p)}
+                    className="flex-1 text-left px-2 py-1 rounded-lg text-xs text-gray-300 hover:bg-gray-800 hover:text-white transition-colors truncate"
+                    title={`${p.tag_ids.length} tag · ${HOURS.find((h) => h.v === p.hours)?.l ?? p.hours + 'h'}`}
+                  >
+                    {p.name}
+                  </button>
+                  <button
+                    onClick={() => deletePreset(p.name)}
+                    className="opacity-0 group-hover:opacity-100 text-gray-600 hover:text-red-400 text-xs transition-all px-1"
+                    title="Sil"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+              <div className="border-t border-gray-800 pt-1" />
+            </div>
+          )}
+
           <p className="text-xs text-gray-500 uppercase tracking-wide px-1">Tag Seç</p>
           <div className="space-y-1">
             {filteredTags.length === 0 && (
