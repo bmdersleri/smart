@@ -1,44 +1,82 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { getTags, createTag, deleteTag, updateTag } from '../api/client'
+import { getTags, createTag, deleteTag, updateTag, importTags } from '../api/client'
 import type { Tag } from '../api/client'
 import { useAuth } from '../context/AuthContext'
 
 function AddTagModal({ onClose }: { onClose: () => void }) {
   const qc = useQueryClient()
-  const [form, setForm] = useState({ node_id: '', name: '', unit: '', device: '', channel: '', description: '' })
+  const [form, setForm] = useState({
+    name: '', plc_name: '', plc_ip: '', s7_address: '', data_type: 'float32',
+    unit: '', sample_interval: '5',
+  })
   const mut = useMutation({
     mutationFn: createTag,
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['tags'] }); onClose() },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['tags'] }) },
   })
-  const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement>) => setForm((f) => ({ ...f, [k]: e.target.value }))
+  const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
+    setForm((f) => ({ ...f, [k]: e.target.value }))
+
+  const submit = () => mut.mutate({
+    name: form.name, plc_name: form.plc_name, plc_ip: form.plc_ip || null,
+    s7_address: form.s7_address || null, data_type: form.data_type, unit: form.unit,
+    device: form.plc_name, sample_interval: parseInt(form.sample_interval) || 5, long_term: true,
+  })
+
+  const inputCls = 'w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-500'
+  const result = mut.data?.data
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
       <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-lg p-6 space-y-4">
         <h2 className="text-lg font-semibold text-white">Yeni Tag Ekle</h2>
         {[
-          { k: 'node_id', label: 'S7 Adresi', ph: 'DB1,REAL0' },
           { k: 'name', label: 'Tag Adı', ph: 'Hat Debisi' },
+          { k: 'plc_name', label: 'PLC Adı', ph: 'PLC4' },
+          { k: 'plc_ip', label: 'PLC IP', ph: '192.168.115.2' },
+          { k: 's7_address', label: 'S7 Adresi (WinCC)', ph: 'DB301,DD7890' },
           { k: 'unit', label: 'Birim', ph: 'm³/h' },
-          { k: 'device', label: 'Cihaz (PLC)', ph: 'PLC_1500' },
-          { k: 'channel', label: 'Kanal', ph: 'Channel1' },
+          { k: 'sample_interval', label: 'Kayıt Aralığı (sn)', ph: '5' },
         ].map(({ k, label, ph }) => (
           <div key={k}>
             <label className="text-xs text-gray-400 mb-1 block">{label}</label>
-            <input
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-500"
-              value={(form as Record<string, string>)[k]} onChange={set(k)} placeholder={ph}
-            />
+            <input className={inputCls} value={(form as Record<string, string>)[k]} onChange={set(k)} placeholder={ph} />
           </div>
         ))}
+        <div>
+          <label className="text-xs text-gray-400 mb-1 block">Veri Tipi</label>
+          <select className={inputCls} value={form.data_type} onChange={set('data_type')}>
+            <option value="float32">float32 (REAL)</option>
+            <option value="float64">float64 (REAL)</option>
+            <option value="uint16">uint16 (WORD)</option>
+            <option value="int16">int16 (INT)</option>
+            <option value="Binary">Binary (BOOL)</option>
+          </select>
+        </div>
+
+        {result && (
+          <div className="bg-gray-800/60 border border-gray-700 rounded-lg p-3 text-sm">
+            <p className="text-gray-300">Anlık değer:
+              <span className="text-white font-mono ml-1">{result.current_value ?? '—'}</span>
+              {result.unit ? ` ${result.unit}` : ''}
+            </p>
+            <p className="text-xs mt-1">
+              Kalite: <span className={result.quality === 192 ? 'text-green-400' : 'text-yellow-400'}>
+                {result.quality === 192 ? 'Good' : 'PLC erişilemedi / —'}
+              </span>
+            </p>
+          </div>
+        )}
+
         <div className="flex gap-3 pt-2">
-          <button onClick={onClose} className="flex-1 py-2 rounded-lg border border-gray-700 text-gray-300 hover:bg-gray-800 text-sm transition-colors">İptal</button>
+          <button onClick={onClose} className="flex-1 py-2 rounded-lg border border-gray-700 text-gray-300 hover:bg-gray-800 text-sm transition-colors">
+            {result ? 'Kapat' : 'İptal'}
+          </button>
           <button
-            onClick={() => mut.mutate(form)} disabled={!form.node_id || !form.name || mut.isPending}
+            onClick={submit} disabled={!form.name || !form.s7_address || mut.isPending}
             className="flex-1 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-medium transition-colors"
           >
-            {mut.isPending ? 'Ekleniyor...' : 'Ekle'}
+            {mut.isPending ? 'Ekleniyor...' : result ? 'Tekrar Ekle' : 'Ekle'}
           </button>
         </div>
         {mut.isError && <p className="text-red-400 text-sm">Hata oluştu.</p>}
@@ -83,8 +121,10 @@ function EditTagModal({ tag, onClose }: { tag: Tag; onClose: () => void }) {
         </div>
 
         <div>
-          <label className="text-xs text-gray-400 mb-1 block">S7 Adresi (değiştirilemez)</label>
-          <div className="bg-gray-800/50 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-500 font-mono">{tag.node_id}</div>
+          <label className="text-xs text-gray-400 mb-1 block">S7 Adresi / PLC (değiştirilemez)</label>
+          <div className="bg-gray-800/50 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-500 font-mono">
+            {tag.s7_address ?? tag.node_id}{tag.plc_ip ? ` @ ${tag.plc_ip}` : ''}
+          </div>
         </div>
 
         {[
@@ -126,13 +166,73 @@ function EditTagModal({ tag, onClose }: { tag: Tag; onClose: () => void }) {
   )
 }
 
+function ImportTagModal({ onClose }: { onClose: () => void }) {
+  const qc = useQueryClient()
+  const fileRef = useRef<HTMLInputElement>(null)
+  const [file, setFile] = useState<File | null>(null)
+  const mut = useMutation({
+    mutationFn: importTags,
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['tags'] }); onClose() },
+  })
+
+  return (
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+      <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-lg p-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-white">WinCC Tag Import</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-white">✕</button>
+        </div>
+        <p className="text-gray-400 text-sm">
+          WinCC <code className="text-blue-400">full_export.xlsx</code> dosyasını seçin (Connections + Tags sayfaları).
+          PLC IP'leri çözülür, mutlak adres + tip ile tag'ler eklenir.
+          <br />Uzun-süre (archive) katalogu için sunucuda <code className="text-blue-400">just seed-catalog</code> kullanın.
+        </p>
+        <input
+          ref={fileRef}
+          type="file"
+          accept=".xlsx,.xls"
+          className="hidden"
+          onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+        />
+        <button
+          onClick={() => fileRef.current?.click()}
+          className="w-full py-10 border-2 border-dashed border-gray-700 rounded-xl text-gray-500 hover:border-blue-500 hover:text-blue-400 transition-colors text-sm"
+        >
+          {file ? file.name : 'Dosya seçmek için tıklayın'}
+        </button>
+
+        {mut.isSuccess && (
+          <div className="bg-green-900/30 border border-green-700 rounded-lg p-3 text-sm text-green-400">
+            <p><strong>{mut.data.data.imported}</strong> tag içe aktarıldı.</p>
+            {mut.data.data.skipped > 0 && <p><strong>{mut.data.data.skipped}</strong> tag atlandı (zaten mevcut).</p>}
+          </div>
+        )}
+        {mut.isError && (
+          <p className="text-red-400 text-sm">Import hatası: {(mut.error as any)?.response?.data?.detail || 'Bilinmeyen hata'}</p>
+        )}
+
+        <div className="flex gap-3 pt-2">
+          <button onClick={onClose} className="flex-1 py-2 rounded-lg border border-gray-700 text-gray-300 hover:bg-gray-800 text-sm transition-colors">İptal</button>
+          <button
+            onClick={() => file && mut.mutate(file)}
+            disabled={!file || mut.isPending}
+            className="flex-1 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-medium transition-colors"
+          >
+            {mut.isPending ? 'Import ediliyor...' : 'Import Et'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function FormatGuideModal({ onClose }: { onClose: () => void }) {
   const examples = [
-    { addr: 'DB1,REAL0', desc: 'DB1, REAL (32-bit float), offset 0' },
-    { addr: 'DB2,INT4', desc: 'DB2, INT (16-bit signed), offset 4' },
-    { addr: 'DB3,DINT8', desc: 'DB3, DINT (32-bit signed), offset 8' },
-    { addr: 'DB4,WORD6', desc: 'DB4, WORD (16-bit unsigned), offset 6' },
-    { addr: 'DB5,BOOL10.3', desc: 'DB5, BOOL, byte 10, bit 3' },
+    { addr: 'DB301,DD7890', desc: 'WinCC: DB301, double word (REAL), offset 7890' },
+    { addr: 'DB310,DBW90', desc: 'WinCC: DB310, word (uint16), offset 90' },
+    { addr: 'Q254.1', desc: 'WinCC: çıkış biti (BOOL), byte 254, bit 1' },
+    { addr: 'DB1,REAL0', desc: 'Legacy: DB1, REAL (32-bit float), offset 0' },
+    { addr: 'DB5,BOOL10.3', desc: 'Legacy: DB5, BOOL, byte 10, bit 3' },
   ]
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
@@ -150,7 +250,7 @@ function FormatGuideModal({ onClose }: { onClose: () => void }) {
             </div>
           ))}
         </div>
-        <p className="text-gray-600 text-xs">Desteklenen tipler: REAL · INT · DINT · WORD · BOOL</p>
+        <p className="text-gray-600 text-xs">Operandlar: DD/DBD (4B) · DBW/DW (2B) · DBB · DBX/BOOL · Q/I (proses imaj biti)</p>
         <button onClick={onClose} className="w-full py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium transition-colors">Tamam</button>
       </div>
     </div>
@@ -161,6 +261,7 @@ export default function Tags() {
   const { user } = useAuth()
   const qc = useQueryClient()
   const [showAdd, setShowAdd] = useState(false)
+  const [showImport, setShowImport] = useState(false)
   const [showFormat, setShowFormat] = useState(false)
   const [editTag, setEditTag] = useState<Tag | null>(null)
   const [search, setSearch] = useState('')
@@ -196,6 +297,9 @@ export default function Tags() {
         <h1 className="text-xl font-bold text-white">Tag Yönetimi</h1>
         {canEdit && (
           <div className="flex gap-2">
+            <button onClick={() => setShowImport(true)} className="px-3 py-2 text-sm bg-green-800 hover:bg-green-700 text-green-300 rounded-lg border border-green-700 transition-colors">
+              📥 Import
+            </button>
             <button onClick={() => setShowFormat(true)} className="px-3 py-2 text-sm bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg border border-gray-700 transition-colors">
               Format
             </button>
@@ -224,7 +328,7 @@ export default function Tags() {
           <table className="w-full">
             <thead className="border-b border-gray-800">
               <tr className="text-xs text-gray-500 uppercase tracking-wide">
-                {['Cihaz', 'Tag Adı', 'Node ID', 'Birim', 'Alarm', 'Durum', ''].map((h) => (
+                {['PLC', 'Tag Adı', 'PLC IP', 'S7 Adresi', 'Aralık', 'Birim', 'Alarm', 'Durum', ''].map((h) => (
                   <th key={h} className="px-4 py-3 text-left">{h}</th>
                 ))}
               </tr>
@@ -232,9 +336,15 @@ export default function Tags() {
             <tbody>
               {filtered.map((t: Tag) => (
                 <tr key={t.id} className="border-t border-gray-800 hover:bg-gray-800/40">
-                  <td className="px-4 py-3 text-sm text-gray-400">{t.device}</td>
-                  <td className="px-4 py-3 text-sm font-medium text-white">{t.name}</td>
-                  <td className="px-4 py-3 text-xs font-mono text-gray-500">{t.node_id}</td>
+                  <td className="px-4 py-3 text-sm text-gray-400">{t.plc_name || t.device}</td>
+                  <td className="px-4 py-3 text-sm font-medium text-white">
+                    {t.name}
+                    {t.long_term && <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-blue-900/50 text-blue-300">uzun-süre</span>}
+                    {t.daily_tracking && <span className="ml-1 text-[10px] px-1.5 py-0.5 rounded bg-purple-900/50 text-purple-300">günlük</span>}
+                  </td>
+                  <td className="px-4 py-3 text-xs font-mono text-gray-500">{t.plc_ip ?? '—'}</td>
+                  <td className="px-4 py-3 text-xs font-mono text-gray-500">{t.s7_address ?? '—'}</td>
+                  <td className="px-4 py-3 text-sm text-gray-400">{t.sample_interval}s</td>
                   <td className="px-4 py-3 text-sm text-gray-300">{t.unit}</td>
                   <td className="px-4 py-3 text-sm text-gray-400">{alarmLabel(t)}</td>
                   <td className="px-4 py-3">
@@ -258,6 +368,7 @@ export default function Tags() {
       </div>
 
       {showAdd && <AddTagModal onClose={() => setShowAdd(false)} />}
+      {showImport && <ImportTagModal onClose={() => setShowImport(false)} />}
       {showFormat && <FormatGuideModal onClose={() => setShowFormat(false)} />}
       {editTag && <EditTagModal tag={editTag} onClose={() => setEditTag(null)} />}
     </div>

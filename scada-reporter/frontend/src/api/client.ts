@@ -26,10 +26,22 @@ export const login = (username: string, password: string) =>
 export const getMe = () => api.get<{ id: number; username: string; role: string; full_name: string }>('/auth/me')
 
 // Tags
-export interface Tag { id: number; node_id: string; name: string; unit: string; device: string; channel: string; is_active: boolean; min_alarm: number | null; max_alarm: number | null }
+export interface Tag {
+  id: number; node_id: string; name: string; unit: string; device: string; channel: string
+  is_active: boolean; min_alarm: number | null; max_alarm: number | null
+  plc_name: string; plc_ip: string | null; s7_address: string | null; data_type: string
+  sample_interval: number; long_term: boolean; daily_tracking: boolean
+  // tag ekleme yanıtında dolu gelir
+  current_value?: number | null; quality?: number | null; read_at?: string | null
+}
+export interface TagCreate {
+  node_id?: string; name: string; unit?: string; description?: string; channel?: string; device?: string
+  plc_name?: string; plc_ip?: string | null; plc_rack?: number; plc_slot?: number
+  s7_address?: string | null; data_type?: string; sample_interval?: number; long_term?: boolean
+}
 export interface TagUpdate { name?: string; unit?: string; device?: string; channel?: string; description?: string; min_alarm?: number | null; max_alarm?: number | null }
 export const getTags = () => api.get<Tag[]>('/tags/')
-export const createTag = (data: Omit<Tag, 'id' | 'is_active'>) => api.post<Tag>('/tags/', data)
+export const createTag = (data: TagCreate) => api.post<Tag>('/tags/', data)
 export const updateTag = (id: number, data: TagUpdate) => api.patch<Tag>(`/tags/${id}`, data)
 export const deleteTag = (id: number) => api.delete(`/tags/${id}`)
 export const browseOpcTags = () => api.get<{ tags: { node_id: string; name: string; depth: number }[]; count: number }>('/tags/browse')

@@ -1,24 +1,34 @@
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile
 from pydantic import BaseModel
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.auth import get_current_user, require_role
+from app.collector.s7_collector import read_tag_now
 from app.core.database import get_db
+from app.import_catalog import build_full_catalog
 from app.models.tag import Tag, TagReading
 
 router = APIRouter(prefix="/tags", tags=["tags"])
 
 
 class TagCreate(BaseModel):
-    node_id: str
+    node_id: str = ""
     name: str
     description: str = ""
     unit: str = ""
     channel: str = ""
     device: str = ""
+    plc_name: str = ""
+    plc_ip: str | None = None
+    plc_rack: int = 0
+    plc_slot: int = 1
+    s7_address: str | None = None
+    data_type: str = ""
+    sample_interval: int = 5
+    long_term: bool = False
 
 
 class TagUpdate(BaseModel):
@@ -39,9 +49,20 @@ class TagResponse(BaseModel):
     unit: str
     channel: str
     device: str
+    plc_name: str
+    plc_ip: str | None
+    s7_address: str | None
+    data_type: str
+    sample_interval: int
+    long_term: bool
+    daily_tracking: bool
     is_active: bool
     min_alarm: float | None
     max_alarm: float | None
+    # tag ekleme anında doldurulan anlık okuma (DB kolonu değil)
+    current_value: float | None = None
+    quality: int | None = None
+    read_at: datetime | None = None
 
     model_config = {"from_attributes": True}
 
@@ -50,6 +71,53 @@ class TagResponse(BaseModel):
 async def browse_tags(_=Depends(get_current_user)):
     """snap7 ile otomatik tag kesfi desteklenmez — bos liste doner."""
     return {"tags": [], "count": 0}
+
+
+@router.post("/import")
+async def import_tags(
+    file: UploadFile,
+    db: AsyncSession = Depends(get_db),
+    _=Depends(require_role("admin", "operator")),
+):
+    """WinCC full_export.xlsx yükle: Connection->IP çözülür, mutlak adres + tip ile
+    tag'ler eklenir. Uzun-süre (archive) katalogu için `just seed-catalog` kullanın.
+    """
+    if not file.filename or not file.filename.endswith((".xlsx", ".xls")):
+        raise HTTPException(
+            status_code=400, detail="Lutfen gecerli bir Excel dosyasi yukleyin (.xlsx)"
+        )
+
+    content = await file.read()
+    try:
+        result = build_full_catalog(content)
+    except (KeyError, ValueError) as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Excel cozumlenemedi (full_export formati bekleniyor): {e}",
+        ) from e
+
+    existing = await db.execute(select(Tag.node_id))
+    existing_ids = {r[0] for r in existing.all()}
+
+    imported = 0
+    skipped = result.skipped
+    for t in result.tags:
+        if t["node_id"] in existing_ids:
+            skipped += 1
+            continue
+        db.add(Tag(**t))
+        existing_ids.add(t["node_id"])
+        imported += 1
+
+    if imported:
+        await db.commit()
+
+    return {
+        "imported": imported,
+        "skipped": skipped,
+        "total": imported + skipped,
+        "errors": [],
+    }
 
 
 @router.get("/", response_model=list[TagResponse])
@@ -64,11 +132,29 @@ async def create_tag(
     db: AsyncSession = Depends(get_db),
     _=Depends(require_role("admin", "operator")),
 ):
-    tag = Tag(**data.model_dump())
+    payload = data.model_dump()
+    # node_id verilmemişse türet (benzersizlik için)
+    if not payload.get("node_id"):
+        suffix = payload["s7_address"] or payload["name"]
+        payload["node_id"] = f"{payload['plc_name'] or 'tag'}:{suffix}"
+    tag = Tag(**payload)
     db.add(tag)
     await db.commit()
     await db.refresh(tag)
-    return tag
+
+    # Yeni tag'in değerini hemen PLC'den oku (zaman aşımı/offline -> None)
+    value, quality, read_at = await read_tag_now(
+        tag.s7_address, tag.data_type, tag.plc_ip, tag.plc_rack, tag.plc_slot, tag.plc_name
+    )
+    if quality == 192 and value is not None:
+        db.add(TagReading(tag_id=tag.id, value=value, quality=quality, timestamp=read_at))
+        await db.commit()
+
+    resp = TagResponse.model_validate(tag)
+    resp.current_value = value
+    resp.quality = quality
+    resp.read_at = read_at
+    return resp
 
 
 @router.delete("/{tag_id}", status_code=204)
