@@ -41,36 +41,79 @@ def overview(json_output: bool):
     client.close()
 
 
+_ALARM_LABELS = {"overflow": "OVERFLOW", "max": "MAX AŞIMI", "min": "MIN ALTI"}
+
+
 @dashboard_cmd.command(name="current-values")
 @click.option("--json-output", is_flag=True, help="JSON çıktı")
-def current_values(json_output: bool):
+@click.option(
+    "--alarm-only", is_flag=True, help="Sadece alarm durumundaki tag'leri göster"
+)
+@click.option(
+    "--watch",
+    "watch_interval",
+    type=int,
+    default=0,
+    metavar="SANIYE",
+    help="Her N saniyede bir yenile (0=devre dışı). Ctrl+C ile çık.",
+)
+def current_values(json_output: bool, alarm_only: bool, watch_interval: int):
     """Tüm tag'lerin son değerlerini göster."""
-    client, ok = _get_client()
-    if not ok:
-        return
-    result = client.current_values()
-    if isinstance(result, list) and result and "error" in result[0]:
-        click.echo(error(f"Hata: {result[0].get('detail', 'bilinmeyen hata')}"))
-    elif json_output:
-        click.echo(fmt_json(result))
-    else:
+    import time
+    from datetime import datetime
+
+    def _render() -> bool:
+        client, ok = _get_client()
+        if not ok:
+            return False
+        result = client.current_values()
+        client.close()
+        if isinstance(result, list) and result and "error" in result[0]:
+            click.echo(error(f"Hata: {result[0].get('detail', 'bilinmeyen hata')}"))
+            return False
+        if alarm_only:
+            result = [r for r in result if r.get("alarm_state") is not None]
+        if json_output:
+            click.echo(fmt_json(result))
+            return True
         if not result:
-            click.echo("(veri yok)")
-        else:
-            rows = [
-                {
-                    "device": r["device"],
-                    "name": r["name"],
-                    "value": r["value"],
-                    "unit": r["unit"],
-                    "quality_ok": "✓" if r["quality_ok"] else "✗",
-                }
-                for r in result
-            ]
-            click.echo(
-                fmt_table(rows, ["device", "name", "value", "unit", "quality_ok"])
-            )
-    client.close()
+            click.echo("(alarm yok)" if alarm_only else "(veri yok)")
+            return True
+        rows = [
+            {
+                "cihaz": r["device"],
+                "tag": r["name"],
+                "değer": r["value"],
+                "birim": r["unit"],
+                "kalite": "✓" if r["quality_ok"] else "✗",
+                "alarm": _ALARM_LABELS.get(r.get("alarm_state", ""), "—")
+                if r.get("alarm_state")
+                else "—",
+            }
+            for r in result
+        ]
+        click.echo(
+            fmt_table(rows, ["cihaz", "tag", "değer", "birim", "kalite", "alarm"])
+        )
+        alarm_count = sum(1 for r in result if r.get("alarm_state"))
+        if alarm_count:
+            click.echo(f"\n⚠  {alarm_count} alarm aktif")
+        return True
+
+    if watch_interval > 0:
+        try:
+            while True:
+                click.clear()
+                click.echo(
+                    f"[{datetime.now().strftime('%H:%M:%S')}] Yenileniyor (Ctrl+C ile çık)\n"
+                )
+                if not _render():
+                    break
+                time.sleep(watch_interval)
+        except KeyboardInterrupt:
+            click.echo(info("\nDurduruldu."))
+    else:
+        _render()
 
 
 @dashboard_cmd.command()

@@ -303,3 +303,92 @@ def test_tags_update_json_output():
     data = json.loads(result.output)
     assert data["id"] == 2
     assert data["unit"] == "m3/h"
+
+
+_SAMPLE_VALUES = [
+    {
+        "tag_id": 1,
+        "name": "Hat1_Debi",
+        "device": "Hat1",
+        "unit": "m3/h",
+        "value": 3500.0,
+        "timestamp": "2026-06-15T22:00:00",
+        "quality_ok": True,
+        "alarm_state": "max",
+    },
+    {
+        "tag_id": 2,
+        "name": "Havuz_Seviye",
+        "device": "Havuz",
+        "unit": "mm",
+        "value": 1027604480.0,
+        "timestamp": "2026-06-15T22:00:00",
+        "quality_ok": False,
+        "alarm_state": "overflow",
+    },
+    {
+        "tag_id": 3,
+        "name": "Hat2_Debi",
+        "device": "Hat2",
+        "unit": "m3/h",
+        "value": 1200.0,
+        "timestamp": "2026-06-15T22:00:00",
+        "quality_ok": True,
+        "alarm_state": None,
+    },
+]
+
+
+def test_current_values_shows_alarm_column():
+    """current-values table includes alarm_state column."""
+    mock_client = MagicMock()
+    mock_client.current_values.return_value = _SAMPLE_VALUES
+    with (
+        patch("scada_reporter_cli.commands.dashboard.get_token", return_value="tok"),
+        patch(
+            "scada_reporter_cli.commands.dashboard.ScadaClient",
+            return_value=mock_client,
+        ),
+    ):
+        result = runner.invoke(cli, ["dashboard", "current-values"])
+    assert result.exit_code == 0
+    assert "alarm" in result.output.lower()
+    assert "MAX" in result.output or "OVERFLOW" in result.output
+
+
+def test_current_values_alarm_only_filter():
+    """--alarm-only shows only rows with alarm_state != None."""
+    mock_client = MagicMock()
+    mock_client.current_values.return_value = _SAMPLE_VALUES
+    with (
+        patch("scada_reporter_cli.commands.dashboard.get_token", return_value="tok"),
+        patch(
+            "scada_reporter_cli.commands.dashboard.ScadaClient",
+            return_value=mock_client,
+        ),
+    ):
+        result = runner.invoke(cli, ["dashboard", "current-values", "--alarm-only"])
+    assert result.exit_code == 0
+    assert "Hat2_Debi" not in result.output  # no alarm, should be filtered out
+    assert "Hat1_Debi" in result.output or "Havuz_Seviye" in result.output
+
+
+def test_current_values_json_includes_alarm_state():
+    """--json-output includes alarm_state field."""
+    import json
+
+    mock_client = MagicMock()
+    mock_client.current_values.return_value = _SAMPLE_VALUES
+    with (
+        patch("scada_reporter_cli.commands.dashboard.get_token", return_value="tok"),
+        patch(
+            "scada_reporter_cli.commands.dashboard.ScadaClient",
+            return_value=mock_client,
+        ),
+    ):
+        result = runner.invoke(cli, ["dashboard", "current-values", "--json-output"])
+    assert result.exit_code == 0
+    data = json.loads(result.output)
+    assert any("alarm_state" in item for item in data)
+    overflow_items = [i for i in data if i["alarm_state"] == "overflow"]
+    assert len(overflow_items) == 1
