@@ -7,14 +7,16 @@ import sentry_sdk
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import auth, dashboard, explore, query, reports, tags
+from app.api import advanced_reports, auth, dashboard, explore, query, reports, tags
 from app.collector.opcua_server import opcua_server
 from app.collector.poller import poll_loop
 from app.collector.s7_collector import collector
 from app.core.config import settings
 from app.core.database import Base, engine
 from app.core.timescaledb import init_timescaledb
+from app.models import report_archive, report_template, scheduled_report  # noqa: F401
 from app.models.report_history import ReportHistory as _ReportHistory  # noqa: F401
+from app.services.scheduler import get_scheduler, start_scheduler
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 logger = logging.getLogger(__name__)
@@ -40,6 +42,9 @@ async def lifespan(app: FastAPI):
         await init_timescaledb(conn)
     logger.info("Veritabani tablolari hazir")
 
+    await start_scheduler(settings.DATABASE_URL)
+    logger.info("APScheduler baslatildi")
+
     # S7 bağlantısı kur
     try:
         await collector.connect()
@@ -58,6 +63,9 @@ async def lifespan(app: FastAPI):
 
     yield
 
+    sched = get_scheduler()
+    if sched:
+        sched.shutdown(wait=False)
     await opcua_server.stop()
     if poll_task:
         poll_task.cancel()
@@ -85,6 +93,7 @@ app.include_router(dashboard.router, prefix="/api")
 app.include_router(reports.router, prefix="/api")
 app.include_router(query.router, prefix="/api")
 app.include_router(explore.router, prefix="/api")
+app.include_router(advanced_reports.router, prefix="/api")
 
 
 @app.get("/health")

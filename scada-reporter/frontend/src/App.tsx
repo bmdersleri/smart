@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard'
 import Tags from './pages/Tags'
 import Trend from './pages/Trend'
 import Reports from './pages/Reports'
+import AdvancedReports from './pages/AdvancedReports'
 import './index.css'
 
 const qc = new QueryClient({ defaultOptions: { queries: { staleTime: 10000, retry: 1 } } })
@@ -29,6 +30,7 @@ export default function App() {
               <Route path="tags" element={<Tags />} />
               <Route path="trend" element={<Trend />} />
               <Route path="reports" element={<Reports />} />
+              <Route path="advanced-reports" element={<AdvancedReports />} />
             </Route>
           </Routes>
         </BrowserRouter>

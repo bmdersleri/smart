@@ -33,6 +33,11 @@ export const createTag = (data: Omit<Tag, 'id' | 'is_active'>) => api.post<Tag>(
 export const updateTag = (id: number, data: TagUpdate) => api.patch<Tag>(`/tags/${id}`, data)
 export const deleteTag = (id: number) => api.delete(`/tags/${id}`)
 export const browseOpcTags = () => api.get<{ tags: { node_id: string; name: string; depth: number }[]; count: number }>('/tags/browse')
+export const importTags = (file: File) => {
+  const fd = new FormData()
+  fd.append('file', file)
+  return api.post<{ imported: number; skipped: number; total: number; errors: string[] }>('/tags/import', fd)
+}
 
 // Dashboard
 export interface CurrentValue { tag_id: number; name: string; unit: string; device: string; value: number | null; timestamp: string; quality_ok: boolean; alarm_state: 'overflow' | 'min' | 'max' | null }
@@ -50,3 +55,59 @@ export const generateReport = (data: { tag_ids: number[]; start: string; end: st
 export interface ReportHistoryEntry { id: number; created_at: string; tag_ids: number[]; start: string; end: string; interval: string; format: string }
 export const getReportHistory = () => api.get<ReportHistoryEntry[]>('/reports/history')
 export const downloadHistoryReport = (id: number) => api.get(`/reports/history/${id}/download`, { responseType: 'blob' })
+
+// Advanced Reports
+export interface ReportTemplate {
+  id: number; name: string; description: string; tag_ids: number[]
+  time_range_type: string; custom_start: string | null; custom_end: string | null
+  interval: string; output_format: string
+  include_std_dev: boolean; include_percentiles: boolean; percentile_levels: number[]
+  include_trend_line: boolean; anomaly_enabled: boolean; anomaly_zscore_threshold: number
+  show_summary_stats: boolean; show_trend_charts: boolean; show_anomaly_table: boolean; show_raw_data: boolean
+  created_at: string; updated_at: string
+}
+export interface TemplateCreate {
+  name: string; description?: string; tag_ids: number[]
+  time_range_type?: string; custom_start?: string | null; custom_end?: string | null
+  interval?: string; output_format?: string
+  include_std_dev?: boolean; include_percentiles?: boolean; percentile_levels?: number[]
+  include_trend_line?: boolean; anomaly_enabled?: boolean; anomaly_zscore_threshold?: number
+  show_summary_stats?: boolean; show_trend_charts?: boolean; show_anomaly_table?: boolean; show_raw_data?: boolean
+}
+export interface ScheduledReport {
+  id: number; template_id: number; name: string; schedule_type: string
+  cron_hour: number | null; cron_minute: number | null; cron_day_of_week: string | null; cron_day_of_month: number | null
+  interval_hours: number | null; apscheduler_job_id: string | null
+  is_active: boolean; last_run_at: string | null; last_run_status: string | null
+  last_run_error: string | null; next_run_at: string | null; created_at: string
+}
+export interface ScheduledCreate {
+  template_id: number; name: string; schedule_type: string
+  cron_hour?: number | null; cron_minute?: number | null; cron_day_of_week?: string | null
+  cron_day_of_month?: number | null; interval_hours?: number | null
+}
+export interface ArchiveEntry {
+  id: number; template_id: number | null; scheduled_report_id: number | null
+  status: string; trigger: string; created_at: string; started_at: string | null; completed_at: string | null
+  error_message: string | null; tag_ids: number[]; start: string; end: string
+  interval: string; output_format: string; file_path: string | null; file_size_bytes: number | null
+}
+export interface PaginatedArchive { items: ArchiveEntry[]; total: number; page: number; page_size: number; total_pages: number }
+
+export const listTemplates = () => api.get<ReportTemplate[]>('/advanced-reports/templates')
+export const createTemplate = (d: TemplateCreate) => api.post<ReportTemplate>('/advanced-reports/templates', d)
+export const updateTemplate = (id: number, d: TemplateCreate) => api.put<ReportTemplate>(`/advanced-reports/templates/${id}`, d)
+export const deleteTemplate = (id: number) => api.delete(`/advanced-reports/templates/${id}`)
+export const runTemplate = (id: number, opts?: { start?: string; end?: string }) =>
+  api.post<ArchiveEntry>(`/advanced-reports/templates/${id}/run`, opts ?? {})
+
+export const listScheduled = () => api.get<ScheduledReport[]>('/advanced-reports/scheduled')
+export const createScheduled = (d: ScheduledCreate) => api.post<ScheduledReport>('/advanced-reports/scheduled', d)
+export const updateScheduled = (id: number, d: ScheduledCreate) => api.put<ScheduledReport>(`/advanced-reports/scheduled/${id}`, d)
+export const toggleScheduled = (id: number) => api.patch<ScheduledReport>(`/advanced-reports/scheduled/${id}/toggle`)
+export const deleteScheduled = (id: number) => api.delete(`/advanced-reports/scheduled/${id}`)
+
+export const getArchive = (params: { page?: number; page_size?: number; template_id?: number; status?: string; date_from?: string; date_to?: string }) =>
+  api.get<PaginatedArchive>('/advanced-reports/archive', { params })
+export const getArchiveEntry = (id: number) => api.get<ArchiveEntry>(`/advanced-reports/archive/${id}`)
+export const downloadArchiveReport = (id: number) => api.get(`/advanced-reports/archive/${id}/download`, { responseType: 'blob' })

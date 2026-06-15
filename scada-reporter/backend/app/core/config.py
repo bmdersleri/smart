@@ -4,9 +4,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-    DATABASE_URL: str = (
-        "postgresql+asyncpg://scada:scada123@localhost:5432/scada_reporter"
-    )
+    DATABASE_URL: str = "postgresql+asyncpg://scada:scada123@localhost:5432/scada_reporter"
     SECRET_KEY: str = "dev-secret-key-change-in-production"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 480
 
@@ -23,6 +21,9 @@ class Settings(BaseSettings):
     REDIS_URL: str = "redis://localhost:6379/0"
 
     SENTRY_DSN: str = ""
+
+    FACILITY_NAME: str = "Su/Atıksu Tesisi"
+    REPORT_ARCHIVE_KEEP_DAYS: int = 365
 
 
 settings = Settings()

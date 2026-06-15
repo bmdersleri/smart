@@ -5,7 +5,10 @@ from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
+import app.models.report_archive  # noqa: F401
 import app.models.report_history  # noqa: F401 — registers ReportHistory with Base.metadata
+import app.models.report_template  # noqa: F401
+import app.models.scheduled_report  # noqa: F401
 import app.models.tag  # noqa: F401 — registers Tag + TagReading with Base.metadata
 import app.models.user  # noqa: F401 — registers User with Base.metadata
 from alembic import context

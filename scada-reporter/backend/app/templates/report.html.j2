@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>{{ template.name }} — Rapor</title>
+<style>
+@page {
+    margin: 2cm;
+    @bottom-center {
+        content: "Sayfa " counter(page) " / " counter(pages);
+        font-size: 9pt;
+        color: #6b7280;
+    }
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 10pt;
+    color: #111827;
+    background: #ffffff;
+}
+.report-header {
+    border-bottom: 2px solid #1f2937;
+    padding-bottom: 12px;
+    margin-bottom: 20px;
+}
+.report-header h1 { font-size: 18pt; color: #1f2937; }
+.report-header .meta { font-size: 8pt; color: #6b7280; margin-top: 4px; }
+h2 { font-size: 12pt; color: #1f2937; margin: 16px 0 8px; border-bottom: 1px solid #e5e7eb; padding-bottom: 4px; }
+h3 { font-size: 10pt; color: #374151; margin: 12px 0 6px; }
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 12px;
+    font-size: 9pt;
+}
+th {
+    background: #1f2937;
+    color: #ffffff;
+    padding: 5px 8px;
+    text-align: left;
+    font-weight: bold;
+}
+td {
+    padding: 4px 8px;
+    border-bottom: 1px solid #e5e7eb;
+    color: #374151;
+}
+tr:nth-child(even) td { background: #f9fafb; }
+.tag-section {
+    page-break-inside: avoid;
+    margin-bottom: 24px;
+    border: 1px solid #e5e7eb;
+    border-radius: 4px;
+    padding: 12px;
+}
+.chart-img { width: 100%; max-width: 680px; height: auto; margin: 8px 0; display: block; }
+.severity-critical { color: #dc2626; font-weight: bold; }
+.severity-warning { color: #d97706; }
+.badge {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 8pt;
+    font-weight: bold;
+}
+.badge-critical { background: #fee2e2; color: #991b1b; }
+.badge-warning  { background: #fef3c7; color: #92400e; }
+.summary-box {
+    background: #f3f4f6;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    padding: 12px;
+    margin-bottom: 16px;
+    page-break-inside: avoid;
+}
+.kv-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.kv-item label { font-size: 8pt; color: #6b7280; display: block; }
+.kv-item span { font-size: 10pt; font-weight: 600; color: #111827; }
+</style>
+</head>
+<body>
+
+<div class="report-header">
+    <h1>{{ facility_name }}</h1>
+    <div class="meta">
+        <strong>{{ template.name }}</strong>
+        &nbsp;|&nbsp;
+        Dönem: {{ archive.start.strftime("%d.%m.%Y %H:%M") }} – {{ archive.end.strftime("%d.%m.%Y %H:%M") }}
+        &nbsp;|&nbsp;
+        Oluşturulma: {{ generated_at.strftime("%d.%m.%Y %H:%M:%S") }}
+        &nbsp;|&nbsp;
+        Format: {{ template.interval | capitalize }}
+    </div>
+</div>
+
+{% if template.show_summary_stats %}
+<h2>Özet İstatistikler</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Tag</th><th>Birim</th><th>Ort</th><th>Std</th>
+            <th>Min</th><th>Max</th><th>Erişim %</th><th>Trend</th><th>Anomali</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for td in per_tag_data %}
+    <tr>
+        <td>{{ td.tag.name }}</td>
+        <td>{{ td.tag.unit or "" }}</td>
+        <td>{{ "%.3f"|format(td.stats.avg) if td.stats.avg is not none else "—" }}</td>
+        <td>{{ "%.3f"|format(td.stats.std_dev) if td.stats.std_dev is not none else "—" }}</td>
+        <td>{{ "%.3f"|format(td.stats.min) if td.stats.min is not none else "—" }}</td>
+        <td>{{ "%.3f"|format(td.stats.max) if td.stats.max is not none else "—" }}</td>
+        <td>{{ "%.1f"|format(td.stats.availability_pct) }}%</td>
+        <td>{{ td.stats.trend_direction }}</td>
+        <td>{{ td.anomalies|length }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+
+{% for td in per_tag_data %}
+<div class="tag-section">
+    <h2>{{ td.tag.name }} {% if td.tag.unit %}({{ td.tag.unit }}){% endif %}</h2>
+
+    {% if template.show_summary_stats %}
+    <div class="kv-grid" style="margin-bottom:10px">
+        <div class="kv-item"><label>Ortalama</label><span>{{ "%.3f"|format(td.stats.avg) if td.stats.avg is not none else "—" }}</span></div>
+        <div class="kv-item"><label>Std Sapma</label><span>{{ "%.3f"|format(td.stats.std_dev) if td.stats.std_dev is not none else "—" }}</span></div>
+        <div class="kv-item"><label>Min / Max</label><span>{{ "%.3f"|format(td.stats.min) if td.stats.min is not none else "—" }} / {{ "%.3f"|format(td.stats.max) if td.stats.max is not none else "—" }}</span></div>
+        <div class="kv-item"><label>Erişilebilirlik</label><span>{{ "%.1f"|format(td.stats.availability_pct) }}%</span></div>
+        <div class="kv-item"><label>Trend</label><span>{{ td.stats.trend_direction }}{% if td.stats.trend_slope is not none %} ({{ "%.4f"|format(td.stats.trend_slope) }}/h){% endif %}</span></div>
+        <div class="kv-item"><label>Boşluk</label><span>{{ td.stats.gap_count }} ({{ "%.0f"|format(td.stats.gap_total_seconds) }}s)</span></div>
+    </div>
+    {% endif %}
+
+    {% if template.show_trend_charts and td.chart_b64 %}
+    <img class="chart-img" src="data:image/png;base64,{{ td.chart_b64 }}" alt="{{ td.tag.name }} grafiği">
+    {% endif %}
+
+    {% if template.show_anomaly_table and td.anomalies %}
+    <h3>Anomaliler ({{ td.anomalies|length }})</h3>
+    <table>
+        <thead>
+            <tr><th>Zaman</th><th>Değer</th><th>Tür</th><th>Şiddet</th><th>Detay</th></tr>
+        </thead>
+        <tbody>
+        {% for ev in td.anomalies %}
+        <tr>
+            <td>{{ ev.timestamp.strftime("%d.%m.%Y %H:%M:%S") }}</td>
+            <td>{{ "%.3f"|format(ev.value) if ev.value is not none else "—" }}</td>
+            <td>{{ ev.anomaly_type }}</td>
+            <td><span class="badge badge-{{ ev.severity }}">{{ ev.severity }}</span></td>
+            <td>{{ ev.details }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+
+    {% if td.period_rows %}
+    <h3>Dönem Özeti</h3>
+    <table>
+        <thead>
+            <tr><th>Dönem</th><th>Ortalama</th><th>Min</th><th>Max</th><th>Sayı</th></tr>
+        </thead>
+        <tbody>
+        {% for pr in td.period_rows %}
+        <tr>
+            <td>{{ pr.period }}</td>
+            <td>{{ "%.3f"|format(pr.mean) }}</td>
+            <td>{{ "%.3f"|format(pr.min) }}</td>
+            <td>{{ "%.3f"|format(pr.max) }}</td>
+            <td>{{ pr.count }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+</div>
+{% endfor %}
+
+{% set all_anomalies = [] %}
+{% for td in per_tag_data %}
+  {% for ev in td.anomalies %}
+    {% set _ = all_anomalies.append({"tag": td.tag.name, "ev": ev}) %}
+  {% endfor %}
+{% endfor %}
+
+{% if all_anomalies %}
+<div class="summary-box" style="page-break-before: auto;">
+    <h2>Sistem Sağlık Özeti</h2>
+    <div class="kv-grid" style="margin-bottom:12px">
+        <div class="kv-item">
+            <label>Toplam Anomali</label>
+            <span>{{ all_anomalies|length }}</span>
+        </div>
+        <div class="kv-item">
+            <label>Ortalama Erişilebilirlik</label>
+            <span>{{ "%.1f"|format(per_tag_data|map(attribute='stats')|map(attribute='availability_pct')|list|sum / per_tag_data|length) }}%</span>
+        </div>
+        <div class="kv-item">
+            <label>Tag Sayısı</label>
+            <span>{{ per_tag_data|length }}</span>
+        </div>
+    </div>
+
+    {% set top_anomalies = all_anomalies[:10] %}
+    {% if top_anomalies %}
+    <h3>İlk 10 Anomali</h3>
+    <table>
+        <thead>
+            <tr><th>Tag</th><th>Zaman</th><th>Tür</th><th>Şiddet</th><th>Detay</th></tr>
+        </thead>
+        <tbody>
+        {% for item in top_anomalies %}
+        <tr>
+            <td>{{ item.tag }}</td>
+            <td>{{ item.ev.timestamp.strftime("%d.%m.%Y %H:%M:%S") }}</td>
+            <td>{{ item.ev.anomaly_type }}</td>
+            <td><span class="badge badge-{{ item.ev.severity }}">{{ item.ev.severity }}</span></td>
+            <td>{{ item.ev.details }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+</div>
+{% endif %}
+
+</body>
+</html>
