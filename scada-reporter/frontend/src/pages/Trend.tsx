@@ -127,6 +127,39 @@ export default function Trend() {
     setBrushIndices([newStart, newEnd])
   }
 
+  const exportPNG = () => {
+    const container = chartContainerRef.current
+    if (!container) return
+    const svg = container.querySelector('svg')
+    if (!svg) return
+
+    const { width, height } = svg.getBoundingClientRect()
+    const scale = 2  // retina
+    const canvas = document.createElement('canvas')
+    canvas.width = width * scale
+    canvas.height = height * scale
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    ctx.scale(scale, scale)
+    ctx.fillStyle = '#111827'
+    ctx.fillRect(0, 0, width, height)
+
+    const svgStr = new XMLSerializer().serializeToString(svg)
+    const svgBlob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' })
+    const url = URL.createObjectURL(svgBlob)
+    const img = new Image()
+    img.onload = () => {
+      ctx.drawImage(img, 0, 0, width, height)
+      URL.revokeObjectURL(url)
+      const a = document.createElement('a')
+      a.download = `trend-${format(new Date(), 'yyyyMMdd-HHmm')}.png`
+      a.href = canvas.toDataURL('image/png')
+      a.click()
+    }
+    img.src = url
+  }
+
   return (
     <div className="p-6 space-y-4">
       <div className="flex items-center justify-between">
@@ -143,6 +176,15 @@ export default function Trend() {
               {l}
             </button>
           ))}
+          {selected.length > 0 && (
+            <button
+              onClick={exportPNG}
+              className="px-3 py-1.5 text-xs rounded-lg bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors"
+              title="Grafiği PNG olarak indir"
+            >
+              ↓ PNG
+            </button>
+          )}
           {brushIndices !== null && chartData.length > 0 && (
             <button
               onClick={() => setBrushIndices(null)}
