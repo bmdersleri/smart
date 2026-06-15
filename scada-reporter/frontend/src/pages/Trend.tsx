@@ -22,6 +22,21 @@ function loadPresets(): Preset[] {
   try { return JSON.parse(localStorage.getItem(PRESET_KEY) ?? '[]') } catch { return [] }
 }
 
+function ChartCursor({ x, y, height }: { x?: number; y?: number; width?: number; height?: number }) {
+  if (x == null || y == null || height == null) return null
+  return (
+    <line
+      x1={x}
+      y1={y}
+      x2={x}
+      y2={y + height}
+      stroke="#f59e0b"
+      strokeWidth={1}
+      strokeDasharray="4 2"
+    />
+  )
+}
+
 function Toast({ message, onClose }: { message: string; onClose: () => void }) {
   return (
     <div className="fixed bottom-4 right-4 bg-gray-800 border border-gray-600 text-gray-200 text-sm px-4 py-3 rounded-xl shadow-xl z-50 flex items-center gap-3">
@@ -44,6 +59,7 @@ export default function Trend() {
   const chartContainerRef = useRef<HTMLDivElement>(null)
   const brushIndicesRef = useRef<[number, number] | null>(null)
   const chartDataRef = useRef<typeof chartData>([])
+  const [activePayload, setActivePayload] = useState<Array<{ name: string; value: number; color: string; unit: string }>>([])
 
   const { data: tags = [] } = useQuery({
     queryKey: ['tags'],
@@ -198,6 +214,17 @@ export default function Trend() {
     }).catch((err) => {
       console.error('PNG export failed:', err)
     })
+  }
+
+  const handleTooltipContent = (props: { active?: boolean; payload?: Array<{ name: string; value: number; color: string }> }) => {
+    if (props.active && props.payload && props.payload.length) {
+      const mapped = props.payload.map((p) => {
+        const s = series.find((x) => x.name === p.name)
+        return { name: p.name, value: Number(p.value), color: p.color, unit: s?.unit ?? '' }
+      })
+      setActivePayload(mapped)
+    }
+    return null
   }
 
   return (
@@ -413,13 +440,8 @@ export default function Trend() {
                   )
                 })}
                 <Tooltip
-                  contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #1f2937', borderRadius: 8 }}
-                  labelStyle={{ color: '#e5e7eb', fontSize: 12 }}
-                  itemStyle={{ fontSize: 12 }}
-                  formatter={(value, name) => {
-                    const s = series.find((x) => x.name === name)
-                    return [`${value} ${s?.unit ?? ''}`, name]
-                  }}
+                  cursor={<ChartCursor />}
+                  content={handleTooltipContent as never}
                 />
                 <Legend wrapperStyle={{ fontSize: 12, color: '#9ca3af' }} />
                 <Brush
@@ -454,6 +476,33 @@ export default function Trend() {
                 ))}
               </LineChart>
             </ResponsiveContainer>
+            {activePayload.length > 0 && (
+              <div className="mt-2 border-t border-gray-700 pt-2">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="text-gray-500">
+                      <th className="text-left pb-1 font-normal">Tag</th>
+                      <th className="text-right pb-1 font-normal pr-4">Değer</th>
+                      <th className="text-left pb-1 font-normal">Birim</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {activePayload.map((row) => (
+                      <tr key={row.name}>
+                        <td className="py-0.5">
+                          <span className="flex items-center gap-1.5">
+                            <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: row.color }} />
+                            <span className="truncate max-w-[200px]" style={{ color: row.color }}>{row.name}</span>
+                          </span>
+                        </td>
+                        <td className="py-0.5 text-right pr-4 font-mono text-white">{row.value.toFixed(2)}</td>
+                        <td className="py-0.5 text-gray-400">{row.unit}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
             </div>
           )}
         </div>
