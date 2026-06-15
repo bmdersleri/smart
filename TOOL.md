@@ -69,16 +69,25 @@
 ## Project CLI (`scada`)
 | Command | Description |
 |---------|-------------|
-| `scada auth login` | JWT login |
-| `scada tags list` | List tags |
-| `scada tags readings` | Tag readings |
-| `scada dashboard overview` | System overview |
-| `scada dashboard current-values` | Live values |
-| `scada query run <sql>` | Read-only SQL execution |
-| `scada explore schema` | DB schema discovery |
-| `scada explore tags` | Tag catalog (hierarchy/unit/range) |
+| `scada auth login <username>` | JWT login |
+| `scada auth register <username> <email>` | Create user account |
+| `scada tags list [--json-output]` | List all tags |
+| `scada tags create --node-id <id> --name <name>` | Create tag from PLC |
+| `scada tags update <id> [--unit] [--device] [--channel]` | Update tag (unit, device, alarm thresholds) |
+| `scada tags delete <id>` | Delete tag |
+| `scada tags readings <id> [--start] [--end] [--limit]` | Tag readings with time range |
+| `scada dashboard overview [--json-output]` | System overview |
+| `scada dashboard current-values [--alarm-only] [--watch N]` | Live values with alarm filtering and auto-refresh |
+| `scada dashboard trend <tag_id>... [--hours N]` | Trend visualization (48h default) |
+| `scada reports generate --tag-ids 1,2,3 --start <iso> --end <iso>` | Generate Excel/JSON report |
+| `scada reports list-history [--json-output]` | List last 10 saved reports |
+| `scada reports download-history <id> [--output FILE]` | Re-download cached report |
+| `scada query run "SELECT ..." [--limit N]` | Read-only SQL execution |
+| `scada explore schema [--json-output]` | DB schema discovery |
+| `scada explore tags [--json-output]` | Tag catalog grouped by device with alarm thresholds |
+| `scada explore summary [--json-output]` | System summary (tag count, PLC status, DB size) |
 | `scada shell` | Python REPL with data context |
-| `scada health` | Backend health check |
+| `scada health [--json-output]` | Backend health check |
 
 ## Python Packages (scada-reporter venv — Python 3.14)
 | Package | Version | Purpose |
