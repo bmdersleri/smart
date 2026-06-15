@@ -33,10 +33,10 @@ function HistoryRow({ entry }: { entry: ReportHistoryEntry }) {
     }
   }
 
-  const dateStr = format(parseISO(entry.created_at), 'dd.MM.yyyy HH:mm', { locale: tr })
+  const dateStr = format(parseISO(entry.created_at + 'Z'), 'dd.MM.yyyy HH:mm', { locale: tr })
   const tagCount = entry.tag_ids.length
-  const rangeStart = format(parseISO(entry.start), 'dd.MM', { locale: tr })
-  const rangeEnd = format(parseISO(entry.end), 'dd.MM', { locale: tr })
+  const rangeStart = format(parseISO(entry.start + 'Z'), 'dd.MM', { locale: tr })
+  const rangeEnd = format(parseISO(entry.end + 'Z'), 'dd.MM', { locale: tr })
 
   return (
     <div className="flex items-center justify-between py-2.5 border-t border-gray-800">

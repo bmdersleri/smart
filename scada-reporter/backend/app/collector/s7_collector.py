@@ -1,7 +1,7 @@
 import asyncio
 import logging
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime
+from datetime import UTC, datetime
 
 import snap7
 from snap7.util import get_bool, get_dint, get_int, get_real, get_word
@@ -88,14 +88,14 @@ class S7Collector:
 
     async def read_tag(self, address: str) -> tuple[float | None, int, datetime]:
         if not self.client:
-            return None, 0, datetime.utcnow()
+            return None, 0, datetime.now(UTC)
         loop = asyncio.get_event_loop()
         try:
             value = await loop.run_in_executor(_executor, _read_sync, self.client, address)
-            return value, 192, datetime.utcnow()
+            return value, 192, datetime.now(UTC)
         except Exception as e:
             logger.warning("Tag okuma hatasi %s: %s", address, e)
-            return None, 0, datetime.utcnow()
+            return None, 0, datetime.now(UTC)
 
     async def read_tags_bulk(self, addresses: list[str]) -> list[tuple]:
         results = []

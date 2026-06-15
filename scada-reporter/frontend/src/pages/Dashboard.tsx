@@ -41,7 +41,7 @@ function valueColor(alarmState: CurrentValue['alarm_state']): string {
 }
 
 function TagRow({ tv, rowRef }: { tv: CurrentValue; rowRef?: (el: HTMLTableRowElement | null) => void }) {
-  const ts = tv.timestamp ? format(parseISO(tv.timestamp), 'HH:mm:ss', { locale: tr }) : '—'
+  const ts = tv.timestamp ? format(parseISO(tv.timestamp + 'Z'), 'HH:mm:ss', { locale: tr }) : '—'
   return (
     <tr ref={rowRef} className={rowStyle(tv.alarm_state)} data-tag-id={tv.tag_id}>
       <td className="px-4 py-3 text-sm text-gray-300">{tv.device}</td>
@@ -143,8 +143,8 @@ export default function Dashboard() {
         <StatCard label="Son 24 Saat Okuma" value={overview?.readings_24h?.toLocaleString('tr') ?? '—'} />
         <StatCard
           label="Son Veri"
-          value={overview?.last_reading ? format(parseISO(overview.last_reading), 'HH:mm:ss') : '—'}
-          sub={overview?.last_reading ? format(parseISO(overview.last_reading), 'dd MMM yyyy', { locale: tr }) : undefined}
+          value={overview?.last_reading ? format(parseISO(overview.last_reading + 'Z'), 'HH:mm:ss') : '—'}
+          sub={overview?.last_reading ? format(parseISO(overview.last_reading + 'Z'), 'dd MMM yyyy', { locale: tr }) : undefined}
         />
         <StatCard
           label="PLC Bağlantı"

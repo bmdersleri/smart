@@ -91,7 +91,7 @@ export default function Trend() {
   const timeline: Record<string, Record<string, number | string>> = {}
   series.forEach((s) => {
     s.data.forEach(({ t, v }) => {
-      const key = format(parseISO(t), 'dd.MM HH:mm')
+      const key = format(parseISO(t + 'Z'), 'dd.MM HH:mm')
       timeline[key] ??= { t: key }
       timeline[key][s.name] = v
     })
