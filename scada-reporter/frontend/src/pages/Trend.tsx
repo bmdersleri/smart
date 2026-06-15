@@ -1,12 +1,12 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getTags, getTrend } from '../api/client'
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Brush, ResponsiveContainer,
 } from 'recharts'
 import { format, parseISO } from 'date-fns'
 
-const COLORS = ['#60a5fa', '#34d399', '#f59e0b', '#f87171', '#a78bfa', '#fb923c']
+const COLORS = ['#f87171', '#34d399', '#facc15', '#60a5fa', '#a78bfa', '#fb923c', '#f472b6', '#38bdf8']
 const HOURS = [
   { v: 1, l: 'Son 1 saat' },
   { v: 6, l: 'Son 6 saat' },
@@ -37,6 +37,8 @@ export default function Trend() {
   const [toast, setToast] = useState('')
   const [presets, setPresets] = useState<Preset[]>(loadPresets)
   const [savingName, setSavingName] = useState<string | null>(null)
+  const [brushIndices, setBrushIndices] = useState<[number, number] | null>(null)
+  const chartContainerRef = useRef<HTMLDivElement>(null)
 
   const { data: tags = [] } = useQuery({
     queryKey: ['tags'],
@@ -58,41 +60,12 @@ export default function Trend() {
       )
     : tags
 
-  const selectedUnits: string[] = []
-  const unitToAxis: Record<string, 'left' | 'right'> = {}
-  series.forEach((s) => {
-    if (!unitToAxis[s.unit]) {
-      if (selectedUnits.length === 0) {
-        unitToAxis[s.unit] = 'left'
-        selectedUnits.push(s.unit)
-      } else if (selectedUnits.length === 1 && !selectedUnits.includes(s.unit)) {
-        unitToAxis[s.unit] = 'right'
-        selectedUnits.push(s.unit)
-      } else if (!selectedUnits.includes(s.unit)) {
-        unitToAxis[s.unit] = 'left'
-      }
-    }
-  })
-
-  const leftUnit = selectedUnits[0] ?? ''
-  const rightUnit = selectedUnits[1] ?? ''
-
   const toggle = (id: number) => {
     if (selected.includes(id)) {
       setSelected((s) => s.filter((x) => x !== id))
-      return
+    } else {
+      setSelected((s) => [...s, id])
     }
-    const tag = tags.find((t) => t.id === id)
-    if (!tag) return
-    const existingUnits = [...new Set(
-      tags.filter((t) => selected.includes(t.id)).map((t) => t.unit)
-    )]
-    if (!existingUnits.includes(tag.unit) && existingUnits.length >= 2) {
-      setToast('Maksimum 2 farklı birim. Önce mevcut bir birimi kaldır.')
-      setTimeout(() => setToast(''), 4000)
-      return
-    }
-    setSelected((s) => [...s, id])
   }
 
   const savePreset = () => {
@@ -132,7 +105,27 @@ export default function Trend() {
     String(a.t).localeCompare(String(b.t))
   )
 
-  const hasRightAxis = selectedUnits.length === 2
+  // Reset brush when selection or time range changes
+  useEffect(() => {
+    setBrushIndices(null)
+  }, [selected, hours])
+
+  const axisLeftMargin = Math.max(55, series.length * 52)
+
+  const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    if (chartData.length < 2) return
+    const len = chartData.length
+    const [s, en] = brushIndices ?? [0, len - 1]
+    const windowSize = en - s
+    const zoomDir = e.deltaY > 0 ? 1 : -1  // >0 = zoom out, <0 = zoom in
+    const step = Math.max(1, Math.round(windowSize * 0.15))
+    const newWindow = Math.max(2, Math.min(len - 1, windowSize + zoomDir * step * 2))
+    const center = Math.round((s + en) / 2)
+    const newStart = Math.max(0, center - Math.floor(newWindow / 2))
+    const newEnd = Math.min(len - 1, newStart + newWindow)
+    setBrushIndices([newStart, newEnd])
+  }
 
   return (
     <div className="p-6 space-y-4">
@@ -150,6 +143,15 @@ export default function Trend() {
               {l}
             </button>
           ))}
+          {brushIndices !== null && chartData.length > 0 && (
+            <button
+              onClick={() => setBrushIndices(null)}
+              className="px-3 py-1.5 text-xs rounded-lg bg-gray-700 text-gray-300 hover:bg-gray-600 transition-colors"
+              title="Zoom sıfırla"
+            >
+              ↺ Sıfırla
+            </button>
+          )}
         </div>
       </div>
 
@@ -242,20 +244,21 @@ export default function Trend() {
               <p className="text-gray-500 text-xs px-1">Eşleşme yok.</p>
             )}
             {filteredTags.map((t) => {
-              const colorIdx = tags.findIndex((x) => x.id === t.id)
+              const selIdx = selected.indexOf(t.id)
+              const color = selIdx >= 0 ? COLORS[selIdx % COLORS.length] : '#6b7280'
               return (
                 <button
                   key={t.id}
                   onClick={() => toggle(t.id)}
                   className={`w-full text-left px-2 py-1.5 rounded-lg text-sm transition-colors flex items-center gap-2 ${
-                    selected.includes(t.id)
-                      ? 'bg-blue-600/20 text-blue-300'
+                    selIdx >= 0
+                      ? 'bg-gray-800/60 text-white'
                       : 'text-gray-400 hover:bg-gray-800 hover:text-white'
                   }`}
                 >
                   <span
-                    className="w-2 h-2 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: COLORS[colorIdx % COLORS.length] }}
+                    className="w-2 h-2 rounded-full flex-shrink-0 transition-colors"
+                    style={{ backgroundColor: color }}
                   />
                   <span className="truncate">{t.name}</span>
                 </button>
@@ -265,7 +268,12 @@ export default function Trend() {
         </div>
 
         {/* Chart */}
-        <div className="flex-1 bg-gray-900 border border-gray-800 rounded-xl p-4">
+        <div
+          ref={chartContainerRef}
+          className="flex-1 bg-gray-900 border border-gray-800 rounded-xl p-4"
+          onWheel={handleWheel}
+          style={{ userSelect: 'none' }}
+        >
           {selected.length === 0 ? (
             <div className="h-80 flex items-center justify-center text-gray-500 text-sm">
               Sol panelden tag seçin
@@ -280,26 +288,33 @@ export default function Trend() {
             </div>
           ) : (
             <ResponsiveContainer width="100%" height={380}>
-              <LineChart data={chartData} margin={{ top: 4, right: hasRightAxis ? 60 : 16, left: 0, bottom: 4 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="t" tick={{ fontSize: 11, fill: '#9ca3af' }} interval="preserveStartEnd" />
-                <YAxis
-                  yAxisId="left"
-                  tick={{ fontSize: 11, fill: '#9ca3af' }}
-                  width={55}
-                  label={leftUnit ? { value: leftUnit, angle: -90, position: 'insideLeft', fill: '#6b7280', fontSize: 11, offset: 10 } : undefined}
-                />
-                {hasRightAxis && (
-                  <YAxis
-                    yAxisId="right"
-                    orientation="right"
-                    tick={{ fontSize: 11, fill: '#9ca3af' }}
-                    width={55}
-                    label={rightUnit ? { value: rightUnit, angle: 90, position: 'insideRight', fill: '#6b7280', fontSize: 11, offset: 10 } : undefined}
-                  />
-                )}
+              <LineChart data={chartData} margin={{ top: 4, right: 16, left: axisLeftMargin, bottom: 4 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
+                <XAxis dataKey="t" tick={{ fontSize: 11, fill: '#6b7280' }} interval="preserveStartEnd" />
+                {series.map((s, i) => {
+                  const color = COLORS[i % COLORS.length]
+                  return (
+                    <YAxis
+                      key={s.tag_id}
+                      yAxisId={`y_${s.tag_id}`}
+                      orientation="left"
+                      width={50}
+                      tick={{ fontSize: 10, fill: color }}
+                      tickLine={{ stroke: color }}
+                      axisLine={{ stroke: color }}
+                      label={{
+                        value: s.unit,
+                        angle: -90,
+                        position: 'insideLeft',
+                        fill: color,
+                        fontSize: 10,
+                        dx: -8,
+                      }}
+                    />
+                  )
+                })}
                 <Tooltip
-                  contentStyle={{ backgroundColor: '#111827', border: '1px solid #374151', borderRadius: 8 }}
+                  contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #1f2937', borderRadius: 8 }}
                   labelStyle={{ color: '#e5e7eb', fontSize: 12 }}
                   itemStyle={{ fontSize: 12 }}
                   formatter={(value, name) => {
@@ -308,6 +323,24 @@ export default function Trend() {
                   }}
                 />
                 <Legend wrapperStyle={{ fontSize: 12, color: '#9ca3af' }} />
+                <Brush
+                  dataKey="t"
+                  height={24}
+                  startIndex={brushIndices ? brushIndices[0] : 0}
+                  endIndex={brushIndices ? brushIndices[1] : Math.max(0, chartData.length - 1)}
+                  onChange={(range) => {
+                    if (
+                      range &&
+                      typeof range.startIndex === 'number' &&
+                      typeof range.endIndex === 'number'
+                    ) {
+                      setBrushIndices([range.startIndex, range.endIndex])
+                    }
+                  }}
+                  stroke="#374151"
+                  fill="#1f2937"
+                  travellerWidth={8}
+                />
                 {series.map((s, i) => (
                   <Line
                     key={s.tag_id}
@@ -317,7 +350,7 @@ export default function Trend() {
                     strokeWidth={2}
                     dot={false}
                     connectNulls
-                    yAxisId={unitToAxis[s.unit] ?? 'left'}
+                    yAxisId={`y_${s.tag_id}`}
                   />
                 ))}
               </LineChart>
