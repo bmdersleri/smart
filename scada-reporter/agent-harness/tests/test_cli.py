@@ -115,10 +115,18 @@ def test_client_update_tag_error():
     mock_resp.text = "Tag bulunamadi"
     sc._client.patch = MagicMock(return_value=mock_resp)
 
-    result = sc.update_tag(999)
+    result = sc.update_tag(999, unit="m3/h")
 
     assert result["error"] is True
     assert result["status"] == 404
+
+
+def test_client_update_tag_empty_payload():
+    """update_tag raises ValueError when no fields are provided."""
+    sc = ScadaClient("http://testserver")
+
+    with pytest.raises(ValueError, match="at least one field"):
+        sc.update_tag(1)
 
 
 def test_client_list_report_history():
@@ -144,6 +152,36 @@ def test_client_list_report_history():
     assert len(result) == 1
     assert result[0]["format"] == "json"
     assert "api/reports/history" in sc._client.get.call_args[0][0]
+
+
+def test_client_list_report_history_error():
+    """list_report_history returns error list on non-200."""
+    sc = ScadaClient("http://testserver")
+    mock_resp = MagicMock()
+    mock_resp.status_code = 401
+    mock_resp.text = "Unauthorized"
+    sc._client.get = MagicMock(return_value=mock_resp)
+
+    result = sc.list_report_history()
+
+    assert isinstance(result, list)
+    assert result[0]["error"] is True
+    assert result[0]["status"] == 401
+
+
+def test_client_download_report_history_no_cd_header():
+    """download_report_history uses fallback filename when no Content-Disposition."""
+    sc = ScadaClient("http://testserver")
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_resp.content = b"data"
+    mock_resp.headers = {}  # no content-disposition
+    sc._client.get = MagicMock(return_value=mock_resp)
+
+    result = sc.download_report_history(5)
+
+    assert result["content"] == b"data"
+    assert result["filename"] == "scada_rapor_5.bin"
 
 
 def test_client_download_report_history():

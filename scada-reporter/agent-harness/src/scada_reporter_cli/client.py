@@ -127,6 +127,8 @@ class ScadaClient:
             payload["min_alarm"] = min_alarm
         if max_alarm is not None:
             payload["max_alarm"] = max_alarm
+        if not payload:
+            raise ValueError("update_tag: at least one field must be provided")
         resp = self._client.patch(
             urljoin(self.base_url + "/", f"api/tags/{tag_id}"),
             json=payload,
@@ -218,9 +220,12 @@ class ScadaClient:
         if resp.status_code != 200:
             return {"error": True, "status": resp.status_code, "detail": resp.text}
         cd = resp.headers.get("content-disposition", "")
+        tokens = [t.strip() for t in cd.split(";")]
         filename = f"scada_rapor_{history_id}.bin"
-        if "filename=" in cd:
-            filename = cd.split("filename=")[-1].strip('"').strip("'")
+        for token in tokens:
+            if token.lower().startswith("filename="):
+                filename = token[len("filename=") :].strip('"').strip("'")
+                break
         return {"content": resp.content, "filename": filename}
 
     def health(self) -> dict[str, Any]:
