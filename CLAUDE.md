@@ -8,8 +8,8 @@ Su/Atıksu tesisi SCADA veri toplama ve raporlama sistemi.
 scada-reporter/
 ├── backend/       # Python FastAPI backend (:8001)
 │   ├── app/
-│   │   ├── api/        # REST API endpoints (auth/dashboard/tags/reports)
-│   │   ├── collector/  # S7 snap7 PLC toplayıcı + dahili OPC UA server
+│   │   ├── api/        # REST API endpoints (auth/dashboard/query/explore/tags/reports)
+│   │   ├── collector/  # S7 PLC toplayıcı (snap7) + dahili OPC UA server + poller
 │   │   ├── core/       # Config, DB, güvenlik (JWT)
 │   │   ├── models/     # SQLAlchemy modelleri
 │   │   └── reports/    # Rapor üretimi
@@ -22,7 +22,16 @@ scada-reporter/
 │   ├── src/
 │   ├── openapi-ts.config.ts  # TypeScript API client üretici
 │   └── package.json
-└── docker/        # TimescaleDB + Redis + Grafana
+├── agent-harness/ # Agent-native CLI (Click + JSON + REPL)
+│   ├── src/scada_reporter_cli/  # CLI kaynak kodu
+│   ├── skills/SKILL.md          # Agent skill tanımı
+│   └── setup.py
+├── commands/      # Claude Code slash komutları (markdown)
+├── guides/        # Agent metodoloji rehberleri
+├── .claude-plugin/  # Claude Code marketplace kaydı
+├── cli-anything-plugin/  # Plugin tanımı
+└── AGENTS.md      # Agent kullanım rehberi
+docker/        # TimescaleDB + Redis + Grafana
 ```
 
 ## Komutlar
@@ -51,6 +60,15 @@ scada-reporter/
 - **Format:** `just format`
 - **Type check:** `just typecheck`
 - **Tüm kontroller (CI):** `just check`
+
+### Agent CLI
+- **CLI'yi yükle:** `just install-agent`
+- **Test et:** `just test-agent`
+- **REPL (interaktif):** `just agent-repl`
+- **SQL sorgu:** `just agent cli_args="query run 'SELECT * FROM tags LIMIT 5' --json"`
+- **Veritabanı keşfi:** `just agent cli_args="explore schema"`
+- **Python REPL:** `just agent cli_args="shell"`
+- **Tek komut:** `just agent cli_args="tags list --json"`
 
 ### Araçlar
 - **TS API client üret:** `just gen-client` *(backend çalışırken)*
@@ -99,6 +117,9 @@ scada-reporter/
 
 ## Notlar
 
+- **Dahili OPC UA Server**: `opc.tcp://localhost:4840` — backend başlarken otomatik ayağa kalkar, DB'deki son tag değerlerini yayınlar. Harici ücretli yazılım (KEPServerEX vb.) gerekmez.
+- **S7 PLC bağlantısı**: Snap7 (ücretsiz, pure Python) ile S7-1500'e doğrudan TCP 102 bağlantısı. `S7_HOST`/`S7_RACK`/`S7_SLOT` ile yapılandırılır.
+- **Simülasyon modu**: PLC yoksa veya erişilemezse backend sorunsuz çalışmaya devam eder.
 - WeasyPrint PDF üretimi için GTK runtime gerekir (Windows'da)
 - Backend başlatmak için `.venv\Scripts\activate` veya `just run-backend`
 - `uv pip install ...` ile hızlı paket yükleme

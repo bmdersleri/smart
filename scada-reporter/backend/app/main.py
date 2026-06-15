@@ -8,9 +8,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import auth, dashboard, explore, query, reports, tags
-from app.collector.opc_client import collector
 from app.collector.opcua_server import opcua_server
 from app.collector.poller import poll_loop
+from app.collector.s7_collector import collector
 from app.core.config import settings
 from app.core.database import Base, engine
 from app.core.timescaledb import init_timescaledb

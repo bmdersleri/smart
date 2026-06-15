@@ -1,0 +1,6 @@
+{
+  "name": "scada-reporter-agent",
+  "description": "SCADA Reporter için agent-native CLI ve komut seti. PLC tag'leri, canlı değerler, trend analizi ve raporlama.",
+  "author": { "name": "SCADA Reporter contributors" },
+  "categories": ["monitoring", "industrial", "scada"]
+}

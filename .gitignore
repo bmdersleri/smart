@@ -54,3 +54,11 @@ scada-reporter/backend/reports/
 
 # Docker volumes
 docker/data/
+
+# Local dev artifacts
+pg17/
+.playwright-mcp/
+.claude/backups/
+scada-reporter/backend/certs/*.pem
+scada-reporter/frontend/.vite/
+.env.example

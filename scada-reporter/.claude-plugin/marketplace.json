@@ -1,0 +1,16 @@
+{
+  "name": "scada-reporter",
+  "owner": { "name": "SCADA Reporter contributors" },
+  "metadata": {
+    "description": "SCADA Reporter — Su/Atıksu tesisi SCADA veri toplama ve raporlama sistemini coding agent'lar tarafından kullanılabilir kılar."
+  },
+  "plugins": [
+    {
+      "name": "scada-reporter-agent",
+      "source": "./cli-anything-plugin",
+      "description": "SCADA Reporter için agent-native CLI ve komut seti. Aktif tag'leri listele, canlı değerleri oku, trend analizi yap, rapor oluştur.",
+      "author": { "name": "SCADA Reporter contributors" },
+      "category": "development"
+    }
+  ]
+}
