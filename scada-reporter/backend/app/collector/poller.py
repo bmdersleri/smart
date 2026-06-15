@@ -1,10 +1,12 @@
 import asyncio
 import logging
+
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
-from app.collector.opc_client import collector
-from app.core.database import AsyncSessionLocal
+
+from app.collector.s7_collector import collector
 from app.core.config import settings
+from app.core.database import AsyncSessionLocal
 from app.models.tag import Tag, TagReading
 
 logger = logging.getLogger(__name__)

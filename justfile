@@ -100,6 +100,30 @@ docker-down:
 gen-client:
     cd {{fe}} && pnpm openapi-ts
 
+# ── Agent CLI ─────────────────────────────────────────────────────────────────
+
+ah := "scada-reporter/agent-harness"
+
+# Agent CLI'yi yükle (editable mode)
+install-agent:
+    {{venv}}/Scripts/uv pip install -e {{ah}}
+
+# Agent CLI testleri
+test-agent:
+    cd {{ah}} && ../backend/.venv/Scripts/pytest tests/ -v
+
+# Agent CLI'yi çalıştır (ör: just agent "tags list --json")
+agent args="--help":
+    {{venv}}/Scripts/scada {{args}}
+
+# Agent REPL
+agent-repl:
+    {{venv}}/Scripts/scada
+
+# Agent CLI --help
+agent-help:
+    {{venv}}/Scripts/scada --help
+
 # Proje yapısını göster
 tree:
     eza --tree --git-ignore --level=3 --ignore-glob=".venv|node_modules|__pycache__|dist"

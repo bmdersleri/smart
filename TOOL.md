@@ -64,6 +64,21 @@
 | caveman-code | | `caveman-code` (npm) |
 | RTK | 0.42.4 | `rtk` — Rust Token Killer (LLM token optimizer) |
 | FCC (Free Claude Code) | | `fcc-claude`, `fcc-init`, `fcc-server` |
+| scada | | `scada` — SCADA Reporter agent CLI (agent-harness) |
+
+## Project CLI (`scada`)
+| Command | Description |
+|---------|-------------|
+| `scada auth login` | JWT login |
+| `scada tags list` | List tags |
+| `scada tags readings` | Tag readings |
+| `scada dashboard overview` | System overview |
+| `scada dashboard current-values` | Live values |
+| `scada query run <sql>` | Read-only SQL execution |
+| `scada explore schema` | DB schema discovery |
+| `scada explore tags` | Tag catalog (hierarchy/unit/range) |
+| `scada shell` | Python REPL with data context |
+| `scada health` | Backend health check |
 
 ## Python Packages (scada-reporter venv — Python 3.14)
 | Package | Version | Purpose |
@@ -72,9 +87,9 @@
 | alembic | 1.14.0 | DB migrations |
 | anyio | 4.13.0 | Async runtime |
 | asyncpg | 0.31.0 | Async PostgreSQL |
-| asyncua | 2.0 | OPC UA client/server (dahili server `app/collector/opcua_server.py`) |
+| asyncua | 2.0 | OPC UA client/server (dahili server `app/collector/opcua_server.py`, port 4840) |
 | bcrypt | 4.3.0 | Password hashing |
-| python-snap7 | 3.0.0 | S7 PLC communication (pure Python, no DLL) |
+| python-snap7 | 3.0.0 | S7 PLC communication (`app/collector/s7_collector.py`) — ücretsiz, harici yazılım gerekmez |
 | pandas | 3.0.3 | Data analysis & reporting |
 | matplotlib | 3.11.0 | Static chart generation |
 | plotly | 6.8.0 | Interactive web charts |
@@ -203,11 +218,12 @@
 | SIMATIC OAM | Industrial communication |
 | OPC Tags | OPC server interface |
 | ACE | Advanced Control Engine |
-| KEPServerEX | OPC server (OPC UA certs generated via `backend/gen_cert.py`) |
+| KEPServerEX | Harici OPC UA sunucu (opsiyonel — dahili OPC UA server port 4840 kullanilir) |
 | UA Expert | OPC UA test client (download: unified-automation.com) |
 | Siemens S7-1500 | PLC (native S7 protocol over TCP port 102) |
 | Snap7 | `python-snap7` 3.0.0 — pure Python S7 library for Siemens S7 PLCs |
-| S7 Client | `backend/app/collector/s7_client.py` — S7 PLC connection manager |
+| S7 Collector | `backend/app/collector/s7_collector.py` — S7 PLC baglanti + tag okuma |
+| Dahili OPC UA Server | `backend/app/collector/opcua_server.py` — port 4840, DB'deki son degerleri yayinlar |
 
 ## VS Code
 | Tool | Path |
@@ -219,6 +235,9 @@
 - **Python 3.14** is the primary Python (`python` → `C:\Python314\python.exe`)
 - **Python 3.12** still available at `C:\Program Files\Python312\python.exe`
 - **scada-reporter backend venv**: `scada-reporter/backend/.venv/` (Python 3.14, uv-managed)
+- **scada CLI** requires `uv pip install -e scada-reporter/agent-harness` from project root
+- **New API endpoints (this session):** `/api/query/run` (POST), `/api/explore/schema` (GET), `/api/explore/tags` (GET)
+- **Mimari**: S7 PLC → Snap7 (s7_collector) → DB → dahili OPC UA server (port 4840) + REST API. Harici ücretli yazılım (KEPServerEX) gerekmez.
 - **Docker not installed on host** — compose files ready, needs Docker Desktop or Docker Engine
 - **RTK** installed for LLM token optimization. Run `rtk init -g` for Claude Code integration.
 - **GitHub Pages**: User site at `b110rpsrv2` (this machine)

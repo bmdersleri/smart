@@ -2,17 +2,18 @@
 
 Su ve atıksu tesisleri için **OPC UA tabanlı SCADA veri toplama ve raporlama sistemi**.
 
-Saha ekipmanlarından (PLC, RTU) KEPServerEX aracılığıyla OPC UA protokolü üzerinden gerçek zamanlı veri toplar; zaman serisi veritabanına kaydeder ve kullanıcılara dashboard ile Excel/JSON raporu sunar.
+Saha ekipmanlarından (Siemens S7 PLC) Snap7 protokolü ile doğrudan gerçek zamanlı veri toplar; zaman serisi veritabanına kaydeder; dahili OPC UA server ve REST API üzerinden kullanıcılara dashboard ile Excel/JSON raporu sunar. Harici ücretli yazılım gerektirmez.
 
 ---
 
 ## Kapsam ve Özellikler
 
 ### Veri Toplama
-- KEPServerEX'e OPC UA bağlantısı (varsayılan: `opc.tcp://localhost:49320`)
+- Siemens S7-1500 PLC'ye Snap7 protokolü ile doğrudan bağlantı (TCP 102)
 - Aktif tag'lerin periyodik olarak toplu okunması (varsayılan aralık: 5 saniye)
-- OPC quality kodu ile birlikte her okumanın timestamp'li kaydı
-- OPC UA sunucusu erişilemediğinde simülasyon modunda çalışmaya devam
+- S7 quality kodu ile birlikte her okumanın timestamp'li kaydı
+- PLC erişilemediğinde simülasyon modunda çalışmaya devam
+- **Dahili OPC UA server** (varsayılan: `opc.tcp://localhost:4840`) son değerleri yayınlar
 
 ### Tag Yönetimi
 - OPC UA ağacını (kanal → cihaz → tag hiyerarşisi) otomatik tarama
@@ -24,6 +25,13 @@ Saha ekipmanlarından (PLC, RTU) KEPServerEX aracılığıyla OPC UA protokolü 
 | `GET /api/dashboard/overview` | Toplam aktif tag sayısı, son okuma zamanı, son 24 saatteki okuma adedi |
 | `GET /api/dashboard/current-values` | Her aktif tag için anlık değer ve quality durumu |
 | `GET /api/dashboard/trend` | Seçili tag'ler için zaman serisi (saat bazında filtrelenebilir) |
+
+### Sorgu ve Keşif API
+| Endpoint | Açıklama |
+|---|---|
+| `POST /api/query/run` | Read-only SQL sorgusu çalıştırır (SELECT, WITH, EXPLAIN ANALYZE) |
+| `GET /api/explore/schema` | Veritabanı şemasını (tablo, kolon, tip) döndürür |
+| `GET /api/explore/tags` | Tag kataloğunu (kanal/cihaz hiyerarşisi, birim, aralık) döndürür |
 
 ### Raporlama
 - Saatlik veya günlük aralıkta ortalama / min / max / okuma sayısı agregasyonu
@@ -42,7 +50,8 @@ Saha ekipmanlarından (PLC, RTU) KEPServerEX aracılığıyla OPC UA protokolü 
 | Katman | Teknoloji |
 |---|---|
 | Backend | Python 3.12+, FastAPI, Uvicorn |
-| OPC UA İstemcisi | asyncua |
+| Dahili OPC UA Server | asyncua (istemci/sunucu) |
+| S7 PLC Bağlantısı | python-snap7 (ücretsiz, harici yazılım gerekmez) |
 | Veritabanı | PostgreSQL 16 + TimescaleDB (zaman serisi optimizasyonu) |
 | ORM | SQLAlchemy 2.0 (async) |
 | Görev kuyruğu | Celery + Redis |
@@ -61,11 +70,14 @@ scada-reporter/
 │   │   ├── api/
 │   │   │   ├── auth.py        # JWT kimlik doğrulama ve kayıt
 │   │   │   ├── dashboard.py   # Anlık değer ve trend endpoint'leri
+│   │   │   ├── query.py       # Read-only SQL sorgu çalıştırma
+│   │   │   ├── explore.py     # Şema/metadata keşif endpoint'leri
 │   │   │   ├── reports.py     # Excel/JSON rapor üretimi
 │   │   │   └── tags.py        # Tag CRUD
 │   │   ├── collector/
-│   │   │   ├── opc_client.py  # OPC UA bağlantı ve tag okuma
-│   │   │   └── poller.py      # Periyodik veri toplama döngüsü
+│   │   │   ├── s7_collector.py  # S7 PLC bağlantı ve tag okuma (Snap7)
+│   │   │   ├── opcua_server.py  # Dahili OPC UA sunucu
+│   │   │   └── poller.py        # Periyodik veri toplama döngüsü
 │   │   ├── core/
 │   │   │   ├── config.py      # Ortam değişkeni yönetimi
 │   │   │   ├── database.py    # Async SQLAlchemy motoru
@@ -87,7 +99,9 @@ scada-reporter/
 ### Gereksinimler
 - Python 3.12+
 - Docker ve Docker Compose
-- KEPServerEX (veya başka bir OPC UA sunucusu)
+- Siemens S7-1500 PLC (veya simülasyon modu)
+
+> **Not:** Sistem harici ücretli yazılım gerektirmez. S7 PLC'ye Snap7 ile doğrudan bağlanır, verileri kendi OPC UA sunucusu üzerinden yayınlar.
 
 ### 1. Altyapıyı Başlat (Docker)
 
@@ -138,8 +152,9 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 Uygulama başlarken:
 1. Veritabanı tablolarını otomatik oluşturur.
-2. OPC UA sunucusuna bağlanmaya çalışır; başarısız olursa simülasyon modunda devam eder.
-3. Aktif tag'leri okuma döngüsünü başlatır.
+2. S7 PLC'ye bağlanmaya çalışır; başarısız olursa simülasyon modunda devam eder.
+3. Dahili OPC UA sunucusunu başlatır (`opc.tcp://localhost:4840`).
+4. Aktif tag'leri okuma döngüsünü başlatır.
 
 ---
 
@@ -185,6 +200,44 @@ curl http://localhost:8000/health
 
 ---
 
+## Agent CLI (`scada`)
+
+SCADA Reporter, **agent-native** CLI aracı ile birlikte gelir. Coding agent'lar (Claude Code, OpenCode, Cursor vb.) REST API'yi `scada` komutuyla kullanabilir.
+
+```bash
+# Kurulum
+uv pip install -e scada-reporter/agent-harness
+
+# Giriş
+scada auth login admin
+
+# Tag yönetimi
+scada tags list --json
+scada tags readings 1 --limit 10 --json
+
+# Dashboard
+scada dashboard overview
+scada dashboard current-values
+
+# SQL sorgu (read-only)
+scada query run "SELECT name, value FROM tags LIMIT 5" --json
+
+# Veritabanı keşfi
+scada explore schema
+scada explore tags
+
+# Python REPL (veriler yüklü)
+scada shell
+
+# Sistem durumu
+scada health
+```
+
+Tüm komutlar `--json` flag'i ile makine-okunabilir çıktı üretir.
+Detaylı rehber: `scada-reporter/AGENTS.md`
+
+---
+
 ## Veri Modeli
 
 ```
@@ -192,7 +245,7 @@ Tag
 ├── node_id     — OPC UA node kimliği (ns=2;s=Channel1.Device1.Tag1)
 ├── name        — Görünen ad
 ├── unit        — Ölçüm birimi (m³/h, bar, °C ...)
-├── channel     — KEPServerEX kanal adı
+├── channel     — Kanal adı
 ├── device      — PLC/RTU adı
 └── is_active   — Aktif mi?
 

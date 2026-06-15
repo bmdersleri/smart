@@ -5,14 +5,20 @@ from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
+import app.models.report_history  # noqa: F401 — registers ReportHistory with Base.metadata
+import app.models.tag  # noqa: F401 — registers Tag + TagReading with Base.metadata
+import app.models.user  # noqa: F401 — registers User with Base.metadata
 from alembic import context
-
+from app.core.config import settings
 from app.core.database import Base
 
 config = context.config
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
+
+# Override sqlalchemy.url with the one from settings (reads from .env)
+config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
 
 target_metadata = Base.metadata
 

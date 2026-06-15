@@ -1,20 +1,22 @@
 import asyncio
 import logging
+import os
 from contextlib import asynccontextmanager
+
 import sentry_sdk
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.core.config import settings
-from app.core.database import engine, Base
-from app.core.timescaledb import init_timescaledb
-from app.api import auth, tags, dashboard, reports
-from app.collector.opc_client import collector
-from app.collector.poller import poll_loop
-from app.collector.opcua_server import opcua_server
 
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s"
-)
+from app.api import auth, dashboard, explore, query, reports, tags
+from app.collector.opcua_server import opcua_server
+from app.collector.poller import poll_loop
+from app.collector.s7_collector import collector
+from app.core.config import settings
+from app.core.database import Base, engine
+from app.core.timescaledb import init_timescaledb
+from app.models.report_history import ReportHistory as _ReportHistory  # noqa: F401
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 logger = logging.getLogger(__name__)
 
 
@@ -29,6 +31,9 @@ if settings.SENTRY_DSN:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Rapor dosyaları için dizin oluştur
+    os.makedirs("reports", exist_ok=True)
+
     # Veritabanı tablolarını oluştur
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
@@ -78,6 +83,8 @@ app.include_router(auth.router, prefix="/api")
 app.include_router(tags.router, prefix="/api")
 app.include_router(dashboard.router, prefix="/api")
 app.include_router(reports.router, prefix="/api")
+app.include_router(query.router, prefix="/api")
+app.include_router(explore.router, prefix="/api")
 
 
 @app.get("/health")

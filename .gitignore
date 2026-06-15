@@ -33,6 +33,11 @@ Thumbs.db
 .remember/
 .agents/
 *.log
+*.db
+*.db-shm
+*.db-wal
+scada-reporter/backend/reports/
+.superpowers/
 
 # Claude local/sensitive
 .claude/logs/
@@ -49,3 +54,11 @@ Thumbs.db
 
 # Docker volumes
 docker/data/
+
+# Local dev artifacts
+pg17/
+.playwright-mcp/
+.claude/backups/
+scada-reporter/backend/certs/*.pem
+scada-reporter/frontend/.vite/
+.env.example

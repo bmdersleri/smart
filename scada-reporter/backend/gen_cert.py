@@ -1,11 +1,12 @@
 """
-OPC UA client certificate generator for KEPServerEX compatibility.
-Matches properties of the existing trusted cert in KEPServerEX PKI store.
+OPC UA sertifikasi olusturucu.
+Dahili OPC UA server'a baglanan istemciler icin guvenilir koku sertifikasi.
 """
 
 import datetime
 import hashlib
 import os
+
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -37,7 +38,7 @@ cert = (
     .serial_number(x509.random_serial_number())
     .not_valid_before(now)
     .not_valid_after(now + datetime.timedelta(days=3650))
-    # Key usage matching existing KEPServerEX-trusted cert
+    # Standart OPC UA key usage
     .add_extension(
         x509.KeyUsage(
             digital_signature=True,
@@ -109,7 +110,7 @@ with open(key_path, "wb") as f:
 with open(der_path, "wb") as f:
     f.write(cert.public_bytes(serialization.Encoding.DER))
 
-# Calculate SHA1 thumbprint for KEPServerEX
+# SHA1 thumbprint (OPC UA trusted store icin)
 der_bytes = cert.public_bytes(serialization.Encoding.DER)
 
 thumbprint = hashlib.sha1(der_bytes).hexdigest()
@@ -122,4 +123,4 @@ print(f"  Thumbprint (SHA1): {thumbprint}")
 print(f"  Valid until: {cert.not_valid_after_utc}")
 print(f"  SAN URI: {APP_URI}")
 print()
-print(f"Copy DER to KEPServerEX trusted store with name: {thumbprint}.der")
+print(f"Copy DER to OPC UA trusted store as: {thumbprint}.der")

@@ -1,9 +1,11 @@
-import logging
 import asyncio
+import logging
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
+
 import snap7
-from snap7.util import get_real, get_int, get_bool, get_dint, get_word
+from snap7.util import get_bool, get_dint, get_int, get_real, get_word
+
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -14,7 +16,6 @@ _TYPE_SIZES = {"REAL": 4, "INT": 2, "DINT": 4, "WORD": 2, "BOOL": 1}
 
 
 def _parse_address(address: str) -> tuple[int, str, int, int]:
-    """'DB1,REAL0' veya 'DB3,BOOL8.3' → (db_num, type, byte_offset, bit)"""
     db_part, rest = address.upper().split(",", 1)
     db_num = int(db_part[2:])
     for t in _TYPE_SIZES:
@@ -53,18 +54,26 @@ class S7Collector:
         client = snap7.client.Client()
         await loop.run_in_executor(
             _executor,
-            lambda: client.connect(
-                settings.S7_HOST, settings.S7_RACK, settings.S7_SLOT
-            ),
+            lambda: client.connect(settings.S7_HOST, settings.S7_RACK, settings.S7_SLOT),
         )
+        try:
+            info = client.get_cpu_info()
+            logger.info(
+                "S7-1500 baglandi: %s | %s %s %s",
+                settings.S7_HOST,
+                info.ModuleTypeName.decode(),
+                info.SerialNumber.decode(),
+                info.ASName.decode(),
+            )
+        except Exception:
+            logger.info(
+                "S7 baglantisi kuruldu: %s rack=%d slot=%d",
+                settings.S7_HOST,
+                settings.S7_RACK,
+                settings.S7_SLOT,
+            )
         self.client = client
         self._running = True
-        logger.info(
-            "S7 baglantisi kuruldu: %s rack=%d slot=%d",
-            settings.S7_HOST,
-            settings.S7_RACK,
-            settings.S7_SLOT,
-        )
 
     async def disconnect(self):
         if self.client:
@@ -75,7 +84,6 @@ class S7Collector:
             logger.info("S7 baglantisi kapatildi")
 
     async def browse_tags(self, node_id: str = "") -> list[dict]:
-        """S7/snap7 ile otomatik tag kesfi desteklenmez — bos liste doner."""
         return []
 
     async def read_tag(self, address: str) -> tuple[float | None, int, datetime]:
@@ -83,9 +91,7 @@ class S7Collector:
             return None, 0, datetime.utcnow()
         loop = asyncio.get_event_loop()
         try:
-            value = await loop.run_in_executor(
-                _executor, _read_sync, self.client, address
-            )
+            value = await loop.run_in_executor(_executor, _read_sync, self.client, address)
             return value, 192, datetime.utcnow()
         except Exception as e:
             logger.warning("Tag okuma hatasi %s: %s", address, e)
