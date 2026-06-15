@@ -104,6 +104,37 @@ class ScadaClient:
             return {"error": True, "status": resp.status_code, "detail": resp.text}
         return {"deleted": True, "tag_id": tag_id}
 
+    def update_tag(
+        self,
+        tag_id: int,
+        unit: str | None = None,
+        device: str | None = None,
+        channel: str | None = None,
+        description: str | None = None,
+        min_alarm: float | None = None,
+        max_alarm: float | None = None,
+    ) -> dict[str, Any]:
+        payload: dict[str, Any] = {}
+        if unit is not None:
+            payload["unit"] = unit
+        if device is not None:
+            payload["device"] = device
+        if channel is not None:
+            payload["channel"] = channel
+        if description is not None:
+            payload["description"] = description
+        if min_alarm is not None:
+            payload["min_alarm"] = min_alarm
+        if max_alarm is not None:
+            payload["max_alarm"] = max_alarm
+        resp = self._client.patch(
+            urljoin(self.base_url + "/", f"api/tags/{tag_id}"),
+            json=payload,
+        )
+        if resp.status_code != 200:
+            return {"error": True, "status": resp.status_code, "detail": resp.text}
+        return resp.json()
+
     def get_readings(
         self,
         tag_id: int,
@@ -173,6 +204,24 @@ class ScadaClient:
         if output_format == "json":
             return resp.json()
         return resp.content
+
+    def list_report_history(self) -> list[dict[str, Any]]:
+        resp = self._client.get(urljoin(self.base_url + "/", "api/reports/history"))
+        if resp.status_code != 200:
+            return [{"error": True, "status": resp.status_code, "detail": resp.text}]
+        return resp.json()  # type: ignore[return-value]
+
+    def download_report_history(self, history_id: int) -> dict[str, Any]:
+        resp = self._client.get(
+            urljoin(self.base_url + "/", f"api/reports/history/{history_id}/download")
+        )
+        if resp.status_code != 200:
+            return {"error": True, "status": resp.status_code, "detail": resp.text}
+        cd = resp.headers.get("content-disposition", "")
+        filename = f"scada_rapor_{history_id}.bin"
+        if "filename=" in cd:
+            filename = cd.split("filename=")[-1].strip('"').strip("'")
+        return {"content": resp.content, "filename": filename}
 
     def health(self) -> dict[str, Any]:
         try:

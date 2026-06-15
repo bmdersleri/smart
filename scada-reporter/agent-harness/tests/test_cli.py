@@ -4,6 +4,8 @@ import os
 import pytest
 from click.testing import CliRunner
 from scada_reporter_cli.cli import cli
+from unittest.mock import MagicMock
+from scada_reporter_cli.client import ScadaClient
 
 
 runner = CliRunner()
@@ -74,3 +76,86 @@ def test_group_help(cmd: str):
     result = runner.invoke(cli, [cmd, "--help"])
     assert result.exit_code == 0
     assert result.output.strip()
+
+
+def test_client_update_tag():
+    """update_tag sends PATCH /api/tags/{id} with the right payload."""
+    sc = ScadaClient("http://testserver")
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_resp.json.return_value = {
+        "id": 7,
+        "node_id": "DB1,REAL0",
+        "name": "Test",
+        "unit": "bar",
+        "device": "PLC",
+        "channel": "Ch1",
+        "is_active": True,
+        "min_alarm": 0.0,
+        "max_alarm": 5000.0,
+    }
+    sc._client.patch = MagicMock(return_value=mock_resp)
+
+    result = sc.update_tag(7, unit="bar", min_alarm=0.0, max_alarm=5000.0)
+
+    sc._client.patch.assert_called_once()
+    call_kwargs = sc._client.patch.call_args
+    assert "api/tags/7" in call_kwargs[0][0]
+    assert call_kwargs[1]["json"]["unit"] == "bar"
+    assert call_kwargs[1]["json"]["min_alarm"] == 0.0
+    assert result["id"] == 7
+    assert result["min_alarm"] == 0.0
+
+
+def test_client_update_tag_error():
+    """update_tag returns error dict on non-200."""
+    sc = ScadaClient("http://testserver")
+    mock_resp = MagicMock()
+    mock_resp.status_code = 404
+    mock_resp.text = "Tag bulunamadi"
+    sc._client.patch = MagicMock(return_value=mock_resp)
+
+    result = sc.update_tag(999)
+
+    assert result["error"] is True
+    assert result["status"] == 404
+
+
+def test_client_list_report_history():
+    """list_report_history returns list of history records."""
+    sc = ScadaClient("http://testserver")
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_resp.json.return_value = [
+        {
+            "id": 1,
+            "format": "json",
+            "interval": "hourly",
+            "tag_ids": [1, 2],
+            "created_at": "2026-06-15T22:00:00",
+            "start": "2026-06-15T00:00:00",
+            "end": "2026-06-15T22:00:00",
+        }
+    ]
+    sc._client.get = MagicMock(return_value=mock_resp)
+
+    result = sc.list_report_history()
+
+    assert len(result) == 1
+    assert result[0]["format"] == "json"
+    assert "api/reports/history" in sc._client.get.call_args[0][0]
+
+
+def test_client_download_report_history():
+    """download_report_history returns content bytes + filename from header."""
+    sc = ScadaClient("http://testserver")
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_resp.content = b"fake-excel-bytes"
+    mock_resp.headers = {"content-disposition": 'attachment; filename="report.xlsx"'}
+    sc._client.get = MagicMock(return_value=mock_resp)
+
+    result = sc.download_report_history(3)
+
+    assert result["content"] == b"fake-excel-bytes"
+    assert result["filename"] == "report.xlsx"
