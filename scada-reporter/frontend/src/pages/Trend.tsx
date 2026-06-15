@@ -5,6 +5,7 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Brush, ResponsiveContainer,
 } from 'recharts'
 import { format, parseISO } from 'date-fns'
+import { toPng } from 'html-to-image'
 
 const COLORS = ['#f87171', '#34d399', '#facc15', '#60a5fa', '#a78bfa', '#fb923c', '#f472b6', '#38bdf8']
 const HOURS = [
@@ -167,37 +168,20 @@ export default function Trend() {
   const exportPNG = () => {
     const container = chartContainerRef.current
     if (!container) return
-    const svg = container.querySelector('svg')
-    if (!svg) return
 
-    const { width, height } = svg.getBoundingClientRect()
-    const scale = 2  // retina
-    const canvas = document.createElement('canvas')
-    canvas.width = width * scale
-    canvas.height = height * scale
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-
-    ctx.scale(scale, scale)
-    ctx.fillStyle = '#111827'
-    ctx.fillRect(0, 0, width, height)
-
-    const svgStr = new XMLSerializer().serializeToString(svg)
-    const svgBlob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' })
-    const url = URL.createObjectURL(svgBlob)
-    const img = new Image()
-    img.onload = () => {
-      ctx.drawImage(img, 0, 0, width, height)
-      URL.revokeObjectURL(url)
+    toPng(container, {
+      backgroundColor: '#111827',
+      pixelRatio: 2,
+    }).then((dataUrl) => {
       const a = document.createElement('a')
       a.download = `trend-${format(new Date(), 'yyyyMMdd-HHmm')}.png`
-      a.href = canvas.toDataURL('image/png')
+      a.href = dataUrl
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
-    }
-    img.onerror = () => URL.revokeObjectURL(url)
-    img.src = url
+    }).catch((err) => {
+      console.error('PNG export failed:', err)
+    })
   }
 
   return (
