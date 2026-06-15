@@ -14,6 +14,19 @@ const PRESETS = [
   { label: 'Son 30 Gün', start: () => startOfDay(subDays(new Date(), 30)), end: () => new Date() },
 ]
 
+const REPORT_PRESET_KEY = 'report_presets'
+
+interface ReportPreset {
+  name: string
+  tag_ids: number[]
+  interval: string
+  time_preset?: string
+}
+
+function loadReportPresets(): ReportPreset[] {
+  try { return JSON.parse(localStorage.getItem(REPORT_PRESET_KEY) ?? '[]') } catch { return [] }
+}
+
 function HistoryRow({ entry }: { entry: ReportHistoryEntry }) {
   const [downloading, setDownloading] = useState(false)
 
@@ -79,6 +92,9 @@ export default function Reports() {
   const [interval, setIntervalVal] = useState('hourly')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [activeTimePreset, setActiveTimePreset] = useState<string>('Bugün')
+  const [presets, setPresets] = useState<ReportPreset[]>(loadReportPresets)
+  const [savingName, setSavingName] = useState<string | null>(null)
 
   const toggleTag = (id: number) =>
     setSelectedTags((s) => s.includes(id) ? s.filter((x) => x !== id) : [...s, id])
@@ -86,6 +102,34 @@ export default function Reports() {
   const selectPreset = (p: typeof PRESETS[0]) => {
     setStart(fmt(p.start()))
     setEnd(fmt(p.end()))
+    setActiveTimePreset(p.label)
+  }
+
+  const saveReportPreset = () => {
+    const name = (savingName ?? '').trim()
+    if (!name) return
+    const updated: ReportPreset[] = [
+      { name, tag_ids: selectedTags, interval, time_preset: activeTimePreset },
+      ...presets.filter((p) => p.name !== name),
+    ]
+    localStorage.setItem(REPORT_PRESET_KEY, JSON.stringify(updated))
+    setPresets(updated)
+    setSavingName(null)
+  }
+
+  const loadReportPreset = (p: ReportPreset) => {
+    setSelectedTags(p.tag_ids.filter((id) => tags.some((t) => t.id === id)))
+    setIntervalVal(p.interval)
+    if (p.time_preset) {
+      const tp = PRESETS.find((x) => x.label === p.time_preset)
+      if (tp) { setStart(fmt(tp.start())); setEnd(fmt(tp.end())); setActiveTimePreset(tp.label) }
+    }
+  }
+
+  const deleteReportPreset = (name: string) => {
+    const updated = presets.filter((p) => p.name !== name)
+    localStorage.setItem(REPORT_PRESET_KEY, JSON.stringify(updated))
+    setPresets(updated)
   }
 
   // Group tags by device
@@ -132,6 +176,83 @@ export default function Reports() {
     <div className="p-6 space-y-6 max-w-3xl">
       <h1 className="text-xl font-bold text-white">Rapor Oluştur</h1>
 
+      {/* Saved presets */}
+      {(presets.length > 0 || selectedTags.length > 0) && (
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 space-y-2">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-medium text-gray-300">Kayıtlı Seçimler</p>
+            {selectedTags.length > 0 && savingName === null && (
+              <div className="flex gap-1.5">
+                <button
+                  onClick={() => setSavingName('')}
+                  className="px-2.5 py-1 text-xs bg-blue-700/40 hover:bg-blue-700/60 text-blue-300 rounded-lg transition-colors"
+                >
+                  Kaydet
+                </button>
+                <button
+                  onClick={() => setSelectedTags([])}
+                  className="px-2.5 py-1 text-xs bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-red-400 rounded-lg transition-colors"
+                >
+                  Tümünü Kaldır
+                </button>
+              </div>
+            )}
+          </div>
+
+          {savingName !== null && (
+            <div className="flex gap-2 items-center">
+              <input
+                autoFocus
+                value={savingName}
+                onChange={(e) => setSavingName(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') saveReportPreset(); if (e.key === 'Escape') setSavingName(null) }}
+                placeholder="Seçim adı..."
+                className="flex-1 bg-gray-800 border border-blue-600 rounded-lg px-3 py-1.5 text-sm text-white placeholder-gray-600 focus:outline-none"
+              />
+              <button
+                onClick={saveReportPreset}
+                disabled={!savingName.trim()}
+                className="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white rounded-lg transition-colors"
+              >
+                Kaydet
+              </button>
+              <button
+                onClick={() => setSavingName(null)}
+                className="px-3 py-1.5 text-xs bg-gray-800 hover:bg-gray-700 text-gray-400 rounded-lg transition-colors"
+              >
+                İptal
+              </button>
+            </div>
+          )}
+
+          {presets.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {presets.map((p) => (
+                <div key={p.name} className="group flex items-center gap-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5">
+                  <button
+                    onClick={() => loadReportPreset(p)}
+                    className="text-sm text-gray-300 hover:text-white transition-colors"
+                    title={`${p.tag_ids.length} tag · ${p.interval} · ${p.time_preset ?? 'özel'}`}
+                  >
+                    {p.name}
+                    <span className="ml-1.5 text-xs text-gray-500">{p.tag_ids.length} tag</span>
+                  </button>
+                  <button
+                    onClick={() => deleteReportPreset(p.name)}
+                    className="opacity-0 group-hover:opacity-100 text-gray-600 hover:text-red-400 text-xs transition-all ml-1"
+                    title="Sil"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs text-gray-600">Henüz kayıtlı seçim yok. Tag seçip "Kaydet" ile ekleyin.</p>
+          )}
+        </div>
+      )}
+
       {/* Grouped tag selection */}
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 space-y-4">
         <div className="flex items-center justify-between">
@@ -177,7 +298,11 @@ export default function Reports() {
         <div className="flex gap-2 flex-wrap">
           {PRESETS.map((p) => (
             <button key={p.label} onClick={() => selectPreset(p)}
-              className="px-3 py-1.5 text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg border border-gray-700 transition-colors">
+              className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${
+                activeTimePreset === p.label
+                  ? 'bg-blue-600/20 border-blue-500 text-blue-300'
+                  : 'bg-gray-800 hover:bg-gray-700 text-gray-300 border-gray-700'
+              }`}>
               {p.label}
             </button>
           ))}
@@ -185,12 +310,12 @@ export default function Reports() {
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="text-xs text-gray-500 mb-1 block">Başlangıç</label>
-            <input type="datetime-local" value={start} onChange={(e) => setStart(e.target.value)}
+            <input type="datetime-local" value={start} onChange={(e) => { setStart(e.target.value); setActiveTimePreset('') }}
               className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
           </div>
           <div>
             <label className="text-xs text-gray-500 mb-1 block">Bitiş</label>
-            <input type="datetime-local" value={end} onChange={(e) => setEnd(e.target.value)}
+            <input type="datetime-local" value={end} onChange={(e) => { setEnd(e.target.value); setActiveTimePreset('') }}
               className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
           </div>
         </div>
