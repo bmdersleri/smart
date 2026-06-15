@@ -62,7 +62,7 @@ seed-tags:
 
 # WinCC export'larından uzun-süre tag kataloğunu yükle (xlsx/ klasöründen)
 seed-catalog *args:
-    cd {{be}} && {{venv}}\Scripts\python -m app.seed_catalog {{args}}
+    cd {{be}} && .venv/Scripts/python -m app.seed_catalog {{args}}
 
 # ── Kalite ───────────────────────────────────────────────────────────────────
 
