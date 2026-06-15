@@ -155,7 +155,8 @@ export default function Trend() {
       URL.revokeObjectURL(url)
       setToast('Excel raporu indirildi')
       setTimeout(() => setToast(''), 3000)
-    } catch {
+    } catch (err) {
+      console.error('Report export failed:', err)
       setToast('Rapor oluşturulamadı')
       setTimeout(() => setToast(''), 3000)
     } finally {
