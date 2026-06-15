@@ -155,8 +155,11 @@ export default function Trend() {
       const a = document.createElement('a')
       a.download = `trend-${format(new Date(), 'yyyyMMdd-HHmm')}.png`
       a.href = canvas.toDataURL('image/png')
+      document.body.appendChild(a)
       a.click()
+      document.body.removeChild(a)
     }
+    img.onerror = () => URL.revokeObjectURL(url)
     img.src = url
   }
 
