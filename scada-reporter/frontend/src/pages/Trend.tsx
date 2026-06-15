@@ -42,6 +42,8 @@ export default function Trend() {
   const [brushIndices, setBrushIndices] = useState<[number, number] | null>(null)
   const [panelOpen, setPanelOpen] = useState(true)
   const chartContainerRef = useRef<HTMLDivElement>(null)
+  const brushIndicesRef = useRef<[number, number] | null>(null)
+  const chartDataRef = useRef<typeof chartData>([])
 
   const { data: tags = [] } = useQuery({
     queryKey: ['tags'],
@@ -113,22 +115,32 @@ export default function Trend() {
     setBrushIndices(null)
   }, [selected, hours])
 
+  useEffect(() => { brushIndicesRef.current = brushIndices }, [brushIndices])
+  useEffect(() => { chartDataRef.current = chartData })
+
   const axisLeftMargin = Math.max(55, series.length * 52)
 
-  const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
-    e.preventDefault()
-    if (chartData.length < 2) return
-    const len = chartData.length
-    const [s, en] = brushIndices ?? [0, len - 1]
-    const windowSize = en - s
-    const zoomDir = e.deltaY > 0 ? 1 : -1  // >0 = zoom out, <0 = zoom in
-    const step = Math.max(1, Math.round(windowSize * 0.15))
-    const newWindow = Math.max(2, Math.min(len - 1, windowSize + zoomDir * step * 2))
-    const center = Math.round((s + en) / 2)
-    const newStart = Math.max(0, center - Math.floor(newWindow / 2))
-    const newEnd = Math.min(len - 1, newStart + newWindow)
-    setBrushIndices([newStart, newEnd])
-  }
+  useEffect(() => {
+    const el = chartContainerRef.current
+    if (!el) return
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault()
+      const data = chartDataRef.current
+      if (data.length < 2) return
+      const len = data.length
+      const [s, en] = brushIndicesRef.current ?? [0, len - 1]
+      const windowSize = en - s
+      const zoomDir = e.deltaY > 0 ? 1 : -1
+      const step = Math.max(1, Math.round(windowSize * 0.15))
+      const newWindow = Math.max(2, Math.min(len - 1, windowSize + zoomDir * step * 2))
+      const center = Math.round((s + en) / 2)
+      const newStart = Math.max(0, center - Math.floor(newWindow / 2))
+      const newEnd = Math.min(len - 1, newStart + newWindow)
+      setBrushIndices([newStart, newEnd])
+    }
+    el.addEventListener('wheel', onWheel, { passive: false })
+    return () => el.removeEventListener('wheel', onWheel)
+  }, [])
 
   const exportReport = async () => {
     if (!selected.length || exporting) return
@@ -244,7 +256,7 @@ export default function Trend() {
 
       <div className="flex gap-4 min-h-0">
         {/* Tag selector */}
-        <div className={`bg-gray-900 border border-gray-800 rounded-xl flex-shrink-0 space-y-2 overflow-hidden transition-all duration-200 ${panelOpen ? 'w-52 p-3' : 'w-0 p-0 border-0'}`}>
+        <div className={`bg-gray-900 border border-gray-800 rounded-xl flex-shrink-0 space-y-2 overflow-hidden transition-all duration-200 ${panelOpen ? 'w-52 p-3' : 'w-0 p-0'}`}>
           <input
             value={tagSearch}
             onChange={(e) => setTagSearch(e.target.value)}
@@ -358,7 +370,6 @@ export default function Trend() {
         <div
           ref={chartContainerRef}
           className="flex-1 bg-gray-900 border border-gray-800 rounded-xl p-4 flex flex-col"
-          onWheel={handleWheel}
           style={{ userSelect: 'none', minHeight: 'calc(100vh - 180px)' }}
         >
           {selected.length === 0 ? (
