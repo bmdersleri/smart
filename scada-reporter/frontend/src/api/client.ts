@@ -52,7 +52,7 @@ export const importTags = (file: File) => {
 }
 
 // Dashboard
-export interface CurrentValue { tag_id: number; name: string; unit: string; device: string; value: number | null; timestamp: string; quality_ok: boolean; alarm_state: 'overflow' | 'min' | 'max' | null }
+export interface CurrentValue { tag_id: number; name: string; unit: string; device: string; value: number | null; timestamp: string; quality_ok: boolean }
 export const getCurrentValues = () => api.get<CurrentValue[]>('/dashboard/current-values')
 export const getOverview = () => api.get<{ active_tags: number; last_reading: string | null; readings_24h: number }>('/dashboard/overview')
 export const getTrend = (tagIds: number[], hours: number) =>

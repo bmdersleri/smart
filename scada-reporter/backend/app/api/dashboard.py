@@ -14,7 +14,7 @@ router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 @router.get("/overview")
 async def overview(db: AsyncSession = Depends(get_db), _=Depends(get_current_user)):
     """Toplam tag sayısı, son okuma zamanı gibi genel bilgiler."""
-    tag_count = await db.scalar(select(func.count(Tag.id)).where(Tag.is_active))
+    tag_count = await db.scalar(select(func.count(Tag.id)).where(Tag.is_active, Tag.long_term))
     last_reading = await db.scalar(select(func.max(TagReading.timestamp)))
     reading_count_24h = await db.scalar(
         select(func.count(TagReading.timestamp)).where(
@@ -56,7 +56,7 @@ async def trend(
 
 @router.get("/current-values")
 async def current_values(db: AsyncSession = Depends(get_db), _=Depends(get_current_user)):
-    """Each active tag's latest reading with alarm_state."""
+    """Her uzun-süre (archive) tag'in son okuması."""
     subq = (
         select(TagReading.tag_id, func.max(TagReading.timestamp).label("max_ts"))
         .group_by(TagReading.tag_id)
@@ -68,8 +68,6 @@ async def current_values(db: AsyncSession = Depends(get_db), _=Depends(get_curre
             Tag.name,
             Tag.unit,
             Tag.device,
-            Tag.min_alarm,
-            Tag.max_alarm,
             TagReading.value,
             TagReading.timestamp,
             TagReading.quality,
@@ -79,19 +77,10 @@ async def current_values(db: AsyncSession = Depends(get_db), _=Depends(get_curre
             TagReading,
             (TagReading.tag_id == subq.c.tag_id) & (TagReading.timestamp == subq.c.max_ts),
         )
-        .where(Tag.is_active)
+        .where(Tag.is_active, Tag.long_term)
         .order_by(Tag.device, Tag.name)
     )
     rows = result.all()
-
-    def _alarm_state(value, quality, min_alarm, max_alarm):
-        if value is None or quality != 192 or value > 1_000_000:
-            return "overflow"
-        if max_alarm is not None and value > max_alarm:
-            return "max"
-        if min_alarm is not None and value < min_alarm:
-            return "min"
-        return None
 
     return [
         {
@@ -99,10 +88,9 @@ async def current_values(db: AsyncSession = Depends(get_db), _=Depends(get_curre
             "name": r[1],
             "unit": r[2],
             "device": r[3],
-            "value": r[6],
-            "timestamp": r[7],
-            "quality_ok": r[8] == 192,
-            "alarm_state": _alarm_state(r[6], r[8], r[4], r[5]),
+            "value": r[4],
+            "timestamp": r[5],
+            "quality_ok": r[6] == 192,
         }
         for r in rows
     ]

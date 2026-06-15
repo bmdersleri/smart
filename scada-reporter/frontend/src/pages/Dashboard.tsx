@@ -1,4 +1,3 @@
-import { useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getCurrentValues, getOverview } from '../api/client'
 import type { CurrentValue } from '../api/client'
@@ -19,82 +18,27 @@ function StatCard({ label, value, sub }: { label: string; value: string | number
   )
 }
 
-function rowStyle(alarmState: CurrentValue['alarm_state']): string {
-  if (alarmState === 'overflow' || alarmState === 'max' || alarmState === 'min') {
-    return alarmState === 'overflow'
-      ? 'border-t border-gray-800 bg-red-950/60'
-      : 'border-t border-gray-800 bg-yellow-950/60'
-  }
-  return 'border-t border-gray-800 hover:bg-gray-800/40 transition-colors'
-}
-
 function valueDisplay(tv: CurrentValue): string {
-  if (tv.alarm_state === 'overflow') return 'OVERFLOW'
   if (tv.value === null) return '—'
   return `${tv.value.toFixed(2)} ${tv.unit}`
 }
 
-function valueColor(alarmState: CurrentValue['alarm_state']): string {
-  if (alarmState === 'overflow') return 'text-red-400'
-  if (alarmState === 'max' || alarmState === 'min') return 'text-red-400'
-  return 'text-cyan-300'
-}
-
-function TagRow({ tv, rowRef }: { tv: CurrentValue; rowRef?: (el: HTMLTableRowElement | null) => void }) {
+function TagRow({ tv }: { tv: CurrentValue }) {
   const ts = tv.timestamp ? format(parseISO(tv.timestamp + 'Z'), 'HH:mm:ss', { locale: tr }) : '—'
   return (
-    <tr ref={rowRef} className={rowStyle(tv.alarm_state)} data-tag-id={tv.tag_id}>
+    <tr className="border-t border-gray-800 hover:bg-gray-800/40 transition-colors">
       <td className="px-4 py-3 text-sm text-gray-300">{tv.device}</td>
       <td className="px-4 py-3 text-sm text-white font-medium">{tv.name}</td>
-      <td className={`px-4 py-3 text-sm text-right font-mono ${valueColor(tv.alarm_state)}`}>
-        {valueDisplay(tv)}
-      </td>
+      <td className="px-4 py-3 text-sm text-right font-mono text-cyan-300">{valueDisplay(tv)}</td>
       <td className="px-4 py-3 text-sm text-gray-400 text-right">{ts}</td>
-      <td className="px-4 py-3 text-right">
-        <QualityDot ok={tv.quality_ok} />
-      </td>
+      <td className="px-4 py-3 text-right"><QualityDot ok={tv.quality_ok} /></td>
     </tr>
   )
 }
 
-function AlarmBanner({
-  alarms,
-  onDismiss,
-  onScrollTo,
-}: {
-  alarms: CurrentValue[]
-  onDismiss: () => void
-  onScrollTo: (tagId: number) => void
-}) {
-  if (alarms.length === 0) return null
-  return (
-    <div className="flex items-center gap-3 bg-red-950 border border-red-800 rounded-xl px-4 py-2.5">
-      <span className="text-red-400 font-bold text-sm shrink-0">
-        🔴 {alarms.length} ALARM
-      </span>
-      <div className="flex flex-wrap gap-x-3 gap-y-1 flex-1">
-        {alarms.map((a) => (
-          <button
-            key={a.tag_id}
-            onClick={() => onScrollTo(a.tag_id)}
-            className="text-red-300 text-xs hover:text-white underline underline-offset-2"
-          >
-            {a.name}
-            {a.alarm_state === 'overflow' ? ': overflow'
-              : a.alarm_state === 'max' ? `: max aşımı (${a.value?.toFixed(0)})`
-              : `: min altı (${a.value?.toFixed(0)})`}
-          </button>
-        ))}
-      </div>
-      <button onClick={onDismiss} className="text-red-600 hover:text-red-300 text-xs shrink-0">✕</button>
-    </div>
-  )
-}
+interface HealthResp { plc_connected?: number; plc_total?: number }
 
 export default function Dashboard() {
-  const rowRefs = useRef<Record<number, HTMLTableRowElement | null>>({})
-  const [bannerDismissed, setBannerDismissed] = useState(false)
-
   const { data: overview } = useQuery({
     queryKey: ['overview'],
     queryFn: () => getOverview().then((r) => r.data),
@@ -107,11 +51,9 @@ export default function Dashboard() {
   })
   const { data: health } = useQuery({
     queryKey: ['health'],
-    queryFn: () => fetch('/health').then((r) => r.json()) as Promise<{ opc_connected: boolean }>,
+    queryFn: () => fetch('/health').then((r) => r.json()) as Promise<HealthResp>,
     refetchInterval: 10000,
   })
-
-  const alarms = values.filter((v) => v.alarm_state !== null)
 
   const byDevice = values.reduce<Record<string, CurrentValue[]>>((acc, v) => {
     const d = v.device || 'Diğer';
@@ -119,9 +61,8 @@ export default function Dashboard() {
     return acc
   }, {})
 
-  const scrollTo = (tagId: number) => {
-    rowRefs.current[tagId]?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-  }
+  const plcLabel = health == null ? '...'
+    : `${health.plc_connected ?? 0}/${health.plc_total ?? 0}`
 
   return (
     <div className="p-6 space-y-6">
@@ -129,14 +70,6 @@ export default function Dashboard() {
         <h1 className="text-xl font-bold text-white">Dashboard</h1>
         <span className="text-xs text-gray-500">5 sn'de bir güncellenir</span>
       </div>
-
-      {!bannerDismissed && (
-        <AlarmBanner
-          alarms={alarms}
-          onDismiss={() => setBannerDismissed(true)}
-          onScrollTo={scrollTo}
-        />
-      )}
 
       <div className="grid grid-cols-4 gap-4">
         <StatCard label="Aktif Tag" value={overview?.active_tags ?? '—'} />
@@ -146,11 +79,7 @@ export default function Dashboard() {
           value={overview?.last_reading ? format(parseISO(overview.last_reading + 'Z'), 'HH:mm:ss') : '—'}
           sub={overview?.last_reading ? format(parseISO(overview.last_reading + 'Z'), 'dd MMM yyyy', { locale: tr }) : undefined}
         />
-        <StatCard
-          label="PLC Bağlantı"
-          value={health == null ? '...' : health.opc_connected ? '● Bağlı' : '✗ Kopuk'}
-          sub={health?.opc_connected ? undefined : 'S7 bağlantısı yok'}
-        />
+        <StatCard label="PLC Bağlantı" value={plcLabel} sub="bağlı / toplam" />
       </div>
 
       {isLoading ? (
@@ -179,13 +108,7 @@ export default function Dashboard() {
                 </tr>
               </thead>
               <tbody>
-                {tvs.map((tv) => (
-                  <TagRow
-                    key={tv.tag_id}
-                    tv={tv}
-                    rowRef={(el) => { rowRefs.current[tv.tag_id] = el }}
-                  />
-                ))}
+                {tvs.map((tv) => <TagRow key={tv.tag_id} tv={tv} />)}
               </tbody>
             </table>
           </div>

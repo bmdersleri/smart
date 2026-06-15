@@ -32,7 +32,8 @@ async def poll_loop() -> None:
         min_interval = settings.S7_POLL_INTERVAL
         try:
             async with AsyncSessionLocal() as db:
-                result = await db.execute(select(Tag).where(Tag.is_active))
+                # Sadece uzun-süre (archive) tag'leri topla/kaydet
+                result = await db.execute(select(Tag).where(Tag.is_active, Tag.long_term))
                 tags = result.scalars().all()
 
             now = time.monotonic()

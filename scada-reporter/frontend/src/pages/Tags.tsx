@@ -87,28 +87,16 @@ function AddTagModal({ onClose }: { onClose: () => void }) {
 
 function EditTagModal({ tag, onClose }: { tag: Tag; onClose: () => void }) {
   const qc = useQueryClient()
-  const [minAlarm, setMinAlarm] = useState(tag.min_alarm != null ? String(tag.min_alarm) : '')
-  const [maxAlarm, setMaxAlarm] = useState(tag.max_alarm != null ? String(tag.max_alarm) : '')
   const [unit, setUnit] = useState(tag.unit)
   const [device, setDevice] = useState(tag.device)
   const [channel, setChannel] = useState(tag.channel)
-  const [validationErr, setValidationErr] = useState('')
 
   const mut = useMutation({
     mutationFn: (payload: Parameters<typeof updateTag>[1]) => updateTag(tag.id, payload),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['tags'] }); onClose() },
   })
 
-  const save = () => {
-    const min = minAlarm !== '' ? parseFloat(minAlarm) : null
-    const max = maxAlarm !== '' ? parseFloat(maxAlarm) : null
-    if (min !== null && max !== null && min >= max) {
-      setValidationErr('Min değer Max\'tan küçük olmalı')
-      return
-    }
-    setValidationErr('')
-    mut.mutate({ unit, device, channel, min_alarm: min, max_alarm: max })
-  }
+  const save = () => mut.mutate({ unit, device, channel })
 
   const inputCls = 'w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500'
 
@@ -138,18 +126,6 @@ function EditTagModal({ tag, onClose }: { tag: Tag; onClose: () => void }) {
           </div>
         ))}
 
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="text-xs text-gray-400 mb-1 block">Min Alarm (boş = yok)</label>
-            <input className={inputCls} type="number" value={minAlarm} onChange={(e) => setMinAlarm(e.target.value)} placeholder="0" />
-          </div>
-          <div>
-            <label className="text-xs text-gray-400 mb-1 block">Max Alarm (boş = yok)</label>
-            <input className={inputCls} type="number" value={maxAlarm} onChange={(e) => setMaxAlarm(e.target.value)} placeholder="5000" />
-          </div>
-        </div>
-
-        {validationErr && <p className="text-red-400 text-sm">{validationErr}</p>}
         {mut.isError && <p className="text-red-400 text-sm">Kayıt hatası.</p>}
 
         <div className="flex gap-3 pt-2">
@@ -283,14 +259,6 @@ export default function Tags() {
       )
     : tags
 
-  const alarmLabel = (t: Tag) => {
-    if (t.min_alarm == null && t.max_alarm == null) return '—'
-    const parts: string[] = []
-    if (t.min_alarm != null) parts.push(`${t.min_alarm}`)
-    if (t.max_alarm != null) parts.push(`${t.max_alarm}`)
-    return `${parts.join('–')}${t.unit ? ' ' + t.unit : ''}`
-  }
-
   return (
     <div className="p-6 space-y-4">
       <div className="flex items-center justify-between">
@@ -328,7 +296,7 @@ export default function Tags() {
           <table className="w-full">
             <thead className="border-b border-gray-800">
               <tr className="text-xs text-gray-500 uppercase tracking-wide">
-                {['PLC', 'Tag Adı', 'PLC IP', 'S7 Adresi', 'Aralık', 'Birim', 'Alarm', 'Durum', ''].map((h) => (
+                {['PLC', 'Tag Adı', 'PLC IP', 'S7 Adresi', 'Aralık', 'Birim', 'Durum', ''].map((h) => (
                   <th key={h} className="px-4 py-3 text-left">{h}</th>
                 ))}
               </tr>
@@ -346,7 +314,6 @@ export default function Tags() {
                   <td className="px-4 py-3 text-xs font-mono text-gray-500">{t.s7_address ?? '—'}</td>
                   <td className="px-4 py-3 text-sm text-gray-400">{t.sample_interval}s</td>
                   <td className="px-4 py-3 text-sm text-gray-300">{t.unit}</td>
-                  <td className="px-4 py-3 text-sm text-gray-400">{alarmLabel(t)}</td>
                   <td className="px-4 py-3">
                     <span className={`text-xs px-2 py-0.5 rounded-full ${t.is_active ? 'bg-green-900/50 text-green-400' : 'bg-gray-800 text-gray-500'}`}>
                       {t.is_active ? 'Aktif' : 'Pasif'}
