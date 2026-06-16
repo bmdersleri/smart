@@ -8,7 +8,17 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 
-from app.api import advanced_reports, auth, dashboard, explore, plc, query, reports, tags
+from app.api import (
+    advanced_reports,
+    auth,
+    dashboard,
+    explore,
+    plc,
+    query,
+    realtime,
+    reports,
+    tags,
+)
 from app.collector.opcua_server import opcua_server
 from app.collector.poller import poll_loop
 from app.collector.s7_collector import plc_manager
@@ -91,6 +101,7 @@ app.add_middleware(
 app.include_router(auth.router, prefix="/api")
 app.include_router(tags.router, prefix="/api")
 app.include_router(dashboard.router, prefix="/api")
+app.include_router(realtime.router, prefix="/api")
 app.include_router(reports.router, prefix="/api")
 app.include_router(query.router, prefix="/api")
 app.include_router(explore.router, prefix="/api")
