@@ -56,9 +56,10 @@ async def devices(db: AsyncSession = Depends(get_db), _=Depends(get_current_user
 # ---------------------------------------------------------------------------
 
 
-def _latest_reading_subq():
+def _latest_reading_subq(tag_ids: list[int]):
     return (
         select(TagReading.tag_id, func.max(TagReading.timestamp).label("max_ts"))
+        .where(TagReading.tag_id.in_(tag_ids))
         .group_by(TagReading.tag_id)
         .subquery()
     )
@@ -67,7 +68,7 @@ def _latest_reading_subq():
 async def _fetch_tags_with_readings(db: AsyncSession, tag_ids: list[int]) -> list[dict]:
     if not tag_ids:
         return []
-    subq = _latest_reading_subq()
+    subq = _latest_reading_subq(tag_ids)
     result = await db.execute(
         select(
             Tag.id,
@@ -194,7 +195,7 @@ async def dashboard_tags(
     tag_ids = [t.id for t in tags]
 
     # 4. Fetch latest readings for this page's tags only
-    subq = _latest_reading_subq()
+    subq = _latest_reading_subq(tag_ids)
     readings_result = await db.execute(
         select(
             TagReading.tag_id,

@@ -181,3 +181,21 @@ async def test_pagination(client: AsyncClient, db_session: AsyncSession):
     data2 = r2.json()
     assert len(data2["items"]) == 10
     assert data2["page"] == 2
+
+
+@pytest.mark.asyncio
+async def test_latest_reading_picks_newest(client: AsyncClient, db_session: AsyncSession):
+    token = await _register_and_login(client, "dt_latest_user")
+    tid = await _make_tag(db_session, "DT_LATEST_TAG", device="DT_LATEST_DEV")
+    now = datetime.now(UTC)
+    db_session.add(
+        TagReading(tag_id=tid, value=1.0, quality=192, timestamp=now - timedelta(seconds=30))
+    )
+    db_session.add(TagReading(tag_id=tid, value=2.0, quality=192, timestamp=now))
+    await db_session.commit()
+    headers = {"Authorization": f"Bearer {token}"}
+
+    r = await client.get("/api/dashboard/tags", params={"device": "DT_LATEST_DEV"}, headers=headers)
+    item = next(i for i in r.json()["items"] if i["name"] == "DT_LATEST_TAG")
+    assert item["value"] == 2.0
+    assert item["quality_ok"] is True
