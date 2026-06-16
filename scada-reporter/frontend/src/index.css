@@ -98,6 +98,14 @@ html.light .from-emerald-950\/40 {
 /* sarı / amber */
 html.light .text-yellow-400,
 html.light .text-yellow-300 { color: #a16207; }
+html.light .bg-yellow-900\/30,
+html.light .bg-yellow-900\/40,
+html.light .bg-yellow-900\/50 { background-color: #fef9c3; }
+html.light .text-amber-400,
+html.light .text-amber-300 { color: #b45309; }
+html.light .bg-amber-900\/30,
+html.light .bg-amber-900\/40,
+html.light .bg-amber-900\/50 { background-color: #fef3c7; }
 
 /* ── butonlar: solid vurgu zemininde yazı BEYAZ kalmalı ─────────────────────
    Global text-white koyulaştırması, mavi/yeşil dolu butonlarda yazıyı okunmaz
