@@ -1,6 +1,9 @@
+import csv
+import io
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile
+from fastapi.responses import Response
 from pydantic import BaseModel
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -59,6 +62,7 @@ class TagResponse(BaseModel):
     long_term: bool
     daily_tracking: bool
     is_active: bool
+    group_id: int | None
     min_alarm: float | None
     max_alarm: float | None
     deadband: float | None
@@ -121,6 +125,124 @@ async def import_tags(
         "total": imported + skipped,
         "errors": [],
     }
+
+
+# Dışa/içe aktarma için kolon düzeni (CSV başlığı ve XLSX sütunları)
+_IO_COLUMNS = [
+    "node_id",
+    "name",
+    "description",
+    "unit",
+    "plc_name",
+    "plc_ip",
+    "plc_rack",
+    "plc_slot",
+    "s7_address",
+    "data_type",
+    "sample_interval",
+    "long_term",
+    "daily_tracking",
+    "is_active",
+]
+
+
+@router.get("/export")
+async def export_tags(
+    format: str = Query("csv", pattern="^(csv|xlsx)$"),
+    db: AsyncSession = Depends(get_db),
+    _=Depends(get_current_user),
+):
+    """Tüm tag'leri CSV veya XLSX olarak indir. Aynı kolon düzeni import_csv ile uyumlu."""
+    result = await db.execute(select(Tag).order_by(Tag.plc_name, Tag.name))
+    tags = result.scalars().all()
+    rows = [[getattr(t, c) for c in _IO_COLUMNS] for t in tags]
+    stamp = datetime.now().strftime("%Y%m%d-%H%M")
+
+    if format == "xlsx":
+        from openpyxl import Workbook
+
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Tags"
+        ws.append(_IO_COLUMNS)
+        for row in rows:
+            ws.append(row)
+        buf = io.BytesIO()
+        wb.save(buf)
+        return Response(
+            content=buf.getvalue(),
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": f'attachment; filename="tags-{stamp}.xlsx"'},
+        )
+
+    sbuf = io.StringIO()
+    writer = csv.writer(sbuf)
+    writer.writerow(_IO_COLUMNS)
+    writer.writerows(rows)
+    return Response(
+        content=sbuf.getvalue(),
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="tags-{stamp}.csv"'},
+    )
+
+
+_BOOL_FIELDS = {"long_term", "daily_tracking", "is_active"}
+_INT_FIELDS = {"plc_rack", "plc_slot", "sample_interval"}
+
+
+@router.post("/import_csv")
+async def import_tags_csv(
+    file: UploadFile,
+    db: AsyncSession = Depends(get_db),
+    _=Depends(require_role("admin", "operator")),
+):
+    """Genel CSV import. En az `name` kolonu gerekir; node_id verilmezse türetilir.
+    Mevcut node_id atlanır. Kolonlar export ile aynıdır (eksikler varsayılan alır).
+    """
+    if not file.filename or not file.filename.lower().endswith(".csv"):
+        raise HTTPException(status_code=400, detail="Lütfen .csv dosyası yükleyin")
+    content = (await file.read()).decode("utf-8-sig")
+    reader = csv.DictReader(io.StringIO(content))
+    if not reader.fieldnames or "name" not in reader.fieldnames:
+        raise HTTPException(status_code=400, detail="CSV 'name' kolonu içermeli")
+
+    existing = await db.execute(select(Tag.node_id))
+    existing_ids = {r[0] for r in existing.all()}
+
+    imported, skipped, errors = 0, 0, []
+    for i, raw in enumerate(reader, start=2):
+        name = (raw.get("name") or "").strip()
+        if not name:
+            skipped += 1
+            continue
+        payload: dict = {}
+        for col in _IO_COLUMNS:
+            if col not in raw or raw[col] is None or raw[col] == "":
+                continue
+            val = raw[col].strip()
+            if col in _BOOL_FIELDS:
+                payload[col] = val.lower() in ("1", "true", "yes", "evet", "x")
+            elif col in _INT_FIELDS:
+                try:
+                    payload[col] = int(val)
+                except ValueError:
+                    errors.append(f"satır {i}: {col} sayı değil ({val})")
+            else:
+                payload[col] = val
+        payload["name"] = name
+        suffix = payload.get("s7_address") or name
+        node_id = payload.get("node_id") or f"{payload.get('plc_name') or 'tag'}:{suffix}"
+        if node_id in existing_ids:
+            skipped += 1
+            continue
+        payload["node_id"] = node_id
+        db.add(Tag(**payload))
+        existing_ids.add(node_id)
+        imported += 1
+
+    if imported:
+        await db.commit()
+    return {"imported": imported, "skipped": skipped, "total": imported + skipped, "errors": errors}
 
 
 @router.get("/", response_model=list[TagResponse])
