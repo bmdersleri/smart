@@ -19,7 +19,7 @@ def build_pdf(
     generated_at: datetime,
     lang: str = "en",
 ) -> bytes:
-    L = get_labels(lang)
+    L = get_labels(lang)  # noqa: N806 — short alias for label dict, used pervasively
 
     for td in per_tag_data:
         td["chart_b64"] = base64.b64encode(td.get("chart_png", b"")).decode()
