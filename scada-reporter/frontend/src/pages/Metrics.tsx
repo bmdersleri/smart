@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { getMetrics, getDeadbandSavings } from '../api/client'
 import type { MetricsSummary } from '../api/client'
 import { useSortable } from '../hooks/useSortable'
@@ -25,6 +26,7 @@ function fmtPct(r: number | null): string {
 }
 
 export default function Metrics() {
+  const { t, i18n } = useTranslation('metrics')
   const { data, isLoading, isError, dataUpdatedAt } = useQuery({
     queryKey: ['metrics'],
     queryFn: () => getMetrics().then((r) => r.data),
@@ -42,7 +44,7 @@ export default function Metrics() {
   const badAccent =
     m?.bad_ratio == null ? 'text-white' : m.bad_ratio > 0.05 ? 'text-red-400' : 'text-green-400'
 
-  // varsayılan: en yavaş PLC üstte; başlığa tıklayınca yeniden sıralanır
+  // default: slowest PLC on top; clicking a header re-sorts
   const byAvg = [...(m?.plcs ?? [])].sort((a, b) => (b.avg_seconds ?? 0) - (a.avg_seconds ?? 0))
   const { sorted: plcRows, sort, toggle } = useSortable(byAvg)
 
@@ -50,80 +52,80 @@ export default function Metrics() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-white">Canlı Metrikler</h1>
-          <p className="text-sm text-gray-500">Poller / PLC okuma sağlığı — 2 sn'de bir güncellenir</p>
+          <h1 className="text-xl font-semibold text-white">{t('title')}</h1>
+          <p className="text-sm text-gray-500">{t('subtitle')}</p>
         </div>
         <div className="flex items-center gap-2 text-xs text-gray-500">
           <span className="inline-block w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-          {dataUpdatedAt ? new Date(dataUpdatedAt).toLocaleTimeString() : 'bağlanıyor...'}
+          {dataUpdatedAt ? new Date(dataUpdatedAt).toLocaleTimeString(i18n.language) : t('connecting')}
         </div>
       </div>
 
-      {isLoading && <div className="text-center py-16 text-gray-500">Yükleniyor...</div>}
-      {isError && <div className="text-center py-16 text-red-400">Metrikler alınamadı.</div>}
+      {isLoading && <div className="text-center py-16 text-gray-500">{t('loading')}</div>}
+      {isError && <div className="text-center py-16 text-red-400">{t('load_error')}</div>}
 
       {m && (
         <>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <StatCard label="Yazılan Satır" value={m.rows_written_total.toLocaleString()} sub="toplam (DB)" accent="text-cyan-300" />
-            <StatCard label="BAD Kalite" value={m.bad_quality_total.toLocaleString()} sub="toplam okuma" accent={badAccent} />
-            <StatCard label="BAD Oranı" value={fmtPct(m.bad_ratio)} sub="bad / toplam" accent={badAccent} />
-            <StatCard label="Ortalama Tick" value={fmtMs(m.tick_avg_seconds)} sub={`${m.tick_count.toLocaleString()} tick`} accent="text-blue-300" />
+            <StatCard label={t('rows_written')} value={m.rows_written_total.toLocaleString(i18n.language)} sub={t('rows_written_sub')} accent="text-cyan-300" />
+            <StatCard label={t('bad_quality')} value={m.bad_quality_total.toLocaleString(i18n.language)} sub={t('bad_quality_sub')} accent={badAccent} />
+            <StatCard label={t('bad_ratio')} value={fmtPct(m.bad_ratio)} sub={t('bad_ratio_sub')} accent={badAccent} />
+            <StatCard label={t('avg_tick')} value={fmtMs(m.tick_avg_seconds)} sub={t('avg_tick_sub', { value: m.tick_count.toLocaleString(i18n.language) })} accent="text-blue-300" />
           </div>
 
-          {/* Deadband (report-by-exception) veri tasarrufu — son 24 saat, dinamik */}
+          {/* Deadband (report-by-exception) data savings — last 24 hours, dynamic */}
           {savings && (
             <div className="bg-gradient-to-br from-emerald-950/40 to-gray-900 border border-emerald-800/40 rounded-xl p-5">
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h2 className="text-sm font-medium text-white flex items-center gap-2">
-                    <span className="text-emerald-400">♻</span> Deadband Veri Tasarrufu
+                    <span className="text-emerald-400">♻</span> {t('deadband_title')}
                   </h2>
                   <p className="text-xs text-gray-500">
-                    Son {savings.window_hours} saat · {savings.deadband_tags.toLocaleString()} deadband'li tag · report-by-exception
+                    {t('deadband_sub', { hours: savings.window_hours, tags: savings.deadband_tags.toLocaleString(i18n.language) })}
                   </p>
                 </div>
                 <div className="text-right">
                   <p className="text-4xl font-bold font-mono text-emerald-400">
                     {savings.savings_pct === null ? '—' : `${savings.savings_pct}%`}
                   </p>
-                  <p className="text-xs text-gray-500">yazma tasarrufu</p>
+                  <p className="text-xs text-gray-500">{t('write_savings')}</p>
                 </div>
               </div>
 
-              {/* tasarruf çubuğu: yazılan (gerçek) vs önlenen (tasarruf) */}
+              {/* savings bar: written (actual) vs prevented (savings) */}
               <div className="h-3 bg-gray-800 rounded-full overflow-hidden flex mb-2">
                 <div
                   className="h-full bg-emerald-500"
                   style={{ width: `${savings.savings_pct ?? 0}%` }}
-                  title={`${savings.saved_rows.toLocaleString()} satır önlendi`}
+                  title={t('rows_prevented_bar', { value: savings.saved_rows.toLocaleString(i18n.language) })}
                 />
-                <div className="h-full bg-cyan-600/70 flex-1" title={`${savings.actual_rows.toLocaleString()} satır yazıldı`} />
+                <div className="h-full bg-cyan-600/70 flex-1" title={t('rows_written_bar', { value: savings.actual_rows.toLocaleString(i18n.language) })} />
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-                <StatCard label="Önlenen Satır" value={savings.saved_rows.toLocaleString()} sub={`${savings.window_hours} saatte`} accent="text-emerald-400" />
-                <StatCard label="Yazılan Satır" value={savings.actual_rows.toLocaleString()} sub="deadband'li tag'ler" accent="text-cyan-300" />
-                <StatCard label="Deadband'siz Olsa" value={savings.expected_rows.toLocaleString()} sub="beklenen satır" accent="text-gray-300" />
-                <StatCard label="Günlük Tasarruf" value={`~${savings.saved_rows_per_day.toLocaleString()}`} sub="satır / gün (24s ölçek)" accent="text-emerald-300" />
+                <StatCard label={t('rows_prevented')} value={savings.saved_rows.toLocaleString(i18n.language)} sub={t('rows_prevented_sub', { hours: savings.window_hours })} accent="text-emerald-400" />
+                <StatCard label={t('rows_written_db')} value={savings.actual_rows.toLocaleString(i18n.language)} sub={t('rows_written_db_sub')} accent="text-cyan-300" />
+                <StatCard label={t('without_deadband')} value={savings.expected_rows.toLocaleString(i18n.language)} sub={t('without_deadband_sub')} accent="text-gray-300" />
+                <StatCard label={t('daily_savings')} value={`~${savings.saved_rows_per_day.toLocaleString(i18n.language)}`} sub={t('daily_savings_sub')} accent="text-emerald-300" />
               </div>
             </div>
           )}
 
           <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
             <div className="px-4 py-3 border-b border-gray-800">
-              <h2 className="text-sm font-medium text-white">PLC Okuma Gecikmeleri</h2>
-              <p className="text-xs text-gray-500">PLC başına ortalama batch okuma süresi ({m.plcs.length} PLC)</p>
+              <h2 className="text-sm font-medium text-white">{t('read_latency_title')}</h2>
+              <p className="text-xs text-gray-500">{t('read_latency_sub', { value: m.plcs.length })}</p>
             </div>
             <table className="w-full">
               <thead>
                 <tr className="text-xs text-gray-500 uppercase tracking-wide">
-                  <SortHeader label="PLC Adı" sortKey="name" sort={sort} onToggle={toggle} />
-                  <SortHeader label="IP" sortKey="plc" sort={sort} onToggle={toggle} />
-                  <SortHeader label="Tag Sayısı" sortKey="tag_count" sort={sort} onToggle={toggle} align="right" />
-                  <SortHeader label="Okuma Sayısı" sortKey="count" sort={sort} onToggle={toggle} align="right" />
-                  <SortHeader label="Ort. Süre" sortKey="avg_seconds" sort={sort} onToggle={toggle} align="right" />
-                  <th className="px-4 py-2 text-left w-1/4">Gecikme</th>
+                  <SortHeader label={t('col_name')} sortKey="name" sort={sort} onToggle={toggle} />
+                  <SortHeader label={t('col_ip')} sortKey="plc" sort={sort} onToggle={toggle} />
+                  <SortHeader label={t('col_tag_count')} sortKey="tag_count" sort={sort} onToggle={toggle} align="right" />
+                  <SortHeader label={t('col_read_count')} sortKey="count" sort={sort} onToggle={toggle} align="right" />
+                  <SortHeader label={t('col_avg_time')} sortKey="avg_seconds" sort={sort} onToggle={toggle} align="right" />
+                  <th className="px-4 py-2 text-left w-1/4">{t('col_latency')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -135,8 +137,8 @@ export default function Metrics() {
                       <tr key={p.plc} className="border-t border-gray-800 hover:bg-gray-800/40">
                         <td className="px-4 py-2 text-sm text-white">{p.name || '—'}</td>
                         <td className="px-4 py-2 text-sm font-mono text-gray-400">{p.plc}</td>
-                        <td className="px-4 py-2 text-sm text-right text-gray-300 font-mono">{p.tag_count.toLocaleString()}</td>
-                        <td className="px-4 py-2 text-sm text-right text-gray-400 font-mono">{p.count.toLocaleString()}</td>
+                        <td className="px-4 py-2 text-sm text-right text-gray-300 font-mono">{p.tag_count.toLocaleString(i18n.language)}</td>
+                        <td className="px-4 py-2 text-sm text-right text-gray-400 font-mono">{p.count.toLocaleString(i18n.language)}</td>
                         <td className={`px-4 py-2 text-sm text-right font-mono ${slow ? 'text-red-400' : 'text-gray-200'}`}>{fmtMs(p.avg_seconds)}</td>
                         <td className="px-4 py-2">
                           <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
@@ -149,7 +151,7 @@ export default function Metrics() {
                 {m.plcs.length === 0 && (
                   <tr>
                     <td colSpan={6} className="px-4 py-8 text-center text-gray-500 text-sm">
-                      Henüz PLC okuma metriği yok (poller ısınıyor).
+                      {t('empty_plcs')}
                     </td>
                   </tr>
                 )}

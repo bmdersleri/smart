@@ -1,11 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { createPlc, deletePlc, listPlcs, updatePlc } from '../api/client'
 import type { PlcEntry } from '../api/client'
 import { useSortable } from '../hooks/useSortable'
 import SortHeader from '../components/SortHeader'
 
 function ConnBadge({ connected }: { connected: boolean }) {
+  const { t } = useTranslation('plc')
   return (
     <span
       className={`inline-flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-full ${
@@ -13,7 +15,7 @@ function ConnBadge({ connected }: { connected: boolean }) {
       }`}
     >
       <span className={`w-1.5 h-1.5 rounded-full ${connected ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`} />
-      {connected ? 'Bağlı' : 'Bağlantı Yok'}
+      {connected ? t('connected') : t('disconnected')}
     </span>
   )
 }
@@ -27,6 +29,7 @@ function EditRow({
   onSave: (ip: string, rack: number, slot: number) => void
   onCancel: () => void
 }) {
+  const { t, i18n } = useTranslation('plc')
   const [ip, setIp] = useState(plc.ip)
   const [rack, setRack] = useState(plc.rack)
   const [slot, setSlot] = useState(plc.slot)
@@ -38,7 +41,7 @@ function EditRow({
         <input
           value={ip}
           onChange={(e) => setIp(e.target.value)}
-          placeholder="192.168.x.x"
+          placeholder={t('ip_placeholder')}
           className="bg-gray-700 text-gray-100 text-sm rounded px-2 py-1 border border-cyan-600 focus:outline-none w-36 font-mono"
         />
       </td>
@@ -62,7 +65,7 @@ function EditRow({
           max={31}
         />
       </td>
-      <td className="px-4 py-2.5 text-sm text-gray-400">{plc.tag_count.toLocaleString('tr')}</td>
+      <td className="px-4 py-2.5 text-sm text-gray-400">{plc.tag_count.toLocaleString(i18n.language)}</td>
       <td className="px-4 py-2.5"><ConnBadge connected={plc.connected} /></td>
       <td className="px-4 py-2.5 text-right">
         <div className="flex items-center justify-end gap-2">
@@ -70,13 +73,13 @@ function EditRow({
             onClick={() => onSave(ip, rack, slot)}
             className="px-3 py-1 text-xs bg-cyan-600 hover:bg-cyan-500 text-white rounded transition-colors"
           >
-            Kaydet
+            {t('save')}
           </button>
           <button
             onClick={onCancel}
             className="px-3 py-1 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition-colors"
           >
-            İptal
+            {t('cancel')}
           </button>
         </div>
       </td>
@@ -91,6 +94,7 @@ function AddRow({
   onSave: (name: string, ip: string, rack: number, slot: number) => void
   onCancel: () => void
 }) {
+  const { t } = useTranslation('plc')
   const [name, setName] = useState('')
   const [ip, setIp] = useState('')
   const [rack, setRack] = useState(0)
@@ -103,7 +107,7 @@ function AddRow({
           autoFocus
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="PLC adı"
+          placeholder={t('name_placeholder')}
           className="bg-gray-700 text-gray-100 text-sm rounded px-2 py-1 border border-cyan-600 focus:outline-none w-32"
         />
       </td>
@@ -111,7 +115,7 @@ function AddRow({
         <input
           value={ip}
           onChange={(e) => setIp(e.target.value)}
-          placeholder="192.168.x.x"
+          placeholder={t('ip_placeholder')}
           className="bg-gray-700 text-gray-100 text-sm rounded px-2 py-1 border border-gray-600 focus:outline-none w-36 font-mono"
         />
       </td>
@@ -142,13 +146,13 @@ function AddRow({
             disabled={!name.trim()}
             className="px-3 py-1 text-xs bg-cyan-600 hover:bg-cyan-500 disabled:opacity-40 text-white rounded transition-colors"
           >
-            Ekle
+            {t('add')}
           </button>
           <button
             onClick={onCancel}
             className="px-3 py-1 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition-colors"
           >
-            İptal
+            {t('cancel')}
           </button>
         </div>
       </td>
@@ -165,6 +169,7 @@ function PlcRow({
   onEdit: () => void
   onDelete: () => void
 }) {
+  const { t, i18n } = useTranslation('plc')
   const [confirming, setConfirming] = useState(false)
 
   return (
@@ -173,25 +178,25 @@ function PlcRow({
       <td className="px-4 py-3 text-sm text-gray-300 font-mono">{plc.ip || <span className="text-gray-600 italic">—</span>}</td>
       <td className="px-4 py-3 text-sm text-gray-400">{plc.rack}</td>
       <td className="px-4 py-3 text-sm text-gray-400">{plc.slot}</td>
-      <td className="px-4 py-3 text-sm text-gray-400">{plc.tag_count.toLocaleString('tr')}</td>
+      <td className="px-4 py-3 text-sm text-gray-400">{plc.tag_count.toLocaleString(i18n.language)}</td>
       <td className="px-4 py-3"><ConnBadge connected={plc.connected} /></td>
       <td className="px-4 py-3 text-right">
         {confirming ? (
           <div className="flex items-center justify-end gap-2">
             <span className="text-xs text-red-400">
-              {plc.tag_count > 0 ? `${plc.tag_count} tag silinecek!` : 'Emin misin?'}
+              {plc.tag_count > 0 ? t('confirm_delete_tags', { count: plc.tag_count }) : t('confirm_delete')}
             </span>
             <button
               onClick={() => { onDelete(); setConfirming(false) }}
               className="px-3 py-1 text-xs bg-red-700 hover:bg-red-600 text-white rounded transition-colors"
             >
-              Sil
+              {t('delete')}
             </button>
             <button
               onClick={() => setConfirming(false)}
               className="px-3 py-1 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition-colors"
             >
-              İptal
+              {t('cancel')}
             </button>
           </div>
         ) : (
@@ -200,13 +205,13 @@ function PlcRow({
               onClick={onEdit}
               className="px-3 py-1 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition-colors"
             >
-              Düzenle
+              {t('edit')}
             </button>
             <button
               onClick={() => setConfirming(true)}
               className="px-3 py-1 text-xs bg-red-900/40 hover:bg-red-800/60 text-red-400 rounded transition-colors"
             >
-              Sil
+              {t('delete')}
             </button>
           </div>
         )}
@@ -216,6 +221,7 @@ function PlcRow({
 }
 
 export default function PlcConfig() {
+  const { t } = useTranslation('plc')
   const qc = useQueryClient()
   const [editingName, setEditingName] = useState<string | null>(null)
   const [adding, setAdding] = useState(false)
@@ -248,7 +254,7 @@ export default function PlcConfig() {
     },
     onError: (err: unknown) => {
       const msg = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-      setError(msg ?? 'Eklenemedi')
+      setError(msg ?? t('error_add_failed'))
     },
   })
 
@@ -269,14 +275,14 @@ export default function PlcConfig() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-white">PLC Yönetimi</h1>
-          <p className="text-sm text-gray-500 mt-0.5">IP adresi ve bağlantı noktası yapılandırması</p>
+          <h1 className="text-xl font-bold text-white">{t('title')}</h1>
+          <p className="text-sm text-gray-500 mt-0.5">{t('subtitle')}</p>
         </div>
         <div className="flex items-center gap-3">
           {total > 0 && (
             <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium ${connected === total ? 'bg-green-900/30 text-green-400' : 'bg-yellow-900/30 text-yellow-400'}`}>
               <span className="w-2 h-2 rounded-full bg-current" />
-              {connected}/{total} Bağlı
+              {t('connected_count', { connected, total })}
             </span>
           )}
           {!adding && (
@@ -287,7 +293,7 @@ export default function PlcConfig() {
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
-              Yeni PLC Ekle
+              {t('add_plc')}
             </button>
           )}
         </div>
@@ -301,22 +307,22 @@ export default function PlcConfig() {
       )}
 
       {isLoading ? (
-        <div className="text-center py-16 text-gray-500">Yükleniyor...</div>
+        <div className="text-center py-16 text-gray-500">{t('loading')}</div>
       ) : isError ? (
         <div className="text-center py-16 bg-gray-900 rounded-xl border border-red-900">
-          <p className="text-red-400">PLC listesi yüklenemedi</p>
+          <p className="text-red-400">{t('load_error')}</p>
         </div>
       ) : (
         <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
           <table className="w-full">
             <thead>
               <tr className="text-xs text-gray-500 uppercase tracking-wide">
-                <SortHeader label="PLC Adı" sortKey="name" sort={sort} onToggle={toggle} />
-                <SortHeader label="IP Adresi" sortKey="ip" sort={sort} onToggle={toggle} />
-                <SortHeader label="Rack" sortKey="rack" sort={sort} onToggle={toggle} />
-                <SortHeader label="Slot" sortKey="slot" sort={sort} onToggle={toggle} />
-                <SortHeader label="Tag Sayısı" sortKey="tag_count" sort={sort} onToggle={toggle} />
-                <SortHeader label="Durum" sortKey="connected" sort={sort} onToggle={toggle} />
+                <SortHeader label={t('col_name')} sortKey="name" sort={sort} onToggle={toggle} />
+                <SortHeader label={t('col_ip')} sortKey="ip" sort={sort} onToggle={toggle} />
+                <SortHeader label={t('col_rack')} sortKey="rack" sort={sort} onToggle={toggle} />
+                <SortHeader label={t('col_slot')} sortKey="slot" sort={sort} onToggle={toggle} />
+                <SortHeader label={t('col_tag_count')} sortKey="tag_count" sort={sort} onToggle={toggle} />
+                <SortHeader label={t('col_status')} sortKey="connected" sort={sort} onToggle={toggle} />
                 <th className="px-4 py-2 text-right"></th>
               </tr>
             </thead>
@@ -330,7 +336,7 @@ export default function PlcConfig() {
               {plcs.length === 0 && !adding ? (
                 <tr>
                   <td colSpan={7} className="px-4 py-16 text-center text-gray-500">
-                    Henüz PLC kaydı yok. "Yeni PLC Ekle" ile başlayın.
+                    {t('empty')}
                   </td>
                 </tr>
               ) : (
@@ -358,7 +364,7 @@ export default function PlcConfig() {
       )}
 
       <p className="text-xs text-gray-600">
-        IP değiştirildiğinde yeni bağlantı bir sonraki poller döngüsünde kurulur. PLC silindiğinde tüm bağlı tag'ler de kaldırılır.
+        {t('footer_note')}
       </p>
     </div>
   )

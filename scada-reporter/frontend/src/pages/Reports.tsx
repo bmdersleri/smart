@@ -1,18 +1,29 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { getTags, generateReport, getReportHistory, downloadHistoryReport } from '../api/client'
 import type { ReportHistoryEntry } from '../api/client'
 import { format, subDays, startOfDay, endOfDay, parseISO } from 'date-fns'
-import { tr } from 'date-fns/locale'
+import { enUS, tr, ru, de } from 'date-fns/locale'
+
+const DATE_LOCALES: Record<string, typeof tr> = { en: enUS, tr, ru, de }
 
 const fmt = (d: Date) => format(d, "yyyy-MM-dd'T'HH:mm")
 
+// Stable preset identifiers; labels are resolved at render time via i18n.
 const PRESETS = [
-  { label: 'Bugün', start: () => startOfDay(new Date()), end: () => new Date() },
-  { label: 'Dün', start: () => startOfDay(subDays(new Date(), 1)), end: () => endOfDay(subDays(new Date(), 1)) },
-  { label: 'Son 7 Gün', start: () => startOfDay(subDays(new Date(), 7)), end: () => new Date() },
-  { label: 'Son 30 Gün', start: () => startOfDay(subDays(new Date(), 30)), end: () => new Date() },
+  { id: 'today', start: () => startOfDay(new Date()), end: () => new Date() },
+  { id: 'yesterday', start: () => startOfDay(subDays(new Date(), 1)), end: () => endOfDay(subDays(new Date(), 1)) },
+  { id: 'last_7d', start: () => startOfDay(subDays(new Date(), 7)), end: () => new Date() },
+  { id: 'last_30d', start: () => startOfDay(subDays(new Date(), 30)), end: () => new Date() },
 ]
+
+const PRESET_LABEL_KEY: Record<string, string> = {
+  today: 'preset_today',
+  yesterday: 'preset_yesterday',
+  last_7d: 'preset_last_7d',
+  last_30d: 'preset_last_30d',
+}
 
 const REPORT_PRESET_KEY = 'report_presets'
 
@@ -28,7 +39,9 @@ function loadReportPresets(): ReportPreset[] {
 }
 
 function HistoryRow({ entry }: { entry: ReportHistoryEntry }) {
+  const { t, i18n } = useTranslation('reports')
   const [downloading, setDownloading] = useState(false)
+  const dateLocale = DATE_LOCALES[i18n.language] ?? enUS
 
   const reDownload = async () => {
     setDownloading(true)
@@ -46,10 +59,10 @@ function HistoryRow({ entry }: { entry: ReportHistoryEntry }) {
     }
   }
 
-  const dateStr = format(parseISO(entry.created_at + 'Z'), 'dd.MM.yyyy HH:mm', { locale: tr })
+  const dateStr = format(parseISO(entry.created_at + 'Z'), 'dd.MM.yyyy HH:mm', { locale: dateLocale })
   const tagCount = entry.tag_ids.length
-  const rangeStart = format(parseISO(entry.start + 'Z'), 'dd.MM', { locale: tr })
-  const rangeEnd = format(parseISO(entry.end + 'Z'), 'dd.MM', { locale: tr })
+  const rangeStart = format(parseISO(entry.start + 'Z'), 'dd.MM', { locale: dateLocale })
+  const rangeEnd = format(parseISO(entry.end + 'Z'), 'dd.MM', { locale: dateLocale })
 
   return (
     <div className="flex items-center justify-between py-2.5 border-t border-gray-800">
@@ -58,7 +71,7 @@ function HistoryRow({ entry }: { entry: ReportHistoryEntry }) {
         <div>
           <span className="text-sm text-gray-300">{dateStr}</span>
           <span className="text-gray-600 mx-2">·</span>
-          <span className="text-xs text-gray-500">{tagCount} tag</span>
+          <span className="text-xs text-gray-500">{t('tag_count', { value: tagCount })}</span>
           <span className="text-gray-600 mx-2">·</span>
           <span className="text-xs text-gray-500">{rangeStart}–{rangeEnd}</span>
           <span className="text-gray-600 mx-2">·</span>
@@ -70,13 +83,14 @@ function HistoryRow({ entry }: { entry: ReportHistoryEntry }) {
         disabled={downloading}
         className="text-xs text-blue-400 hover:text-blue-300 disabled:opacity-50 transition-colors"
       >
-        {downloading ? '...' : '↓ İndir'}
+        {downloading ? '...' : t('download')}
       </button>
     </div>
   )
 }
 
 export default function Reports() {
+  const { t } = useTranslation('reports')
   const { data: tags = [] } = useQuery({
     queryKey: ['tags'],
     queryFn: () => getTags().then((r) => r.data),
@@ -92,7 +106,7 @@ export default function Reports() {
   const [interval, setIntervalVal] = useState('hourly')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [activeTimePreset, setActiveTimePreset] = useState<string>('Bugün')
+  const [activeTimePreset, setActiveTimePreset] = useState<string>('today')
   const [presets, setPresets] = useState<ReportPreset[]>(loadReportPresets)
   const [savingName, setSavingName] = useState<string | null>(null)
 
@@ -102,7 +116,7 @@ export default function Reports() {
   const selectPreset = (p: typeof PRESETS[0]) => {
     setStart(fmt(p.start()))
     setEnd(fmt(p.end()))
-    setActiveTimePreset(p.label)
+    setActiveTimePreset(p.id)
   }
 
   const saveReportPreset = () => {
@@ -121,8 +135,8 @@ export default function Reports() {
     setSelectedTags(p.tag_ids.filter((id) => tags.some((t) => t.id === id)))
     setIntervalVal(p.interval)
     if (p.time_preset) {
-      const tp = PRESETS.find((x) => x.label === p.time_preset)
-      if (tp) { setStart(fmt(tp.start())); setEnd(fmt(tp.end())); setActiveTimePreset(tp.label) }
+      const tp = PRESETS.find((x) => x.id === p.time_preset)
+      if (tp) { setStart(fmt(tp.start())); setEnd(fmt(tp.end())); setActiveTimePreset(tp.id) }
     }
   }
 
@@ -133,9 +147,9 @@ export default function Reports() {
   }
 
   // Group tags by device
-  const groups = tags.reduce<Record<string, typeof tags>>((acc, t) => {
-    const key = t.device || 'Diğer';
-    (acc[key] ??= []).push(t)
+  const groups = tags.reduce<Record<string, typeof tags>>((acc, tag) => {
+    const key = tag.device || t('other_device');
+    (acc[key] ??= []).push(tag)
     return acc
   }, {})
 
@@ -150,7 +164,7 @@ export default function Reports() {
   }
 
   const download = async (outputFormat: 'excel' | 'json') => {
-    if (!selectedTags.length) { setError('En az bir tag seçin'); return }
+    if (!selectedTags.length) { setError(t('error_select_tag')); return }
     setError(''); setLoading(true)
     try {
       const r = await generateReport({
@@ -166,7 +180,7 @@ export default function Reports() {
       }
       refetchHistory()
     } catch {
-      setError('Rapor oluşturulamadı.')
+      setError(t('error_report_failed'))
     } finally {
       setLoading(false)
     }
@@ -174,26 +188,26 @@ export default function Reports() {
 
   return (
     <div className="p-6 space-y-6 max-w-3xl">
-      <h1 className="text-xl font-bold text-white">Rapor Oluştur</h1>
+      <h1 className="text-xl font-bold text-white">{t('title')}</h1>
 
       {/* Saved presets */}
       {(presets.length > 0 || selectedTags.length > 0) && (
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 space-y-2">
           <div className="flex items-center justify-between">
-            <p className="text-sm font-medium text-gray-300">Kayıtlı Seçimler</p>
+            <p className="text-sm font-medium text-gray-300">{t('saved_selections')}</p>
             {selectedTags.length > 0 && savingName === null && (
               <div className="flex gap-1.5">
                 <button
                   onClick={() => setSavingName('')}
                   className="px-2.5 py-1 text-xs bg-blue-700/40 hover:bg-blue-700/60 text-blue-300 rounded-lg transition-colors"
                 >
-                  Kaydet
+                  {t('save')}
                 </button>
                 <button
                   onClick={() => setSelectedTags([])}
                   className="px-2.5 py-1 text-xs bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-red-400 rounded-lg transition-colors"
                 >
-                  Tümünü Kaldır
+                  {t('clear_all')}
                 </button>
               </div>
             )}
@@ -206,7 +220,7 @@ export default function Reports() {
                 value={savingName}
                 onChange={(e) => setSavingName(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') saveReportPreset(); if (e.key === 'Escape') setSavingName(null) }}
-                placeholder="Seçim adı..."
+                placeholder={t('selection_name_placeholder')}
                 className="flex-1 bg-gray-800 border border-blue-600 rounded-lg px-3 py-1.5 text-sm text-white placeholder-gray-600 focus:outline-none"
               />
               <button
@@ -214,13 +228,13 @@ export default function Reports() {
                 disabled={!savingName.trim()}
                 className="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white rounded-lg transition-colors"
               >
-                Kaydet
+                {t('save')}
               </button>
               <button
                 onClick={() => setSavingName(null)}
                 className="px-3 py-1.5 text-xs bg-gray-800 hover:bg-gray-700 text-gray-400 rounded-lg transition-colors"
               >
-                İptal
+                {t('cancel')}
               </button>
             </div>
           )}
@@ -232,15 +246,19 @@ export default function Reports() {
                   <button
                     onClick={() => loadReportPreset(p)}
                     className="text-sm text-gray-300 hover:text-white transition-colors"
-                    title={`${p.tag_ids.length} tag · ${p.interval} · ${p.time_preset ?? 'özel'}`}
+                    title={t('preset_title', {
+                      tags: p.tag_ids.length,
+                      interval: p.interval,
+                      preset: p.time_preset ? t(PRESET_LABEL_KEY[p.time_preset] ?? 'preset_custom') : t('preset_custom'),
+                    })}
                   >
                     {p.name}
-                    <span className="ml-1.5 text-xs text-gray-500">{p.tag_ids.length} tag</span>
+                    <span className="ml-1.5 text-xs text-gray-500">{t('tag_count', { value: p.tag_ids.length })}</span>
                   </button>
                   <button
                     onClick={() => deleteReportPreset(p.name)}
                     className="opacity-0 group-hover:opacity-100 text-gray-600 hover:text-red-400 text-xs transition-all ml-1"
-                    title="Sil"
+                    title={t('delete_title')}
                   >
                     ✕
                   </button>
@@ -248,7 +266,7 @@ export default function Reports() {
               ))}
             </div>
           ) : (
-            <p className="text-xs text-gray-600">Henüz kayıtlı seçim yok. Tag seçip "Kaydet" ile ekleyin.</p>
+            <p className="text-xs text-gray-600">{t('no_saved_selections')}</p>
           )}
         </div>
       )}
@@ -256,8 +274,8 @@ export default function Reports() {
       {/* Grouped tag selection */}
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 space-y-4">
         <div className="flex items-center justify-between">
-          <p className="text-sm font-medium text-gray-300">Tag Seçimi</p>
-          <span className="text-xs text-gray-500">{selectedTags.length} tag seçili</span>
+          <p className="text-sm font-medium text-gray-300">{t('tag_selection')}</p>
+          <span className="text-xs text-gray-500">{t('tags_selected', { value: selectedTags.length })}</span>
         </div>
         {Object.entries(groups).map(([device, groupTags]) => {
           const allSelected = groupTags.every((t) => selectedTags.includes(t.id))
@@ -269,7 +287,7 @@ export default function Reports() {
                   onClick={() => toggleGroup(groupTags)}
                   className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
                 >
-                  {allSelected ? 'Tümünü Kaldır' : 'Tümünü Seç'}
+                  {allSelected ? t('deselect_all') : t('select_all')}
                 </button>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -294,27 +312,27 @@ export default function Reports() {
 
       {/* Time range */}
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 space-y-3">
-        <p className="text-sm font-medium text-gray-300">Zaman Aralığı</p>
+        <p className="text-sm font-medium text-gray-300">{t('time_range')}</p>
         <div className="flex gap-2 flex-wrap">
           {PRESETS.map((p) => (
-            <button key={p.label} onClick={() => selectPreset(p)}
+            <button key={p.id} onClick={() => selectPreset(p)}
               className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${
-                activeTimePreset === p.label
+                activeTimePreset === p.id
                   ? 'bg-blue-600/20 border-blue-500 text-blue-300'
                   : 'bg-gray-800 hover:bg-gray-700 text-gray-300 border-gray-700'
               }`}>
-              {p.label}
+              {t(PRESET_LABEL_KEY[p.id])}
             </button>
           ))}
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="text-xs text-gray-500 mb-1 block">Başlangıç</label>
+            <label className="text-xs text-gray-500 mb-1 block">{t('start')}</label>
             <input type="datetime-local" value={start} onChange={(e) => { setStart(e.target.value); setActiveTimePreset('') }}
               className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
           </div>
           <div>
-            <label className="text-xs text-gray-500 mb-1 block">Bitiş</label>
+            <label className="text-xs text-gray-500 mb-1 block">{t('end')}</label>
             <input type="datetime-local" value={end} onChange={(e) => { setEnd(e.target.value); setActiveTimePreset('') }}
               className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
           </div>
@@ -323,9 +341,9 @@ export default function Reports() {
 
       {/* Grouping */}
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 space-y-3">
-        <p className="text-sm font-medium text-gray-300">Gruplama</p>
+        <p className="text-sm font-medium text-gray-300">{t('grouping')}</p>
         <div className="flex gap-2">
-          {[{ v: 'hourly', l: 'Saatlik' }, { v: 'daily', l: 'Günlük' }].map(({ v, l }) => (
+          {[{ v: 'hourly', l: t('hourly') }, { v: 'daily', l: t('daily') }].map(({ v, l }) => (
             <button key={v} onClick={() => setIntervalVal(v)}
               className={`px-4 py-2 text-sm rounded-lg border transition-colors ${
                 interval === v
@@ -347,7 +365,7 @@ export default function Reports() {
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
           </svg>
-          {loading ? 'Hazırlanıyor...' : 'Excel İndir'}
+          {loading ? t('preparing') : t('excel_download')}
         </button>
         <button onClick={() => download('json')} disabled={loading}
           className="flex items-center gap-2 px-5 py-2.5 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 text-gray-300 rounded-lg font-medium text-sm border border-gray-700 transition-colors">
@@ -357,9 +375,9 @@ export default function Reports() {
 
       {/* Report history */}
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-        <p className="text-sm font-medium text-gray-300 mb-1">Son Raporlar</p>
+        <p className="text-sm font-medium text-gray-300 mb-1">{t('recent_reports')}</p>
         {history.length === 0 ? (
-          <p className="text-gray-500 text-sm py-4">Henüz rapor oluşturulmadı.</p>
+          <p className="text-gray-500 text-sm py-4">{t('no_reports_yet')}</p>
         ) : (
           history.map((entry) => <HistoryRow key={entry.id} entry={entry} />)
         )}

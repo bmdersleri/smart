@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { format, parseISO } from 'date-fns'
-import { tr } from 'date-fns/locale'
+import { enUS, tr, ru, de } from 'date-fns/locale'
 import {
   listTemplates, createTemplate, updateTemplate, deleteTemplate, runTemplate,
   listScheduled, createScheduled, toggleScheduled, deleteScheduled,
@@ -16,8 +17,10 @@ import SortHeader from '../components/SortHeader'
 // Helpers
 // ---------------------------------------------------------------------------
 
-const fmtDate = (s: string | null) =>
-  s ? format(parseISO(s.endsWith('Z') ? s : s + 'Z'), 'dd.MM.yy HH:mm', { locale: tr }) : '—'
+const DATE_LOCALES: Record<string, typeof tr> = { en: enUS, tr, ru, de }
+
+const fmtDate = (s: string | null, lang: string) =>
+  s ? format(parseISO(s.endsWith('Z') ? s : s + 'Z'), 'dd.MM.yy HH:mm', { locale: DATE_LOCALES[lang] ?? enUS }) : '—'
 
 const fmtBytes = (n: number | null) => {
   if (!n) return '—'
@@ -43,11 +46,11 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 const TIME_RANGE_OPTS = [
-  { value: 'last_1h', label: 'Son 1 Saat' },
-  { value: 'last_24h', label: 'Son 24 Saat' },
-  { value: 'last_7d', label: 'Son 7 Gün' },
-  { value: 'last_30d', label: 'Son 30 Gün' },
-  { value: 'custom', label: 'Özel Aralık' },
+  { value: 'last_1h', labelKey: 'time_last_1h' },
+  { value: 'last_24h', labelKey: 'time_last_24h' },
+  { value: 'last_7d', labelKey: 'time_last_7d' },
+  { value: 'last_30d', labelKey: 'time_last_30d' },
+  { value: 'custom', labelKey: 'time_custom' },
 ]
 
 const INPUT = 'w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500'
@@ -72,6 +75,7 @@ const DEFAULT_FORM: TemplateCreate = {
 function TemplateEditorModal({
   initial, onClose,
 }: { initial?: ReportTemplate; onClose: () => void }) {
+  const { t } = useTranslation('advancedReports')
   const qc = useQueryClient()
   const [step, setStep] = useState(0)
   const [form, setForm] = useState<TemplateCreate>(
@@ -98,14 +102,14 @@ function TemplateEditorModal({
       ? form.tag_ids.filter(x => x !== id)
       : [...form.tag_ids, id])
 
-  const STEPS = ['Tag Seçimi', 'Seçenekler', 'Anomali & Bölümler', 'Önizleme & Kaydet']
+  const STEPS = [t('step_tags'), t('step_options'), t('step_anomaly'), t('step_preview')]
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
       <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-2xl flex flex-col max-h-[90vh]">
         {/* Header */}
         <div className="p-5 border-b border-gray-800">
-          <h2 className="text-lg font-semibold text-white">{initial ? 'Şablonu Düzenle' : 'Yeni Şablon'}</h2>
+          <h2 className="text-lg font-semibold text-white">{initial ? t('edit_template') : t('new_template')}</h2>
           <div className="flex gap-1 mt-3">
             {STEPS.map((s, i) => (
               <div key={i} className="flex-1 flex flex-col items-center gap-1">
@@ -122,7 +126,7 @@ function TemplateEditorModal({
           {/* Step 0: Tag selection */}
           {step === 0 && (
             <div className="space-y-3">
-              <p className="text-sm text-gray-400">Rapora dahil edilecek tag'leri seçin.</p>
+              <p className="text-sm text-gray-400">{t('tags_help')}</p>
               {devices.map(dev => (
                 <div key={dev}>
                   <p className="text-xs text-gray-500 uppercase font-medium mb-1">{dev}</p>
@@ -145,7 +149,7 @@ function TemplateEditorModal({
                   {t.name}
                 </button>
               ))}
-              <p className="text-xs text-gray-500">{form.tag_ids.length} tag seçildi</p>
+              <p className="text-xs text-gray-500">{t('tags_selected', { value: form.tag_ids.length })}</p>
             </div>
           )}
 
@@ -153,25 +157,25 @@ function TemplateEditorModal({
           {step === 1 && (
             <div className="space-y-4">
               <div>
-                <label className="text-xs text-gray-400 mb-1 block">Zaman Aralığı</label>
+                <label className="text-xs text-gray-400 mb-1 block">{t('time_range')}</label>
                 <div className="flex flex-wrap gap-2">
                   {TIME_RANGE_OPTS.map(o => (
                     <button key={o.value} onClick={() => set('time_range_type', o.value)}
                       className={`px-3 py-1 rounded-lg text-sm border transition-colors ${form.time_range_type === o.value ? 'border-blue-500 bg-blue-600/20 text-blue-300' : 'border-gray-700 text-gray-400 hover:border-gray-500'}`}>
-                      {o.label}
+                      {t(o.labelKey)}
                     </button>
                   ))}
                 </div>
                 {form.time_range_type === 'custom' && (
                   <div className="flex gap-3 mt-2">
                     <div className="flex-1">
-                      <label className="text-xs text-gray-500 mb-1 block">Başlangıç</label>
+                      <label className="text-xs text-gray-500 mb-1 block">{t('start')}</label>
                       <input type="datetime-local" className={INPUT}
                         value={form.custom_start?.slice(0, 16) ?? ''}
                         onChange={e => set('custom_start', e.target.value ? e.target.value + ':00' : null)} />
                     </div>
                     <div className="flex-1">
-                      <label className="text-xs text-gray-500 mb-1 block">Bitiş</label>
+                      <label className="text-xs text-gray-500 mb-1 block">{t('end')}</label>
                       <input type="datetime-local" className={INPUT}
                         value={form.custom_end?.slice(0, 16) ?? ''}
                         onChange={e => set('custom_end', e.target.value ? e.target.value + ':00' : null)} />
@@ -180,18 +184,18 @@ function TemplateEditorModal({
                 )}
               </div>
               <div>
-                <label className="text-xs text-gray-400 mb-1 block">İnterval</label>
+                <label className="text-xs text-gray-400 mb-1 block">{t('interval')}</label>
                 <div className="flex gap-2">
                   {['hourly', 'daily', 'weekly'].map(v => (
                     <button key={v} onClick={() => set('interval', v)}
                       className={`px-3 py-1 rounded-lg text-sm border transition-colors capitalize ${form.interval === v ? 'border-blue-500 bg-blue-600/20 text-blue-300' : 'border-gray-700 text-gray-400 hover:border-gray-500'}`}>
-                      {v === 'hourly' ? 'Saatlik' : v === 'daily' ? 'Günlük' : 'Haftalık'}
+                      {v === 'hourly' ? t('interval_hourly') : v === 'daily' ? t('interval_daily') : t('interval_weekly')}
                     </button>
                   ))}
                 </div>
               </div>
               <div>
-                <label className="text-xs text-gray-400 mb-1 block">Format</label>
+                <label className="text-xs text-gray-400 mb-1 block">{t('format')}</label>
                 <div className="flex gap-2">
                   {['excel', 'pdf', 'json'].map(v => (
                     <button key={v} onClick={() => set('output_format', v)}
@@ -202,14 +206,14 @@ function TemplateEditorModal({
                 </div>
               </div>
               <div>
-                <label className="text-xs text-gray-400 mb-2 block">İstatistikler</label>
+                <label className="text-xs text-gray-400 mb-2 block">{t('statistics')}</label>
                 <div className="space-y-2">
-                  {([['include_std_dev', 'Standart Sapma'], ['include_percentiles', 'Persentiller'], ['include_trend_line', 'Trend Çizgisi']] as const).map(([k, label]) => (
+                  {([['include_std_dev', 'stat_std_dev'], ['include_percentiles', 'stat_percentiles'], ['include_trend_line', 'stat_trend_line']] as const).map(([k, labelKey]) => (
                     <label key={k} className="flex items-center gap-2 cursor-pointer">
                       <input type="checkbox" className="accent-blue-500"
                         checked={form[k] as boolean}
                         onChange={e => set(k, e.target.checked)} />
-                      <span className="text-sm text-gray-300">{label}</span>
+                      <span className="text-sm text-gray-300">{t(labelKey)}</span>
                     </label>
                   ))}
                 </div>
@@ -224,37 +228,37 @@ function TemplateEditorModal({
                 <label className="flex items-center gap-2 cursor-pointer mb-3">
                   <input type="checkbox" className="accent-blue-500" checked={form.anomaly_enabled}
                     onChange={e => set('anomaly_enabled', e.target.checked)} />
-                  <span className="text-sm font-medium text-white">Anomali Tespiti Aktif</span>
+                  <span className="text-sm font-medium text-white">{t('anomaly_enabled')}</span>
                 </label>
                 {form.anomaly_enabled && (
                   <div>
                     <label className="text-xs text-gray-400 mb-1 block">
-                      Z-Score Eşiği: <span className="text-blue-400 font-mono">{form.anomaly_zscore_threshold}</span>
+                      {t('zscore_threshold')} <span className="text-blue-400 font-mono">{form.anomaly_zscore_threshold}</span>
                     </label>
                     <input type="range" min="0.5" max="5" step="0.1"
                       className="w-full accent-blue-500"
                       value={form.anomaly_zscore_threshold}
                       onChange={e => set('anomaly_zscore_threshold', parseFloat(e.target.value))} />
                     <div className="flex justify-between text-xs text-gray-600 mt-0.5">
-                      <span>0.5 (hassas)</span><span>5.0 (kaba)</span>
+                      <span>{t('zscore_sensitive')}</span><span>{t('zscore_coarse')}</span>
                     </div>
                   </div>
                 )}
               </div>
               <div>
-                <label className="text-xs text-gray-400 mb-2 block">Rapor Bölümleri</label>
+                <label className="text-xs text-gray-400 mb-2 block">{t('report_sections')}</label>
                 <div className="space-y-2">
                   {([
-                    ['show_summary_stats', 'Özet İstatistikler'],
-                    ['show_trend_charts', 'Trend Grafikleri'],
-                    ['show_anomaly_table', 'Anomali Tablosu'],
-                    ['show_raw_data', 'Ham Veri'],
-                  ] as const).map(([k, label]) => (
+                    ['show_summary_stats', 'section_summary'],
+                    ['show_trend_charts', 'section_trend'],
+                    ['show_anomaly_table', 'section_anomaly'],
+                    ['show_raw_data', 'section_raw'],
+                  ] as const).map(([k, labelKey]) => (
                     <label key={k} className="flex items-center gap-2 cursor-pointer">
                       <input type="checkbox" className="accent-blue-500"
                         checked={form[k] as boolean}
                         onChange={e => set(k, e.target.checked)} />
-                      <span className="text-sm text-gray-300">{label}</span>
+                      <span className="text-sm text-gray-300">{t(labelKey)}</span>
                     </label>
                   ))}
                 </div>
@@ -266,36 +270,36 @@ function TemplateEditorModal({
           {step === 3 && (
             <div className="space-y-4">
               <div className="bg-gray-800/60 rounded-xl p-4 space-y-2 text-sm">
-                <div className="flex justify-between"><span className="text-gray-500">Tag sayısı</span><span className="text-white">{form.tag_ids.length}</span></div>
-                <div className="flex justify-between"><span className="text-gray-500">Zaman aralığı</span><span className="text-white">{TIME_RANGE_OPTS.find(o => o.value === form.time_range_type)?.label}</span></div>
-                <div className="flex justify-between"><span className="text-gray-500">İnterval</span><span className="text-white capitalize">{form.interval}</span></div>
-                <div className="flex justify-between"><span className="text-gray-500">Format</span><span className="text-white uppercase">{form.output_format}</span></div>
-                <div className="flex justify-between"><span className="text-gray-500">Anomali</span><span className={form.anomaly_enabled ? 'text-green-400' : 'text-gray-500'}>{form.anomaly_enabled ? `Aktif (z≥${form.anomaly_zscore_threshold})` : 'Kapalı'}</span></div>
+                <div className="flex justify-between"><span className="text-gray-500">{t('preview_tag_count')}</span><span className="text-white">{form.tag_ids.length}</span></div>
+                <div className="flex justify-between"><span className="text-gray-500">{t('preview_time_range')}</span><span className="text-white">{(() => { const o = TIME_RANGE_OPTS.find(o => o.value === form.time_range_type); return o ? t(o.labelKey) : '' })()}</span></div>
+                <div className="flex justify-between"><span className="text-gray-500">{t('preview_interval')}</span><span className="text-white capitalize">{form.interval}</span></div>
+                <div className="flex justify-between"><span className="text-gray-500">{t('preview_format')}</span><span className="text-white uppercase">{form.output_format}</span></div>
+                <div className="flex justify-between"><span className="text-gray-500">{t('preview_anomaly')}</span><span className={form.anomaly_enabled ? 'text-green-400' : 'text-gray-500'}>{form.anomaly_enabled ? t('anomaly_active', { value: form.anomaly_zscore_threshold }) : t('anomaly_off')}</span></div>
               </div>
               <div>
-                <label className="text-xs text-gray-400 mb-1 block">Şablon Adı *</label>
+                <label className="text-xs text-gray-400 mb-1 block">{t('template_name')}</label>
                 <input className={INPUT} value={form.name}
-                  onChange={e => set('name', e.target.value)} placeholder="Günlük Pompa Raporu" />
+                  onChange={e => set('name', e.target.value)} placeholder={t('template_name_placeholder')} />
               </div>
               <div>
-                <label className="text-xs text-gray-400 mb-1 block">Açıklama</label>
+                <label className="text-xs text-gray-400 mb-1 block">{t('description')}</label>
                 <input className={INPUT} value={form.description ?? ''}
-                  onChange={e => set('description', e.target.value)} placeholder="İsteğe bağlı açıklama" />
+                  onChange={e => set('description', e.target.value)} placeholder={t('description_placeholder')} />
               </div>
-              {mut.isError && <p className="text-red-400 text-sm">Hata: şablon kaydedilemedi.</p>}
+              {mut.isError && <p className="text-red-400 text-sm">{t('error_save_template')}</p>}
             </div>
           )}
         </div>
 
         {/* Footer */}
         <div className="p-5 border-t border-gray-800 flex justify-between">
-          <button onClick={onClose} className={BTN_GHOST}>İptal</button>
+          <button onClick={onClose} className={BTN_GHOST}>{t('cancel')}</button>
           <div className="flex gap-2">
-            {step > 0 && <button onClick={() => setStep(s => s - 1)} className={BTN_GHOST}>← Geri</button>}
+            {step > 0 && <button onClick={() => setStep(s => s - 1)} className={BTN_GHOST}>{t('back')}</button>}
             {step < 3
-              ? <button onClick={() => setStep(s => s + 1)} disabled={step === 0 && form.tag_ids.length === 0} className={BTN_PRIMARY}>İleri →</button>
+              ? <button onClick={() => setStep(s => s + 1)} disabled={step === 0 && form.tag_ids.length === 0} className={BTN_PRIMARY}>{t('next')}</button>
               : <button onClick={() => mut.mutate()} disabled={!form.name || mut.isPending} className={BTN_PRIMARY}>
-                  {mut.isPending ? 'Kaydediliyor...' : initial ? 'Güncelle' : 'Oluştur'}
+                  {mut.isPending ? t('saving') : initial ? t('update') : t('create')}
                 </button>
             }
           </div>
@@ -310,6 +314,7 @@ function TemplateEditorModal({
 // ---------------------------------------------------------------------------
 
 function ScheduleCreateModal({ templates, onClose }: { templates: ReportTemplate[]; onClose: () => void }) {
+  const { t } = useTranslation('advancedReports')
   const qc = useQueryClient()
   const [form, setForm] = useState({
     template_id: templates[0]?.id ?? 0,
@@ -324,10 +329,10 @@ function ScheduleCreateModal({ templates, onClose }: { templates: ReportTemplate
   })
 
   const PRESETS = [
-    { value: 'daily', label: 'Her Gün' },
-    { value: 'weekly', label: 'Haftalık' },
-    { value: 'monthly', label: 'Aylık' },
-    { value: 'interval', label: `Her N Saatte` },
+    { value: 'daily', label: t('preset_daily') },
+    { value: 'weekly', label: t('preset_weekly') },
+    { value: 'monthly', label: t('preset_monthly') },
+    { value: 'interval', label: t('preset_interval') },
   ]
 
   const mut = useMutation({
@@ -353,10 +358,10 @@ function ScheduleCreateModal({ templates, onClose }: { templates: ReportTemplate
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
       <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-md p-6 space-y-4">
-        <h2 className="text-lg font-semibold text-white">Yeni Zamanlama</h2>
+        <h2 className="text-lg font-semibold text-white">{t('new_schedule')}</h2>
 
         <div>
-          <label className="text-xs text-gray-400 mb-1 block">Şablon</label>
+          <label className="text-xs text-gray-400 mb-1 block">{t('template')}</label>
           <select className={INPUT} value={form.template_id}
             onChange={e => setForm(f => ({ ...f, template_id: Number(e.target.value) }))}>
             {templates.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
@@ -364,7 +369,7 @@ function ScheduleCreateModal({ templates, onClose }: { templates: ReportTemplate
         </div>
 
         <div>
-          <label className="text-xs text-gray-400 mb-1 block">Zamanlama Türü</label>
+          <label className="text-xs text-gray-400 mb-1 block">{t('schedule_type')}</label>
           <div className="flex gap-2">
             {PRESETS.map(p => (
               <button key={p.value} onClick={() => setForm(f => ({ ...f, preset: p.value }))}
@@ -378,12 +383,12 @@ function ScheduleCreateModal({ templates, onClose }: { templates: ReportTemplate
         {form.preset !== 'interval' && (
           <div className="flex gap-3">
             <div className="flex-1">
-              <label className="text-xs text-gray-400 mb-1 block">Saat</label>
+              <label className="text-xs text-gray-400 mb-1 block">{t('hour')}</label>
               <input type="number" className={INPUT} min={0} max={23} value={form.cron_hour}
                 onChange={e => setForm(f => ({ ...f, cron_hour: Number(e.target.value) }))} />
             </div>
             <div className="flex-1">
-              <label className="text-xs text-gray-400 mb-1 block">Dakika</label>
+              <label className="text-xs text-gray-400 mb-1 block">{t('minute')}</label>
               <input type="number" className={INPUT} min={0} max={59} value={form.cron_minute}
                 onChange={e => setForm(f => ({ ...f, cron_minute: Number(e.target.value) }))} />
             </div>
@@ -392,7 +397,7 @@ function ScheduleCreateModal({ templates, onClose }: { templates: ReportTemplate
 
         {form.preset === 'weekly' && (
           <div>
-            <label className="text-xs text-gray-400 mb-1 block">Gün</label>
+            <label className="text-xs text-gray-400 mb-1 block">{t('day')}</label>
             <select className={INPUT} value={form.cron_day_of_week ?? 'mon'}
               onChange={e => setForm(f => ({ ...f, cron_day_of_week: e.target.value }))}>
               {['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'].map(d => (
@@ -404,7 +409,7 @@ function ScheduleCreateModal({ templates, onClose }: { templates: ReportTemplate
 
         {form.preset === 'monthly' && (
           <div>
-            <label className="text-xs text-gray-400 mb-1 block">Ayın Günü</label>
+            <label className="text-xs text-gray-400 mb-1 block">{t('day_of_month')}</label>
             <input type="number" className={INPUT} min={1} max={31}
               value={form.cron_day_of_month ?? 1}
               onChange={e => setForm(f => ({ ...f, cron_day_of_month: Number(e.target.value) }))} />
@@ -413,23 +418,23 @@ function ScheduleCreateModal({ templates, onClose }: { templates: ReportTemplate
 
         {form.preset === 'interval' && (
           <div>
-            <label className="text-xs text-gray-400 mb-1 block">Her kaç saatte</label>
+            <label className="text-xs text-gray-400 mb-1 block">{t('every_n_hours')}</label>
             <input type="number" className={INPUT} min={1} max={168} value={form.interval_hours} onChange={s('interval_hours')} />
           </div>
         )}
 
         <div>
-          <label className="text-xs text-gray-400 mb-1 block">Zamanlama Adı</label>
-          <input className={INPUT} value={form.name} onChange={s('name')} placeholder="Günlük Pompa Raporu - Otomatik" />
+          <label className="text-xs text-gray-400 mb-1 block">{t('schedule_name')}</label>
+          <input className={INPUT} value={form.name} onChange={s('name')} placeholder={t('schedule_name_placeholder')} />
         </div>
 
         <div className="flex gap-3 pt-1">
-          <button onClick={onClose} className={BTN_GHOST + ' flex-1'}>İptal</button>
+          <button onClick={onClose} className={BTN_GHOST + ' flex-1'}>{t('cancel')}</button>
           <button onClick={() => mut.mutate()} disabled={!form.name || mut.isPending} className={BTN_PRIMARY + ' flex-1'}>
-            {mut.isPending ? 'Oluşturuluyor...' : 'Oluştur'}
+            {mut.isPending ? t('creating') : t('create')}
           </button>
         </div>
-        {mut.isError && <p className="text-red-400 text-sm">Hata oluştu.</p>}
+        {mut.isError && <p className="text-red-400 text-sm">{t('error_occurred')}</p>}
       </div>
     </div>
   )
@@ -440,6 +445,7 @@ function ScheduleCreateModal({ templates, onClose }: { templates: ReportTemplate
 // ---------------------------------------------------------------------------
 
 function TemplatesTab({ onRunDone }: { onRunDone: () => void }) {
+  const { t, i18n } = useTranslation('advancedReports')
   const qc = useQueryClient()
   const [showCreate, setShowCreate] = useState(false)
   const [editing, setEditing] = useState<ReportTemplate | null>(null)
@@ -462,44 +468,44 @@ function TemplatesTab({ onRunDone }: { onRunDone: () => void }) {
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['adv-archive'] }); onRunDone() },
   })
 
-  if (isLoading) return <p className="text-gray-500 text-sm p-4">Yükleniyor...</p>
+  if (isLoading) return <p className="text-gray-500 text-sm p-4">{t('loading')}</p>
 
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
-        <p className="text-sm text-gray-400">{templates.length} şablon</p>
-        <button onClick={() => setShowCreate(true)} className={BTN_PRIMARY}>+ Yeni Şablon</button>
+        <p className="text-sm text-gray-400">{t('template_count', { value: templates.length })}</p>
+        <button onClick={() => setShowCreate(true)} className={BTN_PRIMARY}>{t('new_template_btn')}</button>
       </div>
       {templates.length === 0
-        ? <div className="text-center py-16 text-gray-600">Henüz şablon yok. İlk şablonu oluşturun.</div>
+        ? <div className="text-center py-16 text-gray-600">{t('empty_templates')}</div>
         : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-800 text-left text-gray-500">
-                  <SortHeader label="Ad" sortKey="name" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
-                  <SortHeader label="Format" sortKey="output_format" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
-                  <SortHeader label="İnterval" sortKey="interval" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
-                  <SortHeader label="Tag" sortKey="tag" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
-                  <SortHeader label="Oluşturulma" sortKey="created_at" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
-                  <th className="pb-2 text-gray-500 font-medium text-right">İşlem</th>
+                  <SortHeader label={t('col_name')} sortKey="name" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
+                  <SortHeader label={t('col_format')} sortKey="output_format" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
+                  <SortHeader label={t('col_interval')} sortKey="interval" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
+                  <SortHeader label={t('col_tag')} sortKey="tag" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
+                  <SortHeader label={t('col_created')} sortKey="created_at" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
+                  <th className="pb-2 text-gray-500 font-medium text-right">{t('col_action')}</th>
                 </tr>
               </thead>
               <tbody>
-                {sortedTemplates.map(t => (
-                  <tr key={t.id} className="border-b border-gray-800/50 hover:bg-gray-800/30">
-                    <td className="py-3 text-white font-medium">{t.name}</td>
-                    <td className="py-3 text-gray-300 uppercase">{t.output_format}</td>
-                    <td className="py-3 text-gray-400 capitalize">{t.interval}</td>
-                    <td className="py-3 text-gray-400">{t.tag_ids.length}</td>
-                    <td className="py-3 text-gray-500">{fmtDate(t.created_at)}</td>
+                {sortedTemplates.map(tpl => (
+                  <tr key={tpl.id} className="border-b border-gray-800/50 hover:bg-gray-800/30">
+                    <td className="py-3 text-white font-medium">{tpl.name}</td>
+                    <td className="py-3 text-gray-300 uppercase">{tpl.output_format}</td>
+                    <td className="py-3 text-gray-400 capitalize">{tpl.interval}</td>
+                    <td className="py-3 text-gray-400">{tpl.tag_ids.length}</td>
+                    <td className="py-3 text-gray-500">{fmtDate(tpl.created_at, i18n.language)}</td>
                     <td className="py-3 text-right">
                       <div className="flex gap-2 justify-end">
-                        <button onClick={() => runMut.mutate(t.id)} disabled={runMut.isPending}
-                          className="text-xs text-blue-400 hover:text-blue-300 disabled:opacity-50">Çalıştır</button>
-                        <button onClick={() => setEditing(t)} className="text-xs text-gray-400 hover:text-white">Düzenle</button>
-                        <button onClick={() => { if (confirm('Şablon silinsin mi?')) delMut.mutate(t.id) }}
-                          className="text-xs text-red-500 hover:text-red-400">Sil</button>
+                        <button onClick={() => runMut.mutate(tpl.id)} disabled={runMut.isPending}
+                          className="text-xs text-blue-400 hover:text-blue-300 disabled:opacity-50">{t('run')}</button>
+                        <button onClick={() => setEditing(tpl)} className="text-xs text-gray-400 hover:text-white">{t('edit')}</button>
+                        <button onClick={() => { if (confirm(t('confirm_delete_template'))) delMut.mutate(tpl.id) }}
+                          className="text-xs text-red-500 hover:text-red-400">{t('delete')}</button>
                       </div>
                     </td>
                   </tr>
@@ -520,6 +526,7 @@ function TemplatesTab({ onRunDone }: { onRunDone: () => void }) {
 // ---------------------------------------------------------------------------
 
 function ScheduledTab() {
+  const { t, i18n } = useTranslation('advancedReports')
   const qc = useQueryClient()
   const [showCreate, setShowCreate] = useState(false)
   const { data: scheduled = [], isLoading } = useQuery({
@@ -545,31 +552,31 @@ function ScheduledTab() {
     k === 'template' ? templateName(s.template_id) : (s as unknown as Record<string, unknown>)[k]
   )
 
-  if (isLoading) return <p className="text-gray-500 text-sm p-4">Yükleniyor...</p>
+  if (isLoading) return <p className="text-gray-500 text-sm p-4">{t('loading')}</p>
 
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
-        <p className="text-sm text-gray-400">{scheduled.length} zamanlama</p>
+        <p className="text-sm text-gray-400">{t('schedule_count', { value: scheduled.length })}</p>
         <button onClick={() => setShowCreate(true)} disabled={templates.length === 0} className={BTN_PRIMARY}>
-          + Yeni Zamanlama
+          {t('new_schedule_btn')}
         </button>
       </div>
       {scheduled.length === 0
-        ? <div className="text-center py-16 text-gray-600">Henüz zamanlama yok.</div>
+        ? <div className="text-center py-16 text-gray-600">{t('empty_scheduled')}</div>
         : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-800 text-left text-gray-500">
-                  <SortHeader label="Ad" sortKey="name" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
-                  <SortHeader label="Şablon" sortKey="template" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
-                  <SortHeader label="Tür" sortKey="schedule_type" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
-                  <SortHeader label="Aktif" sortKey="is_active" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
-                  <SortHeader label="Son Çalışma" sortKey="last_run_at" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
-                  <SortHeader label="Durum" sortKey="last_run_status" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
-                  <SortHeader label="Sonraki" sortKey="next_run_at" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
-                  <th className="pb-2 text-right text-gray-500 font-medium">İşlem</th>
+                  <SortHeader label={t('col_name')} sortKey="name" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
+                  <SortHeader label={t('col_template')} sortKey="template" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
+                  <SortHeader label={t('col_type')} sortKey="schedule_type" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
+                  <SortHeader label={t('col_active')} sortKey="is_active" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
+                  <SortHeader label={t('col_last_run')} sortKey="last_run_at" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
+                  <SortHeader label={t('col_status')} sortKey="last_run_status" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
+                  <SortHeader label={t('col_next')} sortKey="next_run_at" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
+                  <th className="pb-2 text-right text-gray-500 font-medium">{t('col_action')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -578,7 +585,7 @@ function ScheduledTab() {
                     <td className="py-3 text-white">{sr.name}</td>
                     <td className="py-3 text-gray-400">{templateName(sr.template_id)}</td>
                     <td className="py-3 text-gray-400 text-xs">
-                      {sr.schedule_type === 'interval' ? `Her ${sr.interval_hours}h` : `cron`}
+                      {sr.schedule_type === 'interval' ? t('every_hours', { value: sr.interval_hours }) : t('cron')}
                     </td>
                     <td className="py-3">
                       <button onClick={() => toggleMut.mutate(sr.id)}
@@ -586,12 +593,12 @@ function ScheduledTab() {
                         <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-transform ${sr.is_active ? 'translate-x-5' : 'translate-x-0.5'}`} />
                       </button>
                     </td>
-                    <td className="py-3 text-gray-500 text-xs">{fmtDate(sr.last_run_at)}</td>
+                    <td className="py-3 text-gray-500 text-xs">{fmtDate(sr.last_run_at, i18n.language)}</td>
                     <td className="py-3">{sr.last_run_status ? <StatusBadge status={sr.last_run_status} /> : <span className="text-gray-600 text-xs">—</span>}</td>
-                    <td className="py-3 text-gray-500 text-xs">{fmtDate(sr.next_run_at)}</td>
+                    <td className="py-3 text-gray-500 text-xs">{fmtDate(sr.next_run_at, i18n.language)}</td>
                     <td className="py-3 text-right">
-                      <button onClick={() => { if (confirm('Zamanlama silinsin mi?')) delMut.mutate(sr.id) }}
-                        className="text-xs text-red-500 hover:text-red-400">Sil</button>
+                      <button onClick={() => { if (confirm(t('confirm_delete_schedule'))) delMut.mutate(sr.id) }}
+                        className="text-xs text-red-500 hover:text-red-400">{t('delete')}</button>
                     </td>
                   </tr>
                 ))}
@@ -612,6 +619,7 @@ function ScheduledTab() {
 // ---------------------------------------------------------------------------
 
 function ArchiveTab() {
+  const { t, i18n } = useTranslation('advancedReports')
   const [page, setPage] = useState(1)
   const [filterStatus, setFilterStatus] = useState('')
   const [filterTemplateId, setFilterTemplateId] = useState<number | undefined>()
@@ -671,14 +679,14 @@ function ArchiveTab() {
       <div className="flex flex-wrap gap-3">
         <select className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-gray-300 focus:outline-none"
           value={filterStatus} onChange={e => { setFilterStatus(e.target.value); setPage(1) }}>
-          <option value="">Tüm Durumlar</option>
+          <option value="">{t('filter_all_statuses')}</option>
           {['completed', 'running', 'pending', 'failed'].map(s => (
             <option key={s} value={s}>{s}</option>
           ))}
         </select>
         <select className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-gray-300 focus:outline-none"
           value={filterTemplateId ?? ''} onChange={e => { setFilterTemplateId(e.target.value ? Number(e.target.value) : undefined); setPage(1) }}>
-          <option value="">Tüm Şablonlar</option>
+          <option value="">{t('filter_all_templates')}</option>
           {templates.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
         </select>
         <input type="date" className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-gray-300 focus:outline-none"
@@ -688,32 +696,32 @@ function ArchiveTab() {
           value={dateTo} onChange={e => { setDateTo(e.target.value); setPage(1) }} />
         {(filterStatus || filterTemplateId || dateFrom || dateTo) && (
           <button onClick={() => { setFilterStatus(''); setFilterTemplateId(undefined); setDateFrom(''); setDateTo(''); setPage(1) }}
-            className="text-xs text-gray-500 hover:text-gray-300">Temizle ×</button>
+            className="text-xs text-gray-500 hover:text-gray-300">{t('filter_clear')}</button>
         )}
       </div>
 
       {/* Table */}
       {items.length === 0
-        ? <div className="text-center py-16 text-gray-600">Arşivde kayıt yok.</div>
+        ? <div className="text-center py-16 text-gray-600">{t('empty_archive')}</div>
         : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-800 text-left text-gray-500">
-                  <SortHeader label="Tarih" sortKey="created_at" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
-                  <SortHeader label="Şablon" sortKey="template" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
-                  <SortHeader label="Tetikleyen" sortKey="trigger" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
-                  <SortHeader label="Dönem" sortKey="start" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
-                  <SortHeader label="Format" sortKey="output_format" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
-                  <SortHeader label="Durum" sortKey="status" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
-                  <SortHeader label="Boyut" sortKey="file_size_bytes" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
-                  <th className="pb-2 text-right text-gray-500 font-medium">İndir</th>
+                  <SortHeader label={t('col_date')} sortKey="created_at" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
+                  <SortHeader label={t('col_template')} sortKey="template" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
+                  <SortHeader label={t('col_trigger')} sortKey="trigger" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
+                  <SortHeader label={t('col_period')} sortKey="start" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
+                  <SortHeader label={t('col_format')} sortKey="output_format" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
+                  <SortHeader label={t('col_status')} sortKey="status" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
+                  <SortHeader label={t('col_size')} sortKey="file_size_bytes" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
+                  <th className="pb-2 text-right text-gray-500 font-medium">{t('col_download')}</th>
                 </tr>
               </thead>
               <tbody>
                 {sortedItems.map(e => (
                   <tr key={e.id} className="border-b border-gray-800/50 hover:bg-gray-800/30">
-                    <td className="py-3 text-gray-300 text-xs">{fmtDate(e.created_at)}</td>
+                    <td className="py-3 text-gray-300 text-xs">{fmtDate(e.created_at, i18n.language)}</td>
                     <td className="py-3 text-gray-400 text-xs">{templateName(e.template_id)}</td>
                     <td className="py-3">
                       <span className={`text-xs px-2 py-0.5 rounded ${e.trigger === 'scheduled' ? 'bg-purple-900/40 text-purple-300' : 'bg-gray-700 text-gray-400'}`}>
@@ -721,7 +729,7 @@ function ArchiveTab() {
                       </span>
                     </td>
                     <td className="py-3 text-gray-500 text-xs">
-                      {fmtDate(e.start).split(' ')[0]}–{fmtDate(e.end).split(' ')[0]}
+                      {fmtDate(e.start, i18n.language).split(' ')[0]}–{fmtDate(e.end, i18n.language).split(' ')[0]}
                     </td>
                     <td className="py-3 text-gray-400 text-xs uppercase">{e.output_format}</td>
                     <td className="py-3"><StatusBadge status={e.status} /></td>
@@ -772,29 +780,30 @@ function ArchiveTab() {
 type Tab = 'templates' | 'scheduled' | 'archive'
 
 export default function AdvancedReports() {
+  const { t } = useTranslation('advancedReports')
   const [tab, setTab] = useState<Tab>('templates')
 
   const TABS: { id: Tab; label: string }[] = [
-    { id: 'templates', label: 'Şablonlar' },
-    { id: 'scheduled', label: 'Zamanlanmış' },
-    { id: 'archive', label: 'Arşiv' },
+    { id: 'templates', label: t('tab_templates') },
+    { id: 'scheduled', label: t('tab_scheduled') },
+    { id: 'archive', label: t('tab_archive') },
   ]
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white">Gelişmiş Raporlar</h1>
-        <p className="text-gray-500 text-sm mt-1">İstatistik motoru, anomali tespiti ve zamanlanmış rapor arşivi</p>
+        <h1 className="text-2xl font-bold text-white">{t('title')}</h1>
+        <p className="text-gray-500 text-sm mt-1">{t('subtitle')}</p>
       </div>
 
       {/* Tab bar */}
       <div className="flex border-b border-gray-800 mb-6">
-        {TABS.map(t => (
-          <button key={t.id} onClick={() => setTab(t.id)}
+        {TABS.map(tb => (
+          <button key={tb.id} onClick={() => setTab(tb.id)}
             className={`px-5 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px ${
-              tab === t.id ? 'border-blue-500 text-blue-400' : 'border-transparent text-gray-500 hover:text-gray-300'
+              tab === tb.id ? 'border-blue-500 text-blue-400' : 'border-transparent text-gray-500 hover:text-gray-300'
             }`}>
-            {t.label}
+            {tb.label}
           </button>
         ))}
       </div>
