@@ -38,6 +38,21 @@ test-cov:
 test-watch:
     cd {{be}} && .venv/Scripts/ptw tests/ -- -v
 
+# Frontend unit testleri (vitest)
+test-fe:
+    cd {{fe}} && pnpm test
+
+# Frontend test hot reload
+test-fe-watch:
+    cd {{fe}} && pnpm test:watch
+
+# ── Güvenlik ─────────────────────────────────────────────────────────────────
+
+# Python güvenlik taraması (bandit + safety)
+security:
+    cd {{be}} && .venv/Scripts/bandit.exe -r app/ -ll
+    cd {{be}} && .venv/Scripts/safety.exe scan
+
 # ── Veritabanı ───────────────────────────────────────────────────────────────
 
 # Alembic: migration oluştur

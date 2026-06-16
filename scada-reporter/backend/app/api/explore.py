@@ -52,11 +52,11 @@ async def get_schema(
                     }
                     for r in col_rows
                 ]
-                fk_rows = (await db.execute(text(f'PRAGMA foreign_key_list("{tname}")'))).all()
+                fk_rows = (await db.execute(text(f'PRAGMA foreign_key_list("{tname}")'))).all()  # nosec B608
                 foreign_keys = [
                     {"from": r[3], "to_table": r[2], "to_column": r[4]} for r in fk_rows
                 ]
-                row_count = (await db.execute(text(f'SELECT COUNT(*) FROM "{tname}"'))).scalar()
+                row_count = (await db.execute(text(f'SELECT COUNT(*) FROM "{tname}"'))).scalar()  # nosec B608 — tname from SQLAlchemy reflection, not user input
             else:
                 col_rows = (
                     await db.execute(
@@ -65,7 +65,7 @@ async def get_schema(
                     FROM information_schema.columns
                     WHERE table_name = '{tname}' AND table_schema = 'public'
                     ORDER BY ordinal_position
-                """)
+                """)  # nosec B608 — tname from SQLAlchemy reflection, not user input
                     )
                 ).all()
                 columns = [
@@ -78,7 +78,7 @@ async def get_schema(
                     for r in col_rows
                 ]
                 foreign_keys = []
-                row_count = (await db.execute(text(f'SELECT COUNT(*) FROM "{tname}"'))).scalar()
+                row_count = (await db.execute(text(f'SELECT COUNT(*) FROM "{tname}"'))).scalar()  # nosec B608
 
             tables[tname] = {
                 "columns": columns,

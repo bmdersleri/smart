@@ -6,7 +6,7 @@ from jinja2 import Environment, FileSystemLoader
 from weasyprint import HTML
 
 _template_dir = os.path.join(os.path.dirname(__file__), "..", "templates")
-_env = Environment(loader=FileSystemLoader(_template_dir))
+_env = Environment(loader=FileSystemLoader(_template_dir), autoescape=True)
 
 
 def build_pdf(
