@@ -45,25 +45,36 @@ export function toSavePayload(meta: TemplateMeta, rows: MappingRow[]) {
 
 const AGGS: Agg[] = ["sum", "avg", "min", "max", "last", "delta"];
 
+// JWT'yi axios client'ı gibi ekle (localStorage 'token'); raw fetch yoksa 401 olur.
+export function authHeaders(extra: Record<string, string> = {}): Record<string, string> {
+  const token = localStorage.getItem("token");
+  return token ? { ...extra, Authorization: `Bearer ${token}` } : { ...extra };
+}
+
 async function apiInspect(file: File): Promise<{
   sheet_name: string; header_row: number; date_col: string;
   data_start_row: number; date_mode: "write"; columns: MappingRow[];
 }> {
   const fd = new FormData();
   fd.append("file", file);
-  const res = await fetch("/api/excel-templates/inspect", { method: "POST", body: fd });
+  // FormData'da Content-Type'ı tarayıcı (boundary ile) koyar; elle koyma.
+  const res = await fetch("/api/excel-templates/inspect", {
+    method: "POST",
+    headers: authHeaders(),
+    body: fd,
+  });
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
 async function apiList() {
-  const res = await fetch("/api/excel-templates");
+  const res = await fetch("/api/excel-templates", { headers: authHeaders() });
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
 async function apiSave(payload: ReturnType<typeof toSavePayload>) {
   const res = await fetch("/api/excel-templates", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: authHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify(payload),
   });
   if (!res.ok) throw new Error(await res.text());
@@ -117,6 +128,7 @@ export default function ExcelTemplates() {
     const m = now.getMonth() + 1;
     const res = await fetch(`/api/excel-templates/${id}/generate?year=${y}&month=${m}`, {
       method: "POST",
+      headers: authHeaders(),
     });
     if (res.status === 409) {
       const body = await res.json();
