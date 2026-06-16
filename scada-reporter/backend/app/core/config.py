@@ -45,6 +45,9 @@ class Settings(BaseSettings):
 
     FACILITY_NAME: str = "Su/Atıksu Tesisi"
     REPORT_ARCHIVE_KEEP_DAYS: int = 365
+    # Rapor gün sınırı için yerel saat ofseti (UTC+3 İstanbul). Günlük
+    # toplamalar bu ofsetle kaydırılmış tarihe göre gruplanır.
+    REPORT_TZ_OFFSET_HOURS: int = 3
 
     @property
     def is_production(self) -> bool:
