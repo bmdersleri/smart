@@ -1,4 +1,5 @@
 from io import BytesIO
+from types import SimpleNamespace
 
 import pytest
 import pytest_asyncio
@@ -23,7 +24,8 @@ def _template_bytes() -> bytes:
 
 @pytest_asyncio.fixture(autouse=True)
 def _auth_override():
-    app.dependency_overrides[get_current_user] = lambda: {"id": 1, "username": "admin"}
+    # Prod get_current_user, User ORM nesnesi döner (.id). dict değil obje ver.
+    app.dependency_overrides[get_current_user] = lambda: SimpleNamespace(id=1, username="admin")
     yield
     app.dependency_overrides.pop(get_current_user, None)
 
@@ -103,3 +105,24 @@ async def test_save_and_generate_roundtrip(client, seeded_tag):
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
     assert gen.content[:2] == b"PK"
+
+
+@pytest.mark.asyncio
+async def test_duplicate_name_returns_409(client, seeded_tag):
+    import base64
+
+    payload = {
+        "name": "Balta",
+        "description": "",
+        "file_b64": base64.b64encode(_template_bytes()).decode(),
+        "sheet_name": "OCAK 2026",
+        "header_row": 2,
+        "date_col": "D",
+        "data_start_row": 3,
+        "date_mode": "write",
+        "columns": [],
+    }
+    first = await client.post("/api/excel-templates", json=payload)
+    assert first.status_code == 201, first.text
+    dup = await client.post("/api/excel-templates", json=payload)
+    assert dup.status_code == 409

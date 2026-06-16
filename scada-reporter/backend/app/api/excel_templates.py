@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.responses import Response
 from pydantic import BaseModel
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -110,7 +111,7 @@ async def create_template(
         date_col=payload.date_col,
         data_start_row=payload.data_start_row,
         date_mode=payload.date_mode,
-        created_by=user.get("id") if isinstance(user, dict) else None,
+        created_by=user.id,
     )
     tpl.columns = [
         ExcelTemplateColumn(
@@ -123,7 +124,11 @@ async def create_template(
         for c in payload.columns
     ]
     db.add(tpl)
-    await db.commit()
+    try:
+        await db.commit()
+    except IntegrityError as e:
+        await db.rollback()
+        raise HTTPException(status_code=409, detail="Bu isimde bir şablon zaten var") from e
     await db.refresh(tpl, attribute_names=["columns"])
     return _to_out(tpl)
 
