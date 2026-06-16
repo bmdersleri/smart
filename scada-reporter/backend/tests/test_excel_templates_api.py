@@ -126,3 +126,36 @@ async def test_duplicate_name_returns_409(client, seeded_tag):
     assert first.status_code == 201, first.text
     dup = await client.post("/api/excel-templates", json=payload)
     assert dup.status_code == 409
+
+
+@pytest.mark.asyncio
+async def test_generate_blocks_on_drift(client, seeded_tag):
+    import base64
+
+    # Map column E to source_code "999XX999", but the template blob's E2 cell
+    # actually contains "410BF103" -> stored code != blob code -> drift.
+    payload = {
+        "name": "Drift",
+        "description": "",
+        "file_b64": base64.b64encode(_template_bytes()).decode(),
+        "sheet_name": "OCAK 2026",
+        "header_row": 2,
+        "date_col": "D",
+        "data_start_row": 3,
+        "date_mode": "write",
+        "columns": [
+            {
+                "col_letter": "E",
+                "tag_id": seeded_tag.id,
+                "agg": "sum",
+                "source_code": "999XX999",
+                "enabled": True,
+            }
+        ],
+    }
+    save = await client.post("/api/excel-templates", json=payload)
+    assert save.status_code == 201, save.text
+    tpl_id = save.json()["id"]
+    gen = await client.post(f"/api/excel-templates/{tpl_id}/generate?year=2026&month=1")
+    assert gen.status_code == 409
+    assert "drift" in gen.json()["detail"].lower()
