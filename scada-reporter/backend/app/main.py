@@ -45,6 +45,13 @@ if settings.SENTRY_DSN:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Prod yapılandırma sağlık kontrolü — tehlikeli varsayılanlarda durdur
+    errors = settings.config_errors()
+    if errors:
+        for e in errors:
+            logger.error("Yapılandırma hatası: %s", e)
+        raise RuntimeError(f"Production yapılandırma hatası: {'; '.join(errors)}")
+
     # Rapor dosyaları için dizin oluştur
     os.makedirs("reports", exist_ok=True)
 
@@ -97,7 +104,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],
+    allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

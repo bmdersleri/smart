@@ -1,12 +1,22 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+DEFAULT_SECRET = "dev-secret-key-change-in-production"  # noqa: S105
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
+    ENVIRONMENT: str = "development"  # development | production
     DATABASE_URL: str = "postgresql+asyncpg://scada:scada123@localhost:5432/scada_reporter"
-    SECRET_KEY: str = "dev-secret-key-change-in-production"
+    SECRET_KEY: str = DEFAULT_SECRET
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 480
+
+    # Virgülle ayrılmış izinli origin listesi (prod'da gerçek alan adlarıyla doldur)
+    CORS_ORIGINS: str = "http://localhost:5173,http://localhost:3000"
+
+    # DB bağlantı havuzu (postgres); sqlite'da yok sayılır
+    DB_POOL_SIZE: int = 10
+    DB_MAX_OVERFLOW: int = 20
 
     S7_HOST: str = "192.168.112.50"
     S7_RACK: int = 0
@@ -31,6 +41,21 @@ class Settings(BaseSettings):
 
     FACILITY_NAME: str = "Su/Atıksu Tesisi"
     REPORT_ARCHIVE_KEEP_DAYS: int = 365
+
+    @property
+    def is_production(self) -> bool:
+        return self.ENVIRONMENT.lower() == "production"
+
+    @property
+    def cors_origins(self) -> list[str]:
+        return [o.strip() for o in self.CORS_ORIGINS.split(",") if o.strip()]
+
+    def config_errors(self) -> list[str]:
+        """Prod'da tehlikeli/eksik ayarları döndür (boşsa sağlıklı)."""
+        errs: list[str] = []
+        if self.is_production and self.SECRET_KEY == DEFAULT_SECRET:
+            errs.append("SECRET_KEY varsayılan değerde — production'da değiştirin.")
+        return errs
 
 
 settings = Settings()
