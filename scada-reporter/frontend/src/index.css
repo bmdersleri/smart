@@ -95,6 +95,26 @@ html.light .border-emerald-800\/40 { border-color: #6ee7b7; }
 html.light .text-yellow-400,
 html.light .text-yellow-300 { color: #a16207; }
 
+/* ── butonlar: solid vurgu zemininde yazı BEYAZ kalmalı ─────────────────────
+   Global text-white koyulaştırması, mavi/yeşil dolu butonlarda yazıyı okunmaz
+   yapıyordu. Dolu vurgu zeminli + text-white öğelerde beyazı geri ver. */
+html.light :is(
+  .bg-blue-600, .bg-blue-500, .bg-blue-700,
+  .bg-green-600, .bg-green-500,
+  .bg-emerald-600, .bg-emerald-500,
+  .bg-red-600, .bg-red-500,
+  .bg-amber-600, .bg-amber-500,
+  .bg-yellow-600, .bg-yellow-500,
+  .bg-indigo-600, .bg-indigo-500,
+  .bg-cyan-600
+).text-white { color: #ffffff; }
+
+/* muted dolu buton zeminleri light'ta açık yüzeye çekilir (yazı koyu okunur) */
+html.light .bg-gray-700 { background-color: #cbd5e1; }
+html.light .hover\:bg-gray-600:hover { background-color: #94a3b8; }
+html.light .bg-green-800 { background-color: #dcfce7; }
+html.light .hover\:bg-green-700:hover { background-color: #bbf7d0; }
+
 @keyframes scan {
   0%   { transform: translateX(-100%); }
   100% { transform: translateX(300%); }
