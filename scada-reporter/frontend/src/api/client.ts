@@ -23,7 +23,13 @@ api.interceptors.response.use(
 export const login = (username: string, password: string) =>
   api.post<{ access_token: string }>('/auth/token', new URLSearchParams({ username, password }))
 
-export const getMe = () => api.get<{ id: number; username: string; role: string; full_name: string }>('/auth/me')
+export const getMe = () => api.get<{ id: number; username: string; role: string; full_name: string; language: string }>('/auth/me')
+
+export const updateMe = (language: string) =>
+  api.patch<{ id: number; username: string; role: string; full_name: string; language: string }>(
+    '/auth/me',
+    { language },
+  )
 
 // Tags
 export interface Tag {

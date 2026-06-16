@@ -1,4 +1,5 @@
 import { useSettings } from '../context/SettingsContext'
+import LanguageSelector from '../components/LanguageSelector'
 
 const MIN_H = 300
 const MAX_H = 2000
@@ -31,6 +32,13 @@ export default function Settings() {
               </button>
             ))}
           </div>
+        </div>
+        <div className="flex items-center justify-between">
+          <div>
+            <label className="text-sm text-white block">Dil / Language</label>
+            <p className="text-xs text-gray-500 mt-0.5">Arayüz dili</p>
+          </div>
+          <LanguageSelector />
         </div>
       </div>
 
