@@ -102,6 +102,12 @@ export const getTrend = (tagIds: number[], hours: number, maxPoints = 2000) =>
     `/dashboard/trend?${tagIds.map((id) => `tag_ids=${id}`).join('&')}&hours=${hours}&max_points=${maxPoints}`
   )
 
+// Rollup (continuous aggregate) çözünürlüğünden okur; kısa pencerede ham veriye düşer
+export const getTrendAgg = (tagIds: number[], hours: number, maxPoints = 2000) =>
+  api.get<{ tag_id: number; name: string; unit: string; data: { t: string; v: number }[] }[]>(
+    `/dashboard/trend_agg?${tagIds.map((id) => `tag_ids=${id}`).join('&')}&hours=${hours}&max_points=${maxPoints}`
+  )
+
 // Reports
 export const generateReport = (data: { tag_ids: number[]; start: string; end: string; interval: string; format: string }) =>
   api.post('/reports/generate', data, { responseType: 'blob' })

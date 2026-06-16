@@ -56,3 +56,43 @@ async def init_timescaledb(conn: AsyncConnection):
             logger.info("Retention policy added: %s (%d gün)", table, settings.RAW_RETENTION_DAYS)
         except Exception as e:
             logger.info("Retention policy exists: %s - %s", table, e)
+
+
+# Sürekli toplama (continuous aggregate) rollup'ları: trend sorguları pencereye
+# göre uygun çözünürlükten okur; ham veri drill-down için kalır.
+# (bucket, avg/min/max/count). Politikalar düzenli tazeler.
+CAGGS = [
+    ("tag_readings_1m", "1 minute", "3 hours", "1 minute", "1 minute"),
+    ("tag_readings_5m", "5 minutes", "1 day", "5 minutes", "5 minutes"),
+    ("tag_readings_1h", "1 hour", "7 days", "1 hour", "30 minutes"),
+]
+
+
+async def init_continuous_aggregates(conn: AsyncConnection) -> None:
+    """TimescaleDB sürekli toplama view'larını + tazeleme politikalarını kur.
+
+    AUTOCOMMIT bağlantısı bekler (CAGG DDL açık transaction içinde çalışmaz).
+    Timescale yoksa (ör. SQLite dev) sessizce atlanır.
+    """
+    for view, bucket, start_off, end_off, sched in CAGGS:
+        try:
+            await conn.execute(
+                text(
+                    f"CREATE MATERIALIZED VIEW IF NOT EXISTS {view} "
+                    "WITH (timescaledb.continuous) AS "
+                    f"SELECT tag_id, time_bucket(INTERVAL '{bucket}', timestamp) AS bucket, "
+                    "avg(value) AS avg, min(value) AS min, max(value) AS max, count(*) AS n "
+                    "FROM tag_readings GROUP BY tag_id, bucket WITH NO DATA"
+                )
+            )
+            await conn.execute(
+                text(
+                    f"SELECT add_continuous_aggregate_policy('{view}', "
+                    f"start_offset => INTERVAL '{start_off}', "
+                    f"end_offset => INTERVAL '{end_off}', "
+                    f"schedule_interval => INTERVAL '{sched}', if_not_exists => TRUE)"
+                )
+            )
+            logger.info("Continuous aggregate ready: %s (%s)", view, bucket)
+        except Exception as e:
+            logger.info("Continuous aggregate skipped/exists: %s - %s", view, e)

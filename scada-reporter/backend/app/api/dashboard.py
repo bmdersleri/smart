@@ -3,7 +3,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import distinct, func, select
+from sqlalchemy import distinct, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.auth import get_current_user
@@ -287,6 +287,38 @@ def downsample(data: list[dict], max_points: int | None) -> list[dict]:
     return out
 
 
+async def _raw_series(
+    db: AsyncSession, tag_ids: list[int], since: datetime, max_points: int | None
+) -> list[dict]:
+    result = await db.execute(
+        select(Tag.id, Tag.name, Tag.unit, TagReading.timestamp, TagReading.value)
+        .join(TagReading, Tag.id == TagReading.tag_id)
+        .where(Tag.id.in_(tag_ids), TagReading.timestamp >= since)
+        .order_by(TagReading.timestamp.asc())
+    )
+    series: dict[int, dict] = {}
+    for tag_id, name, unit, ts, value in result.all():
+        if tag_id not in series:
+            series[tag_id] = {"tag_id": tag_id, "name": name, "unit": unit, "data": []}
+        series[tag_id]["data"].append({"t": ts.isoformat(), "v": value})
+    out = list(series.values())
+    for s in out:
+        s["data"] = downsample(s["data"], max_points)
+    return out
+
+
+# Pencere -> rollup view eşlemesi. None = ham veri (kısa pencere drill-down).
+_ROLLUP_BY_HOURS = [(6, None), (48, "tag_readings_1m"), (168, "tag_readings_5m")]
+
+
+def pick_rollup(hours: int) -> str | None:
+    """İstenen pencereye uygun continuous-aggregate view'ını seç (yoksa ham)."""
+    for limit, view in _ROLLUP_BY_HOURS:
+        if hours <= limit:
+            return view
+    return "tag_readings_1h"
+
+
 @router.get("/trend")
 async def trend(
     tag_ids: list[int] = Query(...),
@@ -296,20 +328,46 @@ async def trend(
     _=Depends(get_current_user),
 ):
     since = datetime.now(UTC) - timedelta(hours=hours)
-    result = await db.execute(
-        select(Tag.id, Tag.name, Tag.unit, TagReading.timestamp, TagReading.value)
-        .join(TagReading, Tag.id == TagReading.tag_id)
-        .where(Tag.id.in_(tag_ids), TagReading.timestamp >= since)
-        .order_by(TagReading.timestamp.asc())
-    )
-    rows = result.all()
+    return await _raw_series(db, tag_ids, since, max_points)
+
+
+@router.get("/trend_agg")
+async def trend_agg(
+    tag_ids: list[int] = Query(...),
+    hours: int = 24,
+    max_points: int | None = Query(None, ge=2),
+    db: AsyncSession = Depends(get_db),
+    _=Depends(get_current_user),
+):
+    """Pencereye göre rollup (continuous aggregate) çözünürlüğünden okur.
+
+    Kısa pencere veya rollup yoksa (ör. SQLite dev) ham veriye düşer.
+    """
+    since = datetime.now(UTC) - timedelta(hours=hours)
+    view = pick_rollup(hours)
+    if view is None:
+        return await _raw_series(db, tag_ids, since, max_points)
+
+    try:
+        rows = (
+            await db.execute(
+                text(
+                    f"SELECT r.tag_id, t.name, t.unit, r.bucket, r.avg "
+                    f"FROM {view} r JOIN tags t ON t.id = r.tag_id "
+                    "WHERE r.tag_id = ANY(:ids) AND r.bucket >= :since "
+                    "ORDER BY r.bucket ASC"
+                ).bindparams(ids=tag_ids, since=since)
+            )
+        ).all()
+    except Exception:
+        await db.rollback()
+        return await _raw_series(db, tag_ids, since, max_points)
 
     series: dict[int, dict] = {}
-    for tag_id, name, unit, ts, value in rows:
+    for tag_id, name, unit, bucket, avg in rows:
         if tag_id not in series:
             series[tag_id] = {"tag_id": tag_id, "name": name, "unit": unit, "data": []}
-        series[tag_id]["data"].append({"t": ts.isoformat(), "v": value})
-
+        series[tag_id]["data"].append({"t": bucket.isoformat(), "v": avg})
     out = list(series.values())
     for s in out:
         s["data"] = downsample(s["data"], max_points)

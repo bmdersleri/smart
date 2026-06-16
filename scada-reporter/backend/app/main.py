@@ -25,7 +25,7 @@ from app.collector.s7_collector import plc_manager
 from app.core import metrics
 from app.core.config import settings
 from app.core.database import Base, engine
-from app.core.timescaledb import init_timescaledb
+from app.core.timescaledb import init_continuous_aggregates, init_timescaledb
 from app.models import report_archive, report_template, scheduled_report  # noqa: F401
 from app.models.report_history import ReportHistory as _ReportHistory  # noqa: F401
 from app.services.scheduler import get_scheduler, start_scheduler
@@ -53,6 +53,11 @@ async def lifespan(app: FastAPI):
         await conn.run_sync(Base.metadata.create_all)
         await init_timescaledb(conn)
     logger.info("Veritabani tablolari hazir")
+
+    # Sürekli toplama view'ları ayrı AUTOCOMMIT bağlantısında (CAGG DDL transaction'sız)
+    async with engine.connect() as conn:
+        await conn.execution_options(isolation_level="AUTOCOMMIT")
+        await init_continuous_aggregates(conn)
 
     await start_scheduler(settings.DATABASE_URL)
     logger.info("APScheduler baslatildi")

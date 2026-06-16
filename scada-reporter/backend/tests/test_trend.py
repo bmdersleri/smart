@@ -1,6 +1,52 @@
-"""Trend zaman serisi downsample (max_points)."""
+"""Trend zaman serisi downsample (max_points) + rollup seçimi."""
 
-from app.api.dashboard import downsample
+import pytest
+from httpx import AsyncClient
+
+from app.api.dashboard import downsample, pick_rollup
+
+
+def test_pick_rollup_short_window_uses_raw():
+    assert pick_rollup(1) is None
+    assert pick_rollup(6) is None
+
+
+def test_pick_rollup_medium_window_uses_1m():
+    assert pick_rollup(24) == "tag_readings_1m"
+
+
+def test_pick_rollup_multiday_uses_5m():
+    assert pick_rollup(72) == "tag_readings_5m"
+
+
+def test_pick_rollup_long_window_uses_1h():
+    assert pick_rollup(720) == "tag_readings_1h"
+
+
+@pytest.mark.asyncio
+async def test_trend_agg_falls_back_to_raw_on_sqlite(client: AsyncClient):
+    # SQLite'da continuous aggregate view'ı yok -> ham veriye düşer, çökmemeli
+    await client.post(
+        "/api/auth/register",
+        json={"username": "agg", "email": "a@t.com", "password": "test123", "role": "admin"},
+    )
+    tok = await client.post("/api/auth/token", data={"username": "agg", "password": "test123"})
+    headers = {"Authorization": f"Bearer {tok.json()['access_token']}"}
+
+    tag_r = await client.post(
+        "/api/tags/",
+        json={"node_id": "AGG,REAL0", "name": "AggTag", "unit": "m3"},
+        headers=headers,
+    )
+    tag_id = tag_r.json()["id"]
+
+    r = await client.get(
+        "/api/dashboard/trend_agg",
+        params={"tag_ids": [tag_id], "hours": 72},
+        headers=headers,
+    )
+    assert r.status_code == 200
+    assert isinstance(r.json(), list)
 
 
 def test_downsample_returns_all_when_under_limit():

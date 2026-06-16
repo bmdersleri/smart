@@ -91,13 +91,14 @@ function EditTagModal({ tag, onClose }: { tag: Tag; onClose: () => void }) {
   const [unit, setUnit] = useState(tag.unit)
   const [device, setDevice] = useState(tag.device)
   const [channel, setChannel] = useState(tag.channel)
+  const [deadband, setDeadband] = useState(tag.deadband ?? '')
 
   const mut = useMutation({
     mutationFn: (payload: Parameters<typeof updateTag>[1]) => updateTag(tag.id, payload),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['tags'] }); onClose() },
   })
 
-  const save = () => mut.mutate({ unit, device, channel })
+  const save = () => mut.mutate({ unit, device, channel, deadband: deadband === '' ? null : Number(deadband) })
 
   const inputCls = 'w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500'
 
@@ -126,6 +127,12 @@ function EditTagModal({ tag, onClose }: { tag: Tag; onClose: () => void }) {
             <input className={inputCls} value={value} onChange={(e) => set(e.target.value)} placeholder={ph} />
           </div>
         ))}
+
+        <div>
+          <label className="text-xs text-gray-400 mb-1 block">Deadband (ölü bant) — boş: her okuma kaydedilir</label>
+          <input className={inputCls} type="number" step="any" min="0" value={deadband} onChange={(e) => setDeadband(e.target.value)} placeholder="ör. 0.5 (mutlak değişim eşiği)" />
+          <p className="text-gray-600 text-xs mt-1">Değer bu kadar değişmedikçe geçmişe yazılmaz; heartbeat ile periyodik zorla-yazılır.</p>
+        </div>
 
         {mut.isError && <p className="text-red-400 text-sm">Kayıt hatası.</p>}
 

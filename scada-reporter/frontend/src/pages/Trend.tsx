@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useSettings } from '../context/SettingsContext'
 import { useQuery } from '@tanstack/react-query'
-import { getTags, getTrend, generateReport } from '../api/client'
+import { getTags, getTrendAgg, generateReport } from '../api/client'
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Brush, ResponsiveContainer,
 } from 'recharts'
@@ -56,7 +56,7 @@ export default function Trend() {
   const { data: series = [], isLoading } = useQuery({
     queryKey: ['trend', selected, hours],
     queryFn: () =>
-      selected.length ? getTrend(selected, hours).then((r) => r.data) : Promise.resolve([]),
+      selected.length ? getTrendAgg(selected, hours).then((r) => r.data) : Promise.resolve([]),
     enabled: selected.length > 0,
     refetchInterval: 30000,
   })
