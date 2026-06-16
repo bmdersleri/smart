@@ -4,3 +4,8 @@
   *, *::before, *::after { box-sizing: border-box; }
   body { margin: 0; font-family: system-ui, sans-serif; }
 }
+
+@keyframes scan {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(300%); }
+}
