@@ -28,7 +28,8 @@ export const getMe = () => api.get<{ id: number; username: string; role: string;
 // Tags
 export interface Tag {
   id: number; node_id: string; name: string; unit: string; device: string; channel: string
-  is_active: boolean; min_alarm: number | null; max_alarm: number | null; deadband: number | null
+  is_active: boolean; group_id: number | null
+  min_alarm: number | null; max_alarm: number | null; deadband: number | null
   plc_name: string; plc_ip: string | null; s7_address: string | null; data_type: string
   sample_interval: number; long_term: boolean; daily_tracking: boolean
   // tag ekleme yanıtında dolu gelir
@@ -50,6 +51,46 @@ export const importTags = (file: File) => {
   fd.append('file', file)
   return api.post<{ imported: number; skipped: number; total: number; errors: string[] }>('/tags/import', fd)
 }
+export const importTagsCsv = (file: File) => {
+  const fd = new FormData()
+  fd.append('file', file)
+  return api.post<{ imported: number; skipped: number; total: number; errors: string[] }>('/tags/import_csv', fd)
+}
+export const exportTags = (format: 'csv' | 'xlsx') =>
+  api.get(`/tags/export?format=${format}`, { responseType: 'blob' })
+
+// Tag grupları (hiyerarşi)
+export interface Group { id: number; name: string; parent_id: number | null; sort_order: number }
+export interface GroupNode {
+  id: number | null; name: string; parent_id?: number | null; sort_order?: number
+  tag_ids: number[]; children: GroupNode[]
+}
+export const getGroups = () => api.get<Group[]>('/groups/')
+export const getGroupTree = (mode: 'manual' | 'auto' = 'manual') =>
+  api.get<GroupNode[]>(`/groups/tree?mode=${mode}`)
+export const createGroup = (data: { name: string; parent_id?: number | null }) =>
+  api.post<Group>('/groups/', data)
+export const updateGroup = (id: number, data: { name?: string; parent_id?: number | null }) =>
+  api.patch<Group>(`/groups/${id}`, data)
+export const deleteGroup = (id: number) => api.delete(`/groups/${id}`)
+export const assignTagsToGroup = (id: number, tag_ids: number[]) =>
+  api.post(`/groups/${id}/assign`, { tag_ids })
+export const unassignTags = (tag_ids: number[]) => api.post('/groups/unassign', { tag_ids })
+
+// Trend annotations (paylaşımlı notlar)
+export interface Annotation {
+  id: number; tag_id: number | null; username: string; ts: string; text: string; created_at: string
+}
+export const getAnnotations = (params: { tag_ids?: number[]; start?: string; end?: string }) => {
+  const q = new URLSearchParams()
+  params.tag_ids?.forEach((id) => q.append('tag_ids', String(id)))
+  if (params.start) q.set('start', params.start)
+  if (params.end) q.set('end', params.end)
+  return api.get<Annotation[]>(`/annotations/?${q.toString()}`)
+}
+export const createAnnotation = (data: { tag_id?: number | null; ts: string; text: string }) =>
+  api.post<Annotation>('/annotations/', data)
+export const deleteAnnotation = (id: number) => api.delete(`/annotations/${id}`)
 
 // Dashboard
 export interface WatchlistItem {
@@ -115,6 +156,12 @@ export const getTrend = (tagIds: number[], hours: number, maxPoints = 2000) =>
 export const getTrendAgg = (tagIds: number[], hours: number, maxPoints = 2000) =>
   api.get<{ tag_id: number; name: string; unit: string; data: { t: string; v: number }[] }[]>(
     `/dashboard/trend_agg?${tagIds.map((id) => `tag_ids=${id}`).join('&')}&hours=${hours}&max_points=${maxPoints}`
+  )
+
+// Açık başlangıç/bitiş penceresi (dönem karşılaştırması için)
+export const getTrendRange = (tagIds: number[], start: string, end: string, maxPoints = 2000) =>
+  api.get<{ tag_id: number; name: string; unit: string; data: { t: string; v: number }[] }[]>(
+    `/dashboard/trend_range?${tagIds.map((id) => `tag_ids=${id}`).join('&')}&start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&max_points=${maxPoints}`
   )
 
 // Reports

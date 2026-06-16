@@ -1,11 +1,16 @@
 import { useState, useRef, useEffect } from 'react'
 import { useSettings } from '../context/SettingsContext'
-import { useQuery } from '@tanstack/react-query'
-import { getTags, getTrendAgg, generateReport } from '../api/client'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  getTags, getTrendAgg, getTrendRange, generateReport,
+  getGroupTree, getAnnotations, createAnnotation, deleteAnnotation,
+} from '../api/client'
+import type { GroupNode, Tag } from '../api/client'
 import { useSortable } from '../hooks/useSortable'
 import SortHeader from '../components/SortHeader'
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Brush, ResponsiveContainer,
+  ReferenceLine,
 } from 'recharts'
 import { format, parseISO } from 'date-fns'
 import { toPng } from 'html-to-image'
@@ -34,11 +39,82 @@ function Toast({ message, onClose }: { message: string; onClose: () => void }) {
   )
 }
 
+function TreeNode({
+  node, tagMap, selected, onToggle, depth,
+}: {
+  node: GroupNode; tagMap: Map<number, Tag>; selected: number[]
+  onToggle: (id: number) => void; depth: number
+}) {
+  const [open, setOpen] = useState(depth < 1)
+  const leafTags = node.tag_ids.map((id) => tagMap.get(id)).filter(Boolean) as Tag[]
+  const hasContent = leafTags.length > 0 || node.children.length > 0
+  return (
+    <div>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center gap-1 px-1 py-1 text-xs text-gray-300 hover:text-white"
+        style={{ paddingLeft: depth * 10 + 4 }}
+      >
+        <span className="text-gray-500 w-3">{hasContent ? (open ? '▾' : '▸') : '·'}</span>
+        <span className="truncate font-medium">{node.name}</span>
+        <span className="text-gray-600 ml-auto">{node.tag_ids.length || ''}</span>
+      </button>
+      {open && (
+        <div>
+          {node.children.map((c, i) => (
+            <TreeNode key={c.id ?? `${node.name}-${i}`} node={c} tagMap={tagMap} selected={selected} onToggle={onToggle} depth={depth + 1} />
+          ))}
+          {leafTags.map((t) => {
+            const sel = selected.includes(t.id)
+            const idx = selected.indexOf(t.id)
+            const color = sel ? COLORS[idx % COLORS.length] : '#6b7280'
+            return (
+              <button
+                key={t.id}
+                onClick={() => onToggle(t.id)}
+                className={`w-full text-left py-1 rounded-lg text-sm flex items-center gap-2 ${sel ? 'bg-gray-800/60 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
+                style={{ paddingLeft: (depth + 1) * 10 + 8 }}
+              >
+                <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
+                <span className="truncate">{t.name}</span>
+              </button>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function GroupTree({
+  mode, tags, selected, onToggle,
+}: {
+  mode: 'auto' | 'manual'; tags: Tag[]; selected: number[]; onToggle: (id: number) => void
+}) {
+  const { data: tree = [] } = useQuery({
+    queryKey: ['groupTree', mode],
+    queryFn: () => getGroupTree(mode).then((r) => r.data),
+  })
+  const tagMap = new Map(tags.map((t) => [t.id, t]))
+  if (tree.length === 0) return <p className="text-gray-500 text-xs px-1">Grup yok.</p>
+  return (
+    <div className="space-y-0.5">
+      {tree.map((n, i) => (
+        <TreeNode key={n.id ?? `root-${i}`} node={n} tagMap={tagMap} selected={selected} onToggle={onToggle} depth={0} />
+      ))}
+    </div>
+  )
+}
+
 export default function Trend() {
   const { trendChartHeight } = useSettings()
+  const qc = useQueryClient()
   const [selected, setSelected] = useState<number[]>([])
   const [hours, setHours] = useState(24)
   const [tagSearch, setTagSearch] = useState('')
+  const [selectorMode, setSelectorMode] = useState<'flat' | 'auto' | 'manual'>('flat')
+  const [compareMode, setCompareMode] = useState(false)
+  const [annotateMode, setAnnotateMode] = useState(false)
   const [toast, setToast] = useState('')
   const [exporting, setExporting] = useState(false)
   const [presets, setPresets] = useState<Preset[]>(loadPresets)
@@ -60,6 +136,30 @@ export default function Trend() {
     queryKey: ['trend', selected, hours],
     queryFn: () =>
       selected.length ? getTrendAgg(selected, hours).then((r) => r.data) : Promise.resolve([]),
+    enabled: selected.length > 0,
+    refetchInterval: 30000,
+  })
+
+  // F10: önceki eşit-uzunluk pencere (dönem karşılaştırması). Zaman ekseni +hours kaydırılarak bindirilir.
+  const { data: prevSeries = [] } = useQuery({
+    queryKey: ['trendPrev', selected, hours],
+    queryFn: () => {
+      const now = Date.now()
+      const prevEnd = new Date(now - hours * 3600_000).toISOString()
+      const prevStart = new Date(now - 2 * hours * 3600_000).toISOString()
+      return getTrendRange(selected, prevStart, prevEnd).then((r) => r.data)
+    },
+    enabled: compareMode && selected.length > 0,
+    refetchInterval: 30000,
+  })
+
+  // F9: paylaşımlı annotation'lar (seçili tag'ler + grafik-seviyesi)
+  const { data: annotations = [] } = useQuery({
+    queryKey: ['annotations', selected, hours],
+    queryFn: () => {
+      const start = new Date(Date.now() - hours * 3600_000).toISOString()
+      return getAnnotations({ tag_ids: selected, start }).then((r) => r.data)
+    },
     enabled: selected.length > 0,
     refetchInterval: 30000,
   })
@@ -109,10 +209,22 @@ export default function Trend() {
   series.forEach((s) => {
     s.data.forEach(({ t, v }) => {
       const key = format(parseISO(t + 'Z'), 'dd.MM HH:mm')
-      timeline[key] ??= { t: key }
+      timeline[key] ??= { t: key, _iso: t }
       timeline[key][s.name] = v
     })
   })
+  // F10: önceki pencereyi +hours kaydırıp aynı eksene bindirir
+  if (compareMode) {
+    const shiftMs = hours * 3600_000
+    prevSeries.forEach((s) => {
+      s.data.forEach(({ t, v }) => {
+        const shifted = new Date(parseISO(t + 'Z').getTime() + shiftMs)
+        const key = format(shifted, 'dd.MM HH:mm')
+        timeline[key] ??= { t: key, _iso: shifted.toISOString() }
+        timeline[key][`${s.name} (önceki)`] = v
+      })
+    })
+  }
   const chartData = Object.values(timeline).sort((a, b) =>
     String(a.t).localeCompare(String(b.t))
   )
@@ -235,6 +347,34 @@ export default function Trend() {
     setCtxMenu({ x: e.clientX, y: e.clientY })
   }
 
+  const refreshAnnotations = () => qc.invalidateQueries({ queryKey: ['annotations'] })
+
+  const handleChartClick = (state: Record<string, unknown>) => {
+    if (!annotateMode) return
+    const idx = state.activeTooltipIndex as number | undefined
+    if (idx == null || idx < 0) return
+    const point = chartDataRef.current[idx] as Record<string, unknown> | undefined
+    const iso = point?._iso as string | undefined
+    if (!iso) return
+    const text = window.prompt('Not (bu zaman noktasına):')?.trim()
+    if (!text) return
+    createAnnotation({ tag_id: null, ts: iso, text })
+      .then(() => { refreshAnnotations(); setToast('Not eklendi'); setTimeout(() => setToast(''), 2500) })
+      .catch(() => { setToast('Not eklenemedi (yetki?)'); setTimeout(() => setToast(''), 3000) })
+  }
+
+  const removeAnnotation = (id: number) => {
+    deleteAnnotation(id)
+      .then(refreshAnnotations)
+      .catch(() => { setToast('Silinemedi (sadece sahibi/admin)'); setTimeout(() => setToast(''), 3000) })
+  }
+
+  // Annotation'ların grafikteki bucket anahtarları (ReferenceLine için)
+  const chartKeys = new Set(chartData.map((d) => String(d.t)))
+  const annotationLines = annotations
+    .map((a) => ({ ...a, key: format(parseISO(a.ts + 'Z'), 'dd.MM HH:mm') }))
+    .filter((a) => chartKeys.has(a.key))
+
   useEffect(() => {
     if (!ctxMenu) return
     const close = () => setCtxMenu(null)
@@ -272,6 +412,24 @@ export default function Trend() {
               {l}
             </button>
           ))}
+          {selected.length > 0 && (
+            <button
+              onClick={() => setCompareMode((v) => !v)}
+              className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${compareMode ? 'bg-amber-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white'}`}
+              title="Önceki eşit pencere ile karşılaştır (kesikli)"
+            >
+              ⇄ Karşılaştır
+            </button>
+          )}
+          {selected.length > 0 && (
+            <button
+              onClick={() => setAnnotateMode((v) => !v)}
+              className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${annotateMode ? 'bg-yellow-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white'}`}
+              title="Not modu: grafiğe tıklayıp not ekle"
+            >
+              📌 Not
+            </button>
+          )}
           {selected.length > 0 && (
             <button
               onClick={exportPNG}
@@ -312,6 +470,19 @@ export default function Trend() {
             placeholder="Ara..."
             className="w-full bg-gray-800 border border-gray-700 rounded-lg px-2 py-1.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-blue-500"
           />
+
+          {/* F4: görünüm modu — düz liste / otomatik (PLC→cihaz) / manuel hiyerarşi */}
+          <div className="flex gap-1 bg-gray-800 rounded-lg p-0.5">
+            {([['flat', 'Düz'], ['auto', 'Auto'], ['manual', 'Manuel']] as const).map(([m, l]) => (
+              <button
+                key={m}
+                onClick={() => setSelectorMode(m)}
+                className={`flex-1 px-1 py-1 text-[11px] rounded-md transition-colors ${selectorMode === m ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'}`}
+              >
+                {l}
+              </button>
+            ))}
+          </div>
 
           {/* Save / clear actions */}
           {selected.length > 0 && savingName === null && (
@@ -387,32 +558,36 @@ export default function Trend() {
           )}
 
           <p className="text-xs text-gray-500 uppercase tracking-wide px-1">Tag Seç</p>
-          <div className="space-y-1">
-            {filteredTags.length === 0 && (
-              <p className="text-gray-500 text-xs px-1">Eşleşme yok.</p>
-            )}
-            {filteredTags.map((t) => {
-              const selIdx = selected.indexOf(t.id)
-              const color = selIdx >= 0 ? COLORS[selIdx % COLORS.length] : '#6b7280'
-              return (
-                <button
-                  key={t.id}
-                  onClick={() => toggle(t.id)}
-                  className={`w-full text-left px-2 py-1.5 rounded-lg text-sm transition-colors flex items-center gap-2 ${
-                    selIdx >= 0
-                      ? 'bg-gray-800/60 text-white'
-                      : 'text-gray-400 hover:bg-gray-800 hover:text-white'
-                  }`}
-                >
-                  <span
-                    className="w-2 h-2 rounded-full flex-shrink-0 transition-colors"
-                    style={{ backgroundColor: color }}
-                  />
-                  <span className="truncate">{t.name}</span>
-                </button>
-              )
-            })}
-          </div>
+          {selectorMode === 'flat' ? (
+            <div className="space-y-1">
+              {filteredTags.length === 0 && (
+                <p className="text-gray-500 text-xs px-1">Eşleşme yok.</p>
+              )}
+              {filteredTags.map((t) => {
+                const selIdx = selected.indexOf(t.id)
+                const color = selIdx >= 0 ? COLORS[selIdx % COLORS.length] : '#6b7280'
+                return (
+                  <button
+                    key={t.id}
+                    onClick={() => toggle(t.id)}
+                    className={`w-full text-left px-2 py-1.5 rounded-lg text-sm transition-colors flex items-center gap-2 ${
+                      selIdx >= 0
+                        ? 'bg-gray-800/60 text-white'
+                        : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                    }`}
+                  >
+                    <span
+                      className="w-2 h-2 rounded-full flex-shrink-0 transition-colors"
+                      style={{ backgroundColor: color }}
+                    />
+                    <span className="truncate">{t.name}</span>
+                  </button>
+                )
+              })}
+            </div>
+          ) : (
+            <GroupTree mode={selectorMode} tags={tags} selected={selected} onToggle={toggle} />
+          )}
         </div>
 
         {/* Chart */}
@@ -442,6 +617,8 @@ export default function Trend() {
                 margin={{ top: 4, right: 16, left: axisLeftMargin, bottom: 4 }}
                 onMouseMove={handleMouseMove}
                 onMouseLeave={handleMouseLeave}
+                onClick={handleChartClick}
+                style={{ cursor: annotateMode ? 'crosshair' : undefined }}
               >
                 <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
                 <XAxis dataKey="t" tick={{ fontSize: 11, fill: '#6b7280' }} interval="preserveStartEnd" />
@@ -502,6 +679,32 @@ export default function Trend() {
                     yAxisId={`y_${s.tag_id}`}
                   />
                 ))}
+                {/* F10: önceki dönem (kesikli) */}
+                {compareMode && series.map((s, i) => (
+                  <Line
+                    key={`prev_${s.tag_id}`}
+                    type="monotone"
+                    dataKey={`${s.name} (önceki)`}
+                    stroke={COLORS[i % COLORS.length]}
+                    strokeWidth={1.5}
+                    strokeDasharray="5 4"
+                    strokeOpacity={0.6}
+                    dot={false}
+                    connectNulls
+                    yAxisId={`y_${s.tag_id}`}
+                  />
+                ))}
+                {/* F9: annotation dikey çizgileri */}
+                {series.length > 0 && annotationLines.map((a) => (
+                  <ReferenceLine
+                    key={a.id}
+                    x={a.key}
+                    yAxisId={`y_${series[0].tag_id}`}
+                    stroke="#fbbf24"
+                    strokeDasharray="2 2"
+                    label={{ value: '📌', position: 'top', fontSize: 12 }}
+                  />
+                ))}
               </LineChart>
             </ResponsiveContainer>
             </div>
@@ -534,6 +737,36 @@ export default function Trend() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {selected.length > 0 && annotations.length > 0 && (
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-3">
+          <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">📌 Notlar ({annotations.length})</p>
+          <div className="space-y-1 max-h-40 overflow-y-auto">
+            {annotations.map((a) => (
+              <div key={a.id} className="flex items-center gap-2 text-xs group">
+                <span className="text-gray-500 font-mono w-28 flex-shrink-0">
+                  {format(parseISO(a.ts + 'Z'), 'dd.MM HH:mm')}
+                </span>
+                <span className="text-gray-200 flex-1">{a.text}</span>
+                <span className="text-gray-600">{a.username}</span>
+                <button
+                  onClick={() => removeAnnotation(a.id)}
+                  className="opacity-0 group-hover:opacity-100 text-gray-600 hover:text-red-400 transition-all px-1"
+                  title="Sil (sahibi/admin)"
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {annotateMode && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-yellow-600 text-white text-xs px-4 py-2 rounded-xl shadow-xl z-40">
+          📌 Not modu açık — grafikte bir noktaya tıklayın
         </div>
       )}
 

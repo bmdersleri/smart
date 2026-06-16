@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
@@ -14,11 +15,23 @@ const nav = [
 
 export default function Layout() {
   const { user, logout } = useAuth()
+  const [mobileNav, setMobileNav] = useState(false)
 
   return (
     <div className="flex h-screen bg-gray-950 overflow-hidden">
+      {/* Mobil arka plan örtüsü */}
+      {mobileNav && (
+        <div
+          className="fixed inset-0 bg-black/60 z-30 md:hidden"
+          onClick={() => setMobileNav(false)}
+        />
+      )}
       {/* Sidebar */}
-      <aside className="w-56 bg-gray-900 border-r border-gray-800 flex flex-col">
+      <aside
+        className={`w-56 bg-gray-900 border-r border-gray-800 flex flex-col fixed md:static inset-y-0 left-0 z-40 transform transition-transform duration-200 ${
+          mobileNav ? 'translate-x-0' : '-translate-x-full'
+        } md:translate-x-0`}
+      >
         <div className="p-4 border-b border-gray-800">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -37,6 +50,7 @@ export default function Layout() {
           {nav.map(({ to, label, icon }) => (
             <NavLink
               key={to} to={to} end={to === '/'}
+              onClick={() => setMobileNav(false)}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
                   isActive ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'
@@ -69,6 +83,19 @@ export default function Layout() {
 
       {/* Main */}
       <main className="flex-1 overflow-auto">
+        {/* Mobil üst bar */}
+        <div className="md:hidden sticky top-0 z-20 flex items-center gap-3 bg-gray-900 border-b border-gray-800 px-4 py-3">
+          <button
+            onClick={() => setMobileNav(true)}
+            className="text-gray-300 hover:text-white"
+            aria-label="Menüyü aç"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+          <span className="text-white font-semibold text-sm">SCADA Reporter</span>
+        </div>
         <Outlet />
       </main>
     </div>
