@@ -16,7 +16,7 @@ This is distinct from ad-hoc reporting (sub-project B), which generates Excel fr
 
 - **Approach:** A first (new, hard), B later (extends existing `excel_builder.py`).
 - **Mapping:** hybrid — auto-detect column→tag from the embedded sensor-code row, user confirms/corrects and saves.
-- **Data source:** new `tag_readings_1d` continuous aggregate, long retention. Per-column agg ∈ {sum, avg, min, max, last}.
+- **Data source:** new `tag_readings_1d` continuous aggregate, long retention. Per-column agg ∈ {sum, avg, min, max, last, delta}. `delta` = last − first reading of the day (for cumulative counters → daily consumption).
 - **Fill target:** clean single-sheet template in → fresh monthly `.xlsx` out. Master 60-sheet workbook stays untouched as the human archive.
 - **Row mapping:** auto-detect `TARİH` column + grid start; one row per day of selected month.
 - **No backfill:** system fills only data it actually collected (≈ from 2026-06 onward). Pre-existing historical months stay manual.
@@ -62,7 +62,7 @@ Per mapped column (1:N, cascade delete).
 | `template_id` | FK → excel_templates (cascade) | |
 | `col_letter` | str | `"E"` |
 | `tag_id` | FK → tags (SET NULL) | null = unmapped/manual → skip on fill |
-| `agg` | str | `sum\|avg\|min\|max\|last` |
+| `agg` | str | `sum\|avg\|min\|max\|last\|delta` |
 | `source_code` | str | sensor code auto-detected; for drift re-check |
 | `enabled` | bool | toggle off without deleting |
 
@@ -80,12 +80,12 @@ SELECT tag_id, time_bucket('1 day', timestamp) AS bucket,
 FROM tag_readings GROUP BY tag_id, bucket WITH NO DATA;
 ```
 
-- **No `last`/`first` in the CAGG** — Timescale restricts those in continuous aggregates. CAGG covers `avg/min/max/sum`. When a column's agg = `last`, `fill_engine` runs a separate `DISTINCT ON (tag_id) ... ORDER BY timestamp DESC` per day.
+- **No `last`/`first` in the CAGG** — Timescale restricts those in continuous aggregates. CAGG covers `avg/min/max/sum`. When a column's agg = `last`, `fill_engine` runs a separate `DISTINCT ON (tag_id) ... ORDER BY timestamp DESC` per day. `delta` reads both ends per day (`first` via `ORDER BY timestamp ASC`, `last` via `DESC`) → `last − first`; null if either end missing.
 - **Long retention** — no retention policy on `tag_readings_1d` (raw stays 7d). Daily rows are tiny; years fit. Enables any collected past month.
 - **Refresh policy** — wide `start_offset`, `end_offset '1 hour'` so the current day stays fresh.
 
 **Single query interface** — `daily_values(tag_id, year, month, agg) -> {date: value}`:
-- PG/Timescale → read `tag_readings_1d` (or `DISTINCT ON` for `last`).
+- PG/Timescale → read `tag_readings_1d` (or `DISTINCT ON` for `last`/`delta`).
 - SQLite dev (no timescale) → `GROUP BY date(timestamp)` straight on `tag_readings`, same agg funcs. Mirrors `dashboard._query_rollup` degradation.
 
 Day boundaries computed in plant-local time, not UTC.
@@ -96,7 +96,7 @@ Day boundaries computed in plant-local time, not UTC.
 - **Sensor-code row:** scan first ~6 rows, pick the row with most cells matching tag-code regex (`^\d{3}[A-Z]{2}\d{3}$`), cross-checked vs DB `tag.name` → `header_row`.
 - **Date column:** header cell text ≈ `TARİH` (TR-normalized) → `date_col`.
 - **Grid start row:** first row below header where date col holds a date; for `write` mode, first empty data row.
-- **Column→tag proposal:** exact match code → `tag.name`. No match → unmapped. Default `agg` guessed from label: `m³/gün`/`DEBİ` → `sum`; `%`/`ORAN` → `avg`; level/`SEVİYE` → `last`; else `avg`.
+- **Column→tag proposal:** exact match code → `tag.name`. No match → unmapped. Default `agg` guessed from label: `m³/gün`/`DEBİ` → `sum`; `TÜKETİM`/`SAYAÇ`/cumulative kWh → `delta`; `%`/`ORAN` → `avg`; level/`SEVİYE` → `last`; else `avg`.
 
 ### Fill (`fill_engine.fill(template_id, year, month) -> bytes`)
 1. Load `file_blob` via openpyxl (`data_only=False` → keep formulas).
@@ -117,7 +117,7 @@ Day boundaries computed in plant-local time, not UTC.
 | Tag deleted (`tag_id` null) | skip column |
 | Template edited, codes shifted | re-detect compares `source_code`; warn drift, block fill until reconfirm |
 | Merged cells in grid | write to top-left anchor only |
-| `last` agg | separate `DISTINCT ON` query path |
+| `last` / `delta` agg | separate `DISTINCT ON` query path; `delta` = last − first, null if either end missing |
 | Month partly collected | fill available days, rest blank |
 | `match` mode, date missing | skip that day, log |
 | Formula cells | inspector flags formula cols as non-fillable; never overwrite |
@@ -140,7 +140,7 @@ New page `pages/ExcelTemplates.tsx` (sidebar "Excel Şablonları"), three views 
   | B | HAVA DURUMU | — | (unmapped) | — | ☐ |
 
   - Auto-matched rows pre-filled + "auto" badge; unmatched highlighted.
-  - Tag select reuses existing tag picker. Agg dropdown: sum/avg/min/max/last.
+  - Tag select reuses existing tag picker. Agg dropdown: sum/avg/min/max/last/delta.
   - Editable header_row / date_col / data_start_row / date_mode / sheet (detected values shown).
 - "Kaydet" → POST `/excel-templates`.
 
@@ -152,7 +152,7 @@ Reuse tag picker, modal, `useSortable`, TanStack Query, OpenAPI client (`just ge
 
 | Layer | Tests |
 |-------|-------|
-| `daily_values` | SQLite path sum/avg/min/max/last correct; missing-day gaps; tz day boundaries |
+| `daily_values` | SQLite path sum/avg/min/max/last/delta correct; delta = last−first; delta null on single/missing reading; missing-day gaps; tz day boundaries |
 | `template_inspector` | code-row detect; `TARİH` find; agg guess; exact tag match; unmatched → unmapped; formula-col flag |
 | `fill_engine` | write mode dates+values; match mode existing dates; blank on missing (not 0); merged-cell anchor; skip null tag; format preserved; `last` path |
 | API | inspect multipart → proposal; save round-trips; generate → valid xlsx bytes; drift detection |
