@@ -17,6 +17,14 @@ import enDashboard from './locales/en/dashboard.json'
 import trDashboard from './locales/tr/dashboard.json'
 import ruDashboard from './locales/ru/dashboard.json'
 import deDashboard from './locales/de/dashboard.json'
+import enTags from './locales/en/tags.json'
+import trTags from './locales/tr/tags.json'
+import ruTags from './locales/ru/tags.json'
+import deTags from './locales/de/tags.json'
+import enTrend from './locales/en/trend.json'
+import trTrend from './locales/tr/trend.json'
+import ruTrend from './locales/ru/trend.json'
+import deTrend from './locales/de/trend.json'
 
 export const SUPPORTED_LANGS = ['en', 'tr', 'ru', 'de'] as const
 export type Lang = (typeof SUPPORTED_LANGS)[number]
@@ -26,14 +34,14 @@ const initialLng = (SUPPORTED_LANGS as readonly string[]).includes(stored ?? '')
 
 i18n.use(initReactI18next).init({
   resources: {
-    en: { common: enCommon, login: enLogin, settings: enSettings, dashboard: enDashboard },
-    tr: { common: trCommon, login: trLogin, settings: trSettings, dashboard: trDashboard },
-    ru: { common: ruCommon, login: ruLogin, settings: ruSettings, dashboard: ruDashboard },
-    de: { common: deCommon, login: deLogin, settings: deSettings, dashboard: deDashboard },
+    en: { common: enCommon, login: enLogin, settings: enSettings, dashboard: enDashboard, tags: enTags, trend: enTrend },
+    tr: { common: trCommon, login: trLogin, settings: trSettings, dashboard: trDashboard, tags: trTags, trend: trTrend },
+    ru: { common: ruCommon, login: ruLogin, settings: ruSettings, dashboard: ruDashboard, tags: ruTags, trend: ruTrend },
+    de: { common: deCommon, login: deLogin, settings: deSettings, dashboard: deDashboard, tags: deTags, trend: deTrend },
   },
   lng: initialLng,
   fallbackLng: 'en',
-  ns: ['common', 'login', 'settings', 'dashboard'],
+  ns: ['common', 'login', 'settings', 'dashboard', 'tags', 'trend'],
   defaultNS: 'common',
   interpolation: { escapeValue: false },
 })

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useSettings } from '../context/SettingsContext'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
@@ -17,10 +18,10 @@ import { toPng } from 'html-to-image'
 
 const COLORS = ['#f87171', '#34d399', '#facc15', '#60a5fa', '#a78bfa', '#fb923c', '#f472b6', '#38bdf8']
 const HOURS = [
-  { v: 1, l: 'Son 1 saat' },
-  { v: 6, l: 'Son 6 saat' },
-  { v: 24, l: 'Son 24 saat' },
-  { v: 168, l: 'Son 7 gün' },
+  { v: 1, key: 'hours_1' },
+  { v: 6, key: 'hours_6' },
+  { v: 24, key: 'hours_24' },
+  { v: 168, key: 'hours_168' },
 ]
 const PRESET_KEY = 'trend_presets'
 
@@ -91,12 +92,13 @@ function GroupTree({
 }: {
   mode: 'auto' | 'manual'; tags: Tag[]; selected: number[]; onToggle: (id: number) => void
 }) {
+  const { t } = useTranslation('trend')
   const { data: tree = [] } = useQuery({
     queryKey: ['groupTree', mode],
     queryFn: () => getGroupTree(mode).then((r) => r.data),
   })
-  const tagMap = new Map(tags.map((t) => [t.id, t]))
-  if (tree.length === 0) return <p className="text-gray-500 text-xs px-1">Grup yok.</p>
+  const tagMap = new Map(tags.map((tg) => [tg.id, tg]))
+  if (tree.length === 0) return <p className="text-gray-500 text-xs px-1">{t('no_group')}</p>
   return (
     <div className="space-y-0.5">
       {tree.map((n, i) => (
@@ -107,6 +109,7 @@ function GroupTree({
 }
 
 export default function Trend() {
+  const { t } = useTranslation(['trend', 'common'])
   const { trendChartHeight, theme } = useSettings()
   const isLight = theme === 'light'
   const gridStroke = isLight ? '#e2e8f0' : '#1f2937'
@@ -144,7 +147,7 @@ export default function Trend() {
     refetchInterval: 30000,
   })
 
-  // F10: önceki eşit-uzunluk pencere (dönem karşılaştırması). Zaman ekseni +hours kaydırılarak bindirilir.
+  // F10: previous equal-length window (period comparison). Overlaid by shifting the time axis by +hours.
   const { data: prevSeries = [] } = useQuery({
     queryKey: ['trendPrev', selected, hours],
     queryFn: () => {
@@ -157,7 +160,7 @@ export default function Trend() {
     refetchInterval: 30000,
   })
 
-  // F9: paylaşımlı annotation'lar (seçili tag'ler + grafik-seviyesi)
+  // F9: shared annotations (selected tags + chart-level)
   const { data: annotations = [] } = useQuery({
     queryKey: ['annotations', selected, hours],
     queryFn: () => {
@@ -194,7 +197,7 @@ export default function Trend() {
     localStorage.setItem(PRESET_KEY, JSON.stringify(updated))
     setPresets(updated)
     setSavingName(null)
-    setToast(`"${name}" kaydedildi`)
+    setToast(t('toast_preset_saved', { name }))
     setTimeout(() => setToast(''), 3000)
   }
 
@@ -211,21 +214,21 @@ export default function Trend() {
 
   const timeline: Record<string, Record<string, number | string>> = {}
   series.forEach((s) => {
-    s.data.forEach(({ t, v }) => {
-      const key = format(parseISO(t + 'Z'), 'dd.MM HH:mm')
-      timeline[key] ??= { t: key, _iso: t }
+    s.data.forEach(({ t: ts, v }) => {
+      const key = format(parseISO(ts + 'Z'), 'dd.MM HH:mm')
+      timeline[key] ??= { t: key, _iso: ts }
       timeline[key][s.name] = v
     })
   })
-  // F10: önceki pencereyi +hours kaydırıp aynı eksene bindirir
+  // F10: shift the previous window by +hours and overlay it on the same axis
   if (compareMode) {
     const shiftMs = hours * 3600_000
     prevSeries.forEach((s) => {
-      s.data.forEach(({ t, v }) => {
-        const shifted = new Date(parseISO(t + 'Z').getTime() + shiftMs)
+      s.data.forEach(({ t: ts, v }) => {
+        const shifted = new Date(parseISO(ts + 'Z').getTime() + shiftMs)
         const key = format(shifted, 'dd.MM HH:mm')
         timeline[key] ??= { t: key, _iso: shifted.toISOString() }
-        timeline[key][`${s.name} (önceki)`] = v
+        timeline[key][`${s.name} ${t('previous_suffix')}`] = v
       })
     })
   }
@@ -291,11 +294,11 @@ export default function Trend() {
       a.click()
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
-      setToast('Excel raporu indirildi')
+      setToast(t('toast_excel_downloaded'))
       setTimeout(() => setToast(''), 3000)
     } catch (err) {
       console.error('Report export failed:', err)
-      setToast('Rapor oluşturulamadı')
+      setToast(t('toast_report_failed'))
       setTimeout(() => setToast(''), 3000)
     } finally {
       setExporting(false)
@@ -360,20 +363,20 @@ export default function Trend() {
     const point = chartDataRef.current[idx] as Record<string, unknown> | undefined
     const iso = point?._iso as string | undefined
     if (!iso) return
-    const text = window.prompt('Not (bu zaman noktasına):')?.trim()
+    const text = window.prompt(t('prompt_note'))?.trim()
     if (!text) return
     createAnnotation({ tag_id: null, ts: iso, text })
-      .then(() => { refreshAnnotations(); setToast('Not eklendi'); setTimeout(() => setToast(''), 2500) })
-      .catch(() => { setToast('Not eklenemedi (yetki?)'); setTimeout(() => setToast(''), 3000) })
+      .then(() => { refreshAnnotations(); setToast(t('toast_note_added')); setTimeout(() => setToast(''), 2500) })
+      .catch(() => { setToast(t('toast_note_failed')); setTimeout(() => setToast(''), 3000) })
   }
 
   const removeAnnotation = (id: number) => {
     deleteAnnotation(id)
       .then(refreshAnnotations)
-      .catch(() => { setToast('Silinemedi (sadece sahibi/admin)'); setTimeout(() => setToast(''), 3000) })
+      .catch(() => { setToast(t('toast_note_deleted_failed')); setTimeout(() => setToast(''), 3000) })
   }
 
-  // Annotation'ların grafikteki bucket anahtarları (ReferenceLine için)
+  // bucket keys of annotations on the chart (for ReferenceLine)
   const chartKeys = new Set(chartData.map((d) => String(d.t)))
   const annotationLines = annotations
     .map((a) => ({ ...a, key: format(parseISO(a.ts + 'Z'), 'dd.MM HH:mm') }))
@@ -396,16 +399,16 @@ export default function Trend() {
   return (
     <div className="p-6 space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-white">Trend Grafik</h1>
+        <h1 className="text-xl font-bold text-white">{t('title')}</h1>
         <div className="flex gap-2">
           <button
             onClick={() => setPanelOpen((v) => !v)}
             className="px-2 py-1 text-xs rounded-lg bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors"
-            title={panelOpen ? 'Paneli kapat' : 'Paneli aç'}
+            title={panelOpen ? t('panel_hide_title') : t('panel_show_title')}
           >
-            {panelOpen ? '⟨ Gizle' : '⟩ Taglar'}
+            {panelOpen ? t('panel_hide') : t('panel_show')}
           </button>
-          {HOURS.map(({ v, l }) => (
+          {HOURS.map(({ v, key }) => (
             <button
               key={v}
               onClick={() => setHours(v)}
@@ -413,34 +416,34 @@ export default function Trend() {
                 hours === v ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
               }`}
             >
-              {l}
+              {t(key)}
             </button>
           ))}
           {selected.length > 0 && (
             <button
               onClick={() => setCompareMode((v) => !v)}
               className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${compareMode ? 'bg-amber-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white'}`}
-              title="Önceki eşit pencere ile karşılaştır (kesikli)"
+              title={t('compare_title')}
             >
-              ⇄ Karşılaştır
+              {t('compare')}
             </button>
           )}
           {selected.length > 0 && (
             <button
               onClick={() => setAnnotateMode((v) => !v)}
               className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${annotateMode ? 'bg-yellow-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white'}`}
-              title="Not modu: grafiğe tıklayıp not ekle"
+              title={t('annotate_title')}
             >
-              📌 Not
+              {t('annotate')}
             </button>
           )}
           {selected.length > 0 && (
             <button
               onClick={exportPNG}
               className="px-3 py-1.5 text-xs rounded-lg bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors"
-              title="Grafiği PNG olarak indir"
+              title={t('export_png_title')}
             >
-              ↓ PNG
+              {t('export_png')}
             </button>
           )}
           {selected.length > 0 && (
@@ -448,18 +451,18 @@ export default function Trend() {
               onClick={exportReport}
               disabled={exporting}
               className="px-3 py-1.5 text-xs rounded-lg bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white disabled:opacity-50 transition-colors"
-              title="Seçili tag'leri Excel raporuna aktar"
+              title={t('export_excel_title')}
             >
-              {exporting ? '...' : '↓ Excel'}
+              {exporting ? '...' : t('export_excel')}
             </button>
           )}
           {brushIndices !== null && chartData.length > 0 && (
             <button
               onClick={() => setBrushIndices(null)}
               className="px-3 py-1.5 text-xs rounded-lg bg-gray-700 text-gray-300 hover:bg-gray-600 transition-colors"
-              title="Zoom sıfırla"
+              title={t('reset_zoom_title')}
             >
-              ↺ Sıfırla
+              {t('reset_zoom')}
             </button>
           )}
         </div>
@@ -471,13 +474,13 @@ export default function Trend() {
           <input
             value={tagSearch}
             onChange={(e) => setTagSearch(e.target.value)}
-            placeholder="Ara..."
+            placeholder={t('search_placeholder')}
             className="w-full bg-gray-800 border border-gray-700 rounded-lg px-2 py-1.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-blue-500"
           />
 
-          {/* F4: görünüm modu — düz liste / otomatik (PLC→cihaz) / manuel hiyerarşi */}
+          {/* F4: view mode — flat list / automatic (PLC→device) / manual hierarchy */}
           <div className="flex gap-1 bg-gray-800 rounded-lg p-0.5">
-            {([['flat', 'Düz'], ['auto', 'Auto'], ['manual', 'Manuel']] as const).map(([m, l]) => (
+            {([['flat', t('mode_flat')], ['auto', t('mode_auto')], ['manual', t('mode_manual')]] as const).map(([m, l]) => (
               <button
                 key={m}
                 onClick={() => setSelectorMode(m)}
@@ -495,13 +498,13 @@ export default function Trend() {
                 onClick={() => setSavingName('')}
                 className="flex-1 px-2 py-1 text-xs bg-blue-700/40 hover:bg-blue-700/60 text-blue-300 rounded-lg transition-colors"
               >
-                Kaydet
+                {t('save')}
               </button>
               <button
                 onClick={() => setSelected([])}
                 className="flex-1 px-2 py-1 text-xs bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-red-400 rounded-lg transition-colors"
               >
-                Tümünü Kaldır
+                {t('clear_all')}
               </button>
             </div>
           )}
@@ -514,7 +517,7 @@ export default function Trend() {
                 value={savingName}
                 onChange={(e) => setSavingName(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') savePreset(); if (e.key === 'Escape') setSavingName(null) }}
-                placeholder="Seçim adı..."
+                placeholder={t('preset_name_placeholder')}
                 className="w-full bg-gray-800 border border-blue-600 rounded-lg px-2 py-1.5 text-xs text-white placeholder-gray-600 focus:outline-none"
               />
               <div className="flex gap-1">
@@ -523,13 +526,13 @@ export default function Trend() {
                   disabled={!savingName.trim()}
                   className="flex-1 px-2 py-1 text-xs bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white rounded-lg transition-colors"
                 >
-                  Kaydet
+                  {t('save')}
                 </button>
                 <button
                   onClick={() => setSavingName(null)}
                   className="px-2 py-1 text-xs bg-gray-800 hover:bg-gray-700 text-gray-400 rounded-lg transition-colors"
                 >
-                  İptal
+                  {t('common:cancel')}
                 </button>
               </div>
             </div>
@@ -538,34 +541,37 @@ export default function Trend() {
           {/* Saved presets */}
           {presets.length > 0 && (
             <div className="space-y-1">
-              <p className="text-xs text-gray-500 uppercase tracking-wide px-1">Kayıtlı</p>
-              {presets.map((p) => (
+              <p className="text-xs text-gray-500 uppercase tracking-wide px-1">{t('saved_presets')}</p>
+              {presets.map((p) => {
+                const hk = HOURS.find((h) => h.v === p.hours)?.key
+                return (
                 <div key={p.name} className="flex items-center gap-1 group">
                   <button
                     onClick={() => loadPreset(p)}
                     className="flex-1 text-left px-2 py-1 rounded-lg text-xs text-gray-300 hover:bg-gray-800 hover:text-white transition-colors truncate"
-                    title={`${p.tag_ids.length} tag · ${HOURS.find((h) => h.v === p.hours)?.l ?? p.hours + 'h'}`}
+                    title={`${p.tag_ids.length} tag · ${hk ? t(hk) : p.hours + 'h'}`}
                   >
                     {p.name}
                   </button>
                   <button
                     onClick={() => deletePreset(p.name)}
                     className="opacity-0 group-hover:opacity-100 text-gray-600 hover:text-red-400 text-xs transition-all px-1"
-                    title="Sil"
+                    title={t('common:delete')}
                   >
                     ✕
                   </button>
                 </div>
-              ))}
+                )
+              })}
               <div className="border-t border-gray-800 pt-1" />
             </div>
           )}
 
-          <p className="text-xs text-gray-500 uppercase tracking-wide px-1">Tag Seç</p>
+          <p className="text-xs text-gray-500 uppercase tracking-wide px-1">{t('select_tags')}</p>
           {selectorMode === 'flat' ? (
             <div className="space-y-1">
               {filteredTags.length === 0 && (
-                <p className="text-gray-500 text-xs px-1">Eşleşme yok.</p>
+                <p className="text-gray-500 text-xs px-1">{t('no_match')}</p>
               )}
               {filteredTags.map((t) => {
                 const selIdx = selected.indexOf(t.id)
@@ -603,15 +609,15 @@ export default function Trend() {
         >
           {selected.length === 0 ? (
             <div className="flex-1 flex items-center justify-center text-gray-500 text-sm">
-              Sol panelden tag seçin
+              {t('select_from_panel')}
             </div>
           ) : isLoading ? (
             <div className="flex-1 flex items-center justify-center text-gray-500 text-sm">
-              Yükleniyor...
+              {t('loading')}
             </div>
           ) : chartData.length === 0 ? (
             <div className="flex-1 flex items-center justify-center text-gray-500 text-sm">
-              Bu aralıkta veri yok.
+              {t('no_data_range')}
             </div>
           ) : (
             <div className="flex-1 min-h-0">
@@ -683,12 +689,12 @@ export default function Trend() {
                     yAxisId={`y_${s.tag_id}`}
                   />
                 ))}
-                {/* F10: önceki dönem (kesikli) */}
+                {/* F10: previous period (dashed) */}
                 {compareMode && series.map((s, i) => (
                   <Line
                     key={`prev_${s.tag_id}`}
                     type="monotone"
-                    dataKey={`${s.name} (önceki)`}
+                    dataKey={`${s.name} ${t('previous_suffix')}`}
                     stroke={COLORS[i % COLORS.length]}
                     strokeWidth={1.5}
                     strokeDasharray="5 4"
@@ -698,7 +704,7 @@ export default function Trend() {
                     yAxisId={`y_${s.tag_id}`}
                   />
                 ))}
-                {/* F9: annotation dikey çizgileri */}
+                {/* F9: annotation vertical lines */}
                 {series.length > 0 && annotationLines.map((a) => (
                   <ReferenceLine
                     key={a.id}
@@ -721,9 +727,9 @@ export default function Trend() {
           <table className="w-full text-xs">
             <thead>
               <tr className="text-gray-500">
-                <SortHeader label="Tag" sortKey="name" sort={pSort} onToggle={pToggle} className="pb-1 font-normal" />
-                <SortHeader label="Değer" sortKey="value" sort={pSort} onToggle={pToggle} align="right" className="pb-1 font-normal pr-4" />
-                <SortHeader label="Birim" sortKey="unit" sort={pSort} onToggle={pToggle} className="pb-1 font-normal" />
+                <SortHeader label={t('col_tag')} sortKey="name" sort={pSort} onToggle={pToggle} className="pb-1 font-normal" />
+                <SortHeader label={t('col_value')} sortKey="value" sort={pSort} onToggle={pToggle} align="right" className="pb-1 font-normal pr-4" />
+                <SortHeader label={t('col_unit')} sortKey="unit" sort={pSort} onToggle={pToggle} className="pb-1 font-normal" />
               </tr>
             </thead>
             <tbody>
@@ -746,7 +752,7 @@ export default function Trend() {
 
       {selected.length > 0 && annotations.length > 0 && (
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-3">
-          <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">📌 Notlar ({annotations.length})</p>
+          <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">{t('notes_title', { value: annotations.length })}</p>
           <div className="space-y-1 max-h-40 overflow-y-auto">
             {annotations.map((a) => (
               <div key={a.id} className="flex items-center gap-2 text-xs group">
@@ -758,7 +764,7 @@ export default function Trend() {
                 <button
                   onClick={() => removeAnnotation(a.id)}
                   className="opacity-0 group-hover:opacity-100 text-gray-600 hover:text-red-400 transition-all px-1"
-                  title="Sil (sahibi/admin)"
+                  title={t('delete_note_title')}
                 >
                   ✕
                 </button>
@@ -770,7 +776,7 @@ export default function Trend() {
 
       {annotateMode && (
         <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-yellow-600 text-white text-xs px-4 py-2 rounded-xl shadow-xl z-40">
-          📌 Not modu açık — grafikte bir noktaya tıklayın
+          {t('annotate_banner')}
         </div>
       )}
 
@@ -785,14 +791,14 @@ export default function Trend() {
             disabled={selected.length === 0 || chartData.length === 0}
             className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
           >
-            <span className="text-gray-500">↓</span> PNG Kaydet
+            <span className="text-gray-500">↓</span> {t('ctx_save_png')}
           </button>
           <button
             onClick={() => { exportReport(); setCtxMenu(null) }}
             disabled={selected.length === 0 || exporting}
             className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
           >
-            <span className="text-gray-500">↓</span> Excel Raporu
+            <span className="text-gray-500">↓</span> {t('ctx_excel_report')}
           </button>
           <div className="border-t border-gray-800 my-1" />
           <button
@@ -800,14 +806,14 @@ export default function Trend() {
             disabled={brushIndices === null}
             className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
           >
-            <span className="text-gray-500">↺</span> Zoom Sıfırla
+            <span className="text-gray-500">↺</span> {t('ctx_reset_zoom')}
           </button>
           <button
             onClick={() => { setSelected([]); setCtxMenu(null) }}
             disabled={selected.length === 0}
             className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-red-400 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
           >
-            <span className="text-gray-500">✕</span> Seçimi Temizle
+            <span className="text-gray-500">✕</span> {t('ctx_clear_selection')}
           </button>
         </div>
       )}
