@@ -1,3 +1,5 @@
+from typing import Literal
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel
@@ -28,6 +30,10 @@ class UserCreate(BaseModel):
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
+
+
+class UserUpdate(BaseModel):
+    language: Literal["en", "tr", "ru", "de"]
 
 
 async def authenticate_token(token: str, db: AsyncSession) -> User:
@@ -93,4 +99,22 @@ async def me(user: User = Depends(get_current_user)):
         "username": user.username,
         "role": user.role,
         "full_name": user.full_name,
+        "language": user.language,
+    }
+
+
+@router.patch("/me")
+async def update_me(
+    data: UserUpdate,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    user.language = data.language
+    await db.commit()
+    return {
+        "id": user.id,
+        "username": user.username,
+        "role": user.role,
+        "full_name": user.full_name,
+        "language": user.language,
     }
