@@ -13,6 +13,7 @@ import logging
 import re
 import threading
 import time
+from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -29,6 +30,10 @@ _executor = ThreadPoolExecutor(max_workers=settings.S7_MAX_WORKERS, thread_name_
 
 GOOD = 192  # OPC kalite: iyi
 BAD = 0
+
+# Blok okuma: ardışık DB adreslerini tek db_read'e topla (PDU round-trip azalt)
+MAX_BLOCK_BYTES = 222  # en küçük S7 PDU (240) için güvenli tek-okuma payload'u
+BLOCK_GAP_TOLERANCE = 32  # bu kadar boşluğa kadar iki spec aynı bloğa birleşir
 
 # Operand mnemonik -> okunacak byte sayısı
 _OPERAND_SIZES = {
@@ -144,6 +149,51 @@ def _decode(spec: ReadSpec, data: bytearray) -> float | None:
     if spec.decoder == "BOOL":
         return float(get_bool(data, 0, spec.bit))
     return None
+
+
+@dataclass(frozen=True)
+class DbBlock:
+    """Tek db_read ile okunacak ardışık byte aralığı + içindeki tag'ler."""
+
+    db_number: int
+    start: int
+    size: int
+    members: tuple[tuple[int, ReadSpec], ...]  # (opak anahtar, spec)
+
+
+def plan_db_blocks(items: list[tuple[int, ReadSpec]]) -> list[DbBlock]:
+    """Aynı DB içindeki ardışık spec'leri tek bloğa toplar.
+
+    items: (key, ReadSpec); key sonuçları geri eşlemek için opaktır (ör. orijinal
+    indeks). Sadece area == 'DB' spec'ler verilmelidir.
+    """
+    by_db: dict[int, list[tuple[int, ReadSpec]]] = defaultdict(list)
+    for key, sp in items:
+        by_db[sp.db_number].append((key, sp))
+
+    blocks: list[DbBlock] = []
+    for db_number, group in by_db.items():
+        group.sort(key=lambda ks: ks[1].byte_offset)
+        start: int | None = None
+        end = 0
+        members: list[tuple[int, ReadSpec]] = []
+        for key, sp in group:
+            sp_end = sp.byte_offset + sp.size
+            if (
+                start is not None
+                and sp.byte_offset - end <= BLOCK_GAP_TOLERANCE
+                and sp_end - start <= MAX_BLOCK_BYTES
+            ):
+                end = max(end, sp_end)
+                members.append((key, sp))
+            else:
+                if start is not None:
+                    blocks.append(DbBlock(db_number, start, end - start, tuple(members)))
+                start, end = sp.byte_offset, sp_end
+                members = [(key, sp)]
+        if start is not None:
+            blocks.append(DbBlock(db_number, start, end - start, tuple(members)))
+    return blocks
 
 
 _AREA_ENUM = {"DB": Areas.DB, "PA": Areas.PA, "PE": Areas.PE, "MK": Areas.MK}
