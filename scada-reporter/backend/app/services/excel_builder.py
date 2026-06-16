@@ -4,6 +4,8 @@ from openpyxl import Workbook
 from openpyxl.drawing.image import Image as XLImage
 from openpyxl.styles import Font, PatternFill
 
+from app.i18n import get_labels
+
 HEADER_FILL = PatternFill(fill_type="solid", fgColor="1F2937")
 HEADER_FONT = Font(color="FFFFFF", bold=True)
 FLOAT_FMT = "#,##0.000"
@@ -28,27 +30,29 @@ def build_advanced_excel(
     per_tag_data: list[dict],
     template,
     summary_chart_png: bytes,
+    lang: str = "en",
 ) -> bytes:
+    L = get_labels(lang)  # noqa: N806 — short alias for the label dict, used pervasively below
     wb = Workbook()
 
-    # --- Sheet 1: Özet ---
+    # --- Sheet 1: Summary ---
     ws_ozet = wb.active
-    ws_ozet.title = "Ozet"
+    ws_ozet.title = L["summary_sheet"]
 
     if template.show_summary_stats:
         stat_headers = [
-            "Tag",
-            "Birim",
-            "Sayı",
-            "İyi Kalite",
-            "Erişilebilirlik %",
-            "Ort",
-            "Std Sapma",
-            "Min",
-            "Max",
-            "Trend",
-            "R²",
-            "Anomali Sayısı",
+            L["tag"],
+            L["unit"],
+            L["count"],
+            L["good_quality"],
+            L["availability_pct"],
+            L["average"],
+            L["std_dev"],
+            L["minimum"],
+            L["maximum"],
+            L["trend"],
+            L["trend_r2"],
+            L["anomaly_count"],
         ]
         _header_row(ws_ozet, stat_headers, row=1)
         for row_idx, td in enumerate(per_tag_data, start=2):
@@ -92,29 +96,29 @@ def build_advanced_excel(
         current_row = 1
 
         # Stats block
-        ws.cell(row=current_row, column=1, value="İstatistikler").font = HEADER_FONT
+        ws.cell(row=current_row, column=1, value=L["statistics"]).font = HEADER_FONT
         current_row += 1
         for label, val in [
-            ("Tag", tag.name),
-            ("Birim", tag.unit or ""),
-            ("Toplam Okuma", s.count),
-            ("İyi Kalite", s.good_quality_count),
+            (L["tag"], tag.name),
+            (L["unit"], tag.unit or ""),
+            (L["total_reads"], s.count),
+            (L["good_quality"], s.good_quality_count),
             (
-                "Erişilebilirlik %",
+                L["availability_pct"],
                 round(s.availability_pct, 2) if s.availability_pct is not None else None,
             ),
-            ("Ortalama", round(s.avg, 3) if s.avg is not None else None),
-            ("Std Sapma", round(s.std_dev, 3) if s.std_dev is not None else None),
-            ("Min", round(s.min, 3) if s.min is not None else None),
-            ("Max", round(s.max, 3) if s.max is not None else None),
-            ("Trend", s.trend_direction),
+            (L["average"], round(s.avg, 3) if s.avg is not None else None),
+            (L["std_dev"], round(s.std_dev, 3) if s.std_dev is not None else None),
+            (L["minimum"], round(s.min, 3) if s.min is not None else None),
+            (L["maximum"], round(s.max, 3) if s.max is not None else None),
+            (L["trend"], s.trend_direction),
             (
-                "Trend Eğimi (birim/saat)",
+                L["trend_slope"],
                 round(s.trend_slope, 5) if s.trend_slope is not None else None,
             ),
-            ("R²", round(s.trend_r2, 4) if s.trend_r2 is not None else None),
-            ("Boşluk Sayısı", s.gap_count),
-            ("Toplam Boşluk (sn)", round(s.gap_total_seconds, 1)),
+            (L["trend_r2"], round(s.trend_r2, 4) if s.trend_r2 is not None else None),
+            (L["gap_count"], s.gap_count),
+            (L["gap_total_seconds"], round(s.gap_total_seconds, 1)),
         ]:
             ws.cell(row=current_row, column=1, value=label)
             c = ws.cell(row=current_row, column=2, value=val)
@@ -125,7 +129,7 @@ def build_advanced_excel(
         # Percentiles
         if s.percentiles:
             current_row += 1
-            ws.cell(row=current_row, column=1, value="Persentiller").font = HEADER_FONT
+            ws.cell(row=current_row, column=1, value=L["percentiles"]).font = HEADER_FONT
             current_row += 1
             for level, pval in sorted(s.percentiles.items()):
                 ws.cell(row=current_row, column=1, value=f"P{level}")
@@ -136,9 +140,13 @@ def build_advanced_excel(
         # Anomaly sub-table
         if template.show_anomaly_table and anomalies:
             current_row += 1
-            ws.cell(row=current_row, column=1, value="Anomaliler").font = HEADER_FONT
+            ws.cell(row=current_row, column=1, value=L["anomalies"]).font = HEADER_FONT
             current_row += 1
-            _header_row(ws, ["Zaman", "Değer", "Tür", "Şiddet", "Detay"], row=current_row)
+            _header_row(
+                ws,
+                [L["time"], L["value"], L["type"], L["severity"], L["detail"]],
+                row=current_row,
+            )
             current_row += 1
             for ev in anomalies:
                 ws.cell(row=current_row, column=1, value=ev.timestamp.isoformat())
@@ -162,9 +170,13 @@ def build_advanced_excel(
         # Period aggregation table
         if period_rows:
             current_row += 1
-            ws.cell(row=current_row, column=1, value="Dönem Özeti").font = HEADER_FONT
+            ws.cell(row=current_row, column=1, value=L["period_summary"]).font = HEADER_FONT
             current_row += 1
-            _header_row(ws, ["Dönem", "Ortalama", "Min", "Max", "Sayı"], row=current_row)
+            _header_row(
+                ws,
+                [L["period"], L["average"], L["minimum"], L["maximum"], L["count"]],
+                row=current_row,
+            )
             current_row += 1
             for pr in period_rows:
                 ws.cell(row=current_row, column=1, value=pr["period"])
@@ -176,8 +188,8 @@ def build_advanced_excel(
 
     # --- Raw data sheet ---
     if template.show_raw_data:
-        ws_raw = wb.create_sheet(title="Ham Veri")
-        _header_row(ws_raw, ["Tag", "Zaman", "Değer", "Kalite"], row=1)
+        ws_raw = wb.create_sheet(title=L["raw_sheet"])
+        _header_row(ws_raw, [L["tag"], L["time"], L["value"], L["quality"]], row=1)
         row_idx = 2
         for td in per_tag_data:
             tag = td["tag"]

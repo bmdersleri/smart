@@ -58,6 +58,7 @@ async def generate_report_from_template(
     end: datetime,
     db: AsyncSession,
     archive_id: int,
+    lang: str = "en",
 ) -> ReportArchive:
     archive = await db.get(ReportArchive, archive_id)
     if archive is None:
@@ -147,12 +148,15 @@ async def generate_report_from_template(
         uid = f"{archive_id}_{int(datetime.now(UTC).timestamp())}"
 
         if template.output_format == "excel":
-            content = build_advanced_excel(archive, per_tag_data, template, summary_chart)
+            content = build_advanced_excel(
+                archive, per_tag_data, template, summary_chart, lang=lang
+            )
             ext = "xlsx"
         elif template.output_format == "pdf":
             from app.core.config import settings
 
             generated_at = datetime.now(UTC)
+            # TODO(T5): pass lang to build_pdf once it accepts a lang parameter
             content = build_pdf(
                 archive, per_tag_data, template, settings.FACILITY_NAME, generated_at
             )

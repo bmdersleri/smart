@@ -293,13 +293,14 @@ async def run_template(
     await db.refresh(archive)
 
     archive_id = archive.id
+    lang = user.language
 
     async def _run():
         from app.core.database import AsyncSessionLocal
 
         async with AsyncSessionLocal() as bg_db:
             with contextlib.suppress(Exception):
-                await generate_report_from_template(tmpl, start, end, bg_db, archive_id)
+                await generate_report_from_template(tmpl, start, end, bg_db, archive_id, lang=lang)
 
     background_tasks.add_task(asyncio.ensure_future, _run())
 
