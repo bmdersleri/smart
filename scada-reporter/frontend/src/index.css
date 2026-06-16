@@ -90,6 +90,10 @@ html.light .bg-emerald-950\/40 { background-color: #d1fae5; }
 html.light .text-emerald-300,
 html.light .text-emerald-400 { color: #047857; }
 html.light .border-emerald-800\/40 { border-color: #6ee7b7; }
+/* deadband paneli: koyu gradyan -> açık emerald gradyan (gradient utility) */
+html.light .from-emerald-950\/40 {
+  background-image: linear-gradient(to bottom right, #ecfdf5, #ffffff);
+}
 
 /* sarı / amber */
 html.light .text-yellow-400,
