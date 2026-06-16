@@ -13,7 +13,8 @@ class Settings(BaseSettings):
     S7_SLOT: int = 1
     S7_POLL_INTERVAL: int = 5  # saniye (poller tick alt sınırı)
     S7_READ_TIMEOUT: int = 3  # saniye (tag ekleme anlık okuma zaman aşımı)
-    S7_MAX_WORKERS: int = 16  # snap7 executor thread sayısı (çoklu PLC)
+    S7_MAX_WORKERS: int = 32  # snap7 executor thread sayısı (>= PLC sayısı olmalı)
+    S7_PLC_READ_TIMEOUT: float = 10.0  # saniye, tek PLC grup okuma üst sınırı
 
     # Dahili OPC UA server
     OPCUA_SERVER_PORT: int = 4840
