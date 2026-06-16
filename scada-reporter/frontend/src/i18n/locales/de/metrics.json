@@ -1,6 +1,6 @@
 {
   "title": "Live-Metriken",
-  "subtitle": "Poller- / PLC-Lesezustand — wird alle 2 s aktualisiert",
+  "subtitle": "Poller- / SPS-Lesezustand — wird alle 2 s aktualisiert",
   "connecting": "verbinde...",
   "load_error": "Metriken konnten nicht abgerufen werden.",
   "rows_written": "Geschriebene Zeilen",
@@ -24,13 +24,13 @@
   "without_deadband_sub": "erwartete Zeilen",
   "daily_savings": "Tägliche Ersparnis",
   "daily_savings_sub": "Zeilen / Tag (24-h-Maßstab)",
-  "read_latency_title": "PLC-Leselatenzen",
-  "read_latency_sub": "Durchschnittliche Batch-Lesezeit pro PLC ({{value}} PLCs)",
-  "col_name": "PLC-Name",
+  "read_latency_title": "SPS-Leselatenzen",
+  "read_latency_sub": "Durchschnittliche Batch-Lesezeit pro SPS ({{value}} SPSen)",
+  "col_name": "SPS-Name",
   "col_ip": "IP",
   "col_tag_count": "Tag-Anzahl",
   "col_read_count": "Leseanzahl",
   "col_avg_time": "Ø Zeit",
   "col_latency": "Latenz",
-  "empty_plcs": "Noch keine PLC-Lesemetriken (Poller wärmt auf)."
+  "empty_plcs": "Noch keine SPS-Lesemetriken (Poller wärmt auf)."
 }

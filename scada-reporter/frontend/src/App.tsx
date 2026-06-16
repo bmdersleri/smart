@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { SettingsProvider } from './context/SettingsContext'
 import Layout from './components/Layout'
@@ -19,7 +20,8 @@ const qc = new QueryClient({ defaultOptions: { queries: { staleTime: 10000, retr
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
-  if (loading) return <div className="min-h-screen bg-gray-950 flex items-center justify-center text-gray-400">Yükleniyor...</div>
+  const { t } = useTranslation('common')
+  if (loading) return <div className="min-h-screen bg-gray-950 flex items-center justify-center text-gray-400">{t('loading')}</div>
   return user ? <>{children}</> : <Navigate to="/login" replace />
 }
 
