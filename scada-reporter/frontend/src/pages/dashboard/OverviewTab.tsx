@@ -125,12 +125,39 @@ function TopologyBar({ connectedCount, total, writeFlash }: {
 
 function PlcCard({ plc, writeFlash }: { plc: PlcEntry; writeFlash: boolean }) {
   const isConnected = plc.connected
+  const [hovered, setHovered] = useState(false)
+
   return (
-    <div className={`relative bg-gray-950 border rounded-xl p-4 transition-all duration-300 overflow-hidden
-      ${isConnected
-        ? writeFlash ? 'border-cyan-700/60 shadow-[0_0_10px_rgba(6,182,212,0.12)]' : 'border-gray-700/60'
-        : 'border-gray-800'}`}
+    <div
+      className={`relative bg-gray-950 border rounded-xl p-4 transition-all duration-200 overflow-hidden cursor-default
+        ${isConnected
+          ? writeFlash
+            ? 'border-cyan-600 shadow-[0_0_16px_rgba(6,182,212,0.2)]'
+            : hovered
+              ? 'border-cyan-700/80 shadow-[0_0_20px_rgba(6,182,212,0.15)] -translate-y-0.5'
+              : 'border-gray-700/60'
+          : hovered
+            ? 'border-red-800/60 shadow-[0_0_12px_rgba(239,68,68,0.08)] -translate-y-0.5'
+            : 'border-gray-800'
+        }`}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     >
+      {/* Hover gradient reveal */}
+      <div className={`absolute inset-0 pointer-events-none transition-opacity duration-200 rounded-xl
+        ${isConnected
+          ? 'bg-gradient-to-br from-cyan-950/30 via-transparent to-transparent'
+          : 'bg-gradient-to-br from-gray-800/20 via-transparent to-transparent'}
+        ${hovered ? 'opacity-100' : 'opacity-0'}`}
+      />
+
+      {/* Corner accent on hover */}
+      <div className={`absolute top-0 right-0 w-12 h-12 pointer-events-none transition-opacity duration-200
+        ${hovered ? 'opacity-100' : 'opacity-0'}`}>
+        <div className={`absolute top-0 right-0 w-px h-6 ${isConnected ? 'bg-cyan-500/60' : 'bg-red-500/40'}`} />
+        <div className={`absolute top-0 right-0 h-px w-6 ${isConnected ? 'bg-cyan-500/60' : 'bg-red-500/40'}`} />
+      </div>
+
       {/* Subtle scan sweep on connected PLCs */}
       {isConnected && (
         <div
@@ -142,12 +169,18 @@ function PlcCard({ plc, writeFlash }: { plc: PlcEntry; writeFlash: boolean }) {
       {/* Header row */}
       <div className="flex items-start justify-between mb-3">
         <div>
-          <p className="text-sm font-semibold text-white leading-tight">{plc.name}</p>
-          <p className="text-xs font-mono text-gray-500 mt-0.5">{plc.ip || 'IP yok'}</p>
+          <p className={`text-sm font-semibold leading-tight transition-colors duration-150 ${hovered ? 'text-white' : 'text-gray-200'}`}>
+            {plc.name}
+          </p>
+          <p className={`text-xs font-mono mt-0.5 transition-colors duration-150 ${hovered ? 'text-gray-300' : 'text-gray-500'}`}>
+            {plc.ip || 'IP yok'}
+          </p>
         </div>
-        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-          isConnected ? 'bg-green-900/40 text-green-400' : 'bg-red-900/30 text-red-500'
-        }`}>
+        <span className={`text-xs px-2 py-0.5 rounded-full font-medium transition-all duration-150
+          ${isConnected
+            ? hovered ? 'bg-green-800/60 text-green-300' : 'bg-green-900/40 text-green-400'
+            : hovered ? 'bg-red-900/50 text-red-400' : 'bg-red-900/30 text-red-500'
+          }`}>
           {plc.tag_count} tag
         </span>
       </div>
