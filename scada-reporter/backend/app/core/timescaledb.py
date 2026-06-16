@@ -1,4 +1,5 @@
 import logging
+
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncConnection
 
@@ -18,7 +19,8 @@ async def init_timescaledb(conn: AsyncConnection):
         try:
             await conn.execute(
                 text(
-                    "SELECT create_hypertable(:table, 'timestamp', if_not_exists => TRUE, migrate_data => TRUE)"
+                    "SELECT create_hypertable(:table, 'timestamp',"
+                    " if_not_exists => TRUE, migrate_data => TRUE)"
                 ).bindparams(table=table)
             )
             logger.info("Hypertable created: %s", table)
@@ -34,7 +36,8 @@ async def init_timescaledb(conn: AsyncConnection):
         try:
             await conn.execute(
                 text(
-                    "SELECT add_compression_policy(:table, INTERVAL '7 days', if_not_exists => TRUE)"
+                    "SELECT add_compression_policy(:table,"
+                    " INTERVAL '7 days', if_not_exists => TRUE)"
                 ).bindparams(table=table)
             )
             logger.info("Compression policy added: %s", table)

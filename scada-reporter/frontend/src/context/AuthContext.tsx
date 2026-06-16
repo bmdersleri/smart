@@ -15,12 +15,15 @@ const Ctx = createContext<AuthCtx | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(() => !!localStorage.getItem('token'))
 
   useEffect(() => {
     const token = localStorage.getItem('token')
-    if (!token) { setLoading(false); return }
-    getMe().then((r) => setUser(r.data)).catch(() => localStorage.removeItem('token')).finally(() => setLoading(false))
+    if (!token) return
+    getMe()
+      .then((r) => setUser(r.data))
+      .catch(() => localStorage.removeItem('token'))
+      .finally(() => setLoading(false))
   }, [])
 
   const login = async (username: string, password: string) => {
