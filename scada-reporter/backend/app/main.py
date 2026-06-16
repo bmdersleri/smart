@@ -33,6 +33,7 @@ from app.core.timescaledb import (
     init_timescaledb,
 )
 from app.models import annotation as _annotation  # noqa: F401
+from app.models import excel_template as _excel_template  # noqa: F401
 from app.models import report_archive, report_template, scheduled_report  # noqa: F401
 from app.models import tag_group as _tag_group  # noqa: F401
 from app.models.report_history import ReportHistory as _ReportHistory  # noqa: F401
