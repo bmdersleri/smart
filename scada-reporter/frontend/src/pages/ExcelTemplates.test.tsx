@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import { applyAggChange, toSavePayload, type MappingRow } from "./ExcelTemplates";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { applyAggChange, authHeaders, toSavePayload, type MappingRow } from "./ExcelTemplates";
 
 const rows: MappingRow[] = [
   { col_letter: "E", source_code: "410BF103", label: "DEBİ m3/gün", tag_id: 1, agg: "sum", enabled: true },
@@ -20,5 +20,26 @@ describe("mapping grid state", () => {
     );
     expect(payload.columns).toHaveLength(1);
     expect(payload.columns[0].col_letter).toBe("E");
+  });
+});
+
+describe("authHeaders", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("adds Bearer token from localStorage when present", () => {
+    vi.stubGlobal("localStorage", { getItem: () => "abc123" });
+    expect(authHeaders()).toEqual({ Authorization: "Bearer abc123" });
+    expect(authHeaders({ "Content-Type": "application/json" })).toEqual({
+      "Content-Type": "application/json",
+      Authorization: "Bearer abc123",
+    });
+  });
+
+  it("omits Authorization when no token", () => {
+    vi.stubGlobal("localStorage", { getItem: () => null });
+    expect(authHeaders()).toEqual({});
+    expect(authHeaders({ "Content-Type": "application/json" })).toEqual({
+      "Content-Type": "application/json",
+    });
   });
 });
