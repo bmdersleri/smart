@@ -1,0 +1,13 @@
+{
+  "title": "Einstellungen",
+  "appearance": "Darstellung",
+  "theme": "Thema",
+  "theme_hint": "Helles / dunkles Farbschema",
+  "theme_dark": "Dunkel",
+  "theme_light": "Hell",
+  "language": "Sprache",
+  "language_hint": "Oberflächensprache",
+  "trend_chart": "Trend-Diagramm",
+  "chart_height": "Diagrammhöhe",
+  "selected": "Ausgewählt"
+}

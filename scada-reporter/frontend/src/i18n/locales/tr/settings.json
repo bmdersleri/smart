@@ -1,0 +1,13 @@
+{
+  "title": "Ayarlar",
+  "appearance": "Görünüm",
+  "theme": "Tema",
+  "theme_hint": "Açık / koyu renk şeması",
+  "theme_dark": "Koyu",
+  "theme_light": "Açık",
+  "language": "Dil",
+  "language_hint": "Arayüz dili",
+  "trend_chart": "Trend Grafik",
+  "chart_height": "Grafik Yüksekliği",
+  "selected": "Seçili"
+}

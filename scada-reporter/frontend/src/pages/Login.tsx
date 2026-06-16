@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext'
 
 export default function Login() {
+  const { t } = useTranslation('login')
   const { login } = useAuth()
   const nav = useNavigate()
   const [username, setUsername] = useState('')
@@ -19,7 +21,7 @@ export default function Login() {
       await login(username, password)
       nav('/')
     } catch {
-      setError('Kullanıcı adı veya şifre hatalı')
+      setError(t('error'))
     } finally {
       setLoading(false)
     }
@@ -35,12 +37,12 @@ export default function Login() {
             </svg>
           </div>
           <h1 className="text-2xl font-bold text-white">SCADA Reporter</h1>
-          <p className="text-gray-400 text-sm mt-1">Su/Atıksu Tesis Yönetim Sistemi</p>
+          <p className="text-gray-400 text-sm mt-1">{t('subtitle')}</p>
         </div>
 
         <form onSubmit={submit} className="bg-gray-900 rounded-2xl p-6 space-y-4 border border-gray-800">
           <div>
-            <label className="block text-sm text-gray-400 mb-1">Kullanıcı Adı</label>
+            <label className="block text-sm text-gray-400 mb-1">{t('username')}</label>
             <input
               className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
               value={username} onChange={(e) => setUsername(e.target.value)}
@@ -48,7 +50,7 @@ export default function Login() {
             />
           </div>
           <div>
-            <label className="block text-sm text-gray-400 mb-1">Şifre</label>
+            <label className="block text-sm text-gray-400 mb-1">{t('password')}</label>
             <input
               type="password"
               className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
@@ -61,7 +63,7 @@ export default function Login() {
             type="submit" disabled={loading}
             className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-medium py-2.5 rounded-lg transition-colors"
           >
-            {loading ? 'Giriş yapılıyor...' : 'Giriş Yap'}
+            {loading ? t('submitting') : t('submit')}
           </button>
         </form>
       </div>

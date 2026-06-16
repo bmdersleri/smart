@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { useSettings } from '../context/SettingsContext'
 import LanguageSelector from '../components/LanguageSelector'
 
@@ -6,26 +7,27 @@ const MAX_H = 2000
 const STEP = 50
 
 export default function Settings() {
+  const { t } = useTranslation(['settings', 'common'])
   const { trendChartHeight, theme, set, reset } = useSettings()
 
   return (
     <div className="p-6 max-w-xl">
-      <h1 className="text-xl font-semibold text-white mb-6">Ayarlar</h1>
+      <h1 className="text-xl font-semibold text-white mb-6">{t('title')}</h1>
 
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 space-y-4 mb-4">
-        <h2 className="text-sm font-medium text-gray-400 uppercase tracking-wider">Görünüm</h2>
+        <h2 className="text-sm font-medium text-gray-400 uppercase tracking-wider">{t('appearance')}</h2>
         <div className="flex items-center justify-between">
           <div>
-            <label className="text-sm text-white block">Tema</label>
-            <p className="text-xs text-gray-500 mt-0.5">Açık / koyu renk şeması</p>
+            <label className="text-sm text-white block">{t('theme')}</label>
+            <p className="text-xs text-gray-500 mt-0.5">{t('theme_hint')}</p>
           </div>
           <div className="flex bg-gray-800 border border-gray-700 rounded-lg p-0.5">
-            {([['dark', '🌙 Koyu'], ['light', '☀ Açık']] as const).map(([t, label]) => (
+            {([['dark', `🌙 ${t('theme_dark')}`], ['light', `☀ ${t('theme_light')}`]] as const).map(([val, label]) => (
               <button
-                key={t}
-                onClick={() => set('theme', t)}
+                key={val}
+                onClick={() => set('theme', val)}
                 className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
-                  theme === t ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'
+                  theme === val ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'
                 }`}
               >
                 {label}
@@ -35,19 +37,19 @@ export default function Settings() {
         </div>
         <div className="flex items-center justify-between">
           <div>
-            <label className="text-sm text-white block">Dil / Language</label>
-            <p className="text-xs text-gray-500 mt-0.5">Arayüz dili</p>
+            <label className="text-sm text-white block">{t('language')}</label>
+            <p className="text-xs text-gray-500 mt-0.5">{t('language_hint')}</p>
           </div>
           <LanguageSelector />
         </div>
       </div>
 
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 space-y-6">
-        <h2 className="text-sm font-medium text-gray-400 uppercase tracking-wider">Trend Grafik</h2>
+        <h2 className="text-sm font-medium text-gray-400 uppercase tracking-wider">{t('trend_chart')}</h2>
 
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <label className="text-sm text-white">Grafik Yüksekliği</label>
+            <label className="text-sm text-white">{t('chart_height')}</label>
             <div className="flex items-center gap-2">
               <input
                 type="number"
@@ -77,7 +79,7 @@ export default function Settings() {
 
           <div className="flex justify-between text-xs text-gray-500">
             <span>{MIN_H}px</span>
-            <span className="text-gray-400">Seçili: <span className="text-white font-medium">{trendChartHeight}px</span></span>
+            <span className="text-gray-400">{t('selected')}: <span className="text-white font-medium">{trendChartHeight}px</span></span>
             <span>{MAX_H}px</span>
           </div>
         </div>
@@ -87,7 +89,7 @@ export default function Settings() {
         onClick={reset}
         className="mt-4 px-4 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
       >
-        Varsayılanlara Sıfırla
+        {t('common:reset')}
       </button>
     </div>
   )

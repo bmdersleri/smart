@@ -1,0 +1,13 @@
+{
+  "title": "Настройки",
+  "appearance": "Оформление",
+  "theme": "Тема",
+  "theme_hint": "Светлая / тёмная цветовая схема",
+  "theme_dark": "Тёмная",
+  "theme_light": "Светлая",
+  "language": "Язык",
+  "language_hint": "Язык интерфейса",
+  "trend_chart": "График тренда",
+  "chart_height": "Высота графика",
+  "selected": "Выбрано"
+}

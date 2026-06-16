@@ -1,0 +1,13 @@
+{
+  "title": "Settings",
+  "appearance": "Appearance",
+  "theme": "Theme",
+  "theme_hint": "Light / dark color scheme",
+  "theme_dark": "Dark",
+  "theme_light": "Light",
+  "language": "Language",
+  "language_hint": "Interface language",
+  "trend_chart": "Trend Chart",
+  "chart_height": "Chart Height",
+  "selected": "Selected"
+}
