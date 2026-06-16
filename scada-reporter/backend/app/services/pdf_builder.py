@@ -31,5 +31,6 @@ def build_pdf(
         facility_name=facility_name,
         generated_at=generated_at,
         L=L,
+        lang=lang,
     )
     return HTML(string=html_str).write_pdf()

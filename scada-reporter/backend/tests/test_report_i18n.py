@@ -142,3 +142,32 @@ def test_pdf_differs_by_language(pdf_archive, sample_per_tag_data):
     )
     assert isinstance(content_en, (bytes, bytearray))
     assert content_en != content_tr  # localized labels produce different output
+
+
+def test_pdf_template_renders_localized_strings(pdf_archive, sample_per_tag_data):
+    """Render the report template directly (bypassing WeasyPrint) and assert the
+    actual localized header strings appear, verifying the label wiring."""
+    from app.i18n import get_labels
+    from app.services import pdf_builder
+
+    template = pdf_builder._env.get_template("report.html.j2")
+
+    def _render(lang: str) -> str:
+        return template.render(
+            archive=pdf_archive,
+            template=_PdfTemplate(),
+            per_tag_data=sample_per_tag_data,
+            facility_name="Test Facility",
+            generated_at=datetime(2026, 1, 2, 12, 0, tzinfo=UTC),
+            L=get_labels(lang),
+            lang=lang,
+        )
+
+    html_tr = _render("tr")
+    html_en = _render("en")
+
+    assert get_labels("tr")["summary_stats"] in html_tr
+    assert get_labels("en")["summary_stats"] in html_en
+    # the content language is also reflected in the document <html lang=...>
+    assert '<html lang="tr">' in html_tr
+    assert '<html lang="en">' in html_en
