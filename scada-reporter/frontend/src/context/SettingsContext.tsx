@@ -3,12 +3,16 @@ import { createContext, useContext, useState, useEffect } from 'react'
 
 const SETTINGS_KEY = 'scada_settings'
 
+type Theme = 'dark' | 'light'
+
 interface Settings {
   trendChartHeight: number
+  theme: Theme
 }
 
 const defaults: Settings = {
   trendChartHeight: 1000,
+  theme: 'dark',
 }
 
 function load(): Settings {
@@ -32,6 +36,13 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings))
   }, [settings])
+
+  // Tema sınıfını <html> köküne uygula (CSS override'ları html.light altında)
+  useEffect(() => {
+    const root = document.documentElement
+    root.classList.toggle('light', settings.theme === 'light')
+    root.classList.toggle('dark', settings.theme !== 'light')
+  }, [settings.theme])
 
   function set<K extends keyof Settings>(key: K, value: Settings[K]) {
     setSettings(prev => ({ ...prev, [key]: value }))

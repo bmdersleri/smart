@@ -5,11 +5,34 @@ const MAX_H = 2000
 const STEP = 50
 
 export default function Settings() {
-  const { trendChartHeight, set, reset } = useSettings()
+  const { trendChartHeight, theme, set, reset } = useSettings()
 
   return (
     <div className="p-6 max-w-xl">
       <h1 className="text-xl font-semibold text-white mb-6">Ayarlar</h1>
+
+      <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 space-y-4 mb-4">
+        <h2 className="text-sm font-medium text-gray-400 uppercase tracking-wider">Görünüm</h2>
+        <div className="flex items-center justify-between">
+          <div>
+            <label className="text-sm text-white block">Tema</label>
+            <p className="text-xs text-gray-500 mt-0.5">Açık / koyu renk şeması</p>
+          </div>
+          <div className="flex bg-gray-800 border border-gray-700 rounded-lg p-0.5">
+            {([['dark', '🌙 Koyu'], ['light', '☀ Açık']] as const).map(([t, label]) => (
+              <button
+                key={t}
+                onClick={() => set('theme', t)}
+                className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
+                  theme === t ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
 
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 space-y-6">
         <h2 className="text-sm font-medium text-gray-400 uppercase tracking-wider">Trend Grafik</h2>
