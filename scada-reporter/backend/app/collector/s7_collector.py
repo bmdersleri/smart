@@ -248,41 +248,62 @@ class PLCConnection:
             return False
 
     def read_batch_sync(self, specs: list[ReadSpec]) -> list[tuple[float | None, int]]:
-        """specs sırasına göre (value, quality) listesi döner."""
+        """specs sırasına göre (value, quality) döner.
+
+        DB adresleri ardışık bloklar halinde tek db_read ile okunur (PDU
+        round-trip azaltma); DB-dışı alanlar (Q/I/M) tek tek okunur.
+        """
         with self._lock:
             if not self._ensure_connected_sync():
                 return [(None, BAD)] * len(specs)
-            results: list[tuple[float | None, int]] = []
             client = self._client
             assert client is not None
-            for i, spec in enumerate(specs):
+
+            results: list[tuple[float | None, int]] = [(None, BAD)] * len(specs)
+            db_items = [(i, sp) for i, sp in enumerate(specs) if sp.area == "DB"]
+            other_items = [(i, sp) for i, sp in enumerate(specs) if sp.area != "DB"]
+
+            for block in plan_db_blocks(db_items):
                 try:
-                    if spec.area == "DB":
-                        data = client.db_read(spec.db_number, spec.byte_offset, spec.size)
-                    else:
-                        data = client.read_area(
-                            _AREA_ENUM[spec.area], 0, spec.byte_offset, spec.size
-                        )
-                    results.append((_decode(spec, data), GOOD))
+                    data = client.db_read(block.db_number, block.start, block.size)
                 except Exception as e:
-                    # Bağlantı hâlâ ayakta mı? Ayakta ise bu tek tag'in veri hatası
-                    # (adres yok / geçersiz) -> sadece bu tag'i BAD yap, devam et.
-                    still_up = False
-                    try:
-                        still_up = bool(client.get_connected())
-                    except Exception:
-                        still_up = False
-                    if still_up:
-                        logger.warning("Tag okuma hatasi %s @%s: %s", self.ip, spec, e)
-                        results.append((None, BAD))
-                        continue
-                    # gerçek bağlantı kopması -> kalan tümünü BAD yap, yeniden bağlan
-                    logger.warning("PLC baglanti koptu %s @%s: %s", self.ip, spec, e)
-                    self._connected = False
-                    self._client = None
-                    results.extend([(None, BAD)] * (len(specs) - i))
-                    break
+                    if not self._is_still_connected(client):
+                        logger.warning("PLC baglanti koptu %s: %s", self.ip, e)
+                        self._connected = False
+                        self._client = None
+                        return results
+                    logger.warning(
+                        "Blok okuma hatasi %s DB%d @%d+%d: %s",
+                        self.ip,
+                        block.db_number,
+                        block.start,
+                        block.size,
+                        e,
+                    )
+                    continue
+                for idx, sp in block.members:
+                    rel = sp.byte_offset - block.start
+                    results[idx] = (_decode(sp, data[rel : rel + sp.size]), GOOD)
+
+            for idx, sp in other_items:
+                try:
+                    data = client.read_area(_AREA_ENUM[sp.area], 0, sp.byte_offset, sp.size)
+                    results[idx] = (_decode(sp, data), GOOD)
+                except Exception as e:
+                    if not self._is_still_connected(client):
+                        logger.warning("PLC baglanti koptu %s: %s", self.ip, e)
+                        self._connected = False
+                        self._client = None
+                        return results
+                    logger.warning("Tag okuma hatasi %s @%s: %s", self.ip, sp, e)
             return results
+
+    @staticmethod
+    def _is_still_connected(client: snap7.client.Client) -> bool:
+        try:
+            return bool(client.get_connected())
+        except Exception:
+            return False
 
     def disconnect_sync(self) -> None:
         with self._lock:

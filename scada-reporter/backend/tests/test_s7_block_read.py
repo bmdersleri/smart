@@ -1,6 +1,8 @@
 """Block-read planner ve blok-okuma testleri."""
 
-from app.collector.s7_collector import DbBlock, ReadSpec, plan_db_blocks
+import struct
+
+from app.collector.s7_collector import DbBlock, PLCConnection, ReadSpec, plan_db_blocks
 
 
 def test_plan_db_blocks_coalesces_adjacent():
@@ -46,3 +48,53 @@ def test_plan_db_blocks_caps_block_span():
 
 def test_plan_db_blocks_empty():
     assert plan_db_blocks([]) == []
+
+
+class _FakeClient:
+    def __init__(self, db_data: dict[int, bytes]):
+        self._db = db_data
+        self.db_read_calls = 0
+
+    def db_read(self, db: int, start: int, size: int) -> bytearray:
+        self.db_read_calls += 1
+        return bytearray(self._db[db][start : start + size])
+
+    def read_area(self, area, dbnum, start, size):  # noqa: ANN001
+        return bytearray(b"\x00" * size)
+
+    def get_connected(self) -> bool:
+        return True
+
+
+def test_read_batch_sync_uses_single_block_read():
+    buf = bytearray(16)
+    struct.pack_into(">f", buf, 0, 3.5)  # REAL @0
+    struct.pack_into(">H", buf, 4, 7)  # WORD @4
+    conn = PLCConnection("10.0.0.9")
+    conn._client = _FakeClient({10: bytes(buf)})
+    conn._connected = True
+
+    specs = [
+        ReadSpec("DB", 10, 0, 0, 4, "REAL"),
+        ReadSpec("DB", 10, 4, 0, 2, "WORD"),
+    ]
+    results = conn.read_batch_sync(specs)
+
+    assert results == [(3.5, 192), (7.0, 192)]
+    assert conn._client.db_read_calls == 1  # both tags in one round-trip
+
+
+def test_read_batch_sync_preserves_input_order():
+    buf = bytearray(16)
+    struct.pack_into(">f", buf, 8, 1.25)
+    struct.pack_into(">f", buf, 0, 9.0)
+    conn = PLCConnection("10.0.0.9")
+    conn._client = _FakeClient({10: bytes(buf)})
+    conn._connected = True
+
+    specs = [
+        ReadSpec("DB", 10, 8, 0, 4, "REAL"),  # higher offset first
+        ReadSpec("DB", 10, 0, 0, 4, "REAL"),
+    ]
+    results = conn.read_batch_sync(specs)
+    assert results == [(1.25, 192), (9.0, 192)]
