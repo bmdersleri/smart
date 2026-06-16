@@ -8,28 +8,30 @@ Su/Atıksu tesisi SCADA veri toplama ve raporlama sistemi.
 scada-reporter/
 ├── backend/       # Python FastAPI backend (:8001)
 │   ├── app/
-│   │   ├── api/        # REST API endpoints (auth/dashboard/query/explore/tags/reports)
-│   │   ├── collector/  # S7 PLC toplayıcı (snap7) + dahili OPC UA server + poller
+│   │   ├── api/        # REST API (auth/dashboard/tags/reports/advanced_reports/plc/query/explore)
+│   │   ├── collector/  # Snap7 S7 toplayıcı + dahili OPC UA server + poller
 │   │   ├── core/       # Config, DB, güvenlik (JWT)
-│   │   ├── models/     # SQLAlchemy modelleri
-│   │   └── reports/    # Rapor üretimi
-│   ├── tests/          # pytest async test paketi
+│   │   ├── models/     # Tag, User, PlcConfig, Watchlist, ReportHistory/Template/Scheduled/Archive
+│   │   └── reports/    # Excel / PDF üreticiler
+│   ├── tests/          # pytest async testler (185+)
 │   ├── alembic/        # DB migration dosyaları
+│   ├── seed_users.py   # admin + operator kullanıcı oluşturma
 │   ├── pyproject.toml  # pytest/ruff/mypy config
 │   ├── .venv/          # Python venv (uv ile yönetilir, Python 3.14)
 │   └── requirements.txt
-├── frontend/      # React + Vite + Tailwind + TanStack Query (:5173)
+├── frontend/      # React 19 + Vite + Tailwind CSS v4 + TanStack Query (:5173)
 │   ├── src/
+│   │   ├── pages/      # Dashboard, Trend, Reports, AdvancedReports, Tags, PlcConfig, Settings
+│   │   ├── context/    # AuthContext, SettingsContext (localStorage)
+│   │   └── api/        # Üretilmiş OpenAPI TypeScript client
 │   ├── openapi-ts.config.ts  # TypeScript API client üretici
 │   └── package.json
 ├── agent-harness/ # Agent-native CLI (Click + JSON + REPL)
-│   ├── src/scada_reporter_cli/  # CLI kaynak kodu
-│   ├── skills/SKILL.md          # Agent skill tanımı
+│   ├── src/scada_reporter_cli/
 │   └── setup.py
 ├── commands/      # Claude Code slash komutları (markdown)
 ├── guides/        # Agent metodoloji rehberleri
 ├── .claude-plugin/  # Claude Code marketplace kaydı
-├── cli-anything-plugin/  # Plugin tanımı
 └── AGENTS.md      # Agent kullanım rehberi
 docker/        # TimescaleDB + Redis + Grafana
 ```
@@ -53,6 +55,8 @@ docker/        # TimescaleDB + Redis + Grafana
 - **Migration geri al:** `just migrate-down`
 - **Migration geçmişi:** `just migrate-history`
 - **PLC tag'lerini ekle:** `just seed-tags`
+- **Varsayılan kullanıcılar:** `just seed-users` *(admin/admin123, operator/operator123)*
+- **WinCC xlsx kataloğu:** `just seed-catalog`
 
 ### Kalite
 - **Lint:** `just lint`
@@ -117,11 +121,13 @@ docker/        # TimescaleDB + Redis + Grafana
 
 ## Notlar
 
-- **Dahili OPC UA Server**: `opc.tcp://localhost:4840` — backend başlarken otomatik ayağa kalkar, DB'deki son tag değerlerini yayınlar. Harici ücretli yazılım (KEPServerEX vb.) gerekmez.
-- **S7 PLC bağlantısı**: Snap7 (ücretsiz, pure Python) ile S7-1500'e doğrudan TCP 102 bağlantısı. `S7_HOST`/`S7_RACK`/`S7_SLOT` ile yapılandırılır.
-- **Simülasyon modu**: PLC yoksa veya erişilemezse backend sorunsuz çalışmaya devam eder.
-- WeasyPrint PDF üretimi için GTK runtime gerekir (Windows'da)
-- Backend başlatmak için `.venv\Scripts\activate` veya `just run-backend`
+- **Dahili OPC UA Server**: `opc.tcp://localhost:4840` — backend başlarken otomatik ayağa kalkar. Harici ücretli yazılım (KEPServerEX vb.) gerekmez.
+- **S7 PLC bağlantısı**: Snap7 (ücretsiz, pure Python) ile S7-1500'e doğrudan TCP 102. `S7_HOST`/`S7_RACK`/`S7_SLOT` env var'ları ile yapılandırılır.
+- **Simülasyon modu**: PLC yoksa veya erişilemezse backend sorunsuz çalışır.
+- **OAuth2 giriş**: `/api/auth/token` **form-data** bekler, JSON değil. Frontend doğru gönderir; `curl -d "username=...&password=..."` kullanın.
+- **WeasyPrint PDF**: Windows'da GTK3 runtime gerektirir (kurulu — çalışıyor).
+- **Stats engine**: numpy-only (scipy venv'de yok) — `np.polyfit` + manuel R².
+- Backend başlatmak için `just run-backend`
 - `uv pip install ...` ile hızlı paket yükleme
 - pre-commit hooks aktif — her commit'te ruff + mypy + format kontrolleri çalışır
 - Frontend TS client güncelle: backend çalışırken `just gen-client`
