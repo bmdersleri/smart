@@ -29,7 +29,7 @@ function EditRow({
   onSave: (ip: string, rack: number, slot: number) => void
   onCancel: () => void
 }) {
-  const { t, i18n } = useTranslation('plc')
+  const { t, i18n } = useTranslation(['plc', 'common'])
   const [ip, setIp] = useState(plc.ip)
   const [rack, setRack] = useState(plc.rack)
   const [slot, setSlot] = useState(plc.slot)
@@ -73,13 +73,13 @@ function EditRow({
             onClick={() => onSave(ip, rack, slot)}
             className="px-3 py-1 text-xs bg-cyan-600 hover:bg-cyan-500 text-white rounded transition-colors"
           >
-            {t('save')}
+            {t('common:save')}
           </button>
           <button
             onClick={onCancel}
             className="px-3 py-1 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition-colors"
           >
-            {t('cancel')}
+            {t('common:cancel')}
           </button>
         </div>
       </td>
@@ -94,7 +94,7 @@ function AddRow({
   onSave: (name: string, ip: string, rack: number, slot: number) => void
   onCancel: () => void
 }) {
-  const { t } = useTranslation('plc')
+  const { t } = useTranslation(['plc', 'common'])
   const [name, setName] = useState('')
   const [ip, setIp] = useState('')
   const [rack, setRack] = useState(0)
@@ -146,13 +146,13 @@ function AddRow({
             disabled={!name.trim()}
             className="px-3 py-1 text-xs bg-cyan-600 hover:bg-cyan-500 disabled:opacity-40 text-white rounded transition-colors"
           >
-            {t('add')}
+            {t('common:add')}
           </button>
           <button
             onClick={onCancel}
             className="px-3 py-1 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition-colors"
           >
-            {t('cancel')}
+            {t('common:cancel')}
           </button>
         </div>
       </td>
@@ -169,7 +169,7 @@ function PlcRow({
   onEdit: () => void
   onDelete: () => void
 }) {
-  const { t, i18n } = useTranslation('plc')
+  const { t, i18n } = useTranslation(['plc', 'common'])
   const [confirming, setConfirming] = useState(false)
 
   return (
@@ -190,13 +190,13 @@ function PlcRow({
               onClick={() => { onDelete(); setConfirming(false) }}
               className="px-3 py-1 text-xs bg-red-700 hover:bg-red-600 text-white rounded transition-colors"
             >
-              {t('delete')}
+              {t('common:delete')}
             </button>
             <button
               onClick={() => setConfirming(false)}
               className="px-3 py-1 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition-colors"
             >
-              {t('cancel')}
+              {t('common:cancel')}
             </button>
           </div>
         ) : (
@@ -205,13 +205,13 @@ function PlcRow({
               onClick={onEdit}
               className="px-3 py-1 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition-colors"
             >
-              {t('edit')}
+              {t('common:edit')}
             </button>
             <button
               onClick={() => setConfirming(true)}
               className="px-3 py-1 text-xs bg-red-900/40 hover:bg-red-800/60 text-red-400 rounded transition-colors"
             >
-              {t('delete')}
+              {t('common:delete')}
             </button>
           </div>
         )}
@@ -221,7 +221,7 @@ function PlcRow({
 }
 
 export default function PlcConfig() {
-  const { t } = useTranslation('plc')
+  const { t } = useTranslation(['plc', 'common'])
   const qc = useQueryClient()
   const [editingName, setEditingName] = useState<string | null>(null)
   const [adding, setAdding] = useState(false)
@@ -307,7 +307,7 @@ export default function PlcConfig() {
       )}
 
       {isLoading ? (
-        <div className="text-center py-16 text-gray-500">{t('loading')}</div>
+        <div className="text-center py-16 text-gray-500">{t('common:loading')}</div>
       ) : isError ? (
         <div className="text-center py-16 bg-gray-900 rounded-xl border border-red-900">
           <p className="text-red-400">{t('load_error')}</p>

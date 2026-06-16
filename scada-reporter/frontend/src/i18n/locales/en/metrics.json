@@ -2,7 +2,6 @@
   "title": "Live Metrics",
   "subtitle": "Poller / PLC read health — updates every 2 s",
   "connecting": "connecting...",
-  "loading": "Loading...",
   "load_error": "Could not fetch metrics.",
   "rows_written": "Rows Written",
   "rows_written_sub": "total (DB)",

@@ -75,7 +75,7 @@ const DEFAULT_FORM: TemplateCreate = {
 function TemplateEditorModal({
   initial, onClose,
 }: { initial?: ReportTemplate; onClose: () => void }) {
-  const { t } = useTranslation('advancedReports')
+  const { t } = useTranslation(['advancedReports', 'common'])
   const qc = useQueryClient()
   const [step, setStep] = useState(0)
   const [form, setForm] = useState<TemplateCreate>(
@@ -293,7 +293,7 @@ function TemplateEditorModal({
 
         {/* Footer */}
         <div className="p-5 border-t border-gray-800 flex justify-between">
-          <button onClick={onClose} className={BTN_GHOST}>{t('cancel')}</button>
+          <button onClick={onClose} className={BTN_GHOST}>{t('common:cancel')}</button>
           <div className="flex gap-2">
             {step > 0 && <button onClick={() => setStep(s => s - 1)} className={BTN_GHOST}>{t('back')}</button>}
             {step < 3
@@ -314,7 +314,7 @@ function TemplateEditorModal({
 // ---------------------------------------------------------------------------
 
 function ScheduleCreateModal({ templates, onClose }: { templates: ReportTemplate[]; onClose: () => void }) {
-  const { t } = useTranslation('advancedReports')
+  const { t } = useTranslation(['advancedReports', 'common'])
   const qc = useQueryClient()
   const [form, setForm] = useState({
     template_id: templates[0]?.id ?? 0,
@@ -429,7 +429,7 @@ function ScheduleCreateModal({ templates, onClose }: { templates: ReportTemplate
         </div>
 
         <div className="flex gap-3 pt-1">
-          <button onClick={onClose} className={BTN_GHOST + ' flex-1'}>{t('cancel')}</button>
+          <button onClick={onClose} className={BTN_GHOST + ' flex-1'}>{t('common:cancel')}</button>
           <button onClick={() => mut.mutate()} disabled={!form.name || mut.isPending} className={BTN_PRIMARY + ' flex-1'}>
             {mut.isPending ? t('creating') : t('create')}
           </button>
@@ -445,7 +445,7 @@ function ScheduleCreateModal({ templates, onClose }: { templates: ReportTemplate
 // ---------------------------------------------------------------------------
 
 function TemplatesTab({ onRunDone }: { onRunDone: () => void }) {
-  const { t, i18n } = useTranslation('advancedReports')
+  const { t, i18n } = useTranslation(['advancedReports', 'common'])
   const qc = useQueryClient()
   const [showCreate, setShowCreate] = useState(false)
   const [editing, setEditing] = useState<ReportTemplate | null>(null)
@@ -468,7 +468,7 @@ function TemplatesTab({ onRunDone }: { onRunDone: () => void }) {
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['adv-archive'] }); onRunDone() },
   })
 
-  if (isLoading) return <p className="text-gray-500 text-sm p-4">{t('loading')}</p>
+  if (isLoading) return <p className="text-gray-500 text-sm p-4">{t('common:loading')}</p>
 
   return (
     <div>
@@ -503,9 +503,9 @@ function TemplatesTab({ onRunDone }: { onRunDone: () => void }) {
                       <div className="flex gap-2 justify-end">
                         <button onClick={() => runMut.mutate(tpl.id)} disabled={runMut.isPending}
                           className="text-xs text-blue-400 hover:text-blue-300 disabled:opacity-50">{t('run')}</button>
-                        <button onClick={() => setEditing(tpl)} className="text-xs text-gray-400 hover:text-white">{t('edit')}</button>
+                        <button onClick={() => setEditing(tpl)} className="text-xs text-gray-400 hover:text-white">{t('common:edit')}</button>
                         <button onClick={() => { if (confirm(t('confirm_delete_template'))) delMut.mutate(tpl.id) }}
-                          className="text-xs text-red-500 hover:text-red-400">{t('delete')}</button>
+                          className="text-xs text-red-500 hover:text-red-400">{t('common:delete')}</button>
                       </div>
                     </td>
                   </tr>
@@ -526,7 +526,7 @@ function TemplatesTab({ onRunDone }: { onRunDone: () => void }) {
 // ---------------------------------------------------------------------------
 
 function ScheduledTab() {
-  const { t, i18n } = useTranslation('advancedReports')
+  const { t, i18n } = useTranslation(['advancedReports', 'common'])
   const qc = useQueryClient()
   const [showCreate, setShowCreate] = useState(false)
   const { data: scheduled = [], isLoading } = useQuery({
@@ -552,7 +552,7 @@ function ScheduledTab() {
     k === 'template' ? templateName(s.template_id) : (s as unknown as Record<string, unknown>)[k]
   )
 
-  if (isLoading) return <p className="text-gray-500 text-sm p-4">{t('loading')}</p>
+  if (isLoading) return <p className="text-gray-500 text-sm p-4">{t('common:loading')}</p>
 
   return (
     <div>
@@ -598,7 +598,7 @@ function ScheduledTab() {
                     <td className="py-3 text-gray-500 text-xs">{fmtDate(sr.next_run_at, i18n.language)}</td>
                     <td className="py-3 text-right">
                       <button onClick={() => { if (confirm(t('confirm_delete_schedule'))) delMut.mutate(sr.id) }}
-                        className="text-xs text-red-500 hover:text-red-400">{t('delete')}</button>
+                        className="text-xs text-red-500 hover:text-red-400">{t('common:delete')}</button>
                     </td>
                   </tr>
                 ))}

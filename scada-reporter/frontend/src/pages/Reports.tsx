@@ -90,7 +90,7 @@ function HistoryRow({ entry }: { entry: ReportHistoryEntry }) {
 }
 
 export default function Reports() {
-  const { t } = useTranslation('reports')
+  const { t } = useTranslation(['reports', 'common'])
   const { data: tags = [] } = useQuery({
     queryKey: ['tags'],
     queryFn: () => getTags().then((r) => r.data),
@@ -201,7 +201,7 @@ export default function Reports() {
                   onClick={() => setSavingName('')}
                   className="px-2.5 py-1 text-xs bg-blue-700/40 hover:bg-blue-700/60 text-blue-300 rounded-lg transition-colors"
                 >
-                  {t('save')}
+                  {t('common:save')}
                 </button>
                 <button
                   onClick={() => setSelectedTags([])}
@@ -228,13 +228,13 @@ export default function Reports() {
                 disabled={!savingName.trim()}
                 className="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white rounded-lg transition-colors"
               >
-                {t('save')}
+                {t('common:save')}
               </button>
               <button
                 onClick={() => setSavingName(null)}
                 className="px-3 py-1.5 text-xs bg-gray-800 hover:bg-gray-700 text-gray-400 rounded-lg transition-colors"
               >
-                {t('cancel')}
+                {t('common:cancel')}
               </button>
             </div>
           )}

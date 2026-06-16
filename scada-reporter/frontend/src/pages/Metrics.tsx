@@ -26,7 +26,7 @@ function fmtPct(r: number | null): string {
 }
 
 export default function Metrics() {
-  const { t, i18n } = useTranslation('metrics')
+  const { t, i18n } = useTranslation(['metrics', 'common'])
   const { data, isLoading, isError, dataUpdatedAt } = useQuery({
     queryKey: ['metrics'],
     queryFn: () => getMetrics().then((r) => r.data),
@@ -61,7 +61,7 @@ export default function Metrics() {
         </div>
       </div>
 
-      {isLoading && <div className="text-center py-16 text-gray-500">{t('loading')}</div>}
+      {isLoading && <div className="text-center py-16 text-gray-500">{t('common:loading')}</div>}
       {isError && <div className="text-center py-16 text-red-400">{t('load_error')}</div>}
 
       {m && (

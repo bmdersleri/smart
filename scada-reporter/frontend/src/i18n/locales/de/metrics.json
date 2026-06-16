@@ -2,7 +2,6 @@
   "title": "Live-Metriken",
   "subtitle": "Poller- / PLC-Lesezustand — wird alle 2 s aktualisiert",
   "connecting": "verbinde...",
-  "loading": "Wird geladen...",
   "load_error": "Metriken konnten nicht abgerufen werden.",
   "rows_written": "Geschriebene Zeilen",
   "rows_written_sub": "gesamt (DB)",
