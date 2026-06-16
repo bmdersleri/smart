@@ -45,7 +45,7 @@ class ExcelTemplateColumn(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     template_id: Mapped[int] = mapped_column(
-        ForeignKey("excel_templates.id", ondelete="CASCADE"), nullable=False, index=True
+        ForeignKey("excel_templates.id", ondelete="CASCADE"), nullable=False
     )
     col_letter: Mapped[str] = mapped_column(String(4), nullable=False)
     tag_id: Mapped[int | None] = mapped_column(
