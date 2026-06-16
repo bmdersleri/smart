@@ -1,12 +1,16 @@
 """Poller: ayarlar, grup okuma, bulk yazma, tek-tick koşusu."""
 
 import asyncio
+from datetime import UTC, datetime
 
 import pytest
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from app.collector import poller
 from app.collector.s7_collector import ReadSpec
 from app.core.config import settings
+from app.models.tag import Tag, TagReading
 
 
 def test_settings_worker_pool_covers_fleet():
@@ -37,3 +41,47 @@ async def test_read_plc_group_timeout_marks_bad(monkeypatch):
     items = [(11, ReadSpec("DB", 1, 0, 0, 4, "REAL"))]
     out = await poller.read_plc_group(("10.0.0.1", 0, 1), items, timeout=0.05)
     assert out == [(11, None, 0)]
+
+
+@pytest.mark.asyncio
+async def test_write_readings_bulk(db_engine):
+    sm = async_sessionmaker(db_engine, expire_on_commit=False)
+    async with sm() as s:
+        t1 = Tag(node_id="ns=2;s=WR1", name="WR1", long_term=True)
+        t2 = Tag(node_id="ns=2;s=WR2", name="WR2", long_term=True)
+        s.add_all([t1, t2])
+        await s.commit()
+        await s.refresh(t1)
+        await s.refresh(t2)
+        id1, id2 = t1.id, t2.id
+
+    ts = datetime.now(UTC)
+    n = await poller.write_readings([(id1, 1.5, 192), (id2, 2.5, 0)], ts, sessionmaker=sm)
+    assert n == 2
+
+    async with sm() as s:
+        cnt = await s.scalar(
+            select(func.count()).select_from(TagReading).where(TagReading.tag_id.in_([id1, id2]))
+        )
+    assert cnt == 2
+
+
+@pytest.mark.asyncio
+async def test_write_readings_conflict_returns_zero(db_engine):
+    sm = async_sessionmaker(db_engine, expire_on_commit=False)
+    async with sm() as s:
+        t = Tag(node_id="ns=2;s=WR3", name="WR3", long_term=True)
+        s.add(t)
+        await s.commit()
+        await s.refresh(t)
+        tid = t.id
+
+    ts = datetime.now(UTC)
+    assert await poller.write_readings([(tid, 1.0, 192)], ts, sessionmaker=sm) == 1
+    # same (tag_id, timestamp) -> PK conflict -> whole batch rolled back
+    assert await poller.write_readings([(tid, 9.0, 192)], ts, sessionmaker=sm) == 0
+
+
+@pytest.mark.asyncio
+async def test_write_readings_empty():
+    assert await poller.write_readings([], datetime.now(UTC)) == 0

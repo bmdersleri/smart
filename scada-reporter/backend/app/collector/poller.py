@@ -11,7 +11,7 @@ import time
 from collections import defaultdict
 from datetime import UTC, datetime
 
-from sqlalchemy import select
+from sqlalchemy import insert, select
 from sqlalchemy.exc import IntegrityError
 
 from app.collector.s7_collector import BAD, ReadSpec, parse_address, plc_manager
@@ -41,6 +41,28 @@ async def read_plc_group(
         (tag_id, value, quality)
         for (tag_id, _), (value, quality) in zip(items, results, strict=False)
     ]
+
+
+async def write_readings(
+    rows: list[tuple[int, float | None, int]],
+    ts: datetime,
+    sessionmaker=AsyncSessionLocal,
+) -> int:
+    """rows'u tek bulk insert ile yaz. Çakışmada tüm batch geri alınır, 0 döner."""
+    if not rows:
+        return 0
+    payload = [
+        {"tag_id": tag_id, "value": value, "quality": quality, "timestamp": ts}
+        for tag_id, value, quality in rows
+    ]
+    async with sessionmaker() as db:
+        try:
+            await db.execute(insert(TagReading), payload)
+            await db.commit()
+            return len(payload)
+        except IntegrityError:
+            await db.rollback()
+            return 0
 
 
 async def poll_loop() -> None:
