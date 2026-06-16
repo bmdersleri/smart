@@ -9,7 +9,7 @@ import asyncio
 import logging
 import math
 import time
-from collections import defaultdict
+from collections import defaultdict, deque
 from datetime import UTC, datetime
 
 from sqlalchemy import insert, select
@@ -23,6 +23,33 @@ from app.core.database import AsyncSessionLocal
 from app.models.tag import Tag, TagReading
 
 logger = logging.getLogger(__name__)
+
+Batch = tuple[datetime, list[tuple[int, float | None, int]]]
+
+
+class WriteBuffer:
+    """DB blip'inde düşen tick'leri tutan sınırlı tampon (backpressure).
+
+    Dolunca en eski batch düşer (bounded deque). Bir sonraki başarılı tick'te
+    flush edilir → geçici DB kesintilerinde veri kaybını önler.
+    """
+
+    def __init__(self, maxlen: int = 60) -> None:
+        self._q: deque[Batch] = deque(maxlen=maxlen)
+
+    def add(self, ts: datetime, rows: list[tuple[int, float | None, int]]) -> None:
+        self._q.append((ts, rows))
+
+    def drain(self) -> list[Batch]:
+        items = list(self._q)
+        self._q.clear()
+        return items
+
+    def __len__(self) -> int:
+        return len(self._q)
+
+
+write_buffer = WriteBuffer()
 
 
 async def read_plc_group(
@@ -108,11 +135,14 @@ async def run_once(
     sessionmaker=AsyncSessionLocal,
     timeout: float | None = None,
     last_stored: dict[int, tuple[float | None, int, float]] | None = None,
+    buffer: "WriteBuffer | None" = None,
 ) -> tuple[int, int]:
     """Bir tick: due tag'leri oku, cache + DB'ye yaz. (yazılan_satır, min_interval).
 
     last_stored verilirse deadband (report-by-exception) uygulanır: değişmeyen
     değerler DB'ye yazılmaz (cache yine güncellenir). None ise tüm satırlar yazılır.
+    buffer verilirse DB yazma hatası satırları düşürmek yerine tamponlar; bir
+    sonraki tick'te flush edilir (backpressure).
     """
     timeout = settings.S7_PLC_READ_TIMEOUT if timeout is None else timeout
 
@@ -179,9 +209,30 @@ async def run_once(
         for tag_id, value, quality in store_rows:
             last_stored[tag_id] = (value, quality, now)
 
-    written = await write_readings(store_rows, ts, sessionmaker=sessionmaker)
-    metrics.add_rows_written(written)
     metrics.add_bad_quality(sum(1 for _, _, q in rows if q == BAD))
+
+    if buffer is None:
+        written = await write_readings(store_rows, ts, sessionmaker=sessionmaker)
+        metrics.add_rows_written(written)
+        return written, min_interval
+
+    # Backpressure: önce tamponlanmış batch'ler, sonra bu tick. İlk hatada
+    # kalan tüm batch'ler yeniden tamponlanır (sıra korunur).
+    pending = buffer.drain()
+    pending.append((ts, store_rows))
+    written = 0
+    failed_from: int | None = None
+    for i, (bts, brows) in enumerate(pending):
+        try:
+            written += await write_readings(brows, bts, sessionmaker=sessionmaker)
+        except Exception as e:
+            logger.warning("DB yazma hatasi, tamponlaniyor: %s", e)
+            failed_from = i
+            break
+    if failed_from is not None:
+        for bts, brows in pending[failed_from:]:
+            buffer.add(bts, brows)
+    metrics.add_rows_written(written)
     return written, min_interval
 
 
@@ -198,7 +249,7 @@ async def poll_loop() -> None:
         min_interval = settings.S7_POLL_INTERVAL
         try:
             _, min_interval = await run_once(
-                last_read, now=time.monotonic(), last_stored=last_stored
+                last_read, now=time.monotonic(), last_stored=last_stored, buffer=write_buffer
             )
         except Exception as e:
             logger.error("Poll hatasi: %s", e)

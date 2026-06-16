@@ -69,30 +69,38 @@ async def lifespan(app: FastAPI):
     await start_scheduler(settings.DATABASE_URL)
     logger.info("APScheduler baslatildi")
 
-    # Çoklu-PLC poller (PLC'lere lazy bağlanır, erişilemezse simülasyon modu)
-    poll_task = asyncio.create_task(poll_loop())
-    logger.info("S7 poller baslatildi (coklu PLC, lazy connect)")
+    # Collector (poller + OPC UA) yalnız RUN_COLLECTOR ise bu process'te çalışır.
+    # API'yi collector'dan ayırmak için API worker'larında RUN_COLLECTOR=False
+    # kullanın (çoklu PLC okumasını çoğaltmamak için). Ayrı collector process:
+    # python -m app.collector.runner
+    poll_task: asyncio.Task | None = None
+    opcua_task: asyncio.Task | None = None
+    if settings.RUN_COLLECTOR:
+        poll_task = asyncio.create_task(poll_loop())
+        logger.info("S7 poller baslatildi (coklu PLC, lazy connect)")
 
-    # Dahili OPC UA server — arka planda başlat (binlerce tag node'u HTTP'yi bloklamasın)
-    async def _start_opcua() -> None:
-        try:
-            await opcua_server.start()
-            logger.info("OPC UA server baslatildi")
-        except Exception as e:
-            logger.warning("OPC UA server baslatilamadi: %s", e)
+        async def _start_opcua() -> None:
+            try:
+                await opcua_server.start()
+                logger.info("OPC UA server baslatildi")
+            except Exception as e:
+                logger.warning("OPC UA server baslatilamadi: %s", e)
 
-    opcua_task = asyncio.create_task(_start_opcua())
+        opcua_task = asyncio.create_task(_start_opcua())
+    else:
+        logger.info("RUN_COLLECTOR=False — collector bu process'te baslatilmadi")
 
     yield
 
     sched = get_scheduler()
     if sched:
         sched.shutdown(wait=False)
-    opcua_task.cancel()
-    await opcua_server.stop()
+    if opcua_task:
+        opcua_task.cancel()
+        await opcua_server.stop()
     if poll_task:
         poll_task.cancel()
-    await plc_manager.disconnect_all()
+        await plc_manager.disconnect_all()
 
 
 app = FastAPI(

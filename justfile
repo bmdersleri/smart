@@ -15,6 +15,10 @@ dev:
 run-backend:
     cd {{be}} && .venv/Scripts/uvicorn app.main:app --reload --host 0.0.0.0 --port 8001
 
+# Bağımsız collector process'i (poller + OPC UA); API'den ayrı çalıştırmak için
+run-collector:
+    cd {{be}} && .venv/Scripts/python -m app.collector.runner
+
 # Frontend başlat (Vite dev server)
 run-frontend:
     cd {{fe}} && pnpm dev

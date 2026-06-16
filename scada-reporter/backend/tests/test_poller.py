@@ -92,6 +92,78 @@ async def test_write_readings_empty():
     assert await poller.write_readings([], datetime.now(UTC)) == 0
 
 
+def test_write_buffer_add_and_drain():
+    ts = datetime.now(UTC)
+    buf = poller.WriteBuffer(maxlen=5)
+    buf.add(ts, [(1, 1.0, 192)])
+    buf.add(ts, [(2, 2.0, 192)])
+    assert len(buf) == 2
+    drained = buf.drain()
+    assert len(drained) == 2
+    assert len(buf) == 0  # drain temizler
+
+
+def test_write_buffer_bounded_drops_oldest():
+    ts = datetime.now(UTC)
+    buf = poller.WriteBuffer(maxlen=2)
+    buf.add(ts, [(1, 1.0, 192)])
+    buf.add(ts, [(2, 2.0, 192)])
+    buf.add(ts, [(3, 3.0, 192)])  # taşar -> en eski düşer
+    drained = buf.drain()
+    assert [r[0][0] for _, r in drained] == [2, 3]
+
+
+@pytest.mark.asyncio
+async def test_run_once_buffers_on_db_failure_then_flushes(db_engine, monkeypatch):
+    sm = async_sessionmaker(db_engine, expire_on_commit=False)
+    async with sm() as s:
+        t = Tag(
+            node_id="ns=2;s=BUF",
+            name="BUF",
+            long_term=True,
+            plc_ip="10.0.0.9",
+            s7_address="DB10,DD0",
+            data_type="REAL",
+            sample_interval=1,
+        )
+        s.add(t)
+        await s.commit()
+        await s.refresh(t)
+        tid = t.id
+
+    async def fake_batch(ip, rack, slot, specs, name=""):
+        return [(7.0, 192) for _ in specs]
+
+    monkeypatch.setattr(poller.plc_manager, "read_plc_batch", fake_batch)
+
+    calls = {"n": 0}
+    real_write = poller.write_readings
+
+    async def flaky_write(rows, ts, sessionmaker=sm):
+        calls["n"] += 1
+        if calls["n"] == 1:
+            raise RuntimeError("DB down")  # ilk tick: transient hata
+        return await real_write(rows, ts, sessionmaker=sm)
+
+    buf = poller.WriteBuffer()
+    monkeypatch.setattr(poller, "write_readings", flaky_write)
+    try:
+        w1, _ = await poller.run_once({}, now=1.0, sessionmaker=sm, timeout=5, buffer=buf)
+        assert w1 == 0
+        assert len(buf) == 1
+        w2, _ = await poller.run_once({}, now=2.0, sessionmaker=sm, timeout=5, buffer=buf)
+        assert w2 >= 1
+        assert len(buf) == 0
+    finally:
+        from sqlalchemy import delete
+
+        monkeypatch.setattr(poller, "write_readings", real_write)
+        async with sm() as s:
+            await s.execute(delete(TagReading).where(TagReading.tag_id == tid))
+            await s.execute(delete(Tag).where(Tag.id == tid))
+            await s.commit()
+
+
 def test_should_store_first_reading_always_stores():
     assert poller.should_store(1, 5.0, 192, now=0.0, last_stored={}, deadband=1.0, heartbeat=300)
 

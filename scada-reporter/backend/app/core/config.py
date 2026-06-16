@@ -18,6 +18,10 @@ class Settings(BaseSettings):
     DB_POOL_SIZE: int = 10
     DB_MAX_OVERFLOW: int = 20
 
+    # Collector (poller + OPC UA) bu process'te çalışsın mı? API'yi collector'dan
+    # ayırmak için: API worker'larında False, ayrı collector process'inde True.
+    RUN_COLLECTOR: bool = True
+
     S7_HOST: str = "192.168.112.50"
     S7_RACK: int = 0
     S7_SLOT: int = 1
