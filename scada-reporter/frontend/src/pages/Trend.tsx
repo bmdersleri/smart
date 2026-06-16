@@ -23,21 +23,6 @@ function loadPresets(): Preset[] {
   try { return JSON.parse(localStorage.getItem(PRESET_KEY) ?? '[]') } catch { return [] }
 }
 
-function ChartCursor({ x, y, height }: { x?: number; y?: number; width?: number; height?: number }) {
-  if (x == null || y == null || height == null) return null
-  return (
-    <line
-      x1={x}
-      y1={y}
-      x2={x}
-      y2={y + height}
-      stroke="#f59e0b"
-      strokeWidth={1}
-      strokeDasharray="4 2"
-    />
-  )
-}
-
 function Toast({ message, onClose }: { message: string; onClose: () => void }) {
   return (
     <div className="fixed bottom-4 right-4 bg-gray-800 border border-gray-600 text-gray-200 text-sm px-4 py-3 rounded-xl shadow-xl z-50 flex items-center gap-3">
@@ -219,17 +204,21 @@ export default function Trend() {
   }
 
   const handleMouseMove = (state: Record<string, unknown>) => {
-    const isActive = Boolean(state.isTooltipActive)
-    const payload = state.activePayload as Array<{ name: string; value: number; color: string }> | undefined
-    if (isActive && payload && payload.length) {
-      const mapped = payload.map((p) => {
-        const s = series.find((x) => x.name === p.name)
-        return { name: p.name, value: Number(p.value), color: p.color, unit: s?.unit ?? '' }
-      })
-      setActivePayload(mapped)
-    } else {
-      setActivePayload([])
+    const activeIndex = state.activeIndex as number | undefined
+    if (activeIndex != null && activeIndex >= 0) {
+      const point = chartDataRef.current[activeIndex] as Record<string, unknown> | undefined
+      if (point) {
+        const mapped = series.map((s, i) => ({
+          name: s.name,
+          value: Number(point[s.name] ?? NaN),
+          color: COLORS[i % COLORS.length],
+          unit: s.unit ?? '',
+        })).filter((r) => !isNaN(r.value))
+        setActivePayload(mapped)
+        return
+      }
     }
+    setActivePayload([])
   }
 
   const handleMouseLeave = () => {
@@ -454,7 +443,7 @@ export default function Trend() {
                   )
                 })}
                 <Tooltip
-                  cursor={<ChartCursor />}
+                  cursor={{ stroke: '#f59e0b', strokeWidth: 1, strokeDasharray: '4 2' }}
                   contentStyle={{ display: 'none' }}
                 />
                 <Legend wrapperStyle={{ fontSize: 12, color: '#9ca3af' }} />
@@ -490,37 +479,38 @@ export default function Trend() {
                 ))}
               </LineChart>
             </ResponsiveContainer>
-            {activePayload.length > 0 && (
-              <div className="mt-2 border-t border-gray-700 pt-2">
-                <table className="w-full text-xs">
-                  <thead>
-                    <tr className="text-gray-500">
-                      <th className="text-left pb-1 font-normal">Tag</th>
-                      <th className="text-right pb-1 font-normal pr-4">Değer</th>
-                      <th className="text-left pb-1 font-normal">Birim</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {activePayload.map((row) => (
-                      <tr key={row.name}>
-                        <td className="py-0.5">
-                          <span className="flex items-center gap-1.5">
-                            <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: row.color }} />
-                            <span className="truncate max-w-[200px]" style={{ color: row.color }}>{row.name}</span>
-                          </span>
-                        </td>
-                        <td className="py-0.5 text-right pr-4 font-mono text-white">{row.value.toFixed(2)}</td>
-                        <td className="py-0.5 text-gray-400">{row.unit}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
             </div>
           )}
         </div>
       </div>
+
+      {activePayload.length > 0 && (
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-3">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="text-gray-500">
+                <th className="text-left pb-1 font-normal">Tag</th>
+                <th className="text-right pb-1 font-normal pr-4">Değer</th>
+                <th className="text-left pb-1 font-normal">Birim</th>
+              </tr>
+            </thead>
+            <tbody>
+              {activePayload.map((row) => (
+                <tr key={row.name}>
+                  <td className="py-0.5">
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: row.color }} />
+                      <span className="truncate max-w-[200px]" style={{ color: row.color }}>{row.name}</span>
+                    </span>
+                  </td>
+                  <td className="py-0.5 text-right pr-4 font-mono text-white">{row.value.toFixed(2)}</td>
+                  <td className="py-0.5 text-gray-400">{row.unit}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {toast && <Toast message={toast} onClose={() => setToast('')} />}
     </div>
