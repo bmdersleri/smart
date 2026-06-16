@@ -16,7 +16,6 @@
   "view_tree_title": "Hierarchiebaum",
   "source_manual": "Manuell",
   "source_auto": "Auto",
-  "loading": "Wird geladen...",
   "no_match": "Keine passenden Tags gefunden.",
   "no_tags": "Noch keine Tags.",
   "col_plc": "SPS",
@@ -31,8 +30,6 @@
   "badge_daily": "täglich",
   "status_active": "Aktiv",
   "status_passive": "Inaktiv",
-  "action_edit": "Bearbeiten",
-  "action_delete": "Löschen",
   "confirm_delete": "\"{{name}}\" löschen?",
   "tree_no_group": "Keine Gruppen. Mit 🗂 Gruppen erstellen.",
   "tree_no_tag": "Keine Tags.",
@@ -100,6 +97,5 @@
   "groups_parent_root": "Übergeordnete Gruppe: (Wurzel)",
   "groups_add": "+ Gruppe hinzufügen",
   "groups_none": "Noch keine Gruppen.",
-  "groups_confirm_delete": "Gruppe \"{{name}}\" löschen? Ihre Tags werden ohne Gruppe.",
-  "groups_delete": "Löschen"
+  "groups_confirm_delete": "Gruppe \"{{name}}\" löschen? Ihre Tags werden ohne Gruppe."
 }

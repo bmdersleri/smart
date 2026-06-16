@@ -498,7 +498,7 @@ export default function Trend() {
                 onClick={() => setSavingName('')}
                 className="flex-1 px-2 py-1 text-xs bg-blue-700/40 hover:bg-blue-700/60 text-blue-300 rounded-lg transition-colors"
               >
-                {t('save')}
+                {t('common:save')}
               </button>
               <button
                 onClick={() => setSelected([])}
@@ -526,7 +526,7 @@ export default function Trend() {
                   disabled={!savingName.trim()}
                   className="flex-1 px-2 py-1 text-xs bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white rounded-lg transition-colors"
                 >
-                  {t('save')}
+                  {t('common:save')}
                 </button>
                 <button
                   onClick={() => setSavingName(null)}
@@ -613,7 +613,7 @@ export default function Trend() {
             </div>
           ) : isLoading ? (
             <div className="flex-1 flex items-center justify-center text-gray-500 text-sm">
-              {t('loading')}
+              {t('common:loading')}
             </div>
           ) : chartData.length === 0 ? (
             <div className="flex-1 flex items-center justify-center text-gray-500 text-sm">

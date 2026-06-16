@@ -16,7 +16,6 @@
   "view_tree_title": "Дерево иерархии",
   "source_manual": "Вручную",
   "source_auto": "Авто",
-  "loading": "Загрузка...",
   "no_match": "Совпадающих тегов не найдено.",
   "no_tags": "Тегов пока нет.",
   "col_plc": "ПЛК",
@@ -31,8 +30,6 @@
   "badge_daily": "ежедневный",
   "status_active": "Активен",
   "status_passive": "Неактивен",
-  "action_edit": "Изменить",
-  "action_delete": "Удалить",
   "confirm_delete": "Удалить \"{{name}}\"?",
   "tree_no_group": "Групп нет. Создайте их через 🗂 Группы.",
   "tree_no_tag": "Тегов нет.",
@@ -100,6 +97,5 @@
   "groups_parent_root": "Родительская группа: (корень)",
   "groups_add": "+ Добавить группу",
   "groups_none": "Групп пока нет.",
-  "groups_confirm_delete": "Удалить группу \"{{name}}\"? Её теги станут без группы.",
-  "groups_delete": "Удалить"
+  "groups_confirm_delete": "Удалить группу \"{{name}}\"? Её теги станут без группы."
 }

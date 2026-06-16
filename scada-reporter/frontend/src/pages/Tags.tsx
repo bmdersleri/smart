@@ -284,7 +284,7 @@ function FormatGuideModal({ onClose }: { onClose: () => void }) {
 }
 
 function GroupsModal({ onClose }: { onClose: () => void }) {
-  const { t } = useTranslation('tags')
+  const { t } = useTranslation(['tags', 'common'])
   const qc = useQueryClient()
   const { data: groups = [] } = useQuery({ queryKey: ['groups'], queryFn: () => getGroups().then((r) => r.data) })
   const [name, setName] = useState('')
@@ -341,7 +341,7 @@ function GroupsModal({ onClose }: { onClose: () => void }) {
                 onClick={() => { if (confirm(t('groups_confirm_delete', { name: g.name }))) delMut.mutate(g.id) }}
                 className="text-gray-500 hover:text-red-400 text-xs px-2"
               >
-                {t('groups_delete')}
+                {t('common:delete')}
               </button>
             </div>
           ))}
@@ -356,7 +356,7 @@ function TagRow({
 }: {
   tag: Tag; canEdit: boolean; onEdit: (t: Tag) => void; onDelete: (t: Tag) => void; indent: number
 }) {
-  const { t } = useTranslation('tags')
+  const { t } = useTranslation(['tags', 'common'])
   return (
     <div className="flex items-center gap-2 py-1.5 pr-2 hover:bg-gray-800/40 rounded-lg" style={{ paddingLeft: indent }}>
       <span className="w-1.5 h-1.5 rounded-full bg-gray-600 flex-shrink-0" />
@@ -368,10 +368,10 @@ function TagRow({
       </span>
       {canEdit && (
         <div className="flex gap-1">
-          <button onClick={() => onEdit(tag)} title={t('action_edit')} className="p-1 rounded text-gray-500 hover:text-blue-400 hover:bg-blue-500/10">
+          <button onClick={() => onEdit(tag)} title={t('common:edit')} className="p-1 rounded text-gray-500 hover:text-blue-400 hover:bg-blue-500/10">
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
           </button>
-          <button onClick={() => onDelete(tag)} title={t('action_delete')} className="p-1 rounded text-gray-500 hover:text-red-400 hover:bg-red-500/10">
+          <button onClick={() => onDelete(tag)} title={t('common:delete')} className="p-1 rounded text-gray-500 hover:text-red-400 hover:bg-red-500/10">
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
           </button>
         </div>
@@ -422,7 +422,7 @@ function TagTreeView({
   source: 'manual' | 'auto'; tags: Tag[]; canEdit: boolean
   onEdit: (t: Tag) => void; onDelete: (t: Tag) => void
 }) {
-  const { t } = useTranslation('tags')
+  const { t } = useTranslation(['tags', 'common'])
   const { data: tree = [], isLoading } = useQuery({
     queryKey: ['groupTree', source],
     queryFn: () => getGroupTree(source).then((r) => r.data),
@@ -430,7 +430,7 @@ function TagTreeView({
   const tagMap = new Map(tags.map((t) => [t.id, t]))
   const ungrouped = source === 'manual' ? tags.filter((t) => t.group_id === null) : []
 
-  if (isLoading) return <div className="py-12 text-center text-gray-500">{t('loading')}</div>
+  if (isLoading) return <div className="py-12 text-center text-gray-500">{t('common:loading')}</div>
   return (
     <div className="p-2 space-y-0.5">
       {tree.length === 0 && ungrouped.length === 0 && (
@@ -454,7 +454,7 @@ function TagTreeView({
 }
 
 export default function Tags() {
-  const { t } = useTranslation('tags')
+  const { t } = useTranslation(['tags', 'common'])
   const { user } = useAuth()
   const qc = useQueryClient()
   const [showAdd, setShowAdd] = useState(false)
@@ -595,7 +595,7 @@ export default function Tags() {
         {viewMode === 'tree' ? (
           <TagTreeView source={treeSource} tags={tags} canEdit={canEdit} onEdit={setEditTag} onDelete={handleDelete} />
         ) : isLoading ? (
-          <div className="py-12 text-center text-gray-500">{t('loading')}</div>
+          <div className="py-12 text-center text-gray-500">{t('common:loading')}</div>
         ) : filtered.length === 0 ? (
           <div className="py-12 text-center">
             <p className="text-gray-400">{search ? t('no_match') : t('no_tags')}</p>
@@ -647,7 +647,7 @@ export default function Tags() {
                       <div className="flex gap-2 justify-end">
                         <button
                           onClick={() => setEditTag(row)}
-                          title={t('action_edit')}
+                          title={t('common:edit')}
                           className="p-1.5 rounded-lg text-gray-400 hover:text-blue-400 hover:bg-blue-500/10 border border-gray-700 hover:border-blue-500/40 transition-colors"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -656,7 +656,7 @@ export default function Tags() {
                         </button>
                         <button
                           onClick={() => { if (confirm(t('confirm_delete', { name: row.name }))) delMut.mutate(row.id) }}
-                          title={t('action_delete')}
+                          title={t('common:delete')}
                           className="p-1.5 rounded-lg text-gray-400 hover:text-red-400 hover:bg-red-500/10 border border-gray-700 hover:border-red-500/40 transition-colors"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
