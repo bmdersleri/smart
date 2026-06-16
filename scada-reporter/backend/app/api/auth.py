@@ -111,6 +111,7 @@ async def update_me(
 ):
     user.language = data.language
     await db.commit()
+    await db.refresh(user)
     return {
         "id": user.id,
         "username": user.username,
