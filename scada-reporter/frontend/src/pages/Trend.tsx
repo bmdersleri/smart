@@ -290,9 +290,9 @@ export default function Trend() {
         </div>
       </div>
 
-      <div className="flex gap-4 min-h-0">
+      <div className="flex gap-4" style={{ height: trendChartHeight }}>
         {/* Tag selector */}
-        <div className={`bg-gray-900 border border-gray-800 rounded-xl flex-shrink-0 space-y-2 overflow-hidden transition-all duration-200 ${panelOpen ? 'w-52 p-3' : 'w-0 p-0'}`}>
+        <div className={`bg-gray-900 border border-gray-800 rounded-xl flex-shrink-0 space-y-2 overflow-y-auto transition-all duration-200 ${panelOpen ? 'w-52 p-3' : 'w-0 p-0'}`}>
           <input
             value={tagSearch}
             onChange={(e) => setTagSearch(e.target.value)}
@@ -406,7 +406,7 @@ export default function Trend() {
         <div
           ref={chartContainerRef}
           className="flex-1 bg-gray-900 border border-gray-800 rounded-xl p-4 flex flex-col"
-          style={{ userSelect: 'none', minHeight: trendChartHeight }}
+          style={{ userSelect: 'none' }}
         >
           {selected.length === 0 ? (
             <div className="flex-1 flex items-center justify-center text-gray-500 text-sm">
