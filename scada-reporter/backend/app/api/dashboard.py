@@ -312,10 +312,23 @@ def downsample(data: list[dict], max_points: int | None) -> list[dict]:
 async def _raw_series(
     db: AsyncSession, tag_ids: list[int], since: datetime, max_points: int | None
 ) -> list[dict]:
+    return await _raw_series_window(db, tag_ids, since, None, max_points)
+
+
+async def _raw_series_window(
+    db: AsyncSession,
+    tag_ids: list[int],
+    start: datetime,
+    end: datetime | None,
+    max_points: int | None,
+) -> list[dict]:
+    conditions = [Tag.id.in_(tag_ids), TagReading.timestamp >= start]
+    if end is not None:
+        conditions.append(TagReading.timestamp <= end)
     result = await db.execute(
         select(Tag.id, Tag.name, Tag.unit, TagReading.timestamp, TagReading.value)
         .join(TagReading, Tag.id == TagReading.tag_id)
-        .where(Tag.id.in_(tag_ids), TagReading.timestamp >= since)
+        .where(*conditions)
         .order_by(TagReading.timestamp.asc())
     )
     series: dict[int, dict] = {}
@@ -351,6 +364,21 @@ async def trend(
 ):
     since = datetime.now(UTC) - timedelta(hours=hours)
     return await _raw_series(db, tag_ids, since, max_points)
+
+
+@router.get("/trend_range")
+async def trend_range(
+    tag_ids: list[int] = Query(...),
+    start: datetime = Query(...),
+    end: datetime = Query(...),
+    max_points: int | None = Query(None, ge=2),
+    db: AsyncSession = Depends(get_db),
+    _=Depends(get_current_user),
+):
+    """Açık başlangıç/bitiş penceresinde ham seri (dönem karşılaştırması için)."""
+    s = start.replace(tzinfo=None) if start.tzinfo else start
+    e = end.replace(tzinfo=None) if end.tzinfo else end
+    return await _raw_series_window(db, tag_ids, s, e, max_points)
 
 
 @router.get("/trend_agg")
