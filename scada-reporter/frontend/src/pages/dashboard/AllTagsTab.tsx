@@ -153,7 +153,7 @@ export default function AllTagsTab({ active }: { active: boolean }) {
             </thead>
             <tbody>
               {items.map((item) => {
-                const pinned = pinnedIds.current.has(item.tag_id)
+                const pinned = pinnedIds.has(item.tag_id)
                 return (
                   <tr key={item.tag_id} className="border-t border-gray-800 hover:bg-gray-800/40 transition-colors">
                     <td className="px-4 py-2.5 text-sm text-white font-medium">{item.name}</td>
