@@ -6,11 +6,13 @@ from contextlib import asynccontextmanager
 import sentry_sdk
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import Response
 
 from app.api import advanced_reports, auth, dashboard, explore, plc, query, reports, tags
 from app.collector.opcua_server import opcua_server
 from app.collector.poller import poll_loop
 from app.collector.s7_collector import plc_manager
+from app.core import metrics
 from app.core.config import settings
 from app.core.database import Base, engine
 from app.core.timescaledb import init_timescaledb
@@ -94,6 +96,11 @@ app.include_router(query.router, prefix="/api")
 app.include_router(explore.router, prefix="/api")
 app.include_router(advanced_reports.router, prefix="/api")
 app.include_router(plc.router, prefix="/api")
+
+
+@app.get("/metrics")
+async def prometheus_metrics():
+    return Response(content=metrics.render(), media_type=metrics.CONTENT_TYPE)
 
 
 @app.get("/health")

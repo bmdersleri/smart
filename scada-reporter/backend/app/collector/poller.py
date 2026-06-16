@@ -17,6 +17,7 @@ from sqlalchemy.exc import IntegrityError
 
 from app.collector.cache import latest_cache
 from app.collector.s7_collector import BAD, ReadSpec, parse_address, plc_manager
+from app.core import metrics
 from app.core.config import settings
 from app.core.database import AsyncSessionLocal
 from app.models.tag import Tag, TagReading
@@ -32,6 +33,7 @@ async def read_plc_group(
     """Bir PLC grubunu zaman aşımı sınırıyla oku. Hata/zaman aşımı -> hepsi BAD."""
     ip, rack, slot = key
     specs = [spec for _, spec in items]
+    read_start = time.monotonic()
     try:
         results = await asyncio.wait_for(
             plc_manager.read_plc_batch(ip, rack, slot, specs), timeout=timeout
@@ -39,6 +41,8 @@ async def read_plc_group(
     except Exception as e:
         logger.warning("PLC grup okuma hatasi/zaman asimi %s: %s", ip, e)
         results = [(None, BAD)] * len(specs)
+    finally:
+        metrics.observe_plc_read(ip, time.monotonic() - read_start)
     return [
         (tag_id, value, quality)
         for (tag_id, _), (value, quality) in zip(items, results, strict=False)
@@ -115,7 +119,9 @@ async def run_once(
     if rows:
         ts = datetime.now(UTC)
         latest_cache.update_many(rows, ts)
-        await write_readings(rows, ts, sessionmaker=sessionmaker)
+        written = await write_readings(rows, ts, sessionmaker=sessionmaker)
+        metrics.add_rows_written(written)
+        metrics.add_bad_quality(sum(1 for _, _, q in rows if q == BAD))
 
     return len(rows), min_interval
 
@@ -136,4 +142,5 @@ async def poll_loop() -> None:
             logger.error("Poll hatasi: %s", e)
         tick = max(1, min_interval)
         elapsed = time.monotonic() - tick_start
+        metrics.observe_tick(elapsed)
         await asyncio.sleep(max(0.0, tick - elapsed))
