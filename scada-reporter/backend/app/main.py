@@ -13,6 +13,7 @@ from app.api import (
     annotations,
     auth,
     dashboard,
+    excel_templates,
     explore,
     groups,
     plc,
@@ -136,6 +137,7 @@ app.include_router(reports.router, prefix="/api")
 app.include_router(query.router, prefix="/api")
 app.include_router(explore.router, prefix="/api")
 app.include_router(advanced_reports.router, prefix="/api")
+app.include_router(excel_templates.router, prefix="/api")
 app.include_router(plc.router, prefix="/api")
 app.include_router(groups.router, prefix="/api")
 app.include_router(annotations.router, prefix="/api")
