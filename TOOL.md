@@ -55,7 +55,7 @@
 ## AI Coding Tools
 | Tool | Version | Path |
 |------|---------|------|
-| Claude Code | 2.1.177 | `claude` (npm) |
+| Claude Code | 2.1.178 | `claude` (npm) |
 | Gemini CLI | 0.46.0 | `gemini` (npm) |
 | opencode | 1.17.6 | `opencode` (npm) |
 | Codex | | `C:\Users\Administrator\AppData\Local\Programs\OpenAI\Codex\bin\codex.exe` |
@@ -133,7 +133,7 @@
 ## npm Global Packages
 | Package | Version |
 |---------|---------|
-| @anthropic-ai/claude-code | 2.1.177 |
+| @anthropic-ai/claude-code | 2.1.178 |
 | @colbymchenry/codegraph | 1.0.1 |
 | @google/gemini-cli | 0.46.0 |
 | @juliusbrussee/caveman-code | |
@@ -192,7 +192,7 @@
 | Service | Image | Purpose |
 |---------|-------|---------|
 | PostgreSQL | timescale/timescaledb:latest-pg17 | Time-series DB |
-| Redis | redis:7-alpine | Cache / Celery broker |
+| Redis | redis:7-alpine | Cache (dev'de kullanılmıyor, prod için) |
 | Grafana | grafana/grafana:latest | Monitoring dashboards |
 | Portainer | portainer/portainer-ce:latest | Container management |
 
@@ -244,9 +244,13 @@
 - **Python 3.14** is the primary Python (`python` → `C:\Python314\python.exe`)
 - **Python 3.12** still available at `C:\Program Files\Python312\python.exe`
 - **scada-reporter backend venv**: `scada-reporter/backend/.venv/` (Python 3.14, uv-managed)
-- **scada CLI** requires `uv pip install -e scada-reporter/agent-harness` from project root
-- **New API endpoints (this session):** `/api/query/run` (POST), `/api/explore/schema` (GET), `/api/explore/tags` (GET)
-- **Mimari**: S7 PLC → Snap7 (s7_collector) → DB → dahili OPC UA server (port 4840) + REST API. Harici ücretli yazılım (KEPServerEX) gerekmez.
+- **scada CLI** requires `uv pip install -e scada-reporter/agent-harness` from project root (`just install-agent`)
+- **Backend API**: 8 router grubu — auth, tags, dashboard, reports, advanced-reports, plc, query, explore (`/api/*`)
+- **Frontend sayfaları**: Dashboard (3 sekme), Trend (zoom/pan/PNG/Excel/sağ tık menüsü), Raporlar, Gelişmiş Raporlar, Tags, PLC Yönetimi, Ayarlar
+- **Auth**: `/api/auth/token` endpoint'i OAuth2 **form-data** bekler, JSON değil. `curl -d "username=...&password=..."`
+- **Varsayılan kullanıcılar**: `just seed-users` → admin/admin123, operator/operator123
+- **Mimari**: S7 PLC → Snap7 (s7_collector) → SQLite (dev) / PostgreSQL (prod) → dahili OPC UA server (port 4840) + REST API. Harici ücretli yazılım (KEPServerEX) gerekmez.
+- **Stats engine**: numpy-only (scipy yok) — `np.polyfit` + manuel R²
 - **Docker not installed on host** — compose files ready, needs Docker Desktop or Docker Engine
 - **RTK** installed for LLM token optimization. Run `rtk init -g` for Claude Code integration.
 - **GitHub Pages**: User site at `b110rpsrv2` (this machine)
