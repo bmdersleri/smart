@@ -22,17 +22,33 @@ router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
 @router.get("/overview")
 async def overview(db: AsyncSession = Depends(get_db), _=Depends(get_current_user)):
+    now = datetime.now(UTC)
     tag_count = await db.scalar(select(func.count(Tag.id)).where(Tag.is_active, Tag.long_term))
     last_reading = await db.scalar(select(func.max(TagReading.timestamp)))
     reading_count_24h = await db.scalar(
         select(func.count(TagReading.timestamp)).where(
-            TagReading.timestamp >= datetime.now(UTC) - timedelta(hours=24)
+            TagReading.timestamp >= now - timedelta(hours=24)
         )
+    )
+    since_1h = now - timedelta(hours=1)
+    reading_count_1h = await db.scalar(
+        select(func.count(TagReading.timestamp)).where(TagReading.timestamp >= since_1h)
+    )
+    good_count_1h = await db.scalar(
+        select(func.count(TagReading.timestamp)).where(
+            TagReading.timestamp >= since_1h,
+            TagReading.quality == 192,
+        )
+    )
+    quality_rate = (
+        round((good_count_1h or 0) / reading_count_1h * 100) if reading_count_1h else None
     )
     return {
         "active_tags": tag_count,
         "last_reading": last_reading,
         "readings_24h": reading_count_24h,
+        "readings_1h": reading_count_1h,
+        "quality_rate": quality_rate,
     }
 
 

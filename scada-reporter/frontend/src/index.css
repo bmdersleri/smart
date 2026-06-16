@@ -34,3 +34,8 @@
   0%   { transform: translateX(-100%); }
   100% { transform: translateX(200%); }
 }
+
+@keyframes flipIn {
+  from { transform: translateY(60%); opacity: 0; }
+  to   { transform: translateY(0);   opacity: 1; }
+}

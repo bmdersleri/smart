@@ -72,7 +72,13 @@ export interface DashboardTagsResponse {
   page_size: number; total_pages: number
 }
 
-export const getOverview = () => api.get<{ active_tags: number; last_reading: string | null; readings_24h: number }>('/dashboard/overview')
+export const getOverview = () => api.get<{
+  active_tags: number
+  last_reading: string | null
+  readings_24h: number
+  readings_1h: number
+  quality_rate: number | null
+}>('/dashboard/overview')
 export const getDashboardDevices = () => api.get<string[]>('/dashboard/devices')
 export const getWatchlist = () => api.get<WatchlistItem[]>('/dashboard/watchlist')
 export const addWatchlist = (tag_id: number) => api.post(`/dashboard/watchlist/${tag_id}`)

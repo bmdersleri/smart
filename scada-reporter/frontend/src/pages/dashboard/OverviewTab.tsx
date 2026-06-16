@@ -7,13 +7,28 @@ import type { PlcEntry } from '../../api/client'
 
 // ── Stat card ──────────────────────────────────────────────────────────────
 
-function StatCard({ label, value, sub, flash }: {
-  label: string; value: string | number; sub?: string; flash?: boolean
+function StatCard({ label, value, sub, flash, flip, accent }: {
+  label: string
+  value: string | number
+  sub?: string
+  flash?: boolean
+  flip?: boolean   // animates value on change
+  accent?: string  // color class for value e.g. 'text-green-400'
 }) {
   return (
-    <div className={`bg-gray-900 border rounded-xl p-4 transition-all duration-300 ${flash ? 'border-cyan-500 shadow-[0_0_12px_rgba(6,182,212,0.25)]' : 'border-gray-800'}`}>
+    <div className={`bg-gray-900 border rounded-xl p-4 transition-all duration-300
+      ${flash ? 'border-cyan-500 shadow-[0_0_12px_rgba(6,182,212,0.25)]' : 'border-gray-800'}`}>
       <p className="text-gray-400 text-xs uppercase tracking-wide mb-1">{label}</p>
-      <p className={`text-2xl font-bold transition-colors duration-300 ${flash ? 'text-cyan-400' : 'text-white'}`}>{value}</p>
+      <div className="overflow-hidden h-8">
+        <p
+          key={flip ? String(value) : undefined}
+          className={`text-2xl font-bold leading-8 transition-colors duration-300
+            ${flash ? 'text-cyan-400' : (accent ?? 'text-white')}
+            ${flip ? 'animate-[flipIn_0.35s_cubic-bezier(0.22,1,0.36,1)]' : ''}`}
+        >
+          {value}
+        </p>
+      </div>
       {sub && <p className="text-gray-500 text-xs mt-1">{sub}</p>}
     </div>
   )
@@ -262,20 +277,58 @@ export default function OverviewTab({ active }: { active: boolean }) {
   const plcLabel = plcs.length > 0 ? `${connectedCount}/${plcs.length}` : '...'
   const deviceCount = devices.length || undefined
 
+  const readRate = overview?.readings_1h != null
+    ? overview.readings_1h < 60
+      ? `~${overview.readings_1h} okuma/sa`
+      : `~${Math.round(overview.readings_1h / 60)} okuma/dk`
+    : '—'
+
+  const qualityAccent = overview?.quality_rate == null
+    ? 'text-white'
+    : overview.quality_rate >= 90
+      ? 'text-green-400'
+      : overview.quality_rate >= 70
+        ? 'text-yellow-400'
+        : 'text-red-400'
+
+  const lastTs = overview?.last_reading
+    ? format(parseISO(overview.last_reading + 'Z'), 'HH:mm:ss')
+    : '—'
+
   return (
     <div className="space-y-6">
-      {/* Stat cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard label="Aktif Tag" value={overview?.active_tags ?? '—'} sub={`${deviceCount ?? '—'} cihaz`} />
+      {/* Stat cards — 6 kart, 2 satır */}
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
         <StatCard
-          label="Son 24 Saat Okuma"
+          label="Aktif Tag"
+          value={overview?.active_tags ?? '—'}
+          sub={`${deviceCount ?? '—'} cihaz`}
+        />
+        <StatCard
+          label="24 Saat Okuma"
           value={overview?.readings_24h?.toLocaleString('tr') ?? '—'}
+        />
+        <StatCard
+          label="Son 1 Saat"
+          value={overview?.readings_1h?.toLocaleString('tr') ?? '—'}
+          sub={readRate}
+          flip
+        />
+        <StatCard
+          label="Veri Kalitesi"
+          value={overview?.quality_rate != null ? `%${overview.quality_rate}` : '—'}
+          sub="son 1 saat iyi kalite"
+          accent={qualityAccent}
+          flip
         />
         <StatCard
           label="Son Veri"
           flash={writeFlash}
-          value={overview?.last_reading ? format(parseISO(overview.last_reading + 'Z'), 'HH:mm:ss') : '—'}
-          sub={overview?.last_reading ? format(parseISO(overview.last_reading + 'Z'), 'dd MMM yyyy', { locale: tr }) : undefined}
+          flip
+          value={lastTs}
+          sub={overview?.last_reading
+            ? format(parseISO(overview.last_reading + 'Z'), 'dd MMM yyyy', { locale: tr })
+            : undefined}
         />
         <StatCard label="PLC Bağlantı" value={plcLabel} sub="bağlı / toplam" />
       </div>
