@@ -2,11 +2,12 @@ import asyncio
 import logging
 
 from asyncua import Server, ua
-from sqlalchemy import func, select
+from sqlalchemy import select
 
+from app.collector.cache import latest_cache
 from app.core.config import settings
 from app.core.database import AsyncSessionLocal
-from app.models.tag import Tag, TagReading
+from app.models.tag import Tag
 
 logger = logging.getLogger(__name__)
 
@@ -70,36 +71,22 @@ class OpcUaServer:
             self._device_folders[key] = node
         return node
 
+    async def _apply_latest(self) -> int:
+        """Cache'teki son değerleri OPC UA node'larına yaz. Yazılan sayıyı döner."""
+        updated = 0
+        for tag_id, node in self._tag_nodes.items():
+            cr = latest_cache.get(tag_id)
+            if cr is not None and cr.value is not None:
+                await node.write_value(ua.Variant(float(cr.value), ua.VariantType.Double))
+                updated += 1
+        return updated
+
     async def _update_loop(self) -> None:
         while True:
             try:
-                async with AsyncSessionLocal() as db:
-                    subq = (
-                        select(
-                            TagReading.tag_id,
-                            func.max(TagReading.timestamp).label("max_ts"),
-                        )
-                        .group_by(TagReading.tag_id)
-                        .subquery()
-                    )
-                    result = await db.execute(
-                        select(TagReading).join(
-                            subq,
-                            (TagReading.tag_id == subq.c.tag_id)
-                            & (TagReading.timestamp == subq.c.max_ts),
-                        )
-                    )
-                    latest_readings = result.scalars().all()
-
-                for reading in latest_readings:
-                    node = self._tag_nodes.get(reading.tag_id)
-                    if node is not None and reading.value is not None:
-                        await node.write_value(
-                            ua.Variant(float(reading.value), ua.VariantType.Double),
-                        )
+                await self._apply_latest()
             except Exception as e:
                 logger.error("OPC UA guncelleme hatasi: %s", e)
-
             await asyncio.sleep(settings.OPCUA_SERVER_UPDATE_INTERVAL)
 
     async def stop(self) -> None:
