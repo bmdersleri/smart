@@ -9,6 +9,7 @@ import Tags from './pages/Tags'
 import Trend from './pages/Trend'
 import Reports from './pages/Reports'
 import AdvancedReports from './pages/AdvancedReports'
+import ExcelTemplates from './pages/ExcelTemplates'
 import PlcConfig from './pages/PlcConfig'
 import Metrics from './pages/Metrics'
 import Settings from './pages/Settings'
@@ -36,6 +37,7 @@ export default function App() {
               <Route path="trend" element={<Trend />} />
               <Route path="reports" element={<Reports />} />
               <Route path="advanced-reports" element={<AdvancedReports />} />
+              <Route path="excel-templates" element={<ExcelTemplates />} />
               <Route path="plc" element={<PlcConfig />} />
               <Route path="metrics" element={<Metrics />} />
               <Route path="settings" element={<Settings />} />
