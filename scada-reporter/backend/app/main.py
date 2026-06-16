@@ -10,9 +10,11 @@ from fastapi.responses import Response
 
 from app.api import (
     advanced_reports,
+    annotations,
     auth,
     dashboard,
     explore,
+    groups,
     plc,
     query,
     realtime,
@@ -26,7 +28,9 @@ from app.core import metrics
 from app.core.config import settings
 from app.core.database import Base, engine
 from app.core.timescaledb import init_continuous_aggregates, init_timescaledb
+from app.models import annotation as _annotation  # noqa: F401
 from app.models import report_archive, report_template, scheduled_report  # noqa: F401
+from app.models import tag_group as _tag_group  # noqa: F401
 from app.models.report_history import ReportHistory as _ReportHistory  # noqa: F401
 from app.services.scheduler import get_scheduler, start_scheduler
 
@@ -127,6 +131,8 @@ app.include_router(query.router, prefix="/api")
 app.include_router(explore.router, prefix="/api")
 app.include_router(advanced_reports.router, prefix="/api")
 app.include_router(plc.router, prefix="/api")
+app.include_router(groups.router, prefix="/api")
+app.include_router(annotations.router, prefix="/api")
 
 
 @app.get("/metrics")

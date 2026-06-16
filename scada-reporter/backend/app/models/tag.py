@@ -39,6 +39,10 @@ class Tag(Base):
     daily_tracking: Mapped[bool] = mapped_column(Boolean, server_default="0", default=False)
 
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    # Manuel hiyerarşi düğümü (tag_groups.id); None -> gruplanmamış
+    group_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("tag_groups.id", ondelete="SET NULL"), nullable=True, index=True
+    )
     min_alarm: Mapped[float | None] = mapped_column(Float, nullable=True)
     max_alarm: Mapped[float | None] = mapped_column(Float, nullable=True)
     # Report-by-exception: değer bu kadar (mutlak) değişmedikçe DB'ye yazma.
