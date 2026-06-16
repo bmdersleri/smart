@@ -4,6 +4,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getTags, createTag, deleteTag, updateTag, importTags } from '../api/client'
 import type { Tag } from '../api/client'
 import { useAuth } from '../context/AuthContext'
+import { useSortable } from '../hooks/useSortable'
+import SortHeader from '../components/SortHeader'
 
 function AddTagModal({ onClose }: { onClose: () => void }) {
   const qc = useQueryClient()
@@ -266,6 +268,9 @@ export default function Tags() {
         t.device.toLowerCase().includes(search.toLowerCase())
       )
     : tags
+  const { sorted, sort, toggle } = useSortable(filtered, (t, k) =>
+    k === 'plc' ? t.plc_name || t.device : (t as unknown as Record<string, unknown>)[k]
+  )
 
   return (
     <div className="p-6 space-y-4">
@@ -304,13 +309,22 @@ export default function Tags() {
           <table className="w-full">
             <thead className="border-b border-gray-800">
               <tr className="text-xs text-gray-500 uppercase tracking-wide">
-                {['PLC', 'Tag Adı', 'PLC IP', 'S7 Adresi', 'Aralık', 'Birim', 'Durum', ''].map((h) => (
-                  <th key={h} className="px-4 py-3 text-left">{h}</th>
+                {[
+                  { label: 'PLC', key: 'plc' },
+                  { label: 'Tag Adı', key: 'name' },
+                  { label: 'PLC IP', key: 'plc_ip' },
+                  { label: 'S7 Adresi', key: 's7_address' },
+                  { label: 'Aralık', key: 'sample_interval' },
+                  { label: 'Birim', key: 'unit' },
+                  { label: 'Durum', key: 'is_active' },
+                ].map((c) => (
+                  <SortHeader key={c.key} label={c.label} sortKey={c.key} sort={sort} onToggle={toggle} className="px-4 py-3" />
                 ))}
+                <th className="px-4 py-3" />
               </tr>
             </thead>
             <tbody>
-              {filtered.map((t: Tag) => (
+              {sorted.map((t: Tag) => (
                 <tr key={t.id} className="border-t border-gray-800 hover:bg-gray-800/40">
                   <td className="px-4 py-3 text-sm text-gray-400">{t.plc_name || t.device}</td>
                   <td className="px-4 py-3 text-sm font-medium text-white">

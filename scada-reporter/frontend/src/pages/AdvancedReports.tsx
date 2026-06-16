@@ -9,6 +9,8 @@ import {
   getTags,
 } from '../api/client'
 import type { ReportTemplate, TemplateCreate, ScheduledReport, ArchiveEntry } from '../api/client'
+import { useSortable } from '../hooks/useSortable'
+import SortHeader from '../components/SortHeader'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -446,6 +448,9 @@ function TemplatesTab({ onRunDone }: { onRunDone: () => void }) {
     queryKey: ['adv-templates'],
     queryFn: () => listTemplates().then(r => r.data),
   })
+  const { sorted: sortedTemplates, sort, toggle } = useSortable(templates, (t, k) =>
+    k === 'tag' ? t.tag_ids.length : (t as unknown as Record<string, unknown>)[k]
+  )
 
   const delMut = useMutation({
     mutationFn: (id: number) => deleteTemplate(id),
@@ -471,17 +476,17 @@ function TemplatesTab({ onRunDone }: { onRunDone: () => void }) {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-800 text-left">
-                  <th className="pb-2 text-gray-500 font-medium">Ad</th>
-                  <th className="pb-2 text-gray-500 font-medium">Format</th>
-                  <th className="pb-2 text-gray-500 font-medium">İnterval</th>
-                  <th className="pb-2 text-gray-500 font-medium">Tag</th>
-                  <th className="pb-2 text-gray-500 font-medium">Oluşturulma</th>
+                <tr className="border-b border-gray-800 text-left text-gray-500">
+                  <SortHeader label="Ad" sortKey="name" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
+                  <SortHeader label="Format" sortKey="output_format" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
+                  <SortHeader label="İnterval" sortKey="interval" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
+                  <SortHeader label="Tag" sortKey="tag" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
+                  <SortHeader label="Oluşturulma" sortKey="created_at" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
                   <th className="pb-2 text-gray-500 font-medium text-right">İşlem</th>
                 </tr>
               </thead>
               <tbody>
-                {templates.map(t => (
+                {sortedTemplates.map(t => (
                   <tr key={t.id} className="border-b border-gray-800/50 hover:bg-gray-800/30">
                     <td className="py-3 text-white font-medium">{t.name}</td>
                     <td className="py-3 text-gray-300 uppercase">{t.output_format}</td>
@@ -536,6 +541,9 @@ function ScheduledTab() {
   })
 
   const templateName = (id: number) => templates.find(t => t.id === id)?.name ?? `#${id}`
+  const { sorted: sortedScheduled, sort, toggle } = useSortable(scheduled, (s, k) =>
+    k === 'template' ? templateName(s.template_id) : (s as unknown as Record<string, unknown>)[k]
+  )
 
   if (isLoading) return <p className="text-gray-500 text-sm p-4">Yükleniyor...</p>
 
@@ -553,19 +561,19 @@ function ScheduledTab() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-800 text-left">
-                  <th className="pb-2 text-gray-500 font-medium">Ad</th>
-                  <th className="pb-2 text-gray-500 font-medium">Şablon</th>
-                  <th className="pb-2 text-gray-500 font-medium">Tür</th>
-                  <th className="pb-2 text-gray-500 font-medium">Aktif</th>
-                  <th className="pb-2 text-gray-500 font-medium">Son Çalışma</th>
-                  <th className="pb-2 text-gray-500 font-medium">Durum</th>
-                  <th className="pb-2 text-gray-500 font-medium">Sonraki</th>
+                <tr className="border-b border-gray-800 text-left text-gray-500">
+                  <SortHeader label="Ad" sortKey="name" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
+                  <SortHeader label="Şablon" sortKey="template" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
+                  <SortHeader label="Tür" sortKey="schedule_type" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
+                  <SortHeader label="Aktif" sortKey="is_active" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
+                  <SortHeader label="Son Çalışma" sortKey="last_run_at" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
+                  <SortHeader label="Durum" sortKey="last_run_status" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
+                  <SortHeader label="Sonraki" sortKey="next_run_at" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
                   <th className="pb-2 text-right text-gray-500 font-medium">İşlem</th>
                 </tr>
               </thead>
               <tbody>
-                {scheduled.map((sr: ScheduledReport) => (
+                {sortedScheduled.map((sr: ScheduledReport) => (
                   <tr key={sr.id} className="border-b border-gray-800/50 hover:bg-gray-800/30">
                     <td className="py-3 text-white">{sr.name}</td>
                     <td className="py-3 text-gray-400">{templateName(sr.template_id)}</td>
@@ -653,6 +661,9 @@ function ArchiveTab() {
   }
 
   const templateName = (id: number | null) => id ? (templates.find(t => t.id === id)?.name ?? `#${id}`) : '—'
+  const { sorted: sortedItems, sort, toggle } = useSortable(items, (e, k) =>
+    k === 'template' ? templateName(e.template_id) : (e as unknown as Record<string, unknown>)[k]
+  )
 
   return (
     <div className="space-y-4">
@@ -688,19 +699,19 @@ function ArchiveTab() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-800 text-left">
-                  <th className="pb-2 text-gray-500 font-medium">Tarih</th>
-                  <th className="pb-2 text-gray-500 font-medium">Şablon</th>
-                  <th className="pb-2 text-gray-500 font-medium">Tetikleyen</th>
-                  <th className="pb-2 text-gray-500 font-medium">Dönem</th>
-                  <th className="pb-2 text-gray-500 font-medium">Format</th>
-                  <th className="pb-2 text-gray-500 font-medium">Durum</th>
-                  <th className="pb-2 text-gray-500 font-medium">Boyut</th>
+                <tr className="border-b border-gray-800 text-left text-gray-500">
+                  <SortHeader label="Tarih" sortKey="created_at" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
+                  <SortHeader label="Şablon" sortKey="template" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
+                  <SortHeader label="Tetikleyen" sortKey="trigger" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
+                  <SortHeader label="Dönem" sortKey="start" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
+                  <SortHeader label="Format" sortKey="output_format" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
+                  <SortHeader label="Durum" sortKey="status" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
+                  <SortHeader label="Boyut" sortKey="file_size_bytes" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
                   <th className="pb-2 text-right text-gray-500 font-medium">İndir</th>
                 </tr>
               </thead>
               <tbody>
-                {items.map(e => (
+                {sortedItems.map(e => (
                   <tr key={e.id} className="border-b border-gray-800/50 hover:bg-gray-800/30">
                     <td className="py-3 text-gray-300 text-xs">{fmtDate(e.created_at)}</td>
                     <td className="py-3 text-gray-400 text-xs">{templateName(e.template_id)}</td>

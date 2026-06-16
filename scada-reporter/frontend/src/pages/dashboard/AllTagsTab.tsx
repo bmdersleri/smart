@@ -3,6 +3,8 @@ import { format, parseISO } from 'date-fns'
 import { useEffect, useMemo, useState } from 'react'
 import { addWatchlist, getDashboardDevices, getDashboardTags } from '../../api/client'
 import type { DashboardTag } from '../../api/client'
+import { useSortable } from '../../hooks/useSortable'
+import SortHeader from '../../components/SortHeader'
 
 function QualityDot({ ok }: { ok: boolean }) {
   return <span className={`inline-block w-2 h-2 rounded-full ${ok ? 'bg-green-400' : 'bg-red-400'}`} />
@@ -76,7 +78,8 @@ export default function AllTagsTab({ active }: { active: boolean }) {
     },
   })
 
-  const items = data?.items ?? []
+  const pageItems = data?.items ?? []
+  const { sorted: items, sort, toggle } = useSortable(pageItems)
   const total = data?.total ?? 0
   const totalPages = data?.total_pages ?? 1
 
@@ -143,11 +146,11 @@ export default function AllTagsTab({ active }: { active: boolean }) {
           <table className="w-full">
             <thead>
               <tr className="text-xs text-gray-500 uppercase tracking-wide">
-                <th className="px-4 py-2 text-left">Tag</th>
-                <th className="px-4 py-2 text-left">Cihaz</th>
-                <th className="px-4 py-2 text-right">Değer</th>
-                <th className="px-4 py-2 text-right">Saat</th>
-                <th className="px-4 py-2 text-center">Kalite</th>
+                <SortHeader label="Tag" sortKey="name" sort={sort} onToggle={toggle} />
+                <SortHeader label="Cihaz" sortKey="device" sort={sort} onToggle={toggle} />
+                <SortHeader label="Değer" sortKey="value" sort={sort} onToggle={toggle} align="right" />
+                <SortHeader label="Saat" sortKey="timestamp" sort={sort} onToggle={toggle} align="right" />
+                <SortHeader label="Kalite" sortKey="quality_ok" sort={sort} onToggle={toggle} align="center" />
                 <th className="px-4 py-2 text-center">Pin</th>
               </tr>
             </thead>

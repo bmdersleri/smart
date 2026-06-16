@@ -2,6 +2,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { createPlc, deletePlc, listPlcs, updatePlc } from '../api/client'
 import type { PlcEntry } from '../api/client'
+import { useSortable } from '../hooks/useSortable'
+import SortHeader from '../components/SortHeader'
 
 function ConnBadge({ connected }: { connected: boolean }) {
   return (
@@ -224,6 +226,7 @@ export default function PlcConfig() {
     queryFn: () => listPlcs().then((r) => r.data),
     refetchInterval: 15000,
   })
+  const { sorted: sortedPlcs, sort, toggle } = useSortable(plcs)
 
   const save = useMutation({
     mutationFn: ({ name, ip, rack, slot }: { name: string; ip: string; rack: number; slot: number }) =>
@@ -308,12 +311,12 @@ export default function PlcConfig() {
           <table className="w-full">
             <thead>
               <tr className="text-xs text-gray-500 uppercase tracking-wide">
-                <th className="px-4 py-2 text-left">PLC Adı</th>
-                <th className="px-4 py-2 text-left">IP Adresi</th>
-                <th className="px-4 py-2 text-left">Rack</th>
-                <th className="px-4 py-2 text-left">Slot</th>
-                <th className="px-4 py-2 text-left">Tag Sayısı</th>
-                <th className="px-4 py-2 text-left">Durum</th>
+                <SortHeader label="PLC Adı" sortKey="name" sort={sort} onToggle={toggle} />
+                <SortHeader label="IP Adresi" sortKey="ip" sort={sort} onToggle={toggle} />
+                <SortHeader label="Rack" sortKey="rack" sort={sort} onToggle={toggle} />
+                <SortHeader label="Slot" sortKey="slot" sort={sort} onToggle={toggle} />
+                <SortHeader label="Tag Sayısı" sortKey="tag_count" sort={sort} onToggle={toggle} />
+                <SortHeader label="Durum" sortKey="connected" sort={sort} onToggle={toggle} />
                 <th className="px-4 py-2 text-right"></th>
               </tr>
             </thead>
@@ -331,7 +334,7 @@ export default function PlcConfig() {
                   </td>
                 </tr>
               ) : (
-                plcs.map((plc) =>
+                sortedPlcs.map((plc) =>
                   editingName === plc.name ? (
                     <EditRow
                       key={plc.name}

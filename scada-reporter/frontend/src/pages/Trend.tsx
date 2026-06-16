@@ -2,6 +2,8 @@ import { useState, useRef, useEffect } from 'react'
 import { useSettings } from '../context/SettingsContext'
 import { useQuery } from '@tanstack/react-query'
 import { getTags, getTrendAgg, generateReport } from '../api/client'
+import { useSortable } from '../hooks/useSortable'
+import SortHeader from '../components/SortHeader'
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Brush, ResponsiveContainer,
 } from 'recharts'
@@ -47,6 +49,7 @@ export default function Trend() {
   const brushIndicesRef = useRef<[number, number] | null>(null)
   const chartDataRef = useRef<typeof chartData>([])
   const [activePayload, setActivePayload] = useState<Array<{ name: string; value: number; color: string; unit: string }>>([])
+  const { sorted: payloadRows, sort: pSort, toggle: pToggle } = useSortable(activePayload)
   const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number } | null>(null)
 
   const { data: tags = [] } = useQuery({
@@ -511,13 +514,13 @@ export default function Trend() {
           <table className="w-full text-xs">
             <thead>
               <tr className="text-gray-500">
-                <th className="text-left pb-1 font-normal">Tag</th>
-                <th className="text-right pb-1 font-normal pr-4">Değer</th>
-                <th className="text-left pb-1 font-normal">Birim</th>
+                <SortHeader label="Tag" sortKey="name" sort={pSort} onToggle={pToggle} className="pb-1 font-normal" />
+                <SortHeader label="Değer" sortKey="value" sort={pSort} onToggle={pToggle} align="right" className="pb-1 font-normal pr-4" />
+                <SortHeader label="Birim" sortKey="unit" sort={pSort} onToggle={pToggle} className="pb-1 font-normal" />
               </tr>
             </thead>
             <tbody>
-              {activePayload.map((row) => (
+              {payloadRows.map((row) => (
                 <tr key={row.name}>
                   <td className="py-0.5">
                     <span className="flex items-center gap-1.5">

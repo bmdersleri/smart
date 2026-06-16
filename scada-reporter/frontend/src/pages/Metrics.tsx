@@ -1,6 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
 import { getMetrics } from '../api/client'
 import type { MetricsSummary } from '../api/client'
+import { useSortable } from '../hooks/useSortable'
+import SortHeader from '../components/SortHeader'
 
 function StatCard({ label, value, sub, accent }: { label: string; value: string; sub?: string; accent?: string }) {
   return (
@@ -33,6 +35,10 @@ export default function Metrics() {
   const maxAvg = m?.plcs.reduce((acc, p) => Math.max(acc, p.avg_seconds ?? 0), 0) || 0
   const badAccent =
     m?.bad_ratio == null ? 'text-white' : m.bad_ratio > 0.05 ? 'text-red-400' : 'text-green-400'
+
+  // varsayılan: en yavaş PLC üstte; başlığa tıklayınca yeniden sıralanır
+  const byAvg = [...(m?.plcs ?? [])].sort((a, b) => (b.avg_seconds ?? 0) - (a.avg_seconds ?? 0))
+  const { sorted: plcRows, sort, toggle } = useSortable(byAvg)
 
   return (
     <div className="p-6 space-y-6">
@@ -67,17 +73,16 @@ export default function Metrics() {
             <table className="w-full">
               <thead>
                 <tr className="text-xs text-gray-500 uppercase tracking-wide">
-                  <th className="px-4 py-2 text-left">PLC Adı</th>
-                  <th className="px-4 py-2 text-left">IP</th>
-                  <th className="px-4 py-2 text-right">Tag Sayısı</th>
-                  <th className="px-4 py-2 text-right">Okuma Sayısı</th>
-                  <th className="px-4 py-2 text-right">Ort. Süre</th>
+                  <SortHeader label="PLC Adı" sortKey="name" sort={sort} onToggle={toggle} />
+                  <SortHeader label="IP" sortKey="plc" sort={sort} onToggle={toggle} />
+                  <SortHeader label="Tag Sayısı" sortKey="tag_count" sort={sort} onToggle={toggle} align="right" />
+                  <SortHeader label="Okuma Sayısı" sortKey="count" sort={sort} onToggle={toggle} align="right" />
+                  <SortHeader label="Ort. Süre" sortKey="avg_seconds" sort={sort} onToggle={toggle} align="right" />
                   <th className="px-4 py-2 text-left w-1/4">Gecikme</th>
                 </tr>
               </thead>
               <tbody>
-                {[...m.plcs]
-                  .sort((a, b) => (b.avg_seconds ?? 0) - (a.avg_seconds ?? 0))
+                {plcRows
                   .map((p) => {
                     const pct = maxAvg > 0 ? ((p.avg_seconds ?? 0) / maxAvg) * 100 : 0
                     const slow = (p.avg_seconds ?? 0) > 0.5
