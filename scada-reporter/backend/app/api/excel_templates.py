@@ -12,7 +12,7 @@ from app.api.auth import get_current_user
 from app.core.database import get_db
 from app.models.excel_template import ExcelTemplate, ExcelTemplateColumn
 from app.services.template_fill.fill_engine import fill_template
-from app.services.template_fill.template_inspector import inspect_template
+from app.services.template_fill.template_inspector import detect_drift, inspect_template
 
 router = APIRouter(prefix="/excel-templates", tags=["excel-templates"])
 
@@ -160,10 +160,27 @@ async def generate(
     db: AsyncSession = Depends(get_db),
     user=Depends(get_current_user),
 ):
-    try:
-        data = await fill_template(db, template_id, year, month)
-    except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e)) from e
+    result = await db.execute(
+        select(ExcelTemplate)
+        .where(ExcelTemplate.id == template_id)
+        .options(selectinload(ExcelTemplate.columns))
+    )
+    tpl = result.scalar_one_or_none()
+    if tpl is None:
+        raise HTTPException(status_code=404, detail="Şablon bulunamadı")
+
+    expected = {c.col_letter: c.source_code for c in tpl.columns if c.enabled and c.source_code}
+    drifted = detect_drift(tpl.file_blob, tpl.sheet_name, tpl.header_row, expected)
+    if drifted:
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                f"Şablon değişmiş (drift): sütunlar {', '.join(drifted)}. "
+                "Eşlemeyi yeniden onaylayın."
+            ),
+        )
+
+    data = await fill_template(db, template_id, year, month)
     fname = f"rapor_{year}_{month:02d}.xlsx"
     return Response(
         content=data,

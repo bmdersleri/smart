@@ -100,3 +100,22 @@ async def inspect_template(db: AsyncSession, file_bytes: bytes) -> dict:
         "date_mode": "write",
         "columns": columns,
     }
+
+
+def detect_drift(
+    file_bytes: bytes, sheet_name: str, header_row: int, expected: dict[str, str]
+) -> list[str]:
+    """expected: {col_letter: source_code}. Şablon blob'unda o sütun/satırdaki
+    kod beklenenden farklıysa o sütun harflerini döndürür (drift)."""
+    from openpyxl.utils import column_index_from_string
+
+    wb = load_workbook(BytesIO(file_bytes), data_only=False)
+    ws = wb[sheet_name] if sheet_name in wb.sheetnames else wb.worksheets[0]
+    drifted = []
+    for col_letter, code in expected.items():
+        if not code:
+            continue
+        cell = ws.cell(row=header_row, column=column_index_from_string(col_letter)).value
+        if str(cell or "").strip() != code:
+            drifted.append(col_letter)
+    return drifted
