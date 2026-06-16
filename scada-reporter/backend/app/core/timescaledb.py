@@ -96,3 +96,35 @@ async def init_continuous_aggregates(conn: AsyncConnection) -> None:
             logger.info("Continuous aggregate ready: %s (%s)", view, bucket)
         except Exception as e:
             logger.info("Continuous aggregate skipped/exists: %s - %s", view, e)
+
+
+async def init_daily_rollup(conn: AsyncConnection) -> None:
+    """Uzun saklamalı günlük toplama (rapor şablonları için).
+
+    avg/min/max/sum/first/last/count saklar. Retention YOK — yıllarca tutulur.
+    first/last bir Timescale sürümünde reddedilirse hata loglanıp atlanır;
+    o durumda last/delta yalnız SQLite/dev'de hesaplanabilir.
+    """
+    try:
+        await conn.execute(
+            text(
+                "CREATE MATERIALIZED VIEW IF NOT EXISTS tag_readings_1d "
+                "WITH (timescaledb.continuous) AS "
+                "SELECT tag_id, time_bucket(INTERVAL '1 day', timestamp) AS bucket, "
+                "avg(value) AS avg, min(value) AS min, max(value) AS max, "
+                "sum(value) AS sum, count(*) AS n, "
+                "first(value, timestamp) AS first_v, last(value, timestamp) AS last_v "
+                "FROM tag_readings GROUP BY tag_id, bucket WITH NO DATA"
+            )
+        )
+        await conn.execute(
+            text(
+                "SELECT add_continuous_aggregate_policy('tag_readings_1d', "
+                "start_offset => INTERVAL '7 days', "
+                "end_offset => INTERVAL '1 hour', "
+                "schedule_interval => INTERVAL '1 hour', if_not_exists => TRUE)"
+            )
+        )
+        logger.info("Daily rollup ready: tag_readings_1d (no retention)")
+    except Exception as e:
+        logger.info("Daily rollup skipped/exists: %s", e)
