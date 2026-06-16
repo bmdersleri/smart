@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider, useAuth } from './context/AuthContext'
+import { SettingsProvider } from './context/SettingsContext'
 import Layout from './components/Layout'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
@@ -9,6 +10,7 @@ import Trend from './pages/Trend'
 import Reports from './pages/Reports'
 import AdvancedReports from './pages/AdvancedReports'
 import PlcConfig from './pages/PlcConfig'
+import Settings from './pages/Settings'
 import './index.css'
 
 const qc = new QueryClient({ defaultOptions: { queries: { staleTime: 10000, retry: 1 } } })
@@ -23,6 +25,7 @@ export default function App() {
   return (
     <QueryClientProvider client={qc}>
       <AuthProvider>
+        <SettingsProvider>
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<Login />} />
@@ -33,9 +36,11 @@ export default function App() {
               <Route path="reports" element={<Reports />} />
               <Route path="advanced-reports" element={<AdvancedReports />} />
               <Route path="plc" element={<PlcConfig />} />
+              <Route path="settings" element={<Settings />} />
             </Route>
           </Routes>
         </BrowserRouter>
+        </SettingsProvider>
       </AuthProvider>
     </QueryClientProvider>
   )

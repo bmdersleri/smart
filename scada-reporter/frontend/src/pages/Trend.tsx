@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { useSettings } from '../context/SettingsContext'
 import { useQuery } from '@tanstack/react-query'
 import { getTags, getTrend, generateReport } from '../api/client'
 import {
@@ -47,6 +48,7 @@ function Toast({ message, onClose }: { message: string; onClose: () => void }) {
 }
 
 export default function Trend() {
+  const { trendChartHeight } = useSettings()
   const [selected, setSelected] = useState<number[]>([])
   const [hours, setHours] = useState(24)
   const [tagSearch, setTagSearch] = useState('')
@@ -216,15 +218,22 @@ export default function Trend() {
     })
   }
 
-  const handleTooltipContent = (props: { active?: boolean; payload?: Array<{ name: string; value: number; color: string }> }) => {
-    if (props.active && props.payload && props.payload.length) {
-      const mapped = props.payload.map((p) => {
+  const handleMouseMove = (state: Record<string, unknown>) => {
+    const isActive = Boolean(state.isTooltipActive)
+    const payload = state.activePayload as Array<{ name: string; value: number; color: string }> | undefined
+    if (isActive && payload && payload.length) {
+      const mapped = payload.map((p) => {
         const s = series.find((x) => x.name === p.name)
         return { name: p.name, value: Number(p.value), color: p.color, unit: s?.unit ?? '' }
       })
       setActivePayload(mapped)
+    } else {
+      setActivePayload([])
     }
-    return null
+  }
+
+  const handleMouseLeave = () => {
+    setActivePayload([])
   }
 
   return (
@@ -397,7 +406,7 @@ export default function Trend() {
         <div
           ref={chartContainerRef}
           className="flex-1 bg-gray-900 border border-gray-800 rounded-xl p-4 flex flex-col"
-          style={{ userSelect: 'none', minHeight: 'calc(100vh - 180px)' }}
+          style={{ userSelect: 'none', minHeight: trendChartHeight }}
         >
           {selected.length === 0 ? (
             <div className="flex-1 flex items-center justify-center text-gray-500 text-sm">
@@ -414,7 +423,12 @@ export default function Trend() {
           ) : (
             <div className="flex-1 min-h-0">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData} margin={{ top: 4, right: 16, left: axisLeftMargin, bottom: 4 }}>
+              <LineChart
+                data={chartData}
+                margin={{ top: 4, right: 16, left: axisLeftMargin, bottom: 4 }}
+                onMouseMove={handleMouseMove}
+                onMouseLeave={handleMouseLeave}
+              >
                 <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
                 <XAxis dataKey="t" tick={{ fontSize: 11, fill: '#6b7280' }} interval="preserveStartEnd" />
                 {series.map((s, i) => {
@@ -441,7 +455,7 @@ export default function Trend() {
                 })}
                 <Tooltip
                   cursor={<ChartCursor />}
-                  content={handleTooltipContent as never}
+                  contentStyle={{ display: 'none' }}
                 />
                 <Legend wrapperStyle={{ fontSize: 12, color: '#9ca3af' }} />
                 <Brush

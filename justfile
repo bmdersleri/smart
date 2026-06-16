@@ -60,6 +60,10 @@ migrate-history:
 seed-tags:
     cd {{be}} && {{venv}}\Scripts\python app/seed_tags.py
 
+# Varsayılan kullanıcıları ekle (admin/admin123, operator/operator123)
+seed-users:
+    cd {{be}} && .venv/Scripts/python app/seed_users.py
+
 # WinCC export'larından uzun-süre tag kataloğunu yükle (xlsx/ klasöründen)
 seed-catalog *args:
     cd {{be}} && .venv/Scripts/python -m app.seed_catalog {{args}}
