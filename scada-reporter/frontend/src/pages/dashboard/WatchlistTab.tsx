@@ -7,6 +7,19 @@ function QualityDot({ ok }: { ok: boolean }) {
   return <span className={`inline-block w-2 h-2 rounded-full ${ok ? 'bg-green-400' : 'bg-red-400'}`} />
 }
 
+function FlipCell({ value, className }: { value: string; className?: string }) {
+  return (
+    <span className="inline-block overflow-hidden align-bottom" style={{ height: '1.25rem', lineHeight: '1.25rem' }}>
+      <span
+        key={value}
+        className={`block animate-[flipIn_0.35s_cubic-bezier(0.22,1,0.36,1)] ${className ?? ''}`}
+      >
+        {value}
+      </span>
+    </span>
+  )
+}
+
 function formatValue(item: WatchlistItem): string {
   if (item.value === null) return '—'
   return `${item.value.toFixed(2)}${item.unit ? ` ${item.unit}` : ''}`
@@ -60,8 +73,12 @@ export default function WatchlistTab({ active }: { active: boolean }) {
             <tr key={item.tag_id} className="border-t border-gray-800 hover:bg-gray-800/40 transition-colors">
               <td className="px-4 py-3 text-sm text-gray-400">{item.device || '—'}</td>
               <td className="px-4 py-3 text-sm text-white font-medium">{item.name}</td>
-              <td className="px-4 py-3 text-sm text-right font-mono text-cyan-300">{formatValue(item)}</td>
-              <td className="px-4 py-3 text-sm text-gray-400 text-right">{formatTs(item.timestamp)}</td>
+              <td className="px-4 py-3 text-sm text-right font-mono">
+                <FlipCell value={formatValue(item)} className="text-cyan-300" />
+              </td>
+              <td className="px-4 py-3 text-sm text-right">
+                <FlipCell value={formatTs(item.timestamp)} className="text-gray-400" />
+              </td>
               <td className="px-4 py-3 text-center"><QualityDot ok={item.quality_ok} /></td>
               <td className="px-4 py-3 text-center">
                 <button
