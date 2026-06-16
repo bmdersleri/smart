@@ -9,3 +9,28 @@
   0%   { transform: translateX(-100%); }
   100% { transform: translateX(300%); }
 }
+
+/* PLC dashboard animations */
+@keyframes packet {
+  0%   { left: -8px; opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { left: calc(100% + 4px); opacity: 0; }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 0.2; }
+  50%       { opacity: 1; }
+}
+
+@keyframes flowArrow {
+  0%   { left: -10%; width: 30%; opacity: 0; }
+  10%  { opacity: 1; }
+  80%  { opacity: 1; }
+  100% { left: 100%; width: 30%; opacity: 0; }
+}
+
+@keyframes cardSweep {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
