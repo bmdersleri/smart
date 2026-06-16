@@ -87,6 +87,87 @@ async def test_write_readings_empty():
     assert await poller.write_readings([], datetime.now(UTC)) == 0
 
 
+def test_should_store_first_reading_always_stores():
+    assert poller.should_store(1, 5.0, 192, now=0.0, last_stored={}, deadband=1.0, heartbeat=300)
+
+
+def test_should_store_no_deadband_always_stores():
+    ls = {1: (5.0, 192, 0.0)}
+    assert poller.should_store(1, 5.0, 192, now=1.0, last_stored=ls, deadband=None, heartbeat=300)
+
+
+def test_should_store_within_deadband_skips():
+    ls = {1: (5.0, 192, 0.0)}
+    assert not poller.should_store(
+        1, 5.4, 192, now=1.0, last_stored=ls, deadband=1.0, heartbeat=300
+    )
+
+
+def test_should_store_beyond_deadband_stores():
+    ls = {1: (5.0, 192, 0.0)}
+    assert poller.should_store(1, 6.5, 192, now=1.0, last_stored=ls, deadband=1.0, heartbeat=300)
+
+
+def test_should_store_quality_change_stores():
+    ls = {1: (5.0, 192, 0.0)}
+    assert poller.should_store(1, 5.0, 0, now=1.0, last_stored=ls, deadband=1.0, heartbeat=300)
+
+
+def test_should_store_heartbeat_elapsed_stores():
+    ls = {1: (5.0, 192, 0.0)}
+    assert poller.should_store(1, 5.0, 192, now=301.0, last_stored=ls, deadband=1.0, heartbeat=300)
+
+
+@pytest.mark.asyncio
+async def test_run_once_deadband_skips_unchanged(db_engine, monkeypatch):
+    sm = async_sessionmaker(db_engine, expire_on_commit=False)
+    async with sm() as s:
+        t = Tag(
+            node_id="ns=2;s=DBN1",
+            name="DBN1",
+            long_term=True,
+            plc_ip="10.0.0.8",
+            s7_address="DB10,DD0",
+            data_type="REAL",
+            sample_interval=1,
+            deadband=1.0,
+        )
+        s.add(t)
+        await s.commit()
+        await s.refresh(t)
+        tid = t.id
+
+    async def fake_batch(ip, rack, slot, specs, name=""):
+        return [(42.0, 192) for _ in specs]
+
+    monkeypatch.setattr(poller.plc_manager, "read_plc_batch", fake_batch)
+
+    last_read: dict[int, float] = {}
+    last_stored: dict = {}
+    try:
+        w1, _ = await poller.run_once(
+            last_read, now=1.0, sessionmaker=sm, timeout=5, last_stored=last_stored
+        )
+        w2, _ = await poller.run_once(
+            last_read, now=2.0, sessionmaker=sm, timeout=5, last_stored=last_stored
+        )
+        assert w1 == 1  # ilk okuma yazılır
+        assert w2 == 0  # deadband içinde -> atlanır
+
+        async with sm() as s:
+            cnt = await s.scalar(
+                select(func.count()).select_from(TagReading).where(TagReading.tag_id == tid)
+            )
+        assert cnt == 1
+    finally:
+        from sqlalchemy import delete
+
+        async with sm() as s:
+            await s.execute(delete(TagReading).where(TagReading.tag_id == tid))
+            await s.execute(delete(Tag).where(Tag.id == tid))
+            await s.commit()
+
+
 @pytest.mark.asyncio
 async def test_run_once_writes_db_and_cache(db_engine, monkeypatch):
     from app.collector.cache import latest_cache

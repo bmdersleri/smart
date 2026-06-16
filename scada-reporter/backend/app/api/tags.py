@@ -29,6 +29,7 @@ class TagCreate(BaseModel):
     data_type: str = ""
     sample_interval: int = 5
     long_term: bool = False
+    deadband: float | None = None
 
 
 class TagUpdate(BaseModel):
@@ -39,6 +40,7 @@ class TagUpdate(BaseModel):
     description: str | None = None
     min_alarm: float | None = None
     max_alarm: float | None = None
+    deadband: float | None = None
 
 
 class TagResponse(BaseModel):
@@ -59,6 +61,7 @@ class TagResponse(BaseModel):
     is_active: bool
     min_alarm: float | None
     max_alarm: float | None
+    deadband: float | None
     # tag ekleme anında doldurulan anlık okuma (DB kolonu değil)
     current_value: float | None = None
     quality: int | None = None

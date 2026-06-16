@@ -3,6 +3,8 @@ import logging
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncConnection
 
+from app.core.config import settings
+
 logger = logging.getLogger(__name__)
 
 
@@ -43,3 +45,14 @@ async def init_timescaledb(conn: AsyncConnection):
             logger.info("Compression policy added: %s", table)
         except Exception as e:
             logger.info("Compression policy exists: %s - %s", table, e)
+
+        try:
+            await conn.execute(
+                text(
+                    "SELECT add_retention_policy(:table,"
+                    f" INTERVAL '{settings.RAW_RETENTION_DAYS} days', if_not_exists => TRUE)"
+                ).bindparams(table=table)
+            )
+            logger.info("Retention policy added: %s (%d gün)", table, settings.RAW_RETENTION_DAYS)
+        except Exception as e:
+            logger.info("Retention policy exists: %s - %s", table, e)

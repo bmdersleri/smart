@@ -28,7 +28,7 @@ export const getMe = () => api.get<{ id: number; username: string; role: string;
 // Tags
 export interface Tag {
   id: number; node_id: string; name: string; unit: string; device: string; channel: string
-  is_active: boolean; min_alarm: number | null; max_alarm: number | null
+  is_active: boolean; min_alarm: number | null; max_alarm: number | null; deadband: number | null
   plc_name: string; plc_ip: string | null; s7_address: string | null; data_type: string
   sample_interval: number; long_term: boolean; daily_tracking: boolean
   // tag ekleme yanıtında dolu gelir
@@ -39,7 +39,7 @@ export interface TagCreate {
   plc_name?: string; plc_ip?: string | null; plc_rack?: number; plc_slot?: number
   s7_address?: string | null; data_type?: string; sample_interval?: number; long_term?: boolean
 }
-export interface TagUpdate { name?: string; unit?: string; device?: string; channel?: string; description?: string; min_alarm?: number | null; max_alarm?: number | null }
+export interface TagUpdate { name?: string; unit?: string; device?: string; channel?: string; description?: string; min_alarm?: number | null; max_alarm?: number | null; deadband?: number | null }
 export const getTags = () => api.get<Tag[]>('/tags/')
 export const createTag = (data: TagCreate) => api.post<Tag>('/tags/', data)
 export const updateTag = (id: number, data: TagUpdate) => api.patch<Tag>(`/tags/${id}`, data)
@@ -97,9 +97,9 @@ export const createPlc = (data: PlcCreate) => api.post<PlcEntry>('/plc/', data)
 export const updatePlc = (name: string, data: PlcUpdate) => api.patch<{ updated: boolean }>(`/plc/${encodeURIComponent(name)}`, data)
 export const deletePlc = (name: string) => api.delete(`/plc/${encodeURIComponent(name)}`)
 
-export const getTrend = (tagIds: number[], hours: number) =>
+export const getTrend = (tagIds: number[], hours: number, maxPoints = 2000) =>
   api.get<{ tag_id: number; name: string; unit: string; data: { t: string; v: number }[] }[]>(
-    `/dashboard/trend?${tagIds.map((id) => `tag_ids=${id}`).join('&')}&hours=${hours}`
+    `/dashboard/trend?${tagIds.map((id) => `tag_ids=${id}`).join('&')}&hours=${hours}&max_points=${maxPoints}`
   )
 
 // Reports

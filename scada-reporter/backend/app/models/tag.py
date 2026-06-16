@@ -41,6 +41,9 @@ class Tag(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     min_alarm: Mapped[float | None] = mapped_column(Float, nullable=True)
     max_alarm: Mapped[float | None] = mapped_column(Float, nullable=True)
+    # Report-by-exception: değer bu kadar (mutlak) değişmedikçe DB'ye yazma.
+    # None/0 -> her tick yaz (eski davranış). Heartbeat ile periyodik zorla-yaz.
+    deadband: Mapped[float | None] = mapped_column(Float, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     readings: Mapped[list["TagReading"]] = relationship(back_populates="tag")

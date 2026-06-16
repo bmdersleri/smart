@@ -45,6 +45,36 @@ async def read_plc_group(
     ]
 
 
+def should_store(
+    tag_id: int,
+    value: float | None,
+    quality: int,
+    *,
+    now: float,
+    last_stored: dict[int, tuple[float | None, int, float]],
+    deadband: float | None,
+    heartbeat: float,
+) -> bool:
+    """Report-by-exception: deadband içinde kalan değişmemiş değeri DB'ye yazma.
+
+    İlk okuma, kalite değişimi, heartbeat aşımı veya deadband'ı aşan hareket
+    -> yaz. deadband None/0 ise her zaman yaz (eski davranış).
+    """
+    prev = last_stored.get(tag_id)
+    if prev is None:
+        return True
+    prev_value, prev_quality, prev_ts = prev
+    if quality != prev_quality:
+        return True
+    if now - prev_ts >= heartbeat:
+        return True
+    if not deadband:
+        return True
+    if value is None or prev_value is None:
+        return True
+    return abs(value - prev_value) >= deadband
+
+
 async def write_readings(
     rows: list[tuple[int, float | None, int]],
     ts: datetime,
@@ -73,8 +103,13 @@ async def run_once(
     now: float,
     sessionmaker=AsyncSessionLocal,
     timeout: float | None = None,
+    last_stored: dict[int, tuple[float | None, int, float]] | None = None,
 ) -> tuple[int, int]:
-    """Bir tick: due tag'leri oku, cache + DB'ye yaz. (yazılan_satır, min_interval)."""
+    """Bir tick: due tag'leri oku, cache + DB'ye yaz. (yazılan_satır, min_interval).
+
+    last_stored verilirse deadband (report-by-exception) uygulanır: değişmeyen
+    değerler DB'ye yazılmaz (cache yine güncellenir). None ise tüm satırlar yazılır.
+    """
     timeout = settings.S7_PLC_READ_TIMEOUT if timeout is None else timeout
 
     async with sessionmaker() as db:
@@ -82,6 +117,7 @@ async def run_once(
         tags = result.scalars().all()
 
     min_interval = settings.S7_POLL_INTERVAL
+    deadband_by_tag: dict[int, float | None] = {}
     groups: dict[tuple[str, int, int], list[tuple[int, ReadSpec]]] = defaultdict(list)
     for t in tags:
         if not t.s7_address or not t.plc_ip:
@@ -95,6 +131,7 @@ async def run_once(
         except ValueError as e:
             logger.warning("Tag %s adres hatasi: %s", t.id, e)
             continue
+        deadband_by_tag[t.id] = t.deadband
         groups[(t.plc_ip, t.plc_rack, t.plc_slot)].append((t.id, spec))
 
     rows: list[tuple[int, float | None, int]] = []
@@ -112,12 +149,34 @@ async def run_once(
     for tag_id, _, _ in rows:
         last_read[tag_id] = now
 
-    if rows:
-        ts = datetime.now(UTC)
-        latest_cache.update_many(rows, ts)
-        await write_readings(rows, ts, sessionmaker=sessionmaker)
+    if not rows:
+        return 0, min_interval
 
-    return len(rows), min_interval
+    ts = datetime.now(UTC)
+    latest_cache.update_many(rows, ts)  # cache her zaman taze değeri taşır
+
+    if last_stored is None:
+        store_rows = rows
+    else:
+        heartbeat = settings.S7_STORE_HEARTBEAT_SECONDS
+        store_rows = [
+            (tag_id, value, quality)
+            for tag_id, value, quality in rows
+            if should_store(
+                tag_id,
+                value,
+                quality,
+                now=now,
+                last_stored=last_stored,
+                deadband=deadband_by_tag.get(tag_id),
+                heartbeat=heartbeat,
+            )
+        ]
+        for tag_id, value, quality in store_rows:
+            last_stored[tag_id] = (value, quality, now)
+
+    written = await write_readings(store_rows, ts, sessionmaker=sessionmaker)
+    return written, min_interval
 
 
 async def poll_loop() -> None:
@@ -127,11 +186,14 @@ async def poll_loop() -> None:
         settings.S7_POLL_INTERVAL,
     )
     last_read: dict[int, float] = {}
+    last_stored: dict[int, tuple[float | None, int, float]] = {}
     while True:
         tick_start = time.monotonic()
         min_interval = settings.S7_POLL_INTERVAL
         try:
-            _, min_interval = await run_once(last_read, now=time.monotonic())
+            _, min_interval = await run_once(
+                last_read, now=time.monotonic(), last_stored=last_stored
+            )
         except Exception as e:
             logger.error("Poll hatasi: %s", e)
         tick = max(1, min_interval)
