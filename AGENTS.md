@@ -1,23 +1,23 @@
-# SCADA Reporter — Agent Kullanım Rehberi
+# SCADA Reporter — Agent Usage Guide
 
-Bu proje **agent-native** olarak CLI-Anything yaklaşımı ile yapılandırılmıştır.
-Detaylı rehber: `scada-reporter/AGENTS.md`
+This project is structured **agent-native** following the CLI-Anything approach.
+Detailed guide: `scada-reporter/AGENTS.md`
 
-## Hızlı Bağlantılar
+## Quick Links
 
-| İhtiyaç | Adres |
-|---------|-------|
-| Agent CLI kaynağı | `scada-reporter/agent-harness/` |
+| Need | Location |
+|------|----------|
+| Agent CLI source | `scada-reporter/agent-harness/` |
 | Claude Code plugin | `scada-reporter/.claude-plugin/` |
-| Slash komutları | `scada-reporter/commands/` |
-| Rehberler | `scada-reporter/guides/` |
+| Slash commands | `scada-reporter/commands/` |
+| Guides | `scada-reporter/guides/` |
 | SKILL.md | `scada-reporter/agent-harness/skills/SKILL.md` |
 
-## Kurulum (30 saniye)
+## Setup (30 seconds)
 
 ```bash
 cd scada-reporter
 uv pip install -e agent-harness
-scada auth login admin --password <sifre>
+scada auth login admin --password <password>
 scada tags list
 ```

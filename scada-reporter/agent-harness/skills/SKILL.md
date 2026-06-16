@@ -1,6 +1,6 @@
 ---
 name: scada-reporter-cli
-description: SCADA Reporter için agent-native CLI — PLC tag yönetimi, canlı değerler, trend analizi ve rapor oluşturma
+description: Agent-native CLI for SCADA Reporter — PLC tag management, live values, trend analysis and report generation
 author: SCADA Reporter Team
 commands:
   # Auth
@@ -43,35 +43,35 @@ alarm_state_values:
 
 # SCADA Reporter Agent CLI
 
-Su/Atıksu tesisi SCADA veri toplama ve raporlama sistemine coding agent erişimi.
+Coding agent access to the water/wastewater plant SCADA data acquisition and reporting system.
 
-## Kurulum
+## Installation
 
 ```bash
 uv pip install -e scada-reporter/agent-harness
 ```
 
-## Agent Kullanımı
+## Agent Usage
 
-Tüm komutlar `--json` flag'i ile makine-okunabilir çıktı üretir.
-Token `~/.config/scada-reporter/config.json` dosyasında saklanır.
+All commands produce machine-readable output with the `--json` flag.
+The token is stored in `~/.config/scada-reporter/config.json`.
 
-### Keşif
-
-```bash
-scada tags list --json                    # Tüm tag'leri listele
-scada dashboard current-values --json     # Canlı değerler
-scada dashboard overview --json           # Sistem durumu
-```
-
-### Analiz
+### Discovery
 
 ```bash
-scada dashboard trend 1 2 --hours 48 --json  # 48 saatlik trend
-scada tags readings 1 --limit 100 --json     # Son 100 okuma
+scada tags list --json                    # List all tags
+scada dashboard current-values --json     # Live values
+scada dashboard overview --json           # System state
 ```
 
-### Rapor
+### Analysis
+
+```bash
+scada dashboard trend 1 2 --hours 48 --json  # 48-hour trend
+scada tags readings 1 --limit 100 --json     # Last 100 readings
+```
+
+### Reports
 
 ```bash
 scada reports generate --tag-ids 1,2 --start 2024-01-01T00:00:00 --end 2024-01-02T00:00:00 --format json

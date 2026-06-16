@@ -1,44 +1,44 @@
 # Agent Workflow — SCADA Reporter
 
-Bu kılavuz coding agent'ların SCADA Reporter ile nasıl çalışacağını tanımlar.
+This guide describes how coding agents work with SCADA Reporter.
 
-## Keşif Akışı
+## Discovery Flow
 
-1. `scada health` — API bağlantısını kontrol et
-2. `scada auth login` — Kimlik doğrulama
-3. `scada tags list --json` — Mevcut tag'leri keşfet
-4. `scada dashboard overview --json` — Sistem durumunu öğren
+1. `scada health` — Check API connectivity
+2. `scada auth login` — Authenticate
+3. `scada tags list --json` — Discover available tags
+4. `scada dashboard overview --json` — Learn the system state
 
-## Operasyonel Akışlar
+## Operational Flows
 
-### Anlık Durum Sorgulama
+### Current State Query
 
 ```bash
 scada dashboard current-values --json | jq '.[] | {device, name, value, unit}'
 ```
 
-### Trend Analizi
+### Trend Analysis
 
 ```bash
 scada dashboard trend 1 2 --hours 24 --json | jq '.[] | {name, avg: (.data | map(.v) | add / length)}'
 ```
 
-### Rapor Üretimi
+### Report Generation
 
 ```bash
-scada reports generate --tag-ids 1,2,3 --start "<dun>" --end "<bugun>" --format json
+scada reports generate --tag-ids 1,2,3 --start "<yesterday>" --end "<today>" --format json
 ```
 
-## Hata Yönetimi
+## Error Handling
 
-- `--json` flag'i her zaman makine-okunabilir çıktı verir
-- Hatalar `{"error": true, "detail": "..."}` formatında döner
-- `SCADA_TOKEN` env var ile oturum taşınabilir
+- The `--json` flag always returns machine-readable output
+- Errors are returned in `{"error": true, "detail": "..."}` format
+- Sessions can be carried via the `SCADA_TOKEN` env var
 
-## İlk Kullanım Senaryosu
+## First-Use Scenario
 
-1. `scada auth login operator` — Giriş
-2. `scada health` — Bağlantı kontrolü
-3. `scada tags list --json` — Tag'leri gör
-4. `scada dashboard current-values` — Canlı değerleri tablo olarak gör
-5. `scada tags readings 1 --limit 5` — Son 5 okumayı kontrol et
+1. `scada auth login operator` — Log in
+2. `scada health` — Connectivity check
+3. `scada tags list --json` — See tags
+4. `scada dashboard current-values` — See live values as a table
+5. `scada tags readings 1 --limit 5` — Check the last 5 readings

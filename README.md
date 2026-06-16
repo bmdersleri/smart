@@ -1,109 +1,109 @@
 # SCADA Reporter
 
-Su ve atıksu tesisleri için **Snap7 tabanlı SCADA veri toplama ve raporlama sistemi**.
+**Snap7-based SCADA data acquisition and reporting system** for water and wastewater plants.
 
-Siemens S7-1500 PLC'den doğrudan veri toplar, zaman serisi veritabanına kaydeder, React tabanlı web arayüzü ve REST API üzerinden kullanıcılara sunar. Harici ücretli yazılım gerektirmez.
+Collects data directly from Siemens S7-1500 PLCs, stores it in a time-series database, and serves it to users through a React web interface and a REST API. No paid third-party software required.
 
 ---
 
-## Özellikler
+## Features
 
-### Veri Toplama
-- Siemens S7-1500 PLC'ye **Snap7** ile doğrudan bağlantı (TCP 102, ücretsiz)
-- Çok-PLC desteği: 3000+ tag kataloğu, her PLC için ayrı IP/rack/slot yapılandırması
-- Aktif tag'lerin periyodik toplu okunması (varsayılan: 5 s)
-- PLC erişilemediğinde **simülasyon modunda** çalışmaya devam
-- **Dahili OPC UA server** (`opc.tcp://localhost:4840`) son değerleri yayınlar
+### Data Acquisition
+- Direct connection to Siemens S7-1500 PLCs via **Snap7** (TCP 102, free)
+- Multi-PLC support: 3000+ tag catalog, separate IP/rack/slot configuration per PLC
+- Periodic batch reads of active tags (default: 5 s)
+- Keeps running in **simulation mode** when the PLC is unreachable
+- **Built-in OPC UA server** (`opc.tcp://localhost:4840`) publishes latest values
 
-### Web Arayüzü (Frontend — React)
+### Web Interface (Frontend — React)
 
-| Sayfa | Açıklama |
-|-------|----------|
-| **Dashboard** | 3 sekme: Özet (sayaçlar), İzleme Listesi (kullanıcı başına), Tüm Tag'ler (arama/filtre/sayfalama) |
-| **Trend Grafik** | Çok-tag, çok-Y-ekseni; zoom/pan (Brush + mouse wheel); sarı kesik çizgi imleç; hover veri tablosu; PNG ve Excel dışa aktarım; preset kaydet/yükle |
-| **Raporlar** | Tag/zaman seçimi, saatlik/günlük agregasyon, Excel+JSON çıktısı; filtre presetleri |
-| **Gelişmiş Raporlar** | Rapor şablonları + zamanlayıcı + arşiv (şablon bazlı, tekrarlayan, indir) |
-| **Tags** | Tag listesi, birim ve açıklama düzenleme, aktif/pasif yönetimi |
-| **PLC Yapılandırma** | PLC ekle/sil, IP/rack/slot/bağlantı durumu yönetimi |
-| **Ayarlar** | Kullanıcı tercihleri (ör. trend grafik yüksekliği 300–2000 px) |
+| Page | Description |
+|------|-------------|
+| **Dashboard** | 3 tabs: Overview (counters), Watchlist (per user), All Tags (search/filter/pagination) |
+| **Trend Chart** | Multi-tag, multi-Y-axis; zoom/pan (Brush + mouse wheel); yellow dashed-line cursor; hover data table; PNG and Excel export; preset save/load |
+| **Reports** | Tag/time selection, hourly/daily aggregation, Excel+JSON output; filter presets |
+| **Advanced Reports** | Report templates + scheduler + archive (template-based, recurring, download) |
+| **Tags** | Tag listing, unit and description editing, active/inactive management |
+| **PLC Config** | Add/remove PLCs, manage IP/rack/slot/connection status |
+| **Settings** | User preferences (e.g. trend chart height, 300–2000 px) |
 
 ### Backend API (`/api/*`)
 
-| Grup | Prefix | Açıklama |
-|------|--------|----------|
-| Auth | `/api/auth` | Giriş (OAuth2 form-data), token |
-| Tags | `/api/tags` | Tag CRUD, okuma geçmişi |
-| Dashboard | `/api/dashboard` | Özet, anlık değerler, trend sorgusu |
-| Reports | `/api/reports` | Rapor üretimi ve geçmişi |
-| Advanced Reports | `/api/advanced-reports` | Şablon CRUD, zamanlayıcı, arşiv, indirme |
-| PLC | `/api/plc` | PLC yapılandırma CRUD |
-| Query | `/api/query` | Read-only SQL sorgusu (SELECT / WITH / EXPLAIN) |
-| Explore | `/api/explore` | Şema ve tag kataloğu keşfi |
+| Group | Prefix | Description |
+|-------|--------|-------------|
+| Auth | `/api/auth` | Login (OAuth2 form-data), token |
+| Tags | `/api/tags` | Tag CRUD, reading history |
+| Dashboard | `/api/dashboard` | Overview, current values, trend query |
+| Reports | `/api/reports` | Report generation and history |
+| Advanced Reports | `/api/advanced-reports` | Template CRUD, scheduler, archive, download |
+| PLC | `/api/plc` | PLC configuration CRUD |
+| Query | `/api/query` | Read-only SQL query (SELECT / WITH / EXPLAIN) |
+| Explore | `/api/explore` | Schema and tag catalog discovery |
 
-### Güvenlik
-- JWT tabanlı kimlik doğrulama (OAuth2 Password Flow — **form-data**, JSON değil)
-- Rol tabanlı yetkilendirme: `operator` ve `admin`
-- Varsayılan kullanıcılar: `admin / admin123`, `operator / operator123`
+### Security
+- JWT-based authentication (OAuth2 Password Flow — **form-data**, not JSON)
+- Role-based authorization: `operator` and `admin`
+- Default users: `admin / admin123`, `operator / operator123`
 
 ---
 
-## Teknoloji Yığını
+## Technology Stack
 
-| Katman | Teknoloji |
-|--------|-----------|
+| Layer | Technology |
+|-------|------------|
 | Backend | Python 3.14, FastAPI, Uvicorn |
-| S7 PLC Bağlantısı | python-snap7 (ücretsiz, TCP 102 doğrudan) |
-| Dahili OPC UA | asyncua |
-| Veritabanı (dev) | SQLite + aiosqlite (Docker gerekmez) |
-| Veritabanı (prod) | PostgreSQL 16 + TimescaleDB |
+| S7 PLC connection | python-snap7 (free, direct TCP 102) |
+| Built-in OPC UA | asyncua |
+| Database (dev) | SQLite + aiosqlite (no Docker needed) |
+| Database (prod) | PostgreSQL 16 + TimescaleDB |
 | ORM | SQLAlchemy 2.0 (async) + Alembic |
-| Rapor üretimi | openpyxl, WeasyPrint (PDF — GTK3 gerektirir) |
-| Doğrulama | Pydantic v2 |
+| Report generation | openpyxl, WeasyPrint (PDF — requires GTK3) |
+| Validation | Pydantic v2 |
 | Frontend | React 19, Vite, Tailwind CSS v4, TanStack Query |
-| Grafik | Recharts |
-| Paket yöneticisi | uv (backend), pnpm (frontend) |
+| Charts | Recharts |
+| Package managers | uv (backend), pnpm (frontend) |
 | Task runner | just |
-| Konteyner | Docker Compose (prod) |
+| Containers | Docker Compose (prod) |
 
 ---
 
-## Proje Yapısı
+## Project Structure
 
 ```
 scada-reporter/
 ├── backend/                    # Python FastAPI backend (:8001)
 │   ├── app/
-│   │   ├── api/                # REST endpoint'leri
-│   │   │   ├── auth.py         # Giriş / token
-│   │   │   ├── dashboard.py    # Özet, anlık değerler, trend
+│   │   ├── api/                # REST endpoints
+│   │   │   ├── auth.py         # Login / token
+│   │   │   ├── dashboard.py    # Overview, current values, trend
 │   │   │   ├── tags.py         # Tag CRUD
-│   │   │   ├── reports.py      # Temel raporlama
-│   │   │   ├── advanced_reports.py  # Şablon / zamanlayıcı / arşiv
-│   │   │   ├── plc.py          # PLC yapılandırma CRUD
+│   │   │   ├── reports.py      # Basic reporting
+│   │   │   ├── advanced_reports.py  # Template / scheduler / archive
+│   │   │   ├── plc.py          # PLC configuration CRUD
 │   │   │   ├── query.py        # Read-only SQL
-│   │   │   └── explore.py      # Şema / katalog keşfi
+│   │   │   └── explore.py      # Schema / catalog discovery
 │   │   ├── collector/
-│   │   │   ├── s7_collector.py # Snap7 S7-1500 bağlantısı
-│   │   │   ├── opcua_server.py # Dahili OPC UA sunucu
-│   │   │   └── poller.py       # Periyodik okuma döngüsü
+│   │   │   ├── s7_collector.py # Snap7 S7-1500 connection
+│   │   │   ├── opcua_server.py # Built-in OPC UA server
+│   │   │   └── poller.py       # Periodic read loop
 │   │   ├── core/
-│   │   │   ├── config.py       # Ortam değişkenleri
-│   │   │   ├── database.py     # Async SQLAlchemy motoru
-│   │   │   └── security.py     # JWT / şifreleme
+│   │   │   ├── config.py       # Environment variables
+│   │   │   ├── database.py     # Async SQLAlchemy engine
+│   │   │   └── security.py     # JWT / hashing
 │   │   ├── models/
 │   │   │   ├── tag.py          # Tag + TagReading
-│   │   │   ├── user.py         # Kullanıcı
-│   │   │   ├── plc_config.py   # PLC yapılandırma
-│   │   │   ├── watchlist.py    # Kullanıcı izleme listesi
-│   │   │   ├── report_history.py    # Rapor geçmişi
-│   │   │   ├── report_template.py   # Gelişmiş rapor şablonu
-│   │   │   ├── scheduled_report.py  # Zamanlı rapor
-│   │   │   └── report_archive.py    # Arşivlenmiş raporlar
-│   │   ├── reports/            # Excel / PDF üreticiler
-│   │   └── main.py             # FastAPI uygulama girişi
-│   ├── tests/                  # pytest async testler (185+)
-│   ├── alembic/                # DB migration dosyaları
-│   ├── seed_users.py           # Varsayılan kullanıcı oluşturma
+│   │   │   ├── user.py         # User
+│   │   │   ├── plc_config.py   # PLC configuration
+│   │   │   ├── watchlist.py    # Per-user watchlist
+│   │   │   ├── report_history.py    # Report history
+│   │   │   ├── report_template.py   # Advanced report template
+│   │   │   ├── scheduled_report.py  # Scheduled report
+│   │   │   └── report_archive.py    # Archived reports
+│   │   ├── reports/            # Excel / PDF generators
+│   │   └── main.py             # FastAPI application entry point
+│   ├── tests/                  # pytest async tests (185+)
+│   ├── alembic/                # DB migration files
+│   ├── seed_users.py           # Default user creation
 │   ├── pyproject.toml          # pytest / ruff / mypy config
 │   └── requirements.txt
 ├── frontend/                   # React + Vite (:5173)
@@ -112,74 +112,74 @@ scada-reporter/
 │   │   │                       # Tags, PlcConfig, Settings, Login
 │   │   ├── context/            # AuthContext, SettingsContext (localStorage)
 │   │   ├── components/         # Layout (sidebar nav)
-│   │   └── api/                # Üretilmiş OpenAPI TypeScript client
-│   └── openapi-ts.config.ts    # TS client üretici config
+│   │   └── api/                # Generated OpenAPI TypeScript client
+│   └── openapi-ts.config.ts    # TS client generator config
 ├── agent-harness/              # Agent-native CLI (Click + JSON + REPL)
 │   └── src/scada_reporter_cli/
-├── commands/                   # Claude Code slash komutları
-├── guides/                     # Agent metodoloji rehberleri
-└── AGENTS.md                   # Agent kullanım rehberi
+├── commands/                   # Claude Code slash commands
+├── guides/                     # Agent methodology guides
+└── AGENTS.md                   # Agent usage guide
 docker/                         # TimescaleDB + Redis + Grafana
 ```
 
 ---
 
-## Kurulum ve Çalıştırma
+## Setup and Running
 
-### Gereksinimler
-- Python 3.12+ (uv ile yönetilir)
+### Requirements
+- Python 3.12+ (managed with uv)
 - Node.js 18+, pnpm
 - just (task runner)
-- Siemens S7-1500 PLC (veya simülasyon modu)
+- Siemens S7-1500 PLC (or simulation mode)
 
-### Hızlı Başlangıç
+### Quick Start
 
 ```bash
-# Bağımlılıkları yükle
+# Install dependencies
 just install
 
-# Varsayılan kullanıcıları oluştur (admin/admin123, operator/operator123)
+# Create default users (admin/admin123, operator/operator123)
 just seed-users
 
-# Backend + frontend paralel başlat
+# Start backend + frontend in parallel
 just dev
 ```
 
-Uygulama:
+Application:
 - Backend: `http://localhost:8001` — API docs: `http://localhost:8001/docs`
 - Frontend: `http://localhost:5173`
 
-### Komutlar
+### Commands
 
 ```bash
-# Geliştirme
-just run-backend      # Sadece backend (hot reload)
-just run-frontend     # Sadece frontend (Vite)
+# Development
+just run-backend      # Backend only (hot reload)
+just run-frontend     # Frontend only (Vite)
 
-# Veritabanı
-just migrate          # Migration uygula
-just makemigration msg="açıklama"
-just seed-tags        # Demo tag seti ekle
-just seed-users       # Varsayılan kullanıcılar (admin + operator)
-just seed-catalog     # WinCC xlsx'ten tag kataloğu yükle
+# Database
+just migrate          # Apply migrations
+just makemigration msg="description"
+just seed-tags        # Add demo tag set
+just seed-users       # Default users (admin + operator)
+just seed-catalog     # Load tag catalog from WinCC xlsx
 
-# Test & Kalite
+# Test & Quality
 just test             # pytest
-just test-cov         # Coverage raporu
+just test-cov         # Coverage report
 just lint             # ruff
 just typecheck        # mypy
-just check            # Tüm kontroller (CI)
+just check            # All checks (CI)
 
-# Araçlar
-just gen-client       # OpenAPI → TypeScript client (backend çalışırken)
-just test-plc         # PLC bağlantı testi
-just docker-up        # PostgreSQL + Redis başlat (prod)
+# Tools
+just gen-client       # OpenAPI → TypeScript client (while backend running)
+just test-plc         # PLC connection test
+just docker-up        # Start PostgreSQL + Redis (prod)
 ```
 
-### Ortam Değişkenleri (`.env`)
+### Environment Variables (`.env`)
 
 ```env
-# Dev (SQLite — Docker gerekmez)
+# Dev (SQLite — no Docker needed)
 DATABASE_URL=sqlite+aiosqlite:///./scada_reporter.db
 
 # Prod (PostgreSQL)
@@ -188,13 +188,13 @@ DATABASE_URL=sqlite+aiosqlite:///./scada_reporter.db
 SECRET_KEY=change-this-in-production-32-chars-minimum
 ACCESS_TOKEN_EXPIRE_MINUTES=480
 
-# S7 PLC (simülasyon modunda atlanır)
+# S7 PLC (skipped in simulation mode)
 S7_HOST=192.168.1.1
 S7_RACK=0
 S7_SLOT=1
 ```
 
-`.env.example` dosyasını kopyala ve düzenle:
+Copy and edit the `.env.example` file:
 ```bash
 copy scada-reporter/backend/.env.example scada-reporter/backend/.env
 ```
@@ -203,26 +203,26 @@ copy scada-reporter/backend/.env.example scada-reporter/backend/.env
 
 ## Agent CLI (`scada`)
 
-Coding agent'lar (Claude Code vb.) REST API'yi `scada` CLI ile kullanabilir.
+Coding agents (Claude Code etc.) can use the REST API through the `scada` CLI.
 
 ```bash
-just install-agent        # Kurulum
+just install-agent        # Install
 
-scada auth login admin    # Giriş
-scada tags list --json    # Tag listesi
-scada dashboard overview  # Özet
+scada auth login admin    # Login
+scada tags list --json    # Tag list
+scada dashboard overview  # Overview
 scada query run "SELECT name, value FROM tags LIMIT 5" --json
-scada explore schema      # DB şeması
-scada shell               # Python REPL (veriler yüklü)
+scada explore schema      # DB schema
+scada shell               # Python REPL (data loaded)
 ```
 
-Detaylı rehber: `scada-reporter/AGENTS.md`
+Detailed guide: `scada-reporter/AGENTS.md`
 
 ---
 
-## Notlar
+## Notes
 
-- **OAuth2 giriş**: `/api/auth/token` endpoint'i **form-data** bekler (JSON değil) — `curl -d "username=admin&password=admin123"` kullanın
-- **Simülasyon modu**: PLC yoksa veya erişilemezse backend sorunsuz çalışır
-- **WeasyPrint PDF**: Windows'da GTK3 runtime gerektirir
-- **pre-commit hooks**: Her commit'te ruff + mypy + format kontrolleri çalışır
+- **OAuth2 login**: the `/api/auth/token` endpoint expects **form-data** (not JSON) — use `curl -d "username=admin&password=admin123"`
+- **Simulation mode**: the backend runs fine when no PLC is present or reachable
+- **WeasyPrint PDF**: requires the GTK3 runtime on Windows
+- **pre-commit hooks**: ruff + mypy + format checks run on every commit

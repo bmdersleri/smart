@@ -4,19 +4,19 @@
 
 | Test | Description |
 |------|-------------|
-| `test_health_command` | API kapalıyken health komutu hata mesajı dönmeli |
-| `test_list_tags_no_auth` | Token yokken tags list hata dönmeli |
-| `test_dashboard_overview_no_auth` | Token yokken dashboard hata dönmeli |
-| `test_repl_help` | REPL help çalışmalı |
-| `test_cli_invocation` | --help flag'i çalışmalı |
-| `test_repl_exit` | REPL exit ile kapanmalı |
-| `test_repl_quit` | REPL quit ile kapanmalı |
-| `test_repl_invalid_command` | Geçersiz komut crash yapmamalı |
-| `test_group_help` | Her grup (auth/tags/dashboard/reports) --help çalıştırabilmeli |
+| `test_health_command` | Health command should return an error message when the API is down |
+| `test_list_tags_no_auth` | tags list should return an error without a token |
+| `test_dashboard_overview_no_auth` | dashboard should return an error without a token |
+| `test_repl_help` | REPL help should work |
+| `test_cli_invocation` | The --help flag should work |
+| `test_repl_exit` | REPL should close on exit |
+| `test_repl_quit` | REPL should close on quit |
+| `test_repl_invalid_command` | An invalid command should not crash |
+| `test_group_help` | Each group (auth/tags/dashboard/reports) --help should run |
 
 ## E2E Tests
 
-Backend çalışırken:
+While the backend is running:
 
 ```bash
 pytest tests/ -v --api-url http://localhost:8001
@@ -24,13 +24,13 @@ pytest tests/ -v --api-url http://localhost:8001
 
 | Test | Description |
 |------|-------------|
-| `test_auth_login_logout` | Login → token al → /api/auth/me çağır |
-| `test_tags_crud` | Tag oluştur → listele → sil |
-| `test_dashboard_live` | Overview + current-values çağır |
-| `test_report_generate` | Rapor oluştur → JSON çıktıyı doğrula |
+| `test_auth_login_logout` | Login → get token → call /api/auth/me |
+| `test_tags_crud` | Create tag → list → delete |
+| `test_dashboard_live` | Call overview + current-values |
+| `test_report_generate` | Generate report → validate JSON output |
 
 ## Test Results
 
 ```
-(cixan)
+(pending)
 ```

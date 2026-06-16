@@ -1,6 +1,6 @@
-# Agent Kurulumu — SCADA Reporter
+# Agent Setup — SCADA Reporter
 
-## 1. Backend'i Başlat
+## 1. Start the Backend
 
 ```bash
 cd scada-reporter
@@ -8,34 +8,34 @@ just run-backend
 # → http://localhost:8001
 ```
 
-## 2. Agent CLI'yi Yükle
+## 2. Install the Agent CLI
 
 ```bash
 uv pip install -e scada-reporter/agent-harness
 ```
 
-Doğrulama:
+Verify:
 
 ```bash
 scada --help
 scada health
 ```
 
-## 3. Giriş Yap
+## 3. Log In
 
 ```bash
 scada auth login admin
 ```
 
-## 4. Agent'ınızı Yapılandırın
+## 4. Configure Your Agent
 
 ### Claude Code
 
 ```bash
-# Plugin'i yükle
-/plugin marketplace add <proje-repo>
+# Install the plugin
+/plugin marketplace add <project-repo>
 
-# Plugin komutları:
+# Plugin commands:
 /scada-login
 /scada-tags list
 /scada-dashboard current-values
@@ -43,13 +43,13 @@ scada auth login admin
 
 ### OpenCode
 
-`AGENTS.md` dosyası otomatik olarak yüklenir. Agent CLI komutlarını doğrudan kullanabilirsiniz.
+The `AGENTS.md` file is loaded automatically. You can use the agent CLI commands directly.
 
-### Diğer Agent'lar (Cursor, Copilot, Windsurf)
+### Other Agents (Cursor, Copilot, Windsurf)
 
 ```bash
-# Agent prompt'larınızda:
-scada <komut> --json
+# In your agent prompts:
+scada <command> --json
 ```
 
-JSON çıktı tüm agent'lar tarafından kolayca işlenebilir.
+JSON output is easily processed by any agent.

@@ -96,10 +96,10 @@
 | alembic | 1.14.0 | DB migrations |
 | anyio | 4.13.0 | Async runtime |
 | asyncpg | 0.31.0 | Async PostgreSQL |
-| asyncua | 2.0 | OPC UA client/server (dahili server `app/collector/opcua_server.py`, port 4840) |
+| asyncua | 2.0 | OPC UA client/server (built-in server `app/collector/opcua_server.py`, port 4840) |
 | bandit | 1.9.4 | Security linter (`just security`); B608 SQL nosec markers for SA-reflected names |
 | bcrypt | 4.3.0 | Password hashing |
-| python-snap7 | 3.0.0 | S7 PLC communication (`app/collector/s7_collector.py`) — ücretsiz, harici yazılım gerekmez |
+| python-snap7 | 3.0.0 | S7 PLC communication (`app/collector/s7_collector.py`) — free, no third-party software required |
 | pandas | 3.0.3 | Data analysis & reporting |
 | matplotlib | 3.11.0 | Static chart generation |
 | plotly | 6.8.0 | Interactive web charts |
@@ -200,7 +200,7 @@
 | Service | Image | Purpose |
 |---------|-------|---------|
 | PostgreSQL | timescale/timescaledb:latest-pg17 | Time-series DB |
-| Redis | redis:7-alpine | Cache (dev'de kullanılmıyor, prod için) |
+| Redis | redis:7-alpine | Cache (not used in dev, for prod) |
 | Grafana | grafana/grafana:latest | Monitoring dashboards |
 | Portainer | portainer/portainer-ce:latest | Container management |
 
@@ -208,7 +208,7 @@
 | Tool | Location | Notes |
 |------|----------|-------|
 | Alembic | `backend/alembic/` | Async migration (`env.py` async engine) |
-| pre-commit | `.pre-commit-config.yaml` | Hooks **aktif** (`.git/hooks/pre-commit`); `ruff`, `ruff-format`, `mypy`, `trailing-whitespace`, `end-of-file-fixer`, `check-yaml/json/toml` |
+| pre-commit | `.pre-commit-config.yaml` | Hooks **active** (`.git/hooks/pre-commit`); `ruff`, `ruff-format`, `mypy`, `trailing-whitespace`, `end-of-file-fixer`, `check-yaml/json/toml` |
 | pyproject.toml | `backend/pyproject.toml` | pytest `asyncio_mode=auto`, ruff `line-length=100`, mypy config |
 | GitHub Actions CI | `.github/workflows/ci.yml` | 2 parallel jobs: backend (ruff·mypy·pytest·bandit) + frontend (tsc·eslint·vitest); triggers on push/PR to master |
 
@@ -236,12 +236,12 @@
 | SIMATIC OAM | Industrial communication |
 | OPC Tags | OPC server interface |
 | ACE | Advanced Control Engine |
-| KEPServerEX | Harici OPC UA sunucu (opsiyonel — dahili OPC UA server port 4840 kullanilir) |
+| KEPServerEX | External OPC UA server (optional — the built-in OPC UA server on port 4840 is used) |
 | UA Expert | OPC UA test client (download: unified-automation.com) |
 | Siemens S7-1500 | PLC (native S7 protocol over TCP port 102) |
 | Snap7 | `python-snap7` 3.0.0 — pure Python S7 library for Siemens S7 PLCs |
-| S7 Collector | `backend/app/collector/s7_collector.py` — S7 PLC baglanti + tag okuma |
-| Dahili OPC UA Server | `backend/app/collector/opcua_server.py` — port 4840, DB'deki son degerleri yayinlar |
+| S7 Collector | `backend/app/collector/s7_collector.py` — S7 PLC connection + tag reading |
+| Built-in OPC UA Server | `backend/app/collector/opcua_server.py` — port 4840, publishes the latest values from the DB |
 
 ## VS Code
 | Tool | Path |
@@ -255,14 +255,14 @@
 - **scada-reporter backend venv**: `scada-reporter/backend/.venv/` (Python 3.14, uv-managed)
 - **scada CLI** requires `uv pip install -e scada-reporter/agent-harness` from project root (`just install-agent`)
 - **Backend API**: 8 router grubu — auth, tags, dashboard, reports, advanced-reports, plc, query, explore (`/api/*`)
-- **Frontend sayfaları**: Dashboard (3 sekme), Trend (zoom/pan/PNG/Excel/sağ tık menüsü/yükseklik ayarı), Raporlar, Gelişmiş Raporlar, Tags, PLC Yönetimi, Ayarlar
-- **Auth**: `/api/auth/token` endpoint'i OAuth2 **form-data** bekler, JSON değil. `curl -d "username=...&password=..."`
-- **Varsayılan kullanıcılar**: `just seed-users` → admin/admin123, operator/operator123
-- **Mimari**: S7 PLC → Snap7 (s7_collector) → SQLite (dev) / PostgreSQL (prod) → dahili OPC UA server (port 4840) + REST API. Harici ücretli yazılım (KEPServerEX) gerekmez.
+- **Frontend pages**: Dashboard (3 tabs), Trend (zoom/pan/PNG/Excel/right-click menu/height setting), Reports, Advanced Reports, Tags, PLC Management, Settings
+- **Auth**: the `/api/auth/token` endpoint expects OAuth2 **form-data**, not JSON. `curl -d "username=...&password=..."`
+- **Default users**: `just seed-users` → admin/admin123, operator/operator123
+- **Architecture**: S7 PLC → Snap7 (s7_collector) → SQLite (dev) / PostgreSQL (prod) → built-in OPC UA server (port 4840) + REST API. No paid third-party software (KEPServerEX) required.
 - **Stats engine**: numpy-only (scipy yok) — `np.polyfit` + manuel R²
 - **Docker not installed on host** — compose files ready, needs Docker Desktop or Docker Engine
 - **RTK** installed for LLM token optimization. Run `rtk init -g` for Claude Code integration.
-- **GitHub Actions CI**: `.github/workflows/ci.yml` — push/PR'da backend (ruff·mypy·pytest·bandit) + frontend (tsc·eslint·vitest) otomatik çalışır
+- **GitHub Actions CI**: `.github/workflows/ci.yml` — on push/PR, backend (ruff·mypy·pytest·bandit) + frontend (tsc·eslint·vitest) run automatically
 - **Security scan**: `just security` → bandit (Python code) + safety (dependency CVEs)
 - **GitHub Pages**: User site at `b110rpsrv2` (this machine)
 - **Tailscale** is connected (network overlay)

@@ -1,8 +1,8 @@
-# SCADA Reporter — Agent Rehberi
+# SCADA Reporter — Agent Guide
 
-Bu proje, CLI-Anything yaklaşımı ile **agent-native** olarak tasarlanmıştır.
-Coding agent'lar (Claude Code, OpenCode, GitHub Copilot, Cursor, Windsurf)
-SCADA Reporter sistemini aşağıdaki araçlarla sorunsuz kullanabilir.
+This project is designed **agent-native** following the CLI-Anything approach.
+Coding agents (Claude Code, OpenCode, GitHub Copilot, Cursor, Windsurf)
+can use the SCADA Reporter system seamlessly through the tools below.
 
 ## Agent CLI
 
@@ -10,45 +10,45 @@ SCADA Reporter sistemini aşağıdaki araçlarla sorunsuz kullanabilir.
 scada-reporter/agent-harness/
 ├── src/scada_reporter_cli/   # Click CLI (JSON + REPL)
 ├── setup.py
-└── skills/SKILL.md           # Agent skill tanımı
+└── skills/SKILL.md           # Agent skill definition
 ```
 
-Kurulum: `uv pip install -e scada-reporter/agent-harness`
+Install: `uv pip install -e scada-reporter/agent-harness`
 
 ## Claude Code Plugin
 
 ```
-scada-reporter/.claude-plugin/marketplace.json   # Marketplace kaydı
-scada-reporter/cli-anything-plugin/               # Plugin tanımı
-scada-reporter/commands/                          # Slash komutları
-scada-reporter/guides/                            # Metodoloji rehberleri
+scada-reporter/.claude-plugin/marketplace.json   # Marketplace registration
+scada-reporter/cli-anything-plugin/               # Plugin definition
+scada-reporter/commands/                          # Slash commands
+scada-reporter/guides/                            # Methodology guides
 ```
 
-## Agent-Native Prensipleri
+## Agent-Native Principles
 
-1. **JSON çıktı**: Tüm CLI komutları `--json` flag'i ile makine-okunabilir çıktı üretir
-2. **REPL modu**: `scada` komutu varsayılan olarak interaktif REPL açar
-3. **Durumlu oturum**: JWT token `~/.config/scada-reporter/config.json` dosyasında saklanır
-4. **Keşfedilebilirlik**: `scada tags list`, `scada dashboard overview` ile sistem kendi kendini tanıtır
-5. **SKILL.md**: Agent'lar CLI yeteneklerini skill dosyasından keşfedebilir
+1. **JSON output**: all CLI commands produce machine-readable output with the `--json` flag
+2. **REPL mode**: the `scada` command opens an interactive REPL by default
+3. **Stateful session**: the JWT token is stored in `~/.config/scada-reporter/config.json`
+4. **Discoverability**: the system describes itself via `scada tags list`, `scada dashboard overview`
+5. **SKILL.md**: agents can discover CLI capabilities from the skill file
 
-## Ortam Değişkenleri
+## Environment Variables
 
-| Değişken | Varsayılan | Açıklama |
-|----------|-----------|----------|
-| `SCADA_API_URL` | `http://localhost:8001` | Backend adresi |
-| `SCADA_TOKEN` | — | JWT token (opsiyonel) |
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `SCADA_API_URL` | `http://localhost:8001` | Backend address |
+| `SCADA_TOKEN` | — | JWT token (optional) |
 
-## Hızlı Başlangıç
+## Quick Start
 
 ```bash
-# 1. CLI'yi yükle
+# 1. Install the CLI
 uv pip install -e scada-reporter/agent-harness
 
-# 2. Giriş yap
+# 2. Log in
 scada auth login admin
 
-# 3. Sistemi keşfet
+# 3. Explore the system
 scada tags list --json
 scada dashboard current-values
 scada health

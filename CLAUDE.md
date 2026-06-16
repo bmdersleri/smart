@@ -1,133 +1,133 @@
 # SCADA Reporter
 
-Su/Atıksu tesisi SCADA veri toplama ve raporlama sistemi.
+Water/wastewater plant SCADA data acquisition and reporting system.
 
-## Proje Yapısı
+## Project Structure
 
 ```
 scada-reporter/
 ├── backend/       # Python FastAPI backend (:8001)
 │   ├── app/
 │   │   ├── api/        # REST API (auth/dashboard/tags/reports/advanced_reports/plc/query/explore)
-│   │   ├── collector/  # Snap7 S7 toplayıcı + dahili OPC UA server + poller
-│   │   ├── core/       # Config, DB, güvenlik (JWT)
+│   │   ├── collector/  # Snap7 S7 collector + built-in OPC UA server + poller
+│   │   ├── core/       # Config, DB, security (JWT)
 │   │   ├── models/     # Tag, User, PlcConfig, Watchlist, ReportHistory/Template/Scheduled/Archive
-│   │   └── reports/    # Excel / PDF üreticiler
-│   ├── tests/          # pytest async testler (185+)
-│   ├── alembic/        # DB migration dosyaları
-│   ├── seed_users.py   # admin + operator kullanıcı oluşturma
+│   │   └── reports/    # Excel / PDF generators
+│   ├── tests/          # pytest async tests (185+)
+│   ├── alembic/        # DB migration files
+│   ├── seed_users.py   # admin + operator user creation
 │   ├── pyproject.toml  # pytest/ruff/mypy config
-│   ├── .venv/          # Python venv (uv ile yönetilir, Python 3.14)
+│   ├── .venv/          # Python venv (managed with uv, Python 3.14)
 │   └── requirements.txt
 ├── frontend/      # React 19 + Vite + Tailwind CSS v4 + TanStack Query (:5173)
 │   ├── src/
 │   │   ├── pages/      # Dashboard, Trend, Reports, AdvancedReports, Tags, PlcConfig, Settings
 │   │   ├── context/    # AuthContext, SettingsContext (localStorage)
-│   │   └── api/        # Üretilmiş OpenAPI TypeScript client
-│   ├── openapi-ts.config.ts  # TypeScript API client üretici
+│   │   └── api/        # Generated OpenAPI TypeScript client
+│   ├── openapi-ts.config.ts  # TypeScript API client generator
 │   └── package.json
 ├── agent-harness/ # Agent-native CLI (Click + JSON + REPL)
 │   ├── src/scada_reporter_cli/
 │   └── setup.py
-├── commands/      # Claude Code slash komutları (markdown)
-├── guides/        # Agent metodoloji rehberleri
-├── .claude-plugin/  # Claude Code marketplace kaydı
-└── AGENTS.md      # Agent kullanım rehberi
+├── commands/      # Claude Code slash commands (markdown)
+├── guides/        # Agent methodology guides
+├── .claude-plugin/  # Claude Code marketplace registration
+└── AGENTS.md      # Agent usage guide
 docker/        # TimescaleDB + Redis + Grafana
 ```
 
-## Komutlar
+## Commands
 
-### Geliştirme
-- **Backend + Frontend paralel:** `just dev`
-- **Sadece backend:** `just run-backend`
-- **Sadece frontend:** `just run-frontend`
-- **Bağımlılıkları yükle:** `just install`
+### Development
+- **Backend + Frontend in parallel:** `just dev`
+- **Backend only:** `just run-backend`
+- **Frontend only:** `just run-frontend`
+- **Install dependencies:** `just install`
 
 ### Test
-- **Testleri çalıştır:** `just test`
-- **Coverage raporu:** `just test-cov`
+- **Run tests:** `just test`
+- **Coverage report:** `just test-cov`
 - **TDD hot reload:** `just test-watch`
 
-### Veritabanı
-- **Migration uygula:** `just migrate`
-- **Migration oluştur:** `just makemigration msg="açıklama"`
-- **Migration geri al:** `just migrate-down`
-- **Migration geçmişi:** `just migrate-history`
-- **PLC tag'lerini ekle:** `just seed-tags`
-- **Varsayılan kullanıcılar:** `just seed-users` *(admin/admin123, operator/operator123)*
-- **WinCC xlsx kataloğu:** `just seed-catalog`
+### Database
+- **Apply migration:** `just migrate`
+- **Create migration:** `just makemigration msg="description"`
+- **Roll back migration:** `just migrate-down`
+- **Migration history:** `just migrate-history`
+- **Add PLC tags:** `just seed-tags`
+- **Default users:** `just seed-users` *(admin/admin123, operator/operator123)*
+- **WinCC xlsx catalog:** `just seed-catalog`
 
-### Kalite
+### Quality
 - **Lint:** `just lint`
-- **Lint + otomatik düzelt:** `just lint-fix`
+- **Lint + auto-fix:** `just lint-fix`
 - **Format:** `just format`
 - **Type check:** `just typecheck`
-- **Tüm kontroller (CI):** `just check`
+- **All checks (CI):** `just check`
 
 ### Agent CLI
-- **CLI'yi yükle:** `just install-agent`
-- **Test et:** `just test-agent`
-- **REPL (interaktif):** `just agent-repl`
-- **SQL sorgu:** `just agent cli_args="query run 'SELECT * FROM tags LIMIT 5' --json"`
-- **Veritabanı keşfi:** `just agent cli_args="explore schema"`
+- **Install the CLI:** `just install-agent`
+- **Test it:** `just test-agent`
+- **REPL (interactive):** `just agent-repl`
+- **SQL query:** `just agent cli_args="query run 'SELECT * FROM tags LIMIT 5' --json"`
+- **Database discovery:** `just agent cli_args="explore schema"`
 - **Python REPL:** `just agent cli_args="shell"`
-- **Tek komut:** `just agent cli_args="tags list --json"`
+- **Single command:** `just agent cli_args="tags list --json"`
 
-### Araçlar
-- **TS API client üret:** `just gen-client` *(backend çalışırken)*
-- **PLC bağlantı testi:** `just test-plc`
-- **Docker başlat/durdur:** `just docker-up` / `just docker-down`
-- **Proje ağacı:** `just tree`
+### Tools
+- **Generate TS API client:** `just gen-client` *(while backend running)*
+- **PLC connection test:** `just test-plc`
+- **Start/stop Docker:** `just docker-up` / `just docker-down`
+- **Project tree:** `just tree`
 
-## Veritabanı
+## Database
 
-- Dev/test: SQLite (`scada_reporter.db`) — Docker gerekmez
-- Prod: PostgreSQL (TimescaleDB) + Redis (Docker ile)
-- `.env.example` → `.env` kopyalayıp env var'ları ayarla
+- Dev/test: SQLite (`scada_reporter.db`) — no Docker required
+- Prod: PostgreSQL (TimescaleDB) + Redis (via Docker)
+- Copy `.env.example` → `.env` and set the env vars
 
-## Mevcut Araçlar
+## Available Tools
 
-| Araç | Versiyon | Kullanım |
-|------|----------|----------|
-| Python | 3.14.6 | `python` veya `.venv\Scripts\activate` |
-| uv | 0.11.21 | Hızlı pip alternatifi |
+| Tool | Version | Usage |
+|------|---------|-------|
+| Python | 3.14.6 | `python` or `.venv\Scripts\activate` |
+| uv | 0.11.21 | Fast pip alternative |
 | ruff | 0.15.17 | Python linter + formatter |
 | mypy | 2.1.0 | Python type checker |
 | Node.js | 24.16.0 | JS runtime |
-| pnpm | 11.6.0 | Hızlı npm alternatifi |
+| pnpm | 11.6.0 | Fast npm alternative |
 | TypeScript | 6.0.3 | `tsc` |
 | Prettier | 3.8.4 | Code formatter |
-| Git | 2.54.0 | Versiyon kontrol |
-| Go | 1.26.4 | Go dili |
+| Git | 2.54.0 | Version control |
+| Go | 1.26.4 | Go language |
 | Rust | 1.96.0 | `rustc` + `cargo` |
 | .NET SDK | 10.0.301 | Dotnet |
-| ripgrep | 15.1.0 | Hızlı kod arama (`rg`) |
-| fd | 10.4.2 | Hızlı dosya bulma |
-| bat | 0.26.1 | Syntax highlight ile görüntüle |
+| ripgrep | 15.1.0 | Fast code search (`rg`) |
+| fd | 10.4.2 | Fast file find |
+| bat | 0.26.1 | View with syntax highlight |
 | fzf | 0.73.1 | Fuzzy finder |
-| jq | 1.8.1 | JSON işlemleri |
-| yq | 4.53.3 | YAML/JSON/XML işlemleri |
+| jq | 1.8.1 | JSON processing |
+| yq | 4.53.3 | YAML/JSON/XML processing |
 | gh | 2.94.0 | GitHub CLI |
 | lazygit | 0.62.2 | Terminal Git UI |
 | delta | 0.19.2 | Git diff viewer |
-| tldr | 0.6.1 | Kısa man sayfaları |
+| tldr | 0.6.1 | Short man pages |
 | eza | 0.23.4 | Modern ls |
-| zoxide | 0.9.9 | Akıllı cd (`z <dizin>`) |
-| btop | 1.0.5 | Sistem monitörü |
-| dust | 1.2.4 | Disk analizi |
+| zoxide | 0.9.9 | Smart cd (`z <dir>`) |
+| btop | 1.0.5 | System monitor |
+| dust | 1.2.4 | Disk usage analysis |
 | hyperfine | 1.20.0 | Benchmark |
-| just | 1.52.0 | Komut çalıştırıcı |
+| just | 1.52.0 | Command runner |
 
-## Notlar
+## Notes
 
-- **Dahili OPC UA Server**: `opc.tcp://localhost:4840` — backend başlarken otomatik ayağa kalkar. Harici ücretli yazılım (KEPServerEX vb.) gerekmez.
-- **S7 PLC bağlantısı**: Snap7 (ücretsiz, pure Python) ile S7-1500'e doğrudan TCP 102. `S7_HOST`/`S7_RACK`/`S7_SLOT` env var'ları ile yapılandırılır.
-- **Simülasyon modu**: PLC yoksa veya erişilemezse backend sorunsuz çalışır.
-- **OAuth2 giriş**: `/api/auth/token` **form-data** bekler, JSON değil. Frontend doğru gönderir; `curl -d "username=...&password=..."` kullanın.
-- **WeasyPrint PDF**: Windows'da GTK3 runtime gerektirir (kurulu — çalışıyor).
-- **Stats engine**: numpy-only (scipy venv'de yok) — `np.polyfit` + manuel R².
-- Backend başlatmak için `just run-backend`
-- `uv pip install ...` ile hızlı paket yükleme
-- pre-commit hooks aktif — her commit'te ruff + mypy + format kontrolleri çalışır
-- Frontend TS client güncelle: backend çalışırken `just gen-client`
+- **Built-in OPC UA Server**: `opc.tcp://localhost:4840` — comes up automatically when the backend starts. No paid third-party software (KEPServerEX etc.) required.
+- **S7 PLC connection**: direct to S7-1500 over TCP 102 via Snap7 (free, pure Python). Configured with the `S7_HOST`/`S7_RACK`/`S7_SLOT` env vars.
+- **Simulation mode**: the backend runs fine when no PLC is present or reachable.
+- **OAuth2 login**: `/api/auth/token` expects **form-data**, not JSON. The frontend sends it correctly; use `curl -d "username=...&password=..."`.
+- **WeasyPrint PDF**: requires the GTK3 runtime on Windows (installed — working).
+- **Stats engine**: numpy-only (scipy is not in the venv) — `np.polyfit` + manual R².
+- Start the backend with `just run-backend`
+- Fast package install with `uv pip install ...`
+- pre-commit hooks are active — ruff + mypy + format checks run on every commit
+- Update the frontend TS client: `just gen-client` while the backend is running
