@@ -104,6 +104,31 @@ async def test_patch_tag_alarm_thresholds(client: AsyncClient):
 
 
 @pytest.mark.asyncio
+async def test_patch_tag_deadband(client: AsyncClient):
+    await client.post(
+        "/api/auth/register",
+        json={"username": "dbuser", "email": "db@test.com", "password": "test123", "role": "admin"},
+    )
+    token_r = await client.post(
+        "/api/auth/token", data={"username": "dbuser", "password": "test123"}
+    )
+    headers = {"Authorization": f"Bearer {token_r.json()['access_token']}"}
+
+    tag_r = await client.post(
+        "/api/tags/",
+        json={"node_id": "DB88,REAL0", "name": "DeadbandTag", "unit": "m3/h"},
+        headers=headers,
+    )
+    assert tag_r.status_code == 201
+    tag_id = tag_r.json()["id"]
+    assert tag_r.json()["deadband"] is None
+
+    patch_r = await client.patch(f"/api/tags/{tag_id}", json={"deadband": 2.5}, headers=headers)
+    assert patch_r.status_code == 200
+    assert patch_r.json()["deadband"] == 2.5
+
+
+@pytest.mark.asyncio
 async def test_report_history(client: AsyncClient):
     await client.post(
         "/api/auth/register",

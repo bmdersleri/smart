@@ -15,6 +15,10 @@ class Settings(BaseSettings):
     S7_READ_TIMEOUT: int = 3  # saniye (tag ekleme anlık okuma zaman aşımı)
     S7_MAX_WORKERS: int = 32  # snap7 executor thread sayısı (>= PLC sayısı olmalı)
     S7_PLC_READ_TIMEOUT: float = 10.0  # saniye, tek PLC grup okuma üst sınırı
+    # Deadband içinde kalan tag bile bu süre geçince zorla yazılır (heartbeat)
+    S7_STORE_HEARTBEAT_SECONDS: int = 300
+    # Ham hypertable saklama süresi (gün); rollup'lar daha uzun tutulabilir
+    RAW_RETENTION_DAYS: int = 90
 
     # Dahili OPC UA server
     OPCUA_SERVER_PORT: int = 4840

@@ -271,10 +271,27 @@ async def dashboard_tags(
 # ---------------------------------------------------------------------------
 
 
+def downsample(data: list[dict], max_points: int | None) -> list[dict]:
+    """Seriyi eşit aralıklı stride ile en fazla max_points noktaya indir.
+
+    İlk ve son nokta korunur. max_points None veya seri zaten kısa ise olduğu
+    gibi döner. Çok-noktalı 24sa trend'lerini grafik için hafifletir.
+    """
+    if max_points is None or len(data) <= max_points:
+        return data
+    if max_points <= 2:
+        return [data[0], data[-1]]
+    step = (len(data) - 1) / (max_points - 1)
+    out = [data[round(i * step)] for i in range(max_points)]
+    out[-1] = data[-1]
+    return out
+
+
 @router.get("/trend")
 async def trend(
     tag_ids: list[int] = Query(...),
     hours: int = 24,
+    max_points: int | None = Query(None, ge=2),
     db: AsyncSession = Depends(get_db),
     _=Depends(get_current_user),
 ):
@@ -293,4 +310,7 @@ async def trend(
             series[tag_id] = {"tag_id": tag_id, "name": name, "unit": unit, "data": []}
         series[tag_id]["data"].append({"t": ts.isoformat(), "v": value})
 
-    return list(series.values())
+    out = list(series.values())
+    for s in out:
+        s["data"] = downsample(s["data"], max_points)
+    return out
