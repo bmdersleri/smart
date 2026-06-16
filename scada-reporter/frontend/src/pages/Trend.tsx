@@ -107,7 +107,11 @@ function GroupTree({
 }
 
 export default function Trend() {
-  const { trendChartHeight } = useSettings()
+  const { trendChartHeight, theme } = useSettings()
+  const isLight = theme === 'light'
+  const gridStroke = isLight ? '#e2e8f0' : '#1f2937'
+  const brushStroke = isLight ? '#cbd5e1' : '#374151'
+  const brushFill = isLight ? '#f1f5f9' : '#1f2937'
   const qc = useQueryClient()
   const [selected, setSelected] = useState<number[]>([])
   const [hours, setHours] = useState(24)
@@ -304,7 +308,7 @@ export default function Trend() {
 
     const rect = container.getBoundingClientRect()
     toPng(container, {
-      backgroundColor: '#111827',
+      backgroundColor: isLight ? '#ffffff' : '#111827',
       pixelRatio: 2,
       width: rect.width,
       height: rect.height,
@@ -620,7 +624,7 @@ export default function Trend() {
                 onClick={handleChartClick}
                 style={{ cursor: annotateMode ? 'crosshair' : undefined }}
               >
-                <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
+                <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
                 <XAxis dataKey="t" tick={{ fontSize: 11, fill: '#6b7280' }} interval="preserveStartEnd" />
                 {series.map((s, i) => {
                   const color = COLORS[i % COLORS.length]
@@ -663,8 +667,8 @@ export default function Trend() {
                       setBrushIndices([range.startIndex, range.endIndex])
                     }
                   }}
-                  stroke="#374151"
-                  fill="#1f2937"
+                  stroke={brushStroke}
+                  fill={brushFill}
                   travellerWidth={8}
                 />
                 {series.map((s, i) => (
