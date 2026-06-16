@@ -1,1 +1,1 @@
-import '@testing-library/jest-dom'
+// Test setup — add global matchers here when needed
