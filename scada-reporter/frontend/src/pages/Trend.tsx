@@ -47,6 +47,7 @@ export default function Trend() {
   const brushIndicesRef = useRef<[number, number] | null>(null)
   const chartDataRef = useRef<typeof chartData>([])
   const [activePayload, setActivePayload] = useState<Array<{ name: string; value: number; color: string; unit: string }>>([])
+  const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number } | null>(null)
 
   const { data: tags = [] } = useQuery({
     queryKey: ['tags'],
@@ -225,6 +226,25 @@ export default function Trend() {
     setActivePayload([])
   }
 
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault()
+    setCtxMenu({ x: e.clientX, y: e.clientY })
+  }
+
+  useEffect(() => {
+    if (!ctxMenu) return
+    const close = () => setCtxMenu(null)
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') close() }
+    window.addEventListener('click', close)
+    window.addEventListener('keydown', onKey)
+    window.addEventListener('scroll', close, true)
+    return () => {
+      window.removeEventListener('click', close)
+      window.removeEventListener('keydown', onKey)
+      window.removeEventListener('scroll', close, true)
+    }
+  }, [ctxMenu])
+
   return (
     <div className="p-6 space-y-4">
       <div className="flex items-center justify-between">
@@ -396,6 +416,7 @@ export default function Trend() {
           ref={chartContainerRef}
           className="flex-1 bg-gray-900 border border-gray-800 rounded-xl p-4 flex flex-col"
           style={{ userSelect: 'none' }}
+          onContextMenu={handleContextMenu}
         >
           {selected.length === 0 ? (
             <div className="flex-1 flex items-center justify-center text-gray-500 text-sm">
@@ -509,6 +530,44 @@ export default function Trend() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {ctxMenu && (
+        <div
+          className="fixed z-50 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl py-1 min-w-[180px]"
+          style={{ top: ctxMenu.y, left: ctxMenu.x }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            onClick={() => { exportPNG(); setCtxMenu(null) }}
+            disabled={selected.length === 0 || chartData.length === 0}
+            className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+          >
+            <span className="text-gray-500">↓</span> PNG Kaydet
+          </button>
+          <button
+            onClick={() => { exportReport(); setCtxMenu(null) }}
+            disabled={selected.length === 0 || exporting}
+            className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+          >
+            <span className="text-gray-500">↓</span> Excel Raporu
+          </button>
+          <div className="border-t border-gray-800 my-1" />
+          <button
+            onClick={() => { setBrushIndices(null); setCtxMenu(null) }}
+            disabled={brushIndices === null}
+            className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+          >
+            <span className="text-gray-500">↺</span> Zoom Sıfırla
+          </button>
+          <button
+            onClick={() => { setSelected([]); setCtxMenu(null) }}
+            disabled={selected.length === 0}
+            className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-red-400 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+          >
+            <span className="text-gray-500">✕</span> Seçimi Temizle
+          </button>
         </div>
       )}
 
