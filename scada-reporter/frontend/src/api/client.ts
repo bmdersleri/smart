@@ -79,6 +79,15 @@ export const getOverview = () => api.get<{
   readings_1h: number
   quality_rate: number | null
 }>('/dashboard/overview')
+export interface MetricsSummary {
+  rows_written_total: number
+  bad_quality_total: number
+  bad_ratio: number | null
+  tick_count: number
+  tick_avg_seconds: number | null
+  plcs: { plc: string; count: number; avg_seconds: number | null }[]
+}
+export const getMetrics = () => api.get<MetricsSummary>('/dashboard/metrics')
 export const getDashboardDevices = () => api.get<string[]>('/dashboard/devices')
 export const getWatchlist = () => api.get<WatchlistItem[]>('/dashboard/watchlist')
 export const addWatchlist = (tag_id: number) => api.post(`/dashboard/watchlist/${tag_id}`)

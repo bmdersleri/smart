@@ -7,6 +7,7 @@ from sqlalchemy import distinct, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.auth import get_current_user
+from app.core import metrics
 from app.core.database import get_db
 from app.models.tag import Tag, TagReading
 from app.models.user import User
@@ -18,6 +19,12 @@ router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 # ---------------------------------------------------------------------------
 # Overview
 # ---------------------------------------------------------------------------
+
+
+@router.get("/metrics")
+async def metrics_summary(_=Depends(get_current_user)):
+    """Poller/PLC sağlık metrikleri özeti (canlı izleme için JSON)."""
+    return metrics.summary()
 
 
 @router.get("/overview")

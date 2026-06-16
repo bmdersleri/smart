@@ -5,7 +5,13 @@ okuma gecikmesi, yazılan satır sayısı, BAD-kalite oranı. /metrics endpoint'
 ``render()`` çıktısını Prometheus text formatında sunar.
 """
 
-from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
+from prometheus_client import (
+    CONTENT_TYPE_LATEST,
+    REGISTRY,
+    Counter,
+    Histogram,
+    generate_latest,
+)
 
 tick_duration = Histogram(
     "scada_tick_duration_seconds",
@@ -48,3 +54,45 @@ def add_bad_quality(n: int) -> None:
 
 def render() -> bytes:
     return generate_latest()
+
+
+def _val(name: str, labels: dict | None = None) -> float:
+    return REGISTRY.get_sample_value(name, labels) or 0.0
+
+
+def summary() -> dict:
+    """Dashboard canlı izleme için metrik özeti (JSON).
+
+    Prometheus registry'den okur: yazılan/BAD satır sayaçları, tick ortalama
+    süresi, PLC başına ortalama okuma gecikmesi.
+    """
+    rows = _val("scada_rows_written_total")
+    bad = _val("scada_bad_quality_total")
+    tick_count = _val("scada_tick_duration_seconds_count")
+    tick_sum = _val("scada_tick_duration_seconds_sum")
+    total_reads = rows + bad
+
+    plcs: dict[str, dict[str, float]] = {}
+    for metric in plc_read_duration.collect():
+        for s in metric.samples:
+            if s.name.endswith("_count"):
+                plcs.setdefault(s.labels["plc"], {})["count"] = s.value
+            elif s.name.endswith("_sum"):
+                plcs.setdefault(s.labels["plc"], {})["sum"] = s.value
+    plc_list = [
+        {
+            "plc": ip,
+            "count": d.get("count", 0.0),
+            "avg_seconds": (d["sum"] / d["count"]) if d.get("count") else None,
+        }
+        for ip, d in sorted(plcs.items())
+    ]
+
+    return {
+        "rows_written_total": rows,
+        "bad_quality_total": bad,
+        "bad_ratio": (bad / total_reads) if total_reads else None,
+        "tick_count": tick_count,
+        "tick_avg_seconds": (tick_sum / tick_count) if tick_count else None,
+        "plcs": plc_list,
+    }

@@ -47,3 +47,43 @@ async def test_metrics_endpoint_serves_prometheus(client: AsyncClient):
     assert resp.status_code == 200
     assert "scada_rows_written_total" in resp.text
     assert resp.headers["content-type"].startswith("text/plain")
+
+
+def test_summary_has_keys_and_reflects_counters():
+    before = metrics.summary()["rows_written_total"]
+    metrics.add_rows_written(5)
+    s = metrics.summary()
+    assert s["rows_written_total"] - before == 5.0
+    for key in ("rows_written_total", "bad_quality_total", "tick_avg_seconds", "plcs"):
+        assert key in s
+    assert isinstance(s["plcs"], list)
+
+
+def test_summary_per_plc_avg():
+    metrics.observe_plc_read("10.7.7.7", 0.2)
+    metrics.observe_plc_read("10.7.7.7", 0.4)
+    s = metrics.summary()
+    row = next(p for p in s["plcs"] if p["plc"] == "10.7.7.7")
+    assert row["count"] >= 2
+    assert row["avg_seconds"] is not None and row["avg_seconds"] > 0
+
+
+@pytest.mark.asyncio
+async def test_metrics_summary_endpoint_requires_auth(client: AsyncClient):
+    resp = await client.get("/api/dashboard/metrics")
+    assert resp.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_metrics_summary_endpoint_returns_json(client: AsyncClient):
+    await client.post(
+        "/api/auth/register",
+        json={"username": "mx", "email": "mx@t.com", "password": "test123", "role": "admin"},
+    )
+    tok = await client.post("/api/auth/token", data={"username": "mx", "password": "test123"})
+    headers = {"Authorization": f"Bearer {tok.json()['access_token']}"}
+    resp = await client.get("/api/dashboard/metrics", headers=headers)
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "rows_written_total" in data
+    assert "plcs" in data
