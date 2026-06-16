@@ -87,3 +87,31 @@ async def test_metrics_summary_endpoint_returns_json(client: AsyncClient):
     data = resp.json()
     assert "rows_written_total" in data
     assert "plcs" in data
+
+
+@pytest.mark.asyncio
+async def test_metrics_summary_enriches_plc_name_and_tag_count(client: AsyncClient):
+    await client.post(
+        "/api/auth/register",
+        json={"username": "mn", "email": "mn@t.com", "password": "test123", "role": "admin"},
+    )
+    tok = await client.post("/api/auth/token", data={"username": "mn", "password": "test123"})
+    headers = {"Authorization": f"Bearer {tok.json()['access_token']}"}
+
+    for i in range(2):
+        await client.post(
+            "/api/tags/",
+            json={
+                "node_id": f"PN{i},REAL0",
+                "name": f"PN{i}",
+                "plc_ip": "10.5.5.5",
+                "plc_name": "TESTPLC",
+            },
+            headers=headers,
+        )
+    metrics.observe_plc_read("10.5.5.5", 0.1)
+
+    data = (await client.get("/api/dashboard/metrics", headers=headers)).json()
+    row = next(p for p in data["plcs"] if p["plc"] == "10.5.5.5")
+    assert row["name"] == "TESTPLC"
+    assert row["tag_count"] == 2

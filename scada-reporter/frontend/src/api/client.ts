@@ -85,7 +85,7 @@ export interface MetricsSummary {
   bad_ratio: number | null
   tick_count: number
   tick_avg_seconds: number | null
-  plcs: { plc: string; count: number; avg_seconds: number | null }[]
+  plcs: { plc: string; name: string | null; tag_count: number; count: number; avg_seconds: number | null }[]
 }
 export const getMetrics = () => api.get<MetricsSummary>('/dashboard/metrics')
 export const getDashboardDevices = () => api.get<string[]>('/dashboard/devices')

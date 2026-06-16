@@ -67,10 +67,12 @@ export default function Metrics() {
             <table className="w-full">
               <thead>
                 <tr className="text-xs text-gray-500 uppercase tracking-wide">
-                  <th className="px-4 py-2 text-left">PLC</th>
+                  <th className="px-4 py-2 text-left">PLC Adı</th>
+                  <th className="px-4 py-2 text-left">IP</th>
+                  <th className="px-4 py-2 text-right">Tag Sayısı</th>
                   <th className="px-4 py-2 text-right">Okuma Sayısı</th>
                   <th className="px-4 py-2 text-right">Ort. Süre</th>
-                  <th className="px-4 py-2 text-left w-1/3">Gecikme</th>
+                  <th className="px-4 py-2 text-left w-1/4">Gecikme</th>
                 </tr>
               </thead>
               <tbody>
@@ -81,7 +83,9 @@ export default function Metrics() {
                     const slow = (p.avg_seconds ?? 0) > 0.5
                     return (
                       <tr key={p.plc} className="border-t border-gray-800 hover:bg-gray-800/40">
-                        <td className="px-4 py-2 text-sm font-mono text-gray-300">{p.plc}</td>
+                        <td className="px-4 py-2 text-sm text-white">{p.name || '—'}</td>
+                        <td className="px-4 py-2 text-sm font-mono text-gray-400">{p.plc}</td>
+                        <td className="px-4 py-2 text-sm text-right text-gray-300 font-mono">{p.tag_count.toLocaleString()}</td>
                         <td className="px-4 py-2 text-sm text-right text-gray-400 font-mono">{p.count.toLocaleString()}</td>
                         <td className={`px-4 py-2 text-sm text-right font-mono ${slow ? 'text-red-400' : 'text-gray-200'}`}>{fmtMs(p.avg_seconds)}</td>
                         <td className="px-4 py-2">
@@ -94,7 +98,7 @@ export default function Metrics() {
                   })}
                 {m.plcs.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="px-4 py-8 text-center text-gray-500 text-sm">
+                    <td colSpan={6} className="px-4 py-8 text-center text-gray-500 text-sm">
                       Henüz PLC okuma metriği yok (poller ısınıyor).
                     </td>
                   </tr>

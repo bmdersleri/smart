@@ -22,9 +22,24 @@ router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
 
 @router.get("/metrics")
-async def metrics_summary(_=Depends(get_current_user)):
-    """Poller/PLC sağlık metrikleri özeti (canlı izleme için JSON)."""
-    return metrics.summary()
+async def metrics_summary(db: AsyncSession = Depends(get_db), _=Depends(get_current_user)):
+    """Poller/PLC sağlık metrikleri özeti (canlı izleme için JSON).
+
+    PLC satırları, DB'deki tag kataloğundan PLC adı + yapılandırılmış tag sayısı
+    ile zenginleştirilir (metrik label'ı yalnızca IP taşır).
+    """
+    data = metrics.summary()
+    result = await db.execute(
+        select(Tag.plc_ip, func.max(Tag.plc_name), func.count(Tag.id))
+        .where(Tag.plc_ip.isnot(None))
+        .group_by(Tag.plc_ip)
+    )
+    by_ip = {ip: {"name": name, "tag_count": cnt} for ip, name, cnt in result.all()}
+    for p in data["plcs"]:
+        info = by_ip.get(p["plc"], {})
+        p["name"] = info.get("name")
+        p["tag_count"] = info.get("tag_count", 0)
+    return data
 
 
 @router.get("/overview")
