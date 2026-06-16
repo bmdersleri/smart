@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { getMetrics } from '../api/client'
+import { getMetrics, getDeadbandSavings } from '../api/client'
 import type { MetricsSummary } from '../api/client'
 import { useSortable } from '../hooks/useSortable'
 import SortHeader from '../components/SortHeader'
@@ -29,6 +29,12 @@ export default function Metrics() {
     queryKey: ['metrics'],
     queryFn: () => getMetrics().then((r) => r.data),
     refetchInterval: 2000,
+  })
+
+  const { data: savings } = useQuery({
+    queryKey: ['deadbandSavings'],
+    queryFn: () => getDeadbandSavings(24).then((r) => r.data),
+    refetchInterval: 10000,
   })
 
   const m: MetricsSummary | undefined = data
@@ -64,6 +70,45 @@ export default function Metrics() {
             <StatCard label="BAD Oranı" value={fmtPct(m.bad_ratio)} sub="bad / toplam" accent={badAccent} />
             <StatCard label="Ortalama Tick" value={fmtMs(m.tick_avg_seconds)} sub={`${m.tick_count.toLocaleString()} tick`} accent="text-blue-300" />
           </div>
+
+          {/* Deadband (report-by-exception) veri tasarrufu — son 24 saat, dinamik */}
+          {savings && (
+            <div className="bg-gradient-to-br from-emerald-950/40 to-gray-900 border border-emerald-800/40 rounded-xl p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h2 className="text-sm font-medium text-white flex items-center gap-2">
+                    <span className="text-emerald-400">♻</span> Deadband Veri Tasarrufu
+                  </h2>
+                  <p className="text-xs text-gray-500">
+                    Son {savings.window_hours} saat · {savings.deadband_tags.toLocaleString()} deadband'li tag · report-by-exception
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-4xl font-bold font-mono text-emerald-400">
+                    {savings.savings_pct === null ? '—' : `${savings.savings_pct}%`}
+                  </p>
+                  <p className="text-xs text-gray-500">yazma tasarrufu</p>
+                </div>
+              </div>
+
+              {/* tasarruf çubuğu: yazılan (gerçek) vs önlenen (tasarruf) */}
+              <div className="h-3 bg-gray-800 rounded-full overflow-hidden flex mb-2">
+                <div
+                  className="h-full bg-emerald-500"
+                  style={{ width: `${savings.savings_pct ?? 0}%` }}
+                  title={`${savings.saved_rows.toLocaleString()} satır önlendi`}
+                />
+                <div className="h-full bg-cyan-600/70 flex-1" title={`${savings.actual_rows.toLocaleString()} satır yazıldı`} />
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                <StatCard label="Önlenen Satır" value={savings.saved_rows.toLocaleString()} sub={`${savings.window_hours} saatte`} accent="text-emerald-400" />
+                <StatCard label="Yazılan Satır" value={savings.actual_rows.toLocaleString()} sub="deadband'li tag'ler" accent="text-cyan-300" />
+                <StatCard label="Deadband'siz Olsa" value={savings.expected_rows.toLocaleString()} sub="beklenen satır" accent="text-gray-300" />
+                <StatCard label="Günlük Tasarruf" value={`~${savings.saved_rows_per_day.toLocaleString()}`} sub="satır / gün (24s ölçek)" accent="text-emerald-300" />
+              </div>
+            </div>
+          )}
 
           <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
             <div className="px-4 py-3 border-b border-gray-800">

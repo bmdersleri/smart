@@ -42,6 +42,69 @@ async def metrics_summary(db: AsyncSession = Depends(get_db), _=Depends(get_curr
     return data
 
 
+def compute_deadband_savings(items: list[dict], window_seconds: int) -> dict:
+    """Deadband ile önlenen yazma sayısını tahmin et.
+
+    Her tag için beklenen satır = pencere / sample_interval; gerçek = DB'deki
+    satır sayısı. Tasarruf = beklenen - gerçek (negatif olmaz). Tasarruf oranı
+    toplam beklenene göre yüzde.
+    """
+    expected_total = 0
+    actual_total = 0
+    saved_total = 0
+    for it in items:
+        si = max(1, int(it["sample_interval"]))
+        expected = window_seconds // si
+        actual = int(it["actual"])
+        expected_total += expected
+        actual_total += actual
+        saved_total += max(0, expected - actual)
+    pct = round(saved_total / expected_total * 100, 1) if expected_total else None
+    return {
+        "deadband_tags": len(items),
+        "expected_rows": expected_total,
+        "actual_rows": actual_total,
+        "saved_rows": saved_total,
+        "savings_pct": pct,
+    }
+
+
+@router.get("/deadband_savings")
+async def deadband_savings(
+    hours: int = 24,
+    db: AsyncSession = Depends(get_db),
+    _=Depends(get_current_user),
+):
+    """Deadband (report-by-exception) ile yapılan veri tasarrufunu dinamik hesapla.
+
+    Yalnız deadband > 0 olan aktif uzun-süre tag'leri sayılır; son `hours`
+    penceresindeki gerçek satır sayısı, deadband olmasaydı beklenen satır
+    sayısıyla karşılaştırılır.
+    """
+    window_seconds = hours * 3600
+    since = datetime.now(UTC) - timedelta(hours=hours)
+
+    rows = await db.execute(
+        select(
+            Tag.id,
+            Tag.sample_interval,
+            func.count(TagReading.timestamp),
+        )
+        .outerjoin(
+            TagReading,
+            (TagReading.tag_id == Tag.id) & (TagReading.timestamp >= since),
+        )
+        .where(Tag.is_active, Tag.long_term, Tag.deadband.isnot(None), Tag.deadband > 0)
+        .group_by(Tag.id, Tag.sample_interval)
+    )
+    items = [{"sample_interval": si or 5, "actual": cnt} for _id, si, cnt in rows.all()]
+    out = compute_deadband_savings(items, window_seconds)
+    out["window_hours"] = hours
+    # 24 saate ölçekli kaydedilmeyen satır tahmini (kapasite planlama için)
+    out["saved_rows_per_day"] = round(out["saved_rows"] * 24 / hours) if hours else 0
+    return out
+
+
 @router.get("/overview")
 async def overview(db: AsyncSession = Depends(get_db), _=Depends(get_current_user)):
     now = datetime.now(UTC)

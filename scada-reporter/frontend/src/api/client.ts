@@ -129,6 +129,17 @@ export interface MetricsSummary {
   plcs: { plc: string; name: string | null; tag_count: number; count: number; avg_seconds: number | null }[]
 }
 export const getMetrics = () => api.get<MetricsSummary>('/dashboard/metrics')
+export interface DeadbandSavings {
+  window_hours: number
+  deadband_tags: number
+  expected_rows: number
+  actual_rows: number
+  saved_rows: number
+  saved_rows_per_day: number
+  savings_pct: number | null
+}
+export const getDeadbandSavings = (hours = 24) =>
+  api.get<DeadbandSavings>('/dashboard/deadband_savings', { params: { hours } })
 export const getDashboardDevices = () => api.get<string[]>('/dashboard/devices')
 export const getWatchlist = () => api.get<WatchlistItem[]>('/dashboard/watchlist')
 export const addWatchlist = (tag_id: number) => api.post(`/dashboard/watchlist/${tag_id}`)
