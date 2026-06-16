@@ -15,8 +15,12 @@ CODE_RE = re.compile(r"^\d{3}[A-Z]{2}\d{3}$")
 _SCAN_ROWS = 6
 
 
+_TR_FOLD = str.maketrans("İIŞÜÇÖĞ", "IISUCOG")
+
+
 def _norm(s: object) -> str:
-    return str(s or "").strip().upper().replace("İ", "I").replace("Ş", "S").replace("Ü", "U")
+    # Tam Türkçe katlama: agg tahmin anahtar kelimeleri aksanlı harfte kaçmasın
+    return str(s or "").strip().upper().translate(_TR_FOLD)
 
 
 def _guess_agg(label: str) -> str:
