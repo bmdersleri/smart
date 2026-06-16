@@ -13,8 +13,13 @@ describe('i18n', () => {
     expect(i18n.t('common:save')).toBe('Kaydet')
   })
 
-  it('falls back to English for a missing key in another language', async () => {
+  it('returns the Russian string after switching to ru', async () => {
     await i18n.changeLanguage('ru')
     expect(i18n.t('common:save')).toBe('Сохранить')
+  })
+
+  it('falls back to English for an unsupported language', async () => {
+    await i18n.changeLanguage('fr')
+    expect(i18n.t('common:save')).toBe('Save')
   })
 })
