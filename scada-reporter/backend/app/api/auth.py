@@ -30,10 +30,9 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
 
 
-async def get_current_user(
-    token: str = Depends(oauth2_scheme),
-    db: AsyncSession = Depends(get_db),
-) -> User:
+async def authenticate_token(token: str, db: AsyncSession) -> User:
+    """Token string'i doğrula ve kullanıcıyı döndür. EventSource gibi başlık
+    gönderemeyen istemciler (SSE) bunu query-param token ile kullanır."""
     payload = decode_token(token)
     if not payload:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Gecersiz token")
@@ -42,6 +41,13 @@ async def get_current_user(
     if not user or not user.is_active:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Kullanici bulunamadi")
     return user
+
+
+async def get_current_user(
+    token: str = Depends(oauth2_scheme),
+    db: AsyncSession = Depends(get_db),
+) -> User:
+    return await authenticate_token(token, db)
 
 
 def require_role(*roles: str):

@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { format, parseISO } from 'date-fns'
 import { getWatchlist, removeWatchlist } from '../../api/client'
 import type { WatchlistItem } from '../../api/client'
+import { useLatestStream } from '../../hooks/useLatestStream'
 
 function QualityDot({ ok }: { ok: boolean }) {
   return <span className={`inline-block w-2 h-2 rounded-full ${ok ? 'bg-green-400' : 'bg-red-400'}`} />
@@ -27,7 +28,9 @@ function formatValue(item: WatchlistItem): string {
 
 function formatTs(ts: string | null): string {
   if (!ts) return '—'
-  return format(parseISO(ts + 'Z'), 'HH:mm:ss')
+  // REST naive (tz'siz) ts -> 'Z' ekle; SSE ts zaten tz taşır (+00:00/Z)
+  const iso = ts.endsWith('Z') || ts.includes('+') ? ts : ts + 'Z'
+  return format(parseISO(iso), 'HH:mm:ss')
 }
 
 export default function WatchlistTab({ active }: { active: boolean }) {
@@ -35,8 +38,21 @@ export default function WatchlistTab({ active }: { active: boolean }) {
   const { data: items = [], isLoading } = useQuery({
     queryKey: ['watchlist'],
     queryFn: () => getWatchlist().then((r) => r.data),
-    refetchInterval: 5000,
+    // SSE push canlı değerleri taşır; REST sadece yapı (pin/unpin) için fallback
+    refetchInterval: 30000,
     enabled: active,
+  })
+
+  const live = useLatestStream(
+    items.map((i) => i.tag_id),
+    active
+  )
+
+  // Canlı SSE değerlerini watchlist satırlarına bindir
+  const rows: WatchlistItem[] = items.map((it) => {
+    const lv = live[it.tag_id]
+    if (!lv) return it
+    return { ...it, value: lv.v, timestamp: lv.t, quality_ok: lv.q === 192 }
   })
 
   const unpin = useMutation({
@@ -69,7 +85,7 @@ export default function WatchlistTab({ active }: { active: boolean }) {
           </tr>
         </thead>
         <tbody>
-          {items.map((item) => (
+          {rows.map((item) => (
             <tr key={item.tag_id} className="border-t border-gray-800 hover:bg-gray-800/40 transition-colors">
               <td className="px-4 py-3 text-sm text-gray-400">{item.device || '—'}</td>
               <td className="px-4 py-3 text-sm text-white font-medium">{item.name}</td>
