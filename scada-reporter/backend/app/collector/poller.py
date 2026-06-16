@@ -14,12 +14,33 @@ from datetime import UTC, datetime
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
-from app.collector.s7_collector import ReadSpec, parse_address, plc_manager
+from app.collector.s7_collector import BAD, ReadSpec, parse_address, plc_manager
 from app.core.config import settings
 from app.core.database import AsyncSessionLocal
 from app.models.tag import Tag, TagReading
 
 logger = logging.getLogger(__name__)
+
+
+async def read_plc_group(
+    key: tuple[str, int, int],
+    items: list[tuple[int, ReadSpec]],
+    timeout: float,
+) -> list[tuple[int, float | None, int]]:
+    """Bir PLC grubunu zaman aşımı sınırıyla oku. Hata/zaman aşımı -> hepsi BAD."""
+    ip, rack, slot = key
+    specs = [spec for _, spec in items]
+    try:
+        results = await asyncio.wait_for(
+            plc_manager.read_plc_batch(ip, rack, slot, specs), timeout=timeout
+        )
+    except Exception as e:
+        logger.warning("PLC grup okuma hatasi/zaman asimi %s: %s", ip, e)
+        results = [(None, BAD)] * len(specs)
+    return [
+        (tag_id, value, quality)
+        for (tag_id, _), (value, quality) in zip(items, results, strict=False)
+    ]
 
 
 async def poll_loop() -> None:
