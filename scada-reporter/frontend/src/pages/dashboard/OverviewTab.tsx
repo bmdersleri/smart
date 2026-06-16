@@ -24,7 +24,7 @@ function StatCard({ label, value, sub, flash, flip, accent }: {
           key={flip ? String(value) : undefined}
           className={`text-2xl font-bold leading-8 transition-colors duration-300
             ${flash ? 'text-cyan-400' : (accent ?? 'text-white')}
-            ${flip ? 'animate-[flipIn_0.35s_cubic-bezier(0.22,1,0.36,1)]' : ''}`}
+            ${flip ? 'animate-[flipIn_0.5s_linear]' : ''}`}
         >
           {value}
         </p>

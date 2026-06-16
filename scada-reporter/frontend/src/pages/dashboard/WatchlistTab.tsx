@@ -12,7 +12,7 @@ function FlipCell({ value, className }: { value: string; className?: string }) {
     <span className="inline-block overflow-hidden align-bottom" style={{ height: '1.25rem', lineHeight: '1.25rem' }}>
       <span
         key={value}
-        className={`block animate-[flipIn_0.35s_cubic-bezier(0.22,1,0.36,1)] ${className ?? ''}`}
+        className={`block animate-[flipIn_0.5s_linear] ${className ?? ''}`}
       >
         {value}
       </span>
