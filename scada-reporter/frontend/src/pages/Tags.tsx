@@ -3,9 +3,9 @@ import type { AxiosError } from 'axios'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   getTags, createTag, deleteTag, updateTag, importTags, importTagsCsv, exportTags,
-  getGroups, createGroup, deleteGroup, assignTagsToGroup, unassignTags,
+  getGroups, getGroupTree, createGroup, deleteGroup, assignTagsToGroup, unassignTags,
 } from '../api/client'
-import type { Tag, Group } from '../api/client'
+import type { Tag, Group, GroupNode } from '../api/client'
 import { useAuth } from '../context/AuthContext'
 import { useSortable } from '../hooks/useSortable'
 import SortHeader from '../components/SortHeader'
@@ -348,6 +348,106 @@ function GroupsModal({ onClose }: { onClose: () => void }) {
   )
 }
 
+function TagRow({
+  tag, canEdit, onEdit, onDelete, indent,
+}: {
+  tag: Tag; canEdit: boolean; onEdit: (t: Tag) => void; onDelete: (t: Tag) => void; indent: number
+}) {
+  return (
+    <div className="flex items-center gap-2 py-1.5 pr-2 hover:bg-gray-800/40 rounded-lg" style={{ paddingLeft: indent }}>
+      <span className="w-1.5 h-1.5 rounded-full bg-gray-600 flex-shrink-0" />
+      <span className="text-sm text-white truncate flex-1">{tag.name}</span>
+      <span className="text-xs font-mono text-gray-600 hidden sm:inline">{tag.s7_address ?? '—'}</span>
+      <span className="text-xs text-gray-500 w-10 text-right">{tag.unit}</span>
+      <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${tag.is_active ? 'bg-green-900/50 text-green-400' : 'bg-gray-800 text-gray-500'}`}>
+        {tag.is_active ? 'Aktif' : 'Pasif'}
+      </span>
+      {canEdit && (
+        <div className="flex gap-1">
+          <button onClick={() => onEdit(tag)} title="Düzenle" className="p-1 rounded text-gray-500 hover:text-blue-400 hover:bg-blue-500/10">
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+          </button>
+          <button onClick={() => onDelete(tag)} title="Sil" className="p-1 rounded text-gray-500 hover:text-red-400 hover:bg-red-500/10">
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function TagTreeNode({
+  node, tagMap, canEdit, onEdit, onDelete, depth,
+}: {
+  node: GroupNode; tagMap: Map<number, Tag>; canEdit: boolean
+  onEdit: (t: Tag) => void; onDelete: (t: Tag) => void; depth: number
+}) {
+  const [open, setOpen] = useState(depth < 1)
+  const leafTags = node.tag_ids.map((id) => tagMap.get(id)).filter(Boolean) as Tag[]
+  // alt ağaçtaki toplam tag sayısı (rozet için)
+  const count = (n: GroupNode): number => n.tag_ids.length + n.children.reduce((s, c) => s + count(c), 0)
+  return (
+    <div>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center gap-1.5 py-1.5 text-sm text-gray-200 hover:text-white"
+        style={{ paddingLeft: depth * 16 + 4 }}
+      >
+        <span className="text-gray-500 w-3">{open ? '▾' : '▸'}</span>
+        <svg className="w-4 h-4 text-indigo-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" /></svg>
+        <span className="font-medium truncate">{node.name}</span>
+        <span className="text-xs text-gray-600 ml-1">{count(node)}</span>
+      </button>
+      {open && (
+        <div>
+          {node.children.map((c, i) => (
+            <TagTreeNode key={c.id ?? `${node.name}-${i}`} node={c} tagMap={tagMap} canEdit={canEdit} onEdit={onEdit} onDelete={onDelete} depth={depth + 1} />
+          ))}
+          {leafTags.map((t) => (
+            <TagRow key={t.id} tag={t} canEdit={canEdit} onEdit={onEdit} onDelete={onDelete} indent={(depth + 1) * 16 + 18} />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function TagTreeView({
+  source, tags, canEdit, onEdit, onDelete,
+}: {
+  source: 'manual' | 'auto'; tags: Tag[]; canEdit: boolean
+  onEdit: (t: Tag) => void; onDelete: (t: Tag) => void
+}) {
+  const { data: tree = [], isLoading } = useQuery({
+    queryKey: ['groupTree', source],
+    queryFn: () => getGroupTree(source).then((r) => r.data),
+  })
+  const tagMap = new Map(tags.map((t) => [t.id, t]))
+  const ungrouped = source === 'manual' ? tags.filter((t) => t.group_id === null) : []
+
+  if (isLoading) return <div className="py-12 text-center text-gray-500">Yükleniyor...</div>
+  return (
+    <div className="p-2 space-y-0.5">
+      {tree.length === 0 && ungrouped.length === 0 && (
+        <p className="py-8 text-center text-gray-500 text-sm">
+          {source === 'manual' ? 'Grup yok. 🗂 Gruplar ile oluşturun.' : 'Tag yok.'}
+        </p>
+      )}
+      {tree.map((n, i) => (
+        <TagTreeNode key={n.id ?? `root-${i}`} node={n} tagMap={tagMap} canEdit={canEdit} onEdit={onEdit} onDelete={onDelete} depth={0} />
+      ))}
+      {ungrouped.length > 0 && (
+        <div className="pt-2 mt-2 border-t border-gray-800">
+          <p className="text-xs text-gray-500 uppercase tracking-wide px-2 py-1">Gruplanmamış ({ungrouped.length})</p>
+          {ungrouped.map((t) => (
+            <TagRow key={t.id} tag={t} canEdit={canEdit} onEdit={onEdit} onDelete={onDelete} indent={22} />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function Tags() {
   const { user } = useAuth()
   const qc = useQueryClient()
@@ -358,6 +458,8 @@ export default function Tags() {
   const [editTag, setEditTag] = useState<Tag | null>(null)
   const [search, setSearch] = useState('')
   const [groupFilter, setGroupFilter] = useState<number | 'all' | 'none'>('all')
+  const [viewMode, setViewMode] = useState<'table' | 'tree'>('table')
+  const [treeSource, setTreeSource] = useState<'manual' | 'auto'>('manual')
 
   const { data: tags = [], isLoading } = useQuery({
     queryKey: ['tags'],
@@ -381,6 +483,7 @@ export default function Tags() {
     mutationFn: deleteTag,
     onSuccess: () => qc.invalidateQueries({ queryKey: ['tags'] }),
   })
+  const handleDelete = (t: Tag) => { if (confirm(`"${t.name}" silinsin mi?`)) delMut.mutate(t.id) }
 
   const canEdit = user?.role === 'admin' || user?.role === 'operator'
   const filtered = tags.filter((t) => {
@@ -435,23 +538,57 @@ export default function Tags() {
           placeholder="Tag veya cihaz adı ara..."
           className="flex-1 bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-500"
         />
-        <select
-          value={String(groupFilter)}
-          onChange={(e) => {
-            const v = e.target.value
-            setGroupFilter(v === 'all' || v === 'none' ? v : Number(v))
-          }}
-          className="bg-gray-900 border border-gray-800 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500"
-          title="Gruba göre filtrele"
-        >
-          <option value="all">Tüm gruplar</option>
-          <option value="none">Gruplanmamış</option>
-          {groups.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
-        </select>
+        {viewMode === 'table' && (
+          <select
+            value={String(groupFilter)}
+            onChange={(e) => {
+              const v = e.target.value
+              setGroupFilter(v === 'all' || v === 'none' ? v : Number(v))
+            }}
+            className="bg-gray-900 border border-gray-800 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500"
+            title="Gruba göre filtrele"
+          >
+            <option value="all">Tüm gruplar</option>
+            <option value="none">Gruplanmamış</option>
+            {groups.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
+          </select>
+        )}
+        {/* Tablo / Ağaç görünüm anahtarı */}
+        <div className="flex bg-gray-900 border border-gray-800 rounded-xl p-0.5">
+          <button
+            onClick={() => setViewMode('table')}
+            className={`px-3 py-2 text-sm rounded-lg transition-colors ${viewMode === 'table' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'}`}
+            title="Tablo görünümü"
+          >
+            ☰ Tablo
+          </button>
+          <button
+            onClick={() => setViewMode('tree')}
+            className={`px-3 py-2 text-sm rounded-lg transition-colors ${viewMode === 'tree' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'}`}
+            title="Hiyerarşi ağacı"
+          >
+            🌲 Ağaç
+          </button>
+        </div>
+        {viewMode === 'tree' && (
+          <div className="flex bg-gray-900 border border-gray-800 rounded-xl p-0.5">
+            {(['manual', 'auto'] as const).map((s) => (
+              <button
+                key={s}
+                onClick={() => setTreeSource(s)}
+                className={`px-3 py-2 text-sm rounded-lg transition-colors ${treeSource === s ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-white'}`}
+              >
+                {s === 'manual' ? 'Manuel' : 'Auto'}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
-        {isLoading ? (
+        {viewMode === 'tree' ? (
+          <TagTreeView source={treeSource} tags={tags} canEdit={canEdit} onEdit={setEditTag} onDelete={handleDelete} />
+        ) : isLoading ? (
           <div className="py-12 text-center text-gray-500">Yükleniyor...</div>
         ) : filtered.length === 0 ? (
           <div className="py-12 text-center">
