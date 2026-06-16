@@ -22,6 +22,7 @@ LABELS: dict[str, dict[str, str]] = {
         "period_summary": "Period Summary",
         "summary_stats": "Summary Statistics",
         "system_health_summary": "System Health Summary",
+        "chart": "Chart",
         # ── Stat-block / column headers (Excel per-tag sheet) ────────────────
         "tag": "Tag",
         "unit": "Unit",
@@ -74,6 +75,7 @@ LABELS: dict[str, dict[str, str]] = {
         "period_summary": "Dönem Özeti",
         "summary_stats": "Özet İstatistikler",
         "system_health_summary": "Sistem Sağlık Özeti",
+        "chart": "Grafik",
         # ── Stat-block / column headers ──────────────────────────────────────
         "tag": "Tag",
         "unit": "Birim",
@@ -126,6 +128,7 @@ LABELS: dict[str, dict[str, str]] = {
         "period_summary": "Сводка по периодам",
         "summary_stats": "Сводная статистика",
         "system_health_summary": "Общее состояние системы",
+        "chart": "График",
         # ── Stat-block / column headers ──────────────────────────────────────
         "tag": "Tag",
         "unit": "Единица",
@@ -178,6 +181,7 @@ LABELS: dict[str, dict[str, str]] = {
         "period_summary": "Periodenübersicht",
         "summary_stats": "Zusammenfassende Statistiken",
         "system_health_summary": "Systemgesundheitsübersicht",
+        "chart": "Diagramm",
         # ── Stat-block / column headers ──────────────────────────────────────
         "tag": "Tag",
         "unit": "Einheit",

@@ -1,12 +1,14 @@
 """i18n tests for the Excel report builder (Task 4)."""
 
 import io
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from datetime import UTC, datetime
 
 import pytest
 from openpyxl import load_workbook
 
 from app.services.excel_builder import build_advanced_excel
+from app.services.pdf_builder import build_pdf
 from app.services.stats_engine import TagStats
 
 
@@ -94,3 +96,49 @@ def test_excel_uses_english_summary_sheet(sample_report_archive, sample_per_tag_
 def test_excel_uses_turkish_summary_sheet(sample_report_archive, sample_per_tag_data):
     content = _build(sample_report_archive, sample_per_tag_data, lang="tr")
     assert "Özet" in _sheet_titles(content)
+
+
+# ── PDF i18n (Task 5) ────────────────────────────────────────────────────────
+
+
+@dataclass
+class _PdfTemplate:
+    name: str = "Daily Report"
+    interval: str = "hourly"
+    show_summary_stats: bool = True
+    show_anomaly_table: bool = True
+    show_trend_charts: bool = False
+
+
+@dataclass
+class _PdfArchive:
+    id: int = 1
+    start: datetime = field(default_factory=lambda: datetime(2026, 1, 1, 0, 0, tzinfo=UTC))
+    end: datetime = field(default_factory=lambda: datetime(2026, 1, 2, 0, 0, tzinfo=UTC))
+
+
+@pytest.fixture
+def pdf_archive() -> _PdfArchive:
+    return _PdfArchive()
+
+
+def test_pdf_differs_by_language(pdf_archive, sample_per_tag_data):
+    generated_at = datetime(2026, 1, 2, 12, 0, tzinfo=UTC)
+    content_en = build_pdf(
+        pdf_archive,
+        sample_per_tag_data,
+        _PdfTemplate(),
+        "Test Facility",
+        generated_at,
+        lang="en",
+    )
+    content_tr = build_pdf(
+        pdf_archive,
+        sample_per_tag_data,
+        _PdfTemplate(),
+        "Test Facility",
+        generated_at,
+        lang="tr",
+    )
+    assert isinstance(content_en, (bytes, bytearray))
+    assert content_en != content_tr  # localized labels produce different output

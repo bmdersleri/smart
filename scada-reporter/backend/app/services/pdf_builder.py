@@ -5,6 +5,8 @@ from datetime import datetime
 from jinja2 import Environment, FileSystemLoader
 from weasyprint import HTML
 
+from app.i18n import get_labels
+
 _template_dir = os.path.join(os.path.dirname(__file__), "..", "templates")
 _env = Environment(loader=FileSystemLoader(_template_dir), autoescape=True)
 
@@ -15,7 +17,10 @@ def build_pdf(
     template,
     facility_name: str,
     generated_at: datetime,
+    lang: str = "en",
 ) -> bytes:
+    L = get_labels(lang)
+
     for td in per_tag_data:
         td["chart_b64"] = base64.b64encode(td.get("chart_png", b"")).decode()
 
@@ -25,5 +30,6 @@ def build_pdf(
         per_tag_data=per_tag_data,
         facility_name=facility_name,
         generated_at=generated_at,
+        L=L,
     )
     return HTML(string=html_str).write_pdf()

@@ -156,9 +156,8 @@ async def generate_report_from_template(
             from app.core.config import settings
 
             generated_at = datetime.now(UTC)
-            # TODO(T5): pass lang to build_pdf once it accepts a lang parameter
             content = build_pdf(
-                archive, per_tag_data, template, settings.FACILITY_NAME, generated_at
+                archive, per_tag_data, template, settings.FACILITY_NAME, generated_at, lang=lang
             )
             ext = "pdf"
         else:
