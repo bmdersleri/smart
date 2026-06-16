@@ -85,3 +85,45 @@ async def test_write_readings_conflict_returns_zero(db_engine):
 @pytest.mark.asyncio
 async def test_write_readings_empty():
     assert await poller.write_readings([], datetime.now(UTC)) == 0
+
+
+@pytest.mark.asyncio
+async def test_run_once_writes_db_and_cache(db_engine, monkeypatch):
+    from app.collector.cache import latest_cache
+
+    sm = async_sessionmaker(db_engine, expire_on_commit=False)
+    async with sm() as s:
+        t = Tag(
+            node_id="ns=2;s=RT1",
+            name="RT1",
+            long_term=True,
+            plc_ip="10.0.0.5",
+            s7_address="DB10,DD0",
+            data_type="REAL",
+            sample_interval=1,
+        )
+        s.add(t)
+        await s.commit()
+        await s.refresh(t)
+        tid = t.id
+
+    async def fake_batch(ip, rack, slot, specs, name=""):
+        return [(42.0, 192) for _ in specs]
+
+    monkeypatch.setattr(poller.plc_manager, "read_plc_batch", fake_batch)
+
+    last_read: dict[int, float] = {}
+    written, min_interval = await poller.run_once(last_read, now=1000.0, sessionmaker=sm, timeout=5)
+
+    assert written == 1
+    assert min_interval == 1
+    assert last_read[tid] == 1000.0
+
+    cr = latest_cache.get(tid)
+    assert cr is not None and cr.value == 42.0 and cr.quality == 192
+
+    async with sm() as s:
+        cnt = await s.scalar(
+            select(func.count()).select_from(TagReading).where(TagReading.tag_id == tid)
+        )
+    assert cnt == 1
