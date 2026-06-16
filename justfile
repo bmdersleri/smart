@@ -83,6 +83,10 @@ seed-users:
 seed-catalog *args:
     cd {{be}} && .venv/Scripts/python -m app.seed_catalog {{args}}
 
+# Tag tiplerine göre toplu deadband ayarla (--dry-run / --reset)
+seed-deadband *args:
+    cd {{be}} && .venv/Scripts/python -m app.seed_deadband {{args}}
+
 # ── Kalite ───────────────────────────────────────────────────────────────────
 
 # Python lint
