@@ -31,7 +31,7 @@ function useDebounce<T>(value: T, delay: number): T {
 }
 
 export default function AllTagsTab({ active }: { active: boolean }) {
-  const { t } = useTranslation(['dashboard', 'common'])
+  const { t, i18n } = useTranslation(['dashboard', 'common'])
   const qc = useQueryClient()
   const [device, setDevice] = useState('')
   const [searchInput, setSearchInput] = useState('')
@@ -127,7 +127,7 @@ export default function AllTagsTab({ active }: { active: boolean }) {
           {t('daily_tracking')}
         </label>
 
-        <span className="ml-auto text-xs text-gray-500">{t('tag_count', { count: total.toLocaleString('tr') })}</span>
+        <span className="ml-auto text-xs text-gray-500">{t('tag_count', { value: total.toLocaleString(i18n.language) })}</span>
       </div>
 
       {/* Table */}

@@ -2,15 +2,16 @@ import { useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { format, parseISO } from 'date-fns'
-import { tr } from 'date-fns/locale'
+import { enUS, tr, ru, de } from 'date-fns/locale'
 import { getDashboardDevices, getOverview, listPlcs, getDeadbandSavings } from '../../api/client'
 import type { PlcEntry } from '../../api/client'
 
-// shorten large numbers: 63,396,597 -> "63,4M"
-function fmtCompact(n: number): string {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1).replace('.', ',')}M`
-  if (n >= 1_000) return `${(n / 1_000).toFixed(1).replace('.', ',')}B`
-  return n.toLocaleString('tr')
+// date-fns locale follows the active language (month/day names)
+const DATE_LOCALES: Record<string, typeof tr> = { en: enUS, tr, ru, de }
+
+// shorten large numbers using the active locale: 63,396,597 -> "63.4M" (en) / "63,4 Mio." (de)
+function fmtCompact(n: number, lang: string): string {
+  return n.toLocaleString(lang, { notation: 'compact', maximumFractionDigits: 1 })
 }
 
 // ── Stat card ──────────────────────────────────────────────────────────────
@@ -77,13 +78,13 @@ function ConnectingDots() {
 // ── DB write counter badge ────────────────────────────────────────────────
 
 function WriteCounter({ count, flash }: { count: number; flash: boolean }) {
-  const { t } = useTranslation('dashboard')
+  const { t, i18n } = useTranslation('dashboard')
   return (
     <div className={`flex items-center gap-1.5 text-xs transition-all duration-300 ${flash ? 'text-cyan-400' : 'text-gray-600'}`}>
       <span className={`text-base leading-none transition-transform duration-200 ${flash ? 'translate-y-[-2px]' : ''}`}>
         ↑
       </span>
-      <span className="font-mono tabular-nums">{count.toLocaleString('tr')}</span>
+      <span className="font-mono tabular-nums">{count.toLocaleString(i18n.language)}</span>
       <span>{t('writes')}</span>
     </div>
   )
@@ -148,7 +149,7 @@ function TopologyBar({ connectedCount, total, writeFlash }: {
 // ── PLC card ──────────────────────────────────────────────────────────────
 
 function PlcCard({ plc, writeFlash }: { plc: PlcEntry; writeFlash: boolean }) {
-  const { t } = useTranslation('dashboard')
+  const { t, i18n } = useTranslation('dashboard')
   const isConnected = plc.connected
   const [hovered, setHovered] = useState(false)
 
@@ -206,7 +207,7 @@ function PlcCard({ plc, writeFlash }: { plc: PlcEntry; writeFlash: boolean }) {
             ? hovered ? 'bg-green-800/60 text-green-300' : 'bg-green-900/40 text-green-400'
             : hovered ? 'bg-red-900/50 text-red-400' : 'bg-red-900/30 text-red-500'
           }`}>
-          {t('plc_tag_count', { count: plc.tag_count })}
+          {t('plc_tag_count', { value: plc.tag_count.toLocaleString(i18n.language) })}
         </span>
       </div>
 
@@ -248,7 +249,7 @@ function PlcCard({ plc, writeFlash }: { plc: PlcEntry; writeFlash: boolean }) {
 // ── Main component ────────────────────────────────────────────────────────
 
 export default function OverviewTab({ active }: { active: boolean }) {
-  const { t } = useTranslation('dashboard')
+  const { t, i18n } = useTranslation('dashboard')
   const [writeFlash, setWriteFlash] = useState(false)
   const [writeCount, setWriteCount] = useState(0)
   const lastReadingRef = useRef<string | null>(null)
@@ -296,8 +297,8 @@ export default function OverviewTab({ active }: { active: boolean }) {
 
   const readRate = overview?.readings_1h != null
     ? overview.readings_1h < 60
-      ? t('rate_reads_per_hour', { count: overview.readings_1h })
-      : t('rate_reads_per_min', { count: Math.round(overview.readings_1h / 60) })
+      ? t('rate_reads_per_hour', { value: overview.readings_1h.toLocaleString(i18n.language) })
+      : t('rate_reads_per_min', { value: Math.round(overview.readings_1h / 60).toLocaleString(i18n.language) })
     : '—'
 
   const qualityAccent = overview?.quality_rate == null
@@ -314,20 +315,20 @@ export default function OverviewTab({ active }: { active: boolean }) {
 
   return (
     <div className="space-y-6">
-      {/* Stat cards — 6 kart, 2 satır */}
+      {/* Stat cards — 6 cards, 2 rows */}
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
         <StatCard
           label={t('stat_active_tags')}
           value={overview?.active_tags ?? '—'}
-          sub={t('stat_devices', { count: deviceCount ?? '—' })}
+          sub={t('stat_devices', { value: deviceCount != null ? deviceCount.toLocaleString(i18n.language) : '—' })}
         />
         <StatCard
           label={t('stat_readings_24h')}
-          value={overview?.readings_24h?.toLocaleString('tr') ?? '—'}
+          value={overview?.readings_24h?.toLocaleString(i18n.language) ?? '—'}
         />
         <StatCard
           label={t('stat_readings_1h')}
-          value={overview?.readings_1h?.toLocaleString('tr') ?? '—'}
+          value={overview?.readings_1h?.toLocaleString(i18n.language) ?? '—'}
           sub={readRate}
           flip
         />
@@ -344,14 +345,14 @@ export default function OverviewTab({ active }: { active: boolean }) {
           flip
           value={lastTs}
           sub={overview?.last_reading
-            ? format(parseISO(overview.last_reading + 'Z'), 'dd MMM yyyy', { locale: tr })
+            ? format(parseISO(overview.last_reading + 'Z'), 'dd MMM yyyy', { locale: DATE_LOCALES[i18n.language] ?? enUS })
             : undefined}
         />
         <StatCard label={t('stat_plc_connection')} value={plcLabel} sub={t('stat_plc_sub')} />
         <StatCard
           label={t('stat_deadband_savings')}
           value={savings?.savings_pct != null ? `%${savings.savings_pct}` : '—'}
-          sub={savings ? t('saved_rows_per_day', { count: fmtCompact(savings.saved_rows_per_day) }) : t('stat_deadband_sub_24h')}
+          sub={savings ? t('saved_rows_per_day', { value: fmtCompact(savings.saved_rows_per_day, i18n.language) }) : t('stat_deadband_sub_24h')}
           accent="text-emerald-400"
         />
       </div>
