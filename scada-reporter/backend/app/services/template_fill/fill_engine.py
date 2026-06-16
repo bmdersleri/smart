@@ -18,6 +18,10 @@ from app.core.config import settings
 from app.models.excel_template import ExcelTemplate
 from app.services.template_fill.daily_rollup import daily_values
 
+# write modunda boş tarih hücresine yazılan varsayılan biçim (TR).
+# Şablon hücreyi önceden biçimlendirmişse (General değilse) dokunulmaz.
+_DATE_FMT = "dd.mm.yyyy"
+
 
 async def fill_template(db: AsyncSession, template_id: int, year: int, month: int) -> bytes:
     result = await db.execute(
@@ -48,7 +52,13 @@ async def fill_template(db: AsyncSession, template_id: int, year: int, month: in
     # write modunda tarihleri yaz
     if tpl.date_mode == "write":
         for day in range(1, ndays + 1):
-            ws[f"{tpl.date_col}{day_to_row[day]}"] = datetime(year, month, day)
+            cell = ws[f"{tpl.date_col}{day_to_row[day]}"]
+            # Biçimi değer atamadan ÖNCE oku: openpyxl datetime atayınca
+            # otomatik varsayılan ISO biçimi koyar, "General" kalmaz.
+            preset = cell.number_format != "General"
+            cell.value = datetime(year, month, day)
+            if not preset:
+                cell.number_format = _DATE_FMT
 
     for col in tpl.columns:
         if not col.enabled or col.tag_id is None:
