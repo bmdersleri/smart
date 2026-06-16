@@ -1,0 +1,13 @@
+{
+  "save": "Save",
+  "cancel": "Cancel",
+  "delete": "Delete",
+  "edit": "Edit",
+  "add": "Add",
+  "reset": "Reset to Defaults",
+  "loading": "Loading...",
+  "search": "Search",
+  "settings": "Settings",
+  "logout": "Log Out",
+  "language": "Language"
+}
