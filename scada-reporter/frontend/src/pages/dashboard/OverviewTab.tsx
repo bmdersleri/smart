@@ -2,8 +2,15 @@ import { useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { format, parseISO } from 'date-fns'
 import { tr } from 'date-fns/locale'
-import { getDashboardDevices, getOverview, listPlcs } from '../../api/client'
+import { getDashboardDevices, getOverview, listPlcs, getDeadbandSavings } from '../../api/client'
 import type { PlcEntry } from '../../api/client'
+
+// büyük sayıları kısalt: 63.396.597 -> "63,4M"
+function fmtCompact(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1).replace('.', ',')}M`
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1).replace('.', ',')}B`
+  return n.toLocaleString('tr')
+}
 
 // ── Stat card ──────────────────────────────────────────────────────────────
 
@@ -260,6 +267,12 @@ export default function OverviewTab({ active }: { active: boolean }) {
     refetchInterval: 15000,
     enabled: active,
   })
+  const { data: savings } = useQuery({
+    queryKey: ['deadbandSavings'],
+    queryFn: () => getDeadbandSavings(24).then((r) => r.data),
+    refetchInterval: 30000,
+    enabled: active,
+  })
 
   // Flash + increment counter when last_reading changes
   useEffect(() => {
@@ -331,6 +344,12 @@ export default function OverviewTab({ active }: { active: boolean }) {
             : undefined}
         />
         <StatCard label="PLC Bağlantı" value={plcLabel} sub="bağlı / toplam" />
+        <StatCard
+          label="♻ Deadband Tasarrufu"
+          value={savings?.savings_pct != null ? `%${savings.savings_pct}` : '—'}
+          sub={savings ? `~${fmtCompact(savings.saved_rows_per_day)} satır/gün önlendi` : 'son 24 saat'}
+          accent="text-emerald-400"
+        />
       </div>
 
       {/* PLC bölümü */}
