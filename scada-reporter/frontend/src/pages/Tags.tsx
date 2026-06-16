@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import type { AxiosError } from 'axios'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getTags, createTag, deleteTag, updateTag, importTags } from '../api/client'
 import type { Tag } from '../api/client'
@@ -184,7 +185,7 @@ function ImportTagModal({ onClose }: { onClose: () => void }) {
           </div>
         )}
         {mut.isError && (
-          <p className="text-red-400 text-sm">Import hatası: {(mut.error as any)?.response?.data?.detail || 'Bilinmeyen hata'}</p>
+          <p className="text-red-400 text-sm">Import hatası: {(mut.error as AxiosError<{ detail: string }>)?.response?.data?.detail || 'Bilinmeyen hata'}</p>
         )}
 
         <div className="flex gap-3 pt-2">

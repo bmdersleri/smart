@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, useEffect } from 'react'
 
 const SETTINGS_KEY = 'scada_settings'
@@ -14,7 +15,7 @@ function load(): Settings {
   try {
     const raw = localStorage.getItem(SETTINGS_KEY)
     if (raw) return { ...defaults, ...JSON.parse(raw) }
-  } catch {}
+  } catch { /* ignore parse errors */ }
   return defaults
 }
 

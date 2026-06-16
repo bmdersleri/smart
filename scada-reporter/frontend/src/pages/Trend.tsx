@@ -116,6 +116,7 @@ export default function Trend() {
 
   // Reset brush when selection or time range changes
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setBrushIndices(null)
   }, [selected, hours])
 

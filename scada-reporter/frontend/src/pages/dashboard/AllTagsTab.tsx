@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { format, parseISO } from 'date-fns'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { addWatchlist, getDashboardDevices, getDashboardTags } from '../../api/client'
 import type { DashboardTag } from '../../api/client'
 
@@ -35,10 +35,13 @@ export default function AllTagsTab({ active }: { active: boolean }) {
   const [daily, setDaily] = useState<boolean | undefined>(undefined)
   const [page, setPage] = useState(1)
   const search = useDebounce(searchInput, 300)
-  const pinnedIds = useRef<Set<number>>(new Set())
+  const [pinnedIds, setPinnedIds] = useState<Set<number>>(new Set())
 
   // Reset to page 1 on filter change
-  useEffect(() => { setPage(1) }, [device, search, quality, daily])
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setPage(1)
+  }, [device, search, quality, daily])
 
   const params = useMemo(() => ({
     ...(device ? { device } : {}),
@@ -67,7 +70,7 @@ export default function AllTagsTab({ active }: { active: boolean }) {
   const pin = useMutation({
     mutationFn: (tag_id: number) => addWatchlist(tag_id),
     onSuccess: (_data, tag_id) => {
-      pinnedIds.current.add(tag_id)
+      setPinnedIds((prev) => new Set(prev).add(tag_id))
       qc.invalidateQueries({ queryKey: ['watchlist'] })
       qc.invalidateQueries({ queryKey: ['dashboard-tags'] })
     },
