@@ -9,5 +9,16 @@
   "search": "Ara",
   "settings": "Ayarlar",
   "logout": "Çıkış Yap",
-  "language": "Dil"
+  "language": "Dil",
+  "app_subtitle": "Su/Atıksu Sistemi",
+  "nav_dashboard": "Dashboard",
+  "nav_tags": "Tag Yönetimi",
+  "nav_plc": "PLC Yönetimi",
+  "nav_trend": "Trend Grafik",
+  "nav_reports": "Raporlar",
+  "nav_advanced_reports": "Gelişmiş Raporlar",
+  "nav_excel_templates": "Excel Şablonları",
+  "nav_metrics": "Canlı Metrikler",
+  "nav_settings": "Ayarlar",
+  "menu_open": "Menüyü aç"
 }

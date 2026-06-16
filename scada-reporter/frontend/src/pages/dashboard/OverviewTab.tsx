@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { format, parseISO } from 'date-fns'
 import { tr } from 'date-fns/locale'
 import { getDashboardDevices, getOverview, listPlcs, getDeadbandSavings } from '../../api/client'
 import type { PlcEntry } from '../../api/client'
 
-// büyük sayıları kısalt: 63.396.597 -> "63,4M"
+// shorten large numbers: 63,396,597 -> "63,4M"
 function fmtCompact(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1).replace('.', ',')}M`
   if (n >= 1_000) return `${(n / 1_000).toFixed(1).replace('.', ',')}B`
@@ -76,13 +77,14 @@ function ConnectingDots() {
 // ── DB write counter badge ────────────────────────────────────────────────
 
 function WriteCounter({ count, flash }: { count: number; flash: boolean }) {
+  const { t } = useTranslation('dashboard')
   return (
     <div className={`flex items-center gap-1.5 text-xs transition-all duration-300 ${flash ? 'text-cyan-400' : 'text-gray-600'}`}>
       <span className={`text-base leading-none transition-transform duration-200 ${flash ? 'translate-y-[-2px]' : ''}`}>
         ↑
       </span>
       <span className="font-mono tabular-nums">{count.toLocaleString('tr')}</span>
-      <span>yazma</span>
+      <span>{t('writes')}</span>
     </div>
   )
 }
@@ -146,6 +148,7 @@ function TopologyBar({ connectedCount, total, writeFlash }: {
 // ── PLC card ──────────────────────────────────────────────────────────────
 
 function PlcCard({ plc, writeFlash }: { plc: PlcEntry; writeFlash: boolean }) {
+  const { t } = useTranslation('dashboard')
   const isConnected = plc.connected
   const [hovered, setHovered] = useState(false)
 
@@ -195,7 +198,7 @@ function PlcCard({ plc, writeFlash }: { plc: PlcEntry; writeFlash: boolean }) {
             {plc.name}
           </p>
           <p className={`text-xs font-mono mt-0.5 transition-colors duration-150 ${hovered ? 'text-gray-300' : 'text-gray-500'}`}>
-            {plc.ip || 'IP yok'}
+            {plc.ip || t('plc_no_ip')}
           </p>
         </div>
         <span className={`text-xs px-2 py-0.5 rounded-full font-medium transition-all duration-150
@@ -203,7 +206,7 @@ function PlcCard({ plc, writeFlash }: { plc: PlcEntry; writeFlash: boolean }) {
             ? hovered ? 'bg-green-800/60 text-green-300' : 'bg-green-900/40 text-green-400'
             : hovered ? 'bg-red-900/50 text-red-400' : 'bg-red-900/30 text-red-500'
           }`}>
-          {plc.tag_count} tag
+          {t('plc_tag_count', { count: plc.tag_count })}
         </span>
       </div>
 
@@ -216,12 +219,12 @@ function PlcCard({ plc, writeFlash }: { plc: PlcEntry; writeFlash: boolean }) {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-50" />
                 <span className="relative inline-flex w-2 h-2 rounded-full bg-green-400" />
               </span>
-              <span className="text-xs text-green-400 font-medium">Bağlı</span>
+              <span className="text-xs text-green-400 font-medium">{t('plc_connected')}</span>
             </>
           ) : (
             <>
               <ConnectingDots />
-              <span className="text-xs text-red-500">Bağlantı yok</span>
+              <span className="text-xs text-red-500">{t('plc_disconnected')}</span>
             </>
           )}
         </div>
@@ -231,7 +234,7 @@ function PlcCard({ plc, writeFlash }: { plc: PlcEntry; writeFlash: boolean }) {
           <div className="flex flex-col items-end gap-1">
             <PacketFlow />
             <span className={`text-[10px] transition-colors duration-200 ${writeFlash ? 'text-cyan-400' : 'text-gray-600'}`}>
-              {writeFlash ? '↑ DB yazıyor' : '↓ veri okuyor'}
+              {writeFlash ? t('plc_writing_db') : t('plc_reading_data')}
             </span>
           </div>
         ) : (
@@ -245,6 +248,7 @@ function PlcCard({ plc, writeFlash }: { plc: PlcEntry; writeFlash: boolean }) {
 // ── Main component ────────────────────────────────────────────────────────
 
 export default function OverviewTab({ active }: { active: boolean }) {
+  const { t } = useTranslation('dashboard')
   const [writeFlash, setWriteFlash] = useState(false)
   const [writeCount, setWriteCount] = useState(0)
   const lastReadingRef = useRef<string | null>(null)
@@ -292,8 +296,8 @@ export default function OverviewTab({ active }: { active: boolean }) {
 
   const readRate = overview?.readings_1h != null
     ? overview.readings_1h < 60
-      ? `~${overview.readings_1h} okuma/sa`
-      : `~${Math.round(overview.readings_1h / 60)} okuma/dk`
+      ? t('rate_reads_per_hour', { count: overview.readings_1h })
+      : t('rate_reads_per_min', { count: Math.round(overview.readings_1h / 60) })
     : '—'
 
   const qualityAccent = overview?.quality_rate == null
@@ -313,29 +317,29 @@ export default function OverviewTab({ active }: { active: boolean }) {
       {/* Stat cards — 6 kart, 2 satır */}
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
         <StatCard
-          label="Aktif Tag"
+          label={t('stat_active_tags')}
           value={overview?.active_tags ?? '—'}
-          sub={`${deviceCount ?? '—'} cihaz`}
+          sub={t('stat_devices', { count: deviceCount ?? '—' })}
         />
         <StatCard
-          label="24 Saat Okuma"
+          label={t('stat_readings_24h')}
           value={overview?.readings_24h?.toLocaleString('tr') ?? '—'}
         />
         <StatCard
-          label="Son 1 Saat"
+          label={t('stat_readings_1h')}
           value={overview?.readings_1h?.toLocaleString('tr') ?? '—'}
           sub={readRate}
           flip
         />
         <StatCard
-          label="Veri Kalitesi"
+          label={t('stat_data_quality')}
           value={overview?.quality_rate != null ? `%${overview.quality_rate}` : '—'}
-          sub="son 1 saat iyi kalite"
+          sub={t('stat_quality_sub')}
           accent={qualityAccent}
           flip
         />
         <StatCard
-          label="Son Veri"
+          label={t('stat_last_data')}
           flash={writeFlash}
           flip
           value={lastTs}
@@ -343,21 +347,21 @@ export default function OverviewTab({ active }: { active: boolean }) {
             ? format(parseISO(overview.last_reading + 'Z'), 'dd MMM yyyy', { locale: tr })
             : undefined}
         />
-        <StatCard label="PLC Bağlantı" value={plcLabel} sub="bağlı / toplam" />
+        <StatCard label={t('stat_plc_connection')} value={plcLabel} sub={t('stat_plc_sub')} />
         <StatCard
-          label="♻ Deadband Tasarrufu"
+          label={t('stat_deadband_savings')}
           value={savings?.savings_pct != null ? `%${savings.savings_pct}` : '—'}
-          sub={savings ? `~${fmtCompact(savings.saved_rows_per_day)} satır/gün önlendi` : 'son 24 saat'}
+          sub={savings ? t('saved_rows_per_day', { count: fmtCompact(savings.saved_rows_per_day) }) : t('stat_deadband_sub_24h')}
           accent="text-emerald-400"
         />
       </div>
 
-      {/* PLC bölümü */}
+      {/* PLC section */}
       {plcs.length > 0 && (
         <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
           {/* Header */}
           <div className="px-4 py-3 border-b border-gray-800 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-white">PLC Durumu</h2>
+            <h2 className="text-sm font-semibold text-white">{t('plc_status')}</h2>
             <div className="flex items-center gap-4">
               {writeCount > 0 && (
                 <WriteCounter count={writeCount} flash={writeFlash} />
@@ -365,7 +369,7 @@ export default function OverviewTab({ active }: { active: boolean }) {
               {connectedCount > 0 && (
                 <span className="flex items-center gap-1.5 text-xs text-cyan-500">
                   <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-                  Canlı
+                  {t('live')}
                 </span>
               )}
             </div>

@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { format, parseISO } from 'date-fns'
 import { getWatchlist, removeWatchlist } from '../../api/client'
 import type { WatchlistItem } from '../../api/client'
@@ -30,17 +31,18 @@ function formatValue(item: WatchlistItem): string {
 
 function formatTs(ts: string | null): string {
   if (!ts) return '—'
-  // REST naive (tz'siz) ts -> 'Z' ekle; SSE ts zaten tz taşır (+00:00/Z)
+  // REST naive (no-tz) ts -> append 'Z'; SSE ts already carries tz (+00:00/Z)
   const iso = ts.endsWith('Z') || ts.includes('+') ? ts : ts + 'Z'
   return format(parseISO(iso), 'HH:mm:ss')
 }
 
 export default function WatchlistTab({ active }: { active: boolean }) {
+  const { t } = useTranslation(['dashboard', 'common'])
   const qc = useQueryClient()
   const { data: items = [], isLoading } = useQuery({
     queryKey: ['watchlist'],
     queryFn: () => getWatchlist().then((r) => r.data),
-    // SSE push canlı değerleri taşır; REST sadece yapı (pin/unpin) için fallback
+    // SSE push carries live values; REST is only a fallback for structure (pin/unpin)
     refetchInterval: 30000,
     enabled: active,
   })
@@ -50,7 +52,7 @@ export default function WatchlistTab({ active }: { active: boolean }) {
     active
   )
 
-  // Canlı SSE değerlerini watchlist satırlarına bindir
+  // Bind live SSE values onto watchlist rows
   const merged: WatchlistItem[] = items.map((it) => {
     const lv = live[it.tag_id]
     if (!lv) return it
@@ -63,13 +65,13 @@ export default function WatchlistTab({ active }: { active: boolean }) {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['watchlist'] }),
   })
 
-  if (isLoading) return <div className="text-center py-16 text-gray-500">Yükleniyor...</div>
+  if (isLoading) return <div className="text-center py-16 text-gray-500">{t('common:loading')}</div>
 
   if (items.length === 0) {
     return (
       <div className="text-center py-16 bg-gray-900 rounded-xl border border-gray-800">
-        <p className="text-gray-400">İzleme listesi boş.</p>
-        <p className="text-gray-500 text-sm mt-1">Tüm Tag'ler sekmesinden ★ ile tag pinleyin.</p>
+        <p className="text-gray-400">{t('watchlist_empty')}</p>
+        <p className="text-gray-500 text-sm mt-1">{t('watchlist_empty_hint')}</p>
       </div>
     )
   }
@@ -79,12 +81,12 @@ export default function WatchlistTab({ active }: { active: boolean }) {
       <table className="w-full">
         <thead>
           <tr className="text-xs text-gray-500 uppercase tracking-wide">
-            <SortHeader label="Cihaz" sortKey="device" sort={sort} onToggle={toggle} />
-            <SortHeader label="Tag" sortKey="name" sort={sort} onToggle={toggle} />
-            <SortHeader label="Değer" sortKey="value" sort={sort} onToggle={toggle} align="right" />
-            <SortHeader label="Saat" sortKey="timestamp" sort={sort} onToggle={toggle} align="right" />
-            <SortHeader label="Kalite" sortKey="quality_ok" sort={sort} onToggle={toggle} align="center" />
-            <th className="px-4 py-2 text-center">Pin</th>
+            <SortHeader label={t('col_device')} sortKey="device" sort={sort} onToggle={toggle} />
+            <SortHeader label={t('col_tag')} sortKey="name" sort={sort} onToggle={toggle} />
+            <SortHeader label={t('col_value')} sortKey="value" sort={sort} onToggle={toggle} align="right" />
+            <SortHeader label={t('col_time')} sortKey="timestamp" sort={sort} onToggle={toggle} align="right" />
+            <SortHeader label={t('col_quality')} sortKey="quality_ok" sort={sort} onToggle={toggle} align="center" />
+            <th className="px-4 py-2 text-center">{t('col_pin')}</th>
           </tr>
         </thead>
         <tbody>
@@ -102,7 +104,7 @@ export default function WatchlistTab({ active }: { active: boolean }) {
               <td className="px-4 py-3 text-center">
                 <button
                   onClick={() => unpin.mutate(item.tag_id)}
-                  title="Pin'i kaldır"
+                  title={t('unpin')}
                   className="text-yellow-400 hover:text-yellow-200 text-base leading-none transition-colors"
                 >
                   ★

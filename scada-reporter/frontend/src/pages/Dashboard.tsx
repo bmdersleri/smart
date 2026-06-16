@@ -1,23 +1,25 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import AllTagsTab from './dashboard/AllTagsTab'
 import OverviewTab from './dashboard/OverviewTab'
 import WatchlistTab from './dashboard/WatchlistTab'
 
 type Tab = 'overview' | 'watchlist' | 'tags'
 
-const TABS: { id: Tab; label: string }[] = [
-  { id: 'overview', label: 'Özet' },
-  { id: 'watchlist', label: 'İzleme Listesi' },
-  { id: 'tags', label: 'Tüm Tag\'ler' },
+const TABS: { id: Tab; labelKey: string }[] = [
+  { id: 'overview', labelKey: 'tab_overview' },
+  { id: 'watchlist', labelKey: 'tab_watchlist' },
+  { id: 'tags', labelKey: 'tab_tags' },
 ]
 
 export default function Dashboard() {
+  const { t } = useTranslation('dashboard')
   const [activeTab, setActiveTab] = useState<Tab>('overview')
 
   return (
     <div className="p-6 space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-white">Dashboard</h1>
+        <h1 className="text-xl font-bold text-white">{t('title')}</h1>
       </div>
 
       {/* Tab bar */}
@@ -32,7 +34,7 @@ export default function Dashboard() {
                 : 'border-transparent text-gray-500 hover:text-gray-300'
             }`}
           >
-            {tab.label}
+            {t(tab.labelKey)}
           </button>
         ))}
       </div>

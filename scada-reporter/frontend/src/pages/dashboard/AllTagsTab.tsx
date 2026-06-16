@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { format, parseISO } from 'date-fns'
 import { useEffect, useMemo, useState } from 'react'
 import { addWatchlist, getDashboardDevices, getDashboardTags } from '../../api/client'
@@ -30,6 +31,7 @@ function useDebounce<T>(value: T, delay: number): T {
 }
 
 export default function AllTagsTab({ active }: { active: boolean }) {
+  const { t } = useTranslation(['dashboard', 'common'])
   const qc = useQueryClient()
   const [device, setDevice] = useState('')
   const [searchInput, setSearchInput] = useState('')
@@ -92,13 +94,13 @@ export default function AllTagsTab({ active }: { active: boolean }) {
           onChange={(e) => setDevice(e.target.value)}
           className="bg-gray-800 text-gray-300 text-sm rounded-lg px-3 py-1.5 border border-gray-700 focus:outline-none focus:border-cyan-500"
         >
-          <option value="">Tüm Cihazlar</option>
+          <option value="">{t('filter_all_devices')}</option>
           {devices.map((d) => <option key={d} value={d}>{d}</option>)}
         </select>
 
         <input
           type="text"
-          placeholder="Tag ara..."
+          placeholder={t('search_placeholder')}
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
           className="bg-gray-800 text-gray-300 text-sm rounded-lg px-3 py-1.5 border border-gray-700 focus:outline-none focus:border-cyan-500 min-w-[160px]"
@@ -109,10 +111,10 @@ export default function AllTagsTab({ active }: { active: boolean }) {
           onChange={(e) => setQuality(e.target.value as '' | 'good' | 'bad' | 'stale')}
           className="bg-gray-800 text-gray-300 text-sm rounded-lg px-3 py-1.5 border border-gray-700 focus:outline-none focus:border-cyan-500"
         >
-          <option value="">Tüm Kalite</option>
-          <option value="good">İyi</option>
-          <option value="bad">Hatalı</option>
-          <option value="stale">Bayat</option>
+          <option value="">{t('filter_all_quality')}</option>
+          <option value="good">{t('quality_good')}</option>
+          <option value="bad">{t('quality_bad')}</option>
+          <option value="stale">{t('quality_stale')}</option>
         </select>
 
         <label className="flex items-center gap-1.5 text-sm text-gray-400 cursor-pointer select-none">
@@ -122,36 +124,36 @@ export default function AllTagsTab({ active }: { active: boolean }) {
             onChange={(e) => setDaily(e.target.checked ? true : undefined)}
             className="accent-cyan-500"
           />
-          Günlük Takip
+          {t('daily_tracking')}
         </label>
 
-        <span className="ml-auto text-xs text-gray-500">{total.toLocaleString('tr')} tag</span>
+        <span className="ml-auto text-xs text-gray-500">{t('tag_count', { count: total.toLocaleString('tr') })}</span>
       </div>
 
       {/* Table */}
       {isLoading ? (
-        <div className="text-center py-16 text-gray-500">Yükleniyor...</div>
+        <div className="text-center py-16 text-gray-500">{t('common:loading')}</div>
       ) : isError ? (
         <div className="text-center py-16 bg-gray-900 rounded-xl border border-red-900">
-          <p className="text-red-400 font-medium">Veri yüklenemedi</p>
+          <p className="text-red-400 font-medium">{t('load_failed')}</p>
           <p className="text-gray-500 text-sm mt-1">{String(error)}</p>
-          <p className="text-gray-600 text-xs mt-2">Backend çalışıyor mu? Yeniden başlatmayı deneyin.</p>
+          <p className="text-gray-600 text-xs mt-2">{t('backend_hint')}</p>
         </div>
       ) : items.length === 0 ? (
         <div className="text-center py-16 bg-gray-900 rounded-xl border border-gray-800">
-          <p className="text-gray-400">Eşleşen tag bulunamadı.</p>
+          <p className="text-gray-400">{t('no_tags_found')}</p>
         </div>
       ) : (
         <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
           <table className="w-full">
             <thead>
               <tr className="text-xs text-gray-500 uppercase tracking-wide">
-                <SortHeader label="Tag" sortKey="name" sort={sort} onToggle={toggle} />
-                <SortHeader label="Cihaz" sortKey="device" sort={sort} onToggle={toggle} />
-                <SortHeader label="Değer" sortKey="value" sort={sort} onToggle={toggle} align="right" />
-                <SortHeader label="Saat" sortKey="timestamp" sort={sort} onToggle={toggle} align="right" />
-                <SortHeader label="Kalite" sortKey="quality_ok" sort={sort} onToggle={toggle} align="center" />
-                <th className="px-4 py-2 text-center">Pin</th>
+                <SortHeader label={t('col_tag')} sortKey="name" sort={sort} onToggle={toggle} />
+                <SortHeader label={t('col_device')} sortKey="device" sort={sort} onToggle={toggle} />
+                <SortHeader label={t('col_value')} sortKey="value" sort={sort} onToggle={toggle} align="right" />
+                <SortHeader label={t('col_time')} sortKey="timestamp" sort={sort} onToggle={toggle} align="right" />
+                <SortHeader label={t('col_quality')} sortKey="quality_ok" sort={sort} onToggle={toggle} align="center" />
+                <th className="px-4 py-2 text-center">{t('col_pin')}</th>
               </tr>
             </thead>
             <tbody>
@@ -168,7 +170,7 @@ export default function AllTagsTab({ active }: { active: boolean }) {
                       <button
                         onClick={() => pin.mutate(item.tag_id)}
                         disabled={pinned}
-                        title={pinned ? 'Pinlendi' : 'Watchlist\'e ekle'}
+                        title={pinned ? t('pinned') : t('add_to_watchlist')}
                         className={`text-base leading-none transition-colors ${pinned ? 'text-yellow-400 cursor-default' : 'text-gray-600 hover:text-yellow-400'}`}
                       >
                         {pinned ? '★' : '☆'}
@@ -190,15 +192,15 @@ export default function AllTagsTab({ active }: { active: boolean }) {
             disabled={page === 1}
             className="px-3 py-1.5 text-sm bg-gray-800 text-gray-300 rounded-lg border border-gray-700 disabled:opacity-40 hover:bg-gray-700 transition-colors"
           >
-            ← Önceki
+            {t('prev')}
           </button>
-          <span className="text-sm text-gray-400">Sayfa {page} / {totalPages}</span>
+          <span className="text-sm text-gray-400">{t('page_of', { page, total: totalPages })}</span>
           <button
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
             className="px-3 py-1.5 text-sm bg-gray-800 text-gray-300 rounded-lg border border-gray-700 disabled:opacity-40 hover:bg-gray-700 transition-colors"
           >
-            Sonraki →
+            {t('next')}
           </button>
         </div>
       )}

@@ -9,5 +9,16 @@
   "search": "Поиск",
   "settings": "Настройки",
   "logout": "Выйти",
-  "language": "Язык"
+  "language": "Язык",
+  "app_subtitle": "Система водоснабжения/водоотведения",
+  "nav_dashboard": "Панель",
+  "nav_tags": "Управление тегами",
+  "nav_plc": "Управление ПЛК",
+  "nav_trend": "График трендов",
+  "nav_reports": "Отчёты",
+  "nav_advanced_reports": "Расширенные отчёты",
+  "nav_excel_templates": "Шаблоны Excel",
+  "nav_metrics": "Метрики в реальном времени",
+  "nav_settings": "Настройки",
+  "menu_open": "Открыть меню"
 }

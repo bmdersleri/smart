@@ -9,5 +9,16 @@
   "search": "Suchen",
   "settings": "Einstellungen",
   "logout": "Abmelden",
-  "language": "Sprache"
+  "language": "Sprache",
+  "app_subtitle": "Wasser-/Abwassersystem",
+  "nav_dashboard": "Dashboard",
+  "nav_tags": "Tag-Verwaltung",
+  "nav_plc": "SPS-Verwaltung",
+  "nav_trend": "Trenddiagramm",
+  "nav_reports": "Berichte",
+  "nav_advanced_reports": "Erweiterte Berichte",
+  "nav_excel_templates": "Excel-Vorlagen",
+  "nav_metrics": "Live-Metriken",
+  "nav_settings": "Einstellungen",
+  "menu_open": "Menü öffnen"
 }

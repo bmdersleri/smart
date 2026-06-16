@@ -9,5 +9,16 @@
   "search": "Search",
   "settings": "Settings",
   "logout": "Log Out",
-  "language": "Language"
+  "language": "Language",
+  "app_subtitle": "Water/Wastewater System",
+  "nav_dashboard": "Dashboard",
+  "nav_tags": "Tag Management",
+  "nav_plc": "PLC Management",
+  "nav_trend": "Trend Chart",
+  "nav_reports": "Reports",
+  "nav_advanced_reports": "Advanced Reports",
+  "nav_excel_templates": "Excel Templates",
+  "nav_metrics": "Live Metrics",
+  "nav_settings": "Settings",
+  "menu_open": "Open menu"
 }
