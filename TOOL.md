@@ -97,6 +97,7 @@
 | anyio | 4.13.0 | Async runtime |
 | asyncpg | 0.31.0 | Async PostgreSQL |
 | asyncua | 2.0 | OPC UA client/server (dahili server `app/collector/opcua_server.py`, port 4840) |
+| bandit | 1.9.4 | Security linter (`just security`); B608 SQL nosec markers for SA-reflected names |
 | bcrypt | 4.3.0 | Password hashing |
 | python-snap7 | 3.0.0 | S7 PLC communication (`app/collector/s7_collector.py`) — ücretsiz, harici yazılım gerekmez |
 | pandas | 3.0.3 | Data analysis & reporting |
@@ -106,7 +107,7 @@
 | tabulate | 0.10.0 | ASCII table formatting |
 | python-docx | 1.2.0 | Word document export |
 | reportlab | 4.5.1 | Advanced PDF generation |
-| jinja2 | 3.1.6 | HTML template rendering |
+| jinja2 | 3.1.6 | HTML template rendering (autoescape=True) |
 | cryptography | 49.0.0 | Crypto |
 | fastapi | 0.115.x | Web framework |
 | httpx | 0.28.0 | HTTP client (dev/test) |
@@ -125,6 +126,7 @@
 | pytz | 2026.2 | Timezone |
 | redis | 5.2.0 | Redis client |
 | ruff | 0.15.17 | Linter/formatter |
+| safety | 3.8.1 | Dependency vulnerability scanner (`just security`) |
 | sentry-sdk | 2.62.0 | Error tracking |
 | sqlalchemy | 2.0.36 | ORM |
 | uvicorn | 0.30.0 | ASGI server |
@@ -153,8 +155,13 @@
 | recharts | 3.x | Chart library |
 | lucide-react | 1.x | Icon set |
 | date-fns | 4.x | Date utilities |
+| html-to-image | 1.x | PNG export from DOM nodes |
 | tailwindcss | 4.x | CSS framework |
 | vite | 8.x | Dev server + bundler |
+| vitest | 4.x | Unit test framework (jsdom env) |
+| @testing-library/react | 16.x | React component testing |
+| @testing-library/user-event | 14.x | User interaction simulation |
+| jsdom | 29.x | DOM environment for tests |
 | @hey-api/openapi-ts | 0.98.x | TypeScript client gen from OpenAPI spec (`pnpm gen-client`) |
 
 ## CLI Utilities
@@ -174,6 +181,7 @@
 | tldr | 0.6.1 | Short man pages |
 | 7-Zip | 15.2.0 | Archive tool |
 | curl | 8.13.0 | HTTP client |
+| xh | 0.25.3 | HTTPie-compatible HTTP client (Rust) |
 | ruff | 0.15.17 | Python linter/formatter |
 | agy | | AI commit message generator |
 
@@ -202,6 +210,7 @@
 | Alembic | `backend/alembic/` | Async migration (`env.py` async engine) |
 | pre-commit | `.pre-commit-config.yaml` | Hooks **aktif** (`.git/hooks/pre-commit`); `ruff`, `ruff-format`, `mypy`, `trailing-whitespace`, `end-of-file-fixer`, `check-yaml/json/toml` |
 | pyproject.toml | `backend/pyproject.toml` | pytest `asyncio_mode=auto`, ruff `line-length=100`, mypy config |
+| GitHub Actions CI | `.github/workflows/ci.yml` | 2 parallel jobs: backend (ruff·mypy·pytest·bandit) + frontend (tsc·eslint·vitest); triggers on push/PR to master |
 
 ## Build Tools
 | Tool | Version | Notes |
@@ -246,12 +255,14 @@
 - **scada-reporter backend venv**: `scada-reporter/backend/.venv/` (Python 3.14, uv-managed)
 - **scada CLI** requires `uv pip install -e scada-reporter/agent-harness` from project root (`just install-agent`)
 - **Backend API**: 8 router grubu — auth, tags, dashboard, reports, advanced-reports, plc, query, explore (`/api/*`)
-- **Frontend sayfaları**: Dashboard (3 sekme), Trend (zoom/pan/PNG/Excel/sağ tık menüsü), Raporlar, Gelişmiş Raporlar, Tags, PLC Yönetimi, Ayarlar
+- **Frontend sayfaları**: Dashboard (3 sekme), Trend (zoom/pan/PNG/Excel/sağ tık menüsü/yükseklik ayarı), Raporlar, Gelişmiş Raporlar, Tags, PLC Yönetimi, Ayarlar
 - **Auth**: `/api/auth/token` endpoint'i OAuth2 **form-data** bekler, JSON değil. `curl -d "username=...&password=..."`
 - **Varsayılan kullanıcılar**: `just seed-users` → admin/admin123, operator/operator123
 - **Mimari**: S7 PLC → Snap7 (s7_collector) → SQLite (dev) / PostgreSQL (prod) → dahili OPC UA server (port 4840) + REST API. Harici ücretli yazılım (KEPServerEX) gerekmez.
 - **Stats engine**: numpy-only (scipy yok) — `np.polyfit` + manuel R²
 - **Docker not installed on host** — compose files ready, needs Docker Desktop or Docker Engine
 - **RTK** installed for LLM token optimization. Run `rtk init -g` for Claude Code integration.
+- **GitHub Actions CI**: `.github/workflows/ci.yml` — push/PR'da backend (ruff·mypy·pytest·bandit) + frontend (tsc·eslint·vitest) otomatik çalışır
+- **Security scan**: `just security` → bandit (Python code) + safety (dependency CVEs)
 - **GitHub Pages**: User site at `b110rpsrv2` (this machine)
 - **Tailscale** is connected (network overlay)
