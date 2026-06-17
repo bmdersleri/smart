@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "test": "vitest run",
     "test:watch": "vitest",
-    "lint": "eslint . && node scripts/check-hardcoded-strings.mjs",
+    "lint": "node scripts/check-hardcoded-strings.mjs && eslint .",
+    "lint:i18n": "node scripts/check-hardcoded-strings.mjs",
     "preview": "vite preview",
     "gen-client": "openapi-ts"
   },

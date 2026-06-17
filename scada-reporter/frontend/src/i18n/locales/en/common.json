@@ -20,5 +20,6 @@
   "nav_excel_templates": "Excel Templates",
   "nav_metrics": "Live Metrics",
   "nav_settings": "Settings",
-  "menu_open": "Open menu"
+  "menu_open": "Open menu",
+  "sort_hint": "Click to sort"
 }

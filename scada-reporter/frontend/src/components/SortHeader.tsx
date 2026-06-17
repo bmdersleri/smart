@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import type { SortState } from '../hooks/useSortable'
 
 interface Props {
@@ -9,18 +10,19 @@ interface Props {
   className?: string
 }
 
-/** Tıklanabilir, sıralama oklu tablo başlığı. Mevcut th stiliyle uyumlu. */
+/** Clickable table header with sort arrows. Matches the existing th styling. */
 export default function SortHeader({ label, sortKey, sort, onToggle, align = 'left', className = '' }: Props) {
+  const { t } = useTranslation('common')
   const active = sort.key === sortKey
   const arrow = active ? (sort.dir === 'asc' ? '▲' : '▼') : '↕'
   const justify = align === 'right' ? 'justify-end' : align === 'center' ? 'justify-center' : 'justify-start'
-  // Dolgu/renk çağırandan gelir (className); burada yalnız davranış + hizalama.
+  // Padding/color come from the caller (className); here only behavior + alignment.
   const pad = className || 'px-4 py-2'
   return (
     <th
       onClick={() => onToggle(sortKey)}
       className={`cursor-pointer select-none hover:text-gray-300 transition-colors text-${align} ${pad}`}
-      title="Sıralamak için tıkla"
+      title={t('sort_hint')}
     >
       <span className={`inline-flex items-center gap-1 ${justify}`}>
         {label}

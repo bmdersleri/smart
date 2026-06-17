@@ -17,7 +17,6 @@ const ALLOWLIST = [
   'api/client.ts',
   'main.tsx',
   'context/SettingsContext.tsx',
-  'components/SortHeader.tsx',
   'hooks/useSortable.ts',
   'hooks/useLatestStream.ts',
 ]

@@ -20,5 +20,6 @@
   "nav_excel_templates": "Шаблоны Excel",
   "nav_metrics": "Метрики в реальном времени",
   "nav_settings": "Настройки",
-  "menu_open": "Открыть меню"
+  "menu_open": "Открыть меню",
+  "sort_hint": "Нажмите для сортировки"
 }
