@@ -28,12 +28,18 @@ export default function Users() {
   const [editing, setEditing] = useState<ManagedUser | null>(null)
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ['users'] })
+  const onMutError = (e: unknown) => {
+    const ax = e as { response?: { status?: number; data?: { detail?: string } } }
+    alert(ax.response?.data?.detail || t('last_admin_error'))
+  }
+
   const createMut = useMutation({ mutationFn: createUser, onSuccess: () => { invalidate(); setForm(EMPTY) } })
   const patchMut = useMutation({
     mutationFn: (v: { id: number; data: Parameters<typeof patchUser>[1] }) => patchUser(v.id, v.data),
     onSuccess: () => { invalidate(); setEditing(null) },
+    onError: onMutError,
   })
-  const delMut = useMutation({ mutationFn: deleteUser, onSuccess: invalidate })
+  const delMut = useMutation({ mutationFn: deleteUser, onSuccess: invalidate, onError: onMutError })
 
   const toggleOverride = (target: UserCreatePayload | ManagedUser, key: string, set: (o: Record<string, boolean>) => void) => {
     const cur = { ...(target.permission_overrides || {}) }
@@ -81,7 +87,7 @@ export default function Users() {
               <td className="text-gray-500 text-xs">{u.permissions.join(', ')}</td>
               <td className="text-right space-x-2">
                 <button className="text-blue-400" onClick={() => setEditing(u)}>{t('edit')}</button>
-                <button className="text-amber-400" onClick={() => { const p = prompt(t('reset_password')); if (p) resetUserPassword(u.id, p) }}>{t('reset_password')}</button>
+                <button className="text-amber-400" onClick={() => { const p = prompt(t('reset_password')); if (p) resetUserPassword(u.id, p).catch((e: unknown) => { const ax = e as { response?: { data?: { detail?: string } } }; alert(ax.response?.data?.detail || t('last_admin_error')) }) }}>{t('reset_password')}</button>
                 <button className="text-red-400" onClick={() => { if (confirm(t('confirm_delete'))) delMut.mutate(u.id) }}>{t('delete')}</button>
               </td>
             </tr>
