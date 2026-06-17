@@ -2,8 +2,9 @@ import os
 import markdown
 import weasyprint
 import re
+from pathlib import Path
 from docx import Document
-from docx.shared import Pt, RGBColor
+from docx.shared import Pt, Inches, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.enum.table import WD_TABLE_ALIGNMENT
 from docx.oxml.ns import qn
@@ -107,7 +108,8 @@ html_full = f"<!DOCTYPE html><html><head><meta charset='utf-8'><style>{CSS}</sty
 with open(r"C:\project\smart\docs\tanitim.html", "w", encoding="utf-8") as f:
     f.write(html_full)
 
-weasyprint.HTML(string=html_full).write_pdf(PDF_PATH)
+DOCS_DIR = Path(MD_PATH).parent
+weasyprint.HTML(string=html_full, base_url=str(DOCS_DIR)).write_pdf(PDF_PATH)
 print(f"PDF created: {PDF_PATH}")
 
 # ── MARKDOWN → DOCX ─────────────────────────────────────────────────────────
@@ -163,6 +165,17 @@ while i < len(lines):
         m = re.match(r"^#### (.+)", s)
         if m:
             doc.add_heading(m.group(1), 4)
+        continue
+
+    # Image detection
+    img_m = re.match(r"^!\[.*\]\((.+)\)", s)
+    if img_m:
+        img_path = Path(DOCS_DIR, img_m.group(1))
+        if img_path.exists():
+            doc.add_picture(str(img_path), width=Inches(6.0))
+            last_paragraph = doc.paragraphs[-1]
+            last_paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            doc.add_paragraph()
         continue
 
     if s == "---":
