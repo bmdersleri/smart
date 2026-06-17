@@ -21,6 +21,7 @@ from app.api import (
     realtime,
     reports,
     tags,
+    users,
 )
 from app.collector.opcua_server import opcua_server
 from app.collector.poller import poll_loop
@@ -141,6 +142,7 @@ app.include_router(excel_templates.router, prefix="/api")
 app.include_router(plc.router, prefix="/api")
 app.include_router(groups.router, prefix="/api")
 app.include_router(annotations.router, prefix="/api")
+app.include_router(users.router, prefix="/api")
 
 
 @app.get("/metrics")
