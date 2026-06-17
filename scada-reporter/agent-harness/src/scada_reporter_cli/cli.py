@@ -15,6 +15,7 @@ from scada_reporter_cli.commands.reports import reports_cmd
 from scada_reporter_cli.commands.query import query_cmd
 from scada_reporter_cli.commands.explore import explore_cmd
 from scada_reporter_cli.commands.shell import shell
+from scada_reporter_cli.commands.agent import agent_cmd
 
 
 @click.group(invoke_without_command=True)
@@ -45,6 +46,7 @@ cli.add_command(reports_cmd)
 cli.add_command(query_cmd)
 cli.add_command(explore_cmd)
 cli.add_command(shell)
+cli.add_command(agent_cmd)
 
 
 def repl(ctx: click.Context) -> None:

@@ -264,5 +264,67 @@ class ScadaClient:
             return {"error": True, "detail": resp.text}
         return resp.json()
 
+    # -- AI -------------------------------------------------------------------
+
+    def ai_health(self) -> dict[str, Any]:
+        try:
+            resp = self._client.get(urljoin(self.base_url + "/", "api/ai/health"))
+            if resp.status_code != 200:
+                return {"error": True, "detail": resp.text}
+            return resp.json()
+        except Exception as e:
+            return {"error": True, "detail": str(e)}
+
+    def ai_query(self, question: str) -> dict[str, Any]:
+        resp = self._client.post(
+            urljoin(self.base_url + "/", "api/ai/query"),
+            json={"question": question},
+        )
+        if resp.status_code != 200:
+            return {"error": True, "detail": resp.text}
+        return resp.json()
+
+    def ai_anomalies(
+        self, tag_name: str, window: str = "7d", threshold: float = 3.0
+    ) -> dict[str, Any]:
+        resp = self._client.post(
+            urljoin(self.base_url + "/", "api/ai/anomalies"),
+            json={"tag_name": tag_name, "window": window, "threshold": threshold},
+        )
+        if resp.status_code != 200:
+            return {"error": True, "detail": resp.text}
+        return resp.json()
+
+    def ai_predict(self, tag_name: str, horizon: str = "24h") -> dict[str, Any]:
+        resp = self._client.post(
+            urljoin(self.base_url + "/", "api/ai/predict"),
+            json={"tag_name": tag_name, "horizon": horizon},
+        )
+        if resp.status_code != 200:
+            return {"error": True, "detail": resp.text}
+        return resp.json()
+
+    def ai_generate_report(
+        self,
+        tags: list[str],
+        start: str,
+        end: str,
+        format: str = "excel",
+        aggregation: str = "raw",
+    ) -> dict[str, Any]:
+        resp = self._client.post(
+            urljoin(self.base_url + "/", "api/ai/reports/generate"),
+            json={
+                "tags": tags,
+                "start": start,
+                "end": end,
+                "format": format,
+                "aggregation": aggregation,
+            },
+        )
+        if resp.status_code != 200:
+            return {"error": True, "detail": resp.text}
+        return resp.json()
+
     def close(self) -> None:
         self._client.close()

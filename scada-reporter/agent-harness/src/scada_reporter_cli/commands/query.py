@@ -1,24 +1,13 @@
 from __future__ import annotations
 
 import click
-from scada_reporter_cli.client import ScadaClient
-from scada_reporter_cli.utils.config import get_api_url, get_token
+from scada_reporter_cli.utils.client_helper import get_client
 from scada_reporter_cli.utils.repl_skin import success, error, fmt_json, fmt_table
 
 
 @click.group(name="query")
 def query_cmd():
     """Read-only SQL sorgulari."""
-
-
-def _get_client() -> tuple[ScadaClient, bool]:
-    token = get_token()
-    if not token:
-        click.echo(error("Once `scada auth login` ile giris yapin"))
-        return None, False  # type: ignore[return-value]
-    client = ScadaClient(get_api_url())
-    client.set_token(token)
-    return client, True
 
 
 @query_cmd.command(name="run")
@@ -33,7 +22,7 @@ def run(sql: str, limit: int, json_output: bool):
 
     Ornek: scada query run "SELECT device, COUNT(*) FROM tags GROUP BY device"
     """
-    client, ok = _get_client()
+    client, ok = get_client()
     if not ok:
         return
     result = client.run_query(sql, limit=limit)

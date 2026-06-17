@@ -1,0 +1,5 @@
+{
+  "name": "scada-anomalies",
+  "description": "Detect anomalies in tag data",
+  "prompt": "Ask the user which tag to analyze and the lookback window. Run anomaly detection and present the findings: anomaly count, severity breakdown, and notable events."
+}

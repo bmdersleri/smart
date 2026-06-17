@@ -10,6 +10,7 @@ from fastapi.responses import Response
 
 from app.api import (
     advanced_reports,
+    ai,
     annotations,
     auth,
     dashboard,
@@ -143,6 +144,7 @@ app.include_router(plc.router, prefix="/api")
 app.include_router(groups.router, prefix="/api")
 app.include_router(annotations.router, prefix="/api")
 app.include_router(users.router, prefix="/api")
+app.include_router(ai.router, prefix="/api")
 
 
 @app.get("/metrics")

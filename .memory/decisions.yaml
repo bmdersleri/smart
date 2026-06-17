@@ -1,0 +1,35 @@
+decisions:
+- id: 001
+  date: "2026-06-17"
+  title: MCP Server Protocol Selection
+  decision: Use stdio transport for local agents, SSE for remote
+  rationale: stdio has lower latency for same-machine agents; SSE enables cloud-hosted agent connectivity
+  status: active
+
+- id: 002
+  date: "2026-06-17"
+  title: Backend AI Endpoint Design
+  decision: AI endpoints are pure REST (no LLM dependency), with heuristic-based NL parsing
+  rationale: Keeps latency low, works without internet, avoids LLM API costs for basic queries
+  status: active
+
+- id: 003
+  date: "2026-06-17"
+  title: CLAModel Selection
+  decision: Use big-pickle as the default model for all OpenCode agents
+  rationale: Balanced cost-capability ratio; sufficient for SCADA domain tasks
+  status: active
+
+- id: 004
+  date: "2026-06-17"
+  title: Agent Communication Protocol
+  decision: Agents communicate via MCP tools (scada + scada-db), not direct function calls
+  rationale: Decouples agent implementation from backend; any MCP-compatible agent can participate
+  status: active
+
+- id: 005
+  date: "2026-06-17"
+  title: Memory System Structure
+  decision: YAML for machine-readable decisions, Markdown for human-readable knowledge
+  rationale: YAML enables automated processing; Markdown enables easy reading/editing by humans and AI
+  status: active

@@ -455,7 +455,7 @@ function TagTreeView({
 
 export default function Tags() {
   const { t } = useTranslation(['tags', 'common'])
-  const { user } = useAuth()
+  const { user, can } = useAuth()
   const qc = useQueryClient()
   const [showAdd, setShowAdd] = useState(false)
   const [showImport, setShowImport] = useState(false)
