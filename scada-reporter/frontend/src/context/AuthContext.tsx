@@ -4,13 +4,14 @@ import type { ReactNode } from 'react'
 import { getMe, login as apiLogin } from '../api/client'
 import i18n from '../i18n'
 
-interface User { id: number; username: string; role: string; full_name: string; language: string }
+interface User { id: number; username: string; role: string; full_name: string; language: string; permissions: string[] }
 
 interface AuthCtx {
   user: User | null
   loading: boolean
   login: (u: string, p: string) => Promise<void>
   logout: () => void
+  can: (perm: string) => boolean
 }
 
 const Ctx = createContext<AuthCtx | null>(null)
@@ -38,7 +39,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = () => { localStorage.removeItem('token'); setUser(null) }
 
-  return <Ctx.Provider value={{ user, loading, login, logout }}>{children}</Ctx.Provider>
+  const can = (perm: string) =>
+    user?.role === 'admin' || !!user?.permissions?.includes(perm)
+
+  return <Ctx.Provider value={{ user, loading, login, logout, can }}>{children}</Ctx.Provider>
 }
 
 export const useAuth = () => {

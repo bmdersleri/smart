@@ -23,13 +23,32 @@ api.interceptors.response.use(
 export const login = (username: string, password: string) =>
   api.post<{ access_token: string }>('/auth/token', new URLSearchParams({ username, password }))
 
-export const getMe = () => api.get<{ id: number; username: string; role: string; full_name: string; language: string }>('/auth/me')
+export const getMe = () => api.get<{ id: number; username: string; role: string; full_name: string; language: string; permissions: string[] }>('/auth/me')
 
 export const updateMe = (language: string) =>
-  api.patch<{ id: number; username: string; role: string; full_name: string; language: string }>(
+  api.patch<{ id: number; username: string; role: string; full_name: string; language: string; permissions: string[] }>(
     '/auth/me',
     { language },
   )
+
+export interface ManagedUser {
+  id: number; username: string; email: string; full_name: string
+  role: string; is_active: boolean
+  permission_overrides: Record<string, boolean>; permissions: string[]
+}
+export interface UserCreatePayload {
+  username: string; email: string; password: string
+  full_name?: string; role?: string; permission_overrides?: Record<string, boolean>
+}
+export interface UserPatchPayload {
+  email?: string; full_name?: string; role?: string
+  is_active?: boolean; permission_overrides?: Record<string, boolean>
+}
+export const listUsers = () => api.get<ManagedUser[]>('/users/')
+export const createUser = (data: UserCreatePayload) => api.post<ManagedUser>('/users/', data)
+export const patchUser = (id: number, data: UserPatchPayload) => api.patch<ManagedUser>(`/users/${id}`, data)
+export const resetUserPassword = (id: number, password: string) => api.post(`/users/${id}/password`, { password })
+export const deleteUser = (id: number) => api.delete(`/users/${id}`)
 
 // Tags
 export interface Tag {
