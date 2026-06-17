@@ -44,6 +44,10 @@ LABELS: dict[str, dict[str, str]] = {
         # ── Period-aggregation table columns ─────────────────────────────────
         "period": "Period",
         "count": "Count",
+        # ── Legacy inline Excel export (reports.py) ───────────────────────────
+        "start_label": "Start",
+        "end_label": "End",
+        "interval_label": "Interval",
         # ── Anomaly table columns ─────────────────────────────────────────────
         "time": "Time",
         "value": "Value",
@@ -97,6 +101,10 @@ LABELS: dict[str, dict[str, str]] = {
         # ── Period-aggregation table columns ─────────────────────────────────
         "period": "Dönem",
         "count": "Sayı",
+        # ── Legacy inline Excel export (reports.py) ───────────────────────────
+        "start_label": "Başlangıç",
+        "end_label": "Bitiş",
+        "interval_label": "Aralık",
         # ── Anomaly table columns ─────────────────────────────────────────────
         "time": "Zaman",
         "value": "Değer",
@@ -150,6 +158,10 @@ LABELS: dict[str, dict[str, str]] = {
         # ── Period-aggregation table columns ─────────────────────────────────
         "period": "Период",
         "count": "Кол-во",
+        # ── Legacy inline Excel export (reports.py) ───────────────────────────
+        "start_label": "Начало",
+        "end_label": "Конец",
+        "interval_label": "Интервал",
         # ── Anomaly table columns ─────────────────────────────────────────────
         "time": "Время",
         "value": "Значение",
@@ -203,6 +215,10 @@ LABELS: dict[str, dict[str, str]] = {
         # ── Period-aggregation table columns ─────────────────────────────────
         "period": "Zeitraum",
         "count": "Anzahl",
+        # ── Legacy inline Excel export (reports.py) ───────────────────────────
+        "start_label": "Beginn",
+        "end_label": "Ende",
+        "interval_label": "Intervall",
         # ── Anomaly table columns ─────────────────────────────────────────────
         "time": "Zeit",
         "value": "Wert",

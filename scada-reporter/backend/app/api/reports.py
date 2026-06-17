@@ -14,8 +14,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.auth import get_current_user
 from app.core.database import get_db
+from app.i18n import get_labels
 from app.models.report_history import ReportHistory
 from app.models.tag import Tag, TagReading
+from app.models.user import User
 
 router = APIRouter(prefix="/reports", tags=["reports"])
 
@@ -108,11 +110,53 @@ async def _save_history(req: ReportRequest, file_path: str, db: AsyncSession) ->
             os.remove(p)
 
 
+def _build_simple_excel(
+    data: dict,
+    start: datetime,
+    end: datetime,
+    interval: str,
+    lang: str,
+) -> bytes:
+    """Build the legacy inline Excel workbook with localized labels.
+
+    Returns the workbook as xlsx bytes. Labels are resolved from the i18n
+    report-label registry using `lang`.
+    """
+    L = get_labels(lang)  # noqa: N806 — short alias for the label dict, used pervasively below
+
+    wb = openpyxl.Workbook()
+    ws_summary = wb.active
+    ws_summary.title = L["summary_sheet"]
+
+    ws_summary["A1"] = L["report_title"]
+    ws_summary["A2"] = f"{L['start_label']}: {start.strftime('%d.%m.%Y %H:%M')}"
+    ws_summary["A3"] = f"{L['end_label']}: {end.strftime('%d.%m.%Y %H:%M')}"
+    ws_summary["A4"] = f"{L['interval_label']}: {interval}"
+
+    for tag_name, rows in data.items():
+        ws = wb.create_sheet(title=tag_name[:31])
+        ws.append([L["period"], L["average"], L["minimum"], L["maximum"], L["total_reads"]])
+        for row in rows:
+            ws.append(
+                [
+                    row["period"] if row["period"] else "",
+                    row["avg"],
+                    row["min"],
+                    row["max"],
+                    row["count"],
+                ]
+            )
+
+    buf = BytesIO()
+    wb.save(buf)
+    return buf.getvalue()
+
+
 @router.post("/generate")
 async def generate_report(
     req: ReportRequest,
     db: AsyncSession = Depends(get_db),
-    _=Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ):
     data = await _fetch_aggregated(req.tag_ids, req.start, req.end, req.interval, db)
     file_id = str(uuid.uuid4())
@@ -131,32 +175,8 @@ async def generate_report(
         return payload
 
     # Excel raporu
-    wb = openpyxl.Workbook()
-    ws_summary = wb.active
-    ws_summary.title = "Ozet"
-
-    ws_summary["A1"] = "SCADA Raporu"
-    ws_summary["A2"] = f"Baslangic: {req.start.strftime('%d.%m.%Y %H:%M')}"
-    ws_summary["A3"] = f"Bitis: {req.end.strftime('%d.%m.%Y %H:%M')}"
-    ws_summary["A4"] = f"Interval: {req.interval}"
-
-    for tag_name, rows in data.items():
-        ws = wb.create_sheet(title=tag_name[:31])
-        ws.append(["Donem", "Ortalama", "Minimum", "Maksimum", "Okuma Sayisi"])
-        for row in rows:
-            ws.append(
-                [
-                    row["period"] if row["period"] else "",
-                    row["avg"],
-                    row["min"],
-                    row["max"],
-                    row["count"],
-                ]
-            )
-
-    buf = BytesIO()
-    wb.save(buf)
-    buf.seek(0)
+    content = _build_simple_excel(data, req.start, req.end, req.interval, current_user.language)
+    buf = BytesIO(content)
 
     file_path = os.path.join(REPORTS_DIR, f"{file_id}.xlsx")
     with open(file_path, "wb") as f:
