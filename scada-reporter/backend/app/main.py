@@ -48,6 +48,11 @@ logger = logging.getLogger(__name__)
 log_buffer.setLevel(logging.INFO)
 logging.getLogger().addHandler(log_buffer)
 
+# Gürültülü 3. parti logger'ları kıs — canlı konsol sinyalini koru.
+# asyncua açılışta yüzlerce "add_node" INFO basar; snap7 her tick connect/disconnect.
+logging.getLogger("asyncua").setLevel(logging.WARNING)
+logging.getLogger("snap7").setLevel(logging.WARNING)
+
 if settings.SENTRY_DSN:
     sentry_sdk.init(
         dsn=settings.SENTRY_DSN,
