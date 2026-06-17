@@ -41,6 +41,10 @@ import enMetrics from './locales/en/metrics.json'
 import trMetrics from './locales/tr/metrics.json'
 import ruMetrics from './locales/ru/metrics.json'
 import deMetrics from './locales/de/metrics.json'
+import enUsers from './locales/en/users.json'
+import trUsers from './locales/tr/users.json'
+import ruUsers from './locales/ru/users.json'
+import deUsers from './locales/de/users.json'
 
 export const SUPPORTED_LANGS = ['en', 'tr', 'ru', 'de'] as const
 export type Lang = (typeof SUPPORTED_LANGS)[number]
@@ -50,14 +54,14 @@ const initialLng = (SUPPORTED_LANGS as readonly string[]).includes(stored ?? '')
 
 i18n.use(initReactI18next).init({
   resources: {
-    en: { common: enCommon, login: enLogin, settings: enSettings, dashboard: enDashboard, tags: enTags, trend: enTrend, reports: enReports, advancedReports: enAdvancedReports, plc: enPlc, metrics: enMetrics },
-    tr: { common: trCommon, login: trLogin, settings: trSettings, dashboard: trDashboard, tags: trTags, trend: trTrend, reports: trReports, advancedReports: trAdvancedReports, plc: trPlc, metrics: trMetrics },
-    ru: { common: ruCommon, login: ruLogin, settings: ruSettings, dashboard: ruDashboard, tags: ruTags, trend: ruTrend, reports: ruReports, advancedReports: ruAdvancedReports, plc: ruPlc, metrics: ruMetrics },
-    de: { common: deCommon, login: deLogin, settings: deSettings, dashboard: deDashboard, tags: deTags, trend: deTrend, reports: deReports, advancedReports: deAdvancedReports, plc: dePlc, metrics: deMetrics },
+    en: { common: enCommon, login: enLogin, settings: enSettings, dashboard: enDashboard, tags: enTags, trend: enTrend, reports: enReports, advancedReports: enAdvancedReports, plc: enPlc, metrics: enMetrics, users: enUsers },
+    tr: { common: trCommon, login: trLogin, settings: trSettings, dashboard: trDashboard, tags: trTags, trend: trTrend, reports: trReports, advancedReports: trAdvancedReports, plc: trPlc, metrics: trMetrics, users: trUsers },
+    ru: { common: ruCommon, login: ruLogin, settings: ruSettings, dashboard: ruDashboard, tags: ruTags, trend: ruTrend, reports: ruReports, advancedReports: ruAdvancedReports, plc: ruPlc, metrics: ruMetrics, users: ruUsers },
+    de: { common: deCommon, login: deLogin, settings: deSettings, dashboard: deDashboard, tags: deTags, trend: deTrend, reports: deReports, advancedReports: deAdvancedReports, plc: dePlc, metrics: deMetrics, users: deUsers },
   },
   lng: initialLng,
   fallbackLng: 'en',
-  ns: ['common', 'login', 'settings', 'dashboard', 'tags', 'trend', 'reports', 'advancedReports', 'plc', 'metrics'],
+  ns: ['common', 'login', 'settings', 'dashboard', 'tags', 'trend', 'reports', 'advancedReports', 'plc', 'metrics', 'users'],
   defaultNS: 'common',
   interpolation: { escapeValue: false },
 })

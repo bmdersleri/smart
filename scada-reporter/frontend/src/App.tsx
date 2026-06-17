@@ -14,6 +14,7 @@ import ExcelTemplates from './pages/ExcelTemplates'
 import PlcConfig from './pages/PlcConfig'
 import Metrics from './pages/Metrics'
 import Settings from './pages/Settings'
+import Users from './pages/Users'
 import './index.css'
 
 const qc = new QueryClient({ defaultOptions: { queries: { staleTime: 10000, retry: 1 } } })
@@ -43,6 +44,7 @@ export default function App() {
               <Route path="plc" element={<PlcConfig />} />
               <Route path="metrics" element={<Metrics />} />
               <Route path="settings" element={<Settings />} />
+              <Route path="users" element={<Users />} />
             </Route>
           </Routes>
         </BrowserRouter>

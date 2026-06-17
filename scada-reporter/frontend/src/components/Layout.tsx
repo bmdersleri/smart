@@ -67,6 +67,22 @@ export default function Layout() {
               {t(labelKey)}
             </NavLink>
           ))}
+          {user?.role === 'admin' && (
+            <NavLink
+              to="/users"
+              onClick={() => setMobileNav(false)}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+                  isActive ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                }`
+              }
+            >
+              <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4z" />
+              </svg>
+              {t('nav_users')}
+            </NavLink>
+          )}
         </nav>
 
         <div className="p-3 border-t border-gray-800">

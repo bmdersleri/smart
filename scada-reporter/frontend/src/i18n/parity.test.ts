@@ -50,6 +50,11 @@ import trMetrics from './locales/tr/metrics.json'
 import ruMetrics from './locales/ru/metrics.json'
 import deMetrics from './locales/de/metrics.json'
 
+import enUsers from './locales/en/users.json'
+import trUsers from './locales/tr/users.json'
+import ruUsers from './locales/ru/users.json'
+import deUsers from './locales/de/users.json'
+
 type Dict = Record<string, unknown>
 
 const NAMESPACES: Record<string, Record<string, Dict>> = {
@@ -68,6 +73,7 @@ const NAMESPACES: Record<string, Record<string, Dict>> = {
   },
   plc: { en: enPlc, tr: trPlc, ru: ruPlc, de: dePlc },
   metrics: { en: enMetrics, tr: trMetrics, ru: ruMetrics, de: deMetrics },
+  users: { en: enUsers, tr: trUsers, ru: ruUsers, de: deUsers },
 }
 
 const TARGET_LANGS = ['tr', 'ru', 'de'] as const
