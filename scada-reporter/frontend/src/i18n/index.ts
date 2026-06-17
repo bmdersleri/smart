@@ -60,6 +60,17 @@ import arUsers from './locales/ar/users.json'
 export const SUPPORTED_LANGS = ['en', 'tr', 'ru', 'de', 'ar'] as const
 export type Lang = (typeof SUPPORTED_LANGS)[number]
 
+export const RTL_LANGS = new Set<string>(['ar'])
+export function dirFor(lang: string): 'rtl' | 'ltr' {
+  return RTL_LANGS.has(lang) ? 'rtl' : 'ltr'
+}
+function applyDir(lng: string) {
+  if (typeof document !== 'undefined') {
+    document.documentElement.lang = lng
+    document.documentElement.dir = dirFor(lng)
+  }
+}
+
 const stored = localStorage.getItem('lang')
 const initialLng = (SUPPORTED_LANGS as readonly string[]).includes(stored ?? '') ? (stored as Lang) : 'en'
 
@@ -78,6 +89,11 @@ i18n.use(initReactI18next).init({
   interpolation: { escapeValue: false },
 })
 
-i18n.on('languageChanged', (lng) => { localStorage.setItem('lang', lng) })
+i18n.on('languageChanged', (lng) => {
+  localStorage.setItem('lang', lng)
+  applyDir(lng)
+})
+
+applyDir(initialLng)
 
 export default i18n
