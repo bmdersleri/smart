@@ -7,7 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.permissions import user_can
+from app.core.permissions import effective_permissions, user_can
 from app.core.security import (
     create_access_token,
     decode_token,
@@ -34,7 +34,9 @@ class TokenResponse(BaseModel):
 
 
 class UserUpdate(BaseModel):
-    language: Literal["en", "tr", "ru", "de"]
+    language: Literal["en", "tr", "ru", "de"] | None = None
+    current_password: str | None = None
+    new_password: str | None = None
 
 
 async def authenticate_token(token: str, db: AsyncSession) -> User:
@@ -106,15 +108,20 @@ async def register(
     return {"id": user.id, "username": user.username}
 
 
-@router.get("/me")
-async def me(user: User = Depends(get_current_user)):
+def _me_payload(user: User) -> dict:
     return {
         "id": user.id,
         "username": user.username,
         "role": user.role,
         "full_name": user.full_name,
         "language": user.language,
+        "permissions": sorted(effective_permissions(user)),
     }
+
+
+@router.get("/me")
+async def me(user: User = Depends(get_current_user)):
+    return _me_payload(user)
 
 
 @router.patch("/me")
@@ -123,13 +130,14 @@ async def update_me(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    user.language = data.language
+    if data.language is not None:
+        user.language = data.language
+    if data.new_password is not None:
+        if not data.current_password or not verify_password(
+            data.current_password, user.hashed_password
+        ):
+            raise HTTPException(status_code=400, detail="Mevcut sifre yanlis")
+        user.hashed_password = hash_password(data.new_password)
     await db.commit()
     await db.refresh(user)
-    return {
-        "id": user.id,
-        "username": user.username,
-        "role": user.role,
-        "full_name": user.full_name,
-        "language": user.language,
-    }
+    return _me_payload(user)
