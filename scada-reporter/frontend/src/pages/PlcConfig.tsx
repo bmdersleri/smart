@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { createPlc, deletePlc, listPlcs, updatePlc } from '../api/client'
 import type { PlcEntry } from '../api/client'
+import { useAuth } from '../context/AuthContext'
 import { useSortable } from '../hooks/useSortable'
 import SortHeader from '../components/SortHeader'
 
@@ -162,10 +163,12 @@ function AddRow({
 
 function PlcRow({
   plc,
+  canManage,
   onEdit,
   onDelete,
 }: {
   plc: PlcEntry
+  canManage: boolean
   onEdit: () => void
   onDelete: () => void
 }) {
@@ -181,7 +184,7 @@ function PlcRow({
       <td className="px-4 py-3 text-sm text-gray-400">{plc.tag_count.toLocaleString(i18n.language)}</td>
       <td className="px-4 py-3"><ConnBadge connected={plc.connected} /></td>
       <td className="px-4 py-3 text-right">
-        {confirming ? (
+        {canManage && (confirming ? (
           <div className="flex items-center justify-end gap-2">
             <span className="text-xs text-red-400">
               {plc.tag_count > 0 ? t('confirm_delete_tags', { count: plc.tag_count }) : t('confirm_delete')}
@@ -214,7 +217,7 @@ function PlcRow({
               {t('common:delete')}
             </button>
           </div>
-        )}
+        ))}
       </td>
     </tr>
   )
@@ -222,6 +225,7 @@ function PlcRow({
 
 export default function PlcConfig() {
   const { t } = useTranslation(['plc', 'common'])
+  const { can } = useAuth()
   const qc = useQueryClient()
   const [editingName, setEditingName] = useState<string | null>(null)
   const [adding, setAdding] = useState(false)
@@ -285,7 +289,7 @@ export default function PlcConfig() {
               {t('connected_count', { connected, total })}
             </span>
           )}
-          {!adding && (
+          {can('plc:manage') && !adding && (
             <button
               onClick={() => { setAdding(true); setError('') }}
               className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-cyan-700 hover:bg-cyan-600 text-white rounded-lg transition-colors"
@@ -327,7 +331,7 @@ export default function PlcConfig() {
               </tr>
             </thead>
             <tbody>
-              {adding && (
+              {can('plc:manage') && adding && (
                 <AddRow
                   onSave={(name, ip, rack, slot) => add.mutate({ name, ip, rack, slot })}
                   onCancel={() => { setAdding(false); setError('') }}
@@ -341,7 +345,7 @@ export default function PlcConfig() {
                 </tr>
               ) : (
                 sortedPlcs.map((plc) =>
-                  editingName === plc.name ? (
+                  can('plc:manage') && editingName === plc.name ? (
                     <EditRow
                       key={plc.name}
                       plc={plc}
@@ -352,6 +356,7 @@ export default function PlcConfig() {
                     <PlcRow
                       key={plc.name}
                       plc={plc}
+                      canManage={can('plc:manage')}
                       onEdit={() => setEditingName(plc.name)}
                       onDelete={() => remove.mutate(plc.name)}
                     />
