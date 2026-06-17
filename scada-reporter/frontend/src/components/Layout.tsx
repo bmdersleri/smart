@@ -98,7 +98,7 @@ export default function Layout() {
           <div className="px-2 py-1.5 mb-1">
             <LanguageSelector />
           </div>
-          <button onClick={logout} className="w-full text-left px-3 py-1.5 text-sm text-gray-400 hover:text-red-400 hover:bg-gray-800 rounded-lg transition-colors">
+          <button onClick={logout} className="w-full text-start px-3 py-1.5 text-sm text-gray-400 hover:text-red-400 hover:bg-gray-800 rounded-lg transition-colors">
             {t('logout')}
           </button>
         </div>
