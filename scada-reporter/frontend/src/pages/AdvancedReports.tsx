@@ -643,8 +643,8 @@ function ArchiveTab() {
   const { data } = useQuery({
     queryKey: ['adv-archive', params],
     queryFn: () => getArchive(params).then(r => r.data),
-    refetchInterval: () => {
-      const hasActive = data?.items.some(i => i.status === 'running' || i.status === 'pending')
+    refetchInterval: (query) => {
+      const hasActive = query.state.data?.items.some(i => i.status === 'running' || i.status === 'pending')
       return hasActive ? 5000 : false
     },
   })
