@@ -5,7 +5,7 @@ Keys cover every user-facing string found in:
   - app/services/excel_builder.py  (sheet titles, stat block labels, column headers)
   - app/services/pdf_builder.py    (via app/templates/report.html.j2)
 
-Languages: en (canonical), tr (Turkish), ru (Russian), de (German).
+Languages: en (canonical), tr (Turkish), ru (Russian), de (German), ar (Arabic).
 Fallback: en  — enforced by get_labels() in __init__.py.
 
 RU/DE translations are AI drafts; schedule human review before production.
@@ -239,5 +239,62 @@ LABELS: dict[str, dict[str, str]] = {
         "top_10_anomalies": "Top 10 Anomalien",
         # ── PDF page footer ───────────────────────────────────────────────────
         "page": "Seite",
+    },
+    "ar": {
+        # ── Sheet / section titles ───────────────────────────────────────────
+        "summary_sheet": "ملخص",
+        "raw_sheet": "البيانات الخام",
+        "statistics": "الإحصائيات",
+        "percentiles": "المئينات",
+        "anomalies": "الحالات الشاذة",
+        "period_summary": "ملخص الفترة",
+        "summary_stats": "إحصائيات موجزة",
+        "system_health_summary": "ملخص صحة النظام",
+        "chart": "رسم بياني",
+        # ── Stat-block / column headers ──────────────────────────────────────
+        "tag": "الوسم",
+        "unit": "الوحدة",
+        "total_reads": "إجمالي القراءات",
+        "good_quality": "جودة جيدة",
+        "availability_pct": "التوفر %",
+        "average": "المتوسط",
+        "std_dev": "الانحراف المعياري",
+        "std": "الانحراف",
+        "minimum": "الأدنى",
+        "maximum": "الأقصى",
+        "trend": "الاتجاه",
+        "trend_slope": "ميل الاتجاه (وحدة/ساعة)",
+        "trend_r2": "R²",
+        "anomaly_count": "عدد الحالات الشاذة",
+        "gap_count": "عدد الفجوات",
+        "gap_total_seconds": "إجمالي الفجوة (ث)",
+        "gap": "فجوة",
+        # ── Period-aggregation table columns ─────────────────────────────────
+        "period": "الفترة",
+        "count": "العدد",
+        # ── Legacy inline Excel export (reports.py) ───────────────────────────
+        "start_label": "البداية",
+        "end_label": "النهاية",
+        "interval_label": "الفاصل الزمني",
+        # ── Anomaly table columns ─────────────────────────────────────────────
+        "time": "الوقت",
+        "value": "القيمة",
+        "type": "النوع",
+        "severity": "الخطورة",
+        "detail": "التفاصيل",
+        # ── Quality / raw data ────────────────────────────────────────────────
+        "quality": "الجودة",
+        # ── PDF header meta ───────────────────────────────────────────────────
+        "report_title": "تقرير",
+        "period_meta": "الفترة",
+        "generated_at": "تم الإنشاء في",
+        "format_label": "التنسيق",
+        # ── PDF system health summary ─────────────────────────────────────────
+        "total_anomalies": "إجمالي الحالات الشاذة",
+        "avg_availability": "متوسط التوفر",
+        "tag_count": "عدد الوسوم",
+        "top_10_anomalies": "أعلى 10 حالات شاذة",
+        # ── PDF page footer ───────────────────────────────────────────────────
+        "page": "صفحة",
     },
 }

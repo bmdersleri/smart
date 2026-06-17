@@ -34,7 +34,7 @@ class TokenResponse(BaseModel):
 
 
 class UserUpdate(BaseModel):
-    language: Literal["en", "tr", "ru", "de"] | None = None
+    language: Literal["en", "tr", "ru", "de", "ar"] | None = None
     current_password: str | None = None
     new_password: str | None = Field(default=None, min_length=6)
 

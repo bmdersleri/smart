@@ -66,3 +66,12 @@ async def test_self_password_change_too_short_422(client, operator, db_session):
     # Verify old password is still valid (hash unchanged)
     await db_session.refresh(operator)
     assert verify_password("oldpass", operator.hashed_password)
+
+
+@pytest.mark.asyncio
+async def test_self_language_change_to_arabic(client, operator, db_session):
+    resp = await client.patch("/api/auth/me", json={"language": "ar"})
+    assert resp.status_code == 200
+    assert resp.json()["language"] == "ar"
+    await db_session.refresh(operator)
+    assert operator.language == "ar"
