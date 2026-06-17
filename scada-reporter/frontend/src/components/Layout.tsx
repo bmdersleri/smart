@@ -32,8 +32,8 @@ export default function Layout() {
       )}
       {/* Sidebar */}
       <aside
-        className={`w-56 bg-gray-900 border-r border-gray-800 flex flex-col fixed md:static inset-y-0 left-0 z-40 transform transition-transform duration-200 ${
-          mobileNav ? 'translate-x-0' : '-translate-x-full'
+        className={`w-56 bg-gray-900 border-e border-gray-800 flex flex-col fixed md:static inset-y-0 start-0 z-40 transform transition-transform duration-200 ${
+          mobileNav ? 'translate-x-0' : '-translate-x-full rtl:translate-x-full'
         } md:translate-x-0`}
       >
         <div className="p-4 border-b border-gray-800">
