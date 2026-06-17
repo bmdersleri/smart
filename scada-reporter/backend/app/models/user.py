@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, Integer, String
+from sqlalchemy import JSON, Boolean, DateTime, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base
@@ -17,6 +17,9 @@ class User(Base):
     role: Mapped[str] = mapped_column(String(50), default="operator")  # admin, operator, viewer
     language: Mapped[str] = mapped_column(
         String(5), server_default="en", default="en", nullable=False
+    )
+    permission_overrides: Mapped[dict] = mapped_column(
+        JSON, default=dict, server_default="{}", nullable=False
     )
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
