@@ -7,6 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.core.permissions import user_can
 from app.core.security import (
     create_access_token,
     decode_token,
@@ -59,6 +60,15 @@ async def get_current_user(
 def require_role(*roles: str):
     async def _check(user: User = Depends(get_current_user)):
         if user.role not in roles:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Yetki yok")
+        return user
+
+    return _check
+
+
+def require_perm(perm: str):
+    async def _check(user: User = Depends(get_current_user)):
+        if not user_can(user, perm):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Yetki yok")
         return user
 
