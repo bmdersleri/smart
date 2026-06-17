@@ -54,3 +54,15 @@ async def test_self_password_change_wrong_current(client, operator):
         json={"current_password": "WRONG", "new_password": "newpass1"},
     )
     assert resp.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_self_password_change_too_short_422(client, operator, db_session):
+    resp = await client.patch(
+        "/api/auth/me",
+        json={"current_password": "oldpass", "new_password": "abc"},
+    )
+    assert resp.status_code == 422
+    # Verify old password is still valid (hash unchanged)
+    await db_session.refresh(operator)
+    assert verify_password("oldpass", operator.hashed_password)

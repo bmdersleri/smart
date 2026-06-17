@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.auth import require_role
 from app.core.database import get_db
-from app.core.permissions import effective_permissions
+from app.core.permissions import ALL_PERMISSIONS, effective_permissions
 from app.core.security import hash_password
 from app.models.user import User
 
@@ -26,10 +26,20 @@ class UserOut(BaseModel):
 class UserCreateIn(BaseModel):
     username: str
     email: str
-    password: str
+    password: str = Field(min_length=6)
     full_name: str = ""
     role: str = "operator"
     permission_overrides: dict = {}
+
+    @field_validator("permission_overrides")
+    @classmethod
+    def _check_overrides(cls, v):
+        if v is None:
+            return v
+        bad = set(v) - set(ALL_PERMISSIONS)
+        if bad:
+            raise ValueError(f"Gecersiz yetki anahtari: {', '.join(sorted(bad))}")
+        return {k: bool(val) for k, val in v.items()}
 
 
 class UserPatchIn(BaseModel):
@@ -39,9 +49,19 @@ class UserPatchIn(BaseModel):
     is_active: bool | None = None
     permission_overrides: dict | None = None
 
+    @field_validator("permission_overrides")
+    @classmethod
+    def _check_overrides(cls, v):
+        if v is None:
+            return v
+        bad = set(v) - set(ALL_PERMISSIONS)
+        if bad:
+            raise ValueError(f"Gecersiz yetki anahtari: {', '.join(sorted(bad))}")
+        return {k: bool(val) for k, val in v.items()}
+
 
 class PasswordIn(BaseModel):
-    password: str
+    password: str = Field(min_length=6)
 
 
 def _to_out(user: User) -> UserOut:

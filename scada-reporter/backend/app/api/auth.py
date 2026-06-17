@@ -2,7 +2,7 @@ from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -36,7 +36,7 @@ class TokenResponse(BaseModel):
 class UserUpdate(BaseModel):
     language: Literal["en", "tr", "ru", "de"] | None = None
     current_password: str | None = None
-    new_password: str | None = None
+    new_password: str | None = Field(default=None, min_length=6)
 
 
 async def authenticate_token(token: str, db: AsyncSession) -> User:

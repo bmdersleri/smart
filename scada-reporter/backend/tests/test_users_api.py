@@ -180,3 +180,42 @@ async def test_create_duplicate_email_409(client, as_admin):
     assert (await client.post("/api/users/", json=payload)).status_code == 201
     payload2 = {"username": "user2", "email": "dup@scada.local", "password": "secret1"}
     assert (await client.post("/api/users/", json=payload2)).status_code == 409
+
+
+@pytest.mark.asyncio
+async def test_create_user_short_password_422(client, as_admin):
+    resp = await client.post(
+        "/api/users/",
+        json={"username": "shortpw", "email": "shortpw@scada.local", "password": "abc"},
+    )
+    assert resp.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_reset_password_short_422(client, as_admin):
+    created = (
+        await client.post(
+            "/api/users/",
+            json={
+                "username": "resettarget",
+                "email": "resettarget@scada.local",
+                "password": "secret1",
+            },
+        )
+    ).json()
+    resp = await client.post(f"/api/users/{created['id']}/password", json={"password": "abc"})
+    assert resp.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_create_user_invalid_override_422(client, as_admin):
+    resp = await client.post(
+        "/api/users/",
+        json={
+            "username": "badperm",
+            "email": "badperm@scada.local",
+            "password": "secret1",
+            "permission_overrides": {"bogus:perm": True},
+        },
+    )
+    assert resp.status_code == 422
