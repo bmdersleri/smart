@@ -1,0 +1,5 @@
+{
+  "name": "scada-forecast",
+  "description": "Predict future values for a tag",
+  "prompt": "Ask the user which tag to forecast and the horizon. Run trend prediction and present: current trend direction, slope, and forecasted values with confidence intervals."
+}

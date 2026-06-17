@@ -4,6 +4,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import i18n from '../i18n'
 import AdvancedReports from './AdvancedReports'
 
+vi.mock('../context/AuthContext', () => ({
+  useAuth: () => ({ user: { role: 'admin', permissions: [] }, can: () => true }),
+}))
+
 // Minimal data-layer mocks so the page renders without a backend.
 vi.mock('../api/client', () => ({
   listTemplates: () => Promise.resolve({ data: [] }),

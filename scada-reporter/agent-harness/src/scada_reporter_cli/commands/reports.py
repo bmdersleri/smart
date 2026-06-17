@@ -1,24 +1,13 @@
 from __future__ import annotations
 
 import click
-from scada_reporter_cli.client import ScadaClient
-from scada_reporter_cli.utils.config import get_api_url, get_token
+from scada_reporter_cli.utils.client_helper import get_client
 from scada_reporter_cli.utils.repl_skin import success, error, info, fmt_json, fmt_table
 
 
 @click.group(name="reports")
 def reports_cmd():
     """Rapor oluşturma."""
-
-
-def _get_client() -> tuple[ScadaClient, bool]:
-    token = get_token()
-    if not token:
-        click.echo(error("Önce `scada auth login` ile giriş yapın"))
-        return None, False  # type: ignore[return-value]
-    client = ScadaClient(get_api_url())
-    client.set_token(token)
-    return client, True
 
 
 @reports_cmd.command()
@@ -52,7 +41,7 @@ def generate(
     json_output: bool,
 ):
     """Rapor oluştur."""
-    client, ok = _get_client()
+    client, ok = get_client()
     if not ok:
         return
 
@@ -90,7 +79,7 @@ def generate(
 @click.option("--json-output", is_flag=True, help="JSON çıktı")
 def list_history(json_output: bool):
     """Son 10 raporu listele."""
-    client, ok = _get_client()
+    client, ok = get_client()
     if not ok:
         return
     result = client.list_report_history()
@@ -133,7 +122,7 @@ def list_history(json_output: bool):
 @click.option("--json-output", is_flag=True, help="JSON meta çıktı")
 def download_history(history_id: int, output: str | None, json_output: bool):
     """Geçmiş raporu tekrar indir."""
-    client, ok = _get_client()
+    client, ok = get_client()
     if not ok:
         return
     result = client.download_report_history(history_id)

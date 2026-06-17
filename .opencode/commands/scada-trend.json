@@ -1,0 +1,5 @@
+{
+  "name": "scada-trend",
+  "description": "Query trend data for specific tags",
+  "prompt": "Ask the user which tags they want to see, the time range, and aggregation bucket. Then use query_trend to fetch and display the data as a table or summary."
+}

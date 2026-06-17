@@ -1,0 +1,5 @@
+{
+  "name": "scada-current",
+  "description": "Query current values for SCADA tags",
+  "prompt": "Fetch the latest readings from all active tags. Summarize the results in a table showing tag name, value, unit, and quality."
+}

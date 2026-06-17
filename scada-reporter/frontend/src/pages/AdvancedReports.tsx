@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
+import { useAuth } from '../context/AuthContext'
 import { format, parseISO } from 'date-fns'
 import { enUS, tr, ru, de } from 'date-fns/locale'
 import {
@@ -446,6 +447,7 @@ function ScheduleCreateModal({ templates, onClose }: { templates: ReportTemplate
 
 function TemplatesTab({ onRunDone }: { onRunDone: () => void }) {
   const { t, i18n } = useTranslation(['advancedReports', 'common'])
+  const { can } = useAuth()
   const qc = useQueryClient()
   const [showCreate, setShowCreate] = useState(false)
   const [editing, setEditing] = useState<ReportTemplate | null>(null)
@@ -474,7 +476,9 @@ function TemplatesTab({ onRunDone }: { onRunDone: () => void }) {
     <div>
       <div className="flex justify-between items-center mb-4">
         <p className="text-sm text-gray-400">{t('template_count', { value: templates.length })}</p>
-        <button onClick={() => setShowCreate(true)} className={BTN_PRIMARY}>{t('new_template_btn')}</button>
+        {can('report_template:create') && (
+          <button onClick={() => setShowCreate(true)} className={BTN_PRIMARY}>{t('new_template_btn')}</button>
+        )}
       </div>
       {templates.length === 0
         ? <div className="text-center py-16 text-gray-600">{t('empty_templates')}</div>
@@ -503,9 +507,13 @@ function TemplatesTab({ onRunDone }: { onRunDone: () => void }) {
                       <div className="flex gap-2 justify-end">
                         <button onClick={() => runMut.mutate(tpl.id)} disabled={runMut.isPending}
                           className="text-xs text-blue-400 hover:text-blue-300 disabled:opacity-50">{t('run')}</button>
-                        <button onClick={() => setEditing(tpl)} className="text-xs text-gray-400 hover:text-white">{t('common:edit')}</button>
-                        <button onClick={() => { if (confirm(t('confirm_delete_template'))) delMut.mutate(tpl.id) }}
-                          className="text-xs text-red-500 hover:text-red-400">{t('common:delete')}</button>
+                        {can('report_template:edit') && (
+                          <button onClick={() => setEditing(tpl)} className="text-xs text-gray-400 hover:text-white">{t('common:edit')}</button>
+                        )}
+                        {can('report_template:delete') && (
+                          <button onClick={() => { if (confirm(t('confirm_delete_template'))) delMut.mutate(tpl.id) }}
+                            className="text-xs text-red-500 hover:text-red-400">{t('common:delete')}</button>
+                        )}
                       </div>
                     </td>
                   </tr>

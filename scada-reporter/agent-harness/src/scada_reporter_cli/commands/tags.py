@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 import click
-from scada_reporter_cli.client import ScadaClient
-from scada_reporter_cli.utils.config import get_api_url, get_token
+from scada_reporter_cli.utils.client_helper import get_client
 from scada_reporter_cli.utils.repl_skin import success, error, fmt_table, fmt_json
 
 
@@ -11,21 +10,11 @@ def tags_cmd():
     """PLC tag'lerini yönet."""
 
 
-def _get_client() -> tuple[ScadaClient, bool]:
-    token = get_token()
-    if not token:
-        click.echo(error("Önce `scada auth login` ile giriş yapın"))
-        return None, False  # type: ignore[return-value]
-    client = ScadaClient(get_api_url())
-    client.set_token(token)
-    return client, True
-
-
 @tags_cmd.command(name="list")
 @click.option("--json-output", is_flag=True, help="JSON çıktı")
 def list_tags(json_output: bool):
     """Tüm tag'leri listele."""
-    client, ok = _get_client()
+    client, ok = get_client()
     if not ok:
         return
     result = client.list_tags()
@@ -60,7 +49,7 @@ def create(
     json_output: bool,
 ):
     """Yeni tag oluştur."""
-    client, ok = _get_client()
+    client, ok = get_client()
     if not ok:
         return
     result = client.create_tag(node_id, name, description, unit, channel, device)
@@ -80,7 +69,7 @@ def create(
 @click.option("--json-output", is_flag=True, help="JSON çıktı")
 def delete(tag_id: int, json_output: bool):
     """Tag sil (admin)."""
-    client, ok = _get_client()
+    client, ok = get_client()
     if not ok:
         return
     result = client.delete_tag(tag_id)
@@ -121,7 +110,7 @@ def update(
     if min_alarm is not None and max_alarm is not None and min_alarm >= max_alarm:
         click.echo(error("Min alarm değeri Max alarm'dan küçük olmalı"))
         return
-    client, ok = _get_client()
+    client, ok = get_client()
     if not ok:
         return
     result = client.update_tag(
@@ -169,7 +158,7 @@ def get_readings(
     tag_id: int, start: str | None, end: str | None, limit: int, json_output: bool
 ):
     """Tag okuma değerlerini getir."""
-    client, ok = _get_client()
+    client, ok = get_client()
     if not ok:
         return
     result = client.get_readings(tag_id, start, end, limit)

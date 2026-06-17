@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 import click
-from scada_reporter_cli.client import ScadaClient
-from scada_reporter_cli.utils.config import get_api_url, get_token
+from scada_reporter_cli.utils.client_helper import get_client
 from scada_reporter_cli.utils.repl_skin import success, error, info, fmt_table, fmt_json
 
 
@@ -11,21 +10,11 @@ def dashboard_cmd():
     """Dashboard verileri ve canlı değerler."""
 
 
-def _get_client() -> tuple[ScadaClient, bool]:
-    token = get_token()
-    if not token:
-        click.echo(error("Önce `scada auth login` ile giriş yapın"))
-        return None, False  # type: ignore[return-value]
-    client = ScadaClient(get_api_url())
-    client.set_token(token)
-    return client, True
-
-
 @dashboard_cmd.command()
 @click.option("--json-output", is_flag=True, help="JSON çıktı")
 def overview(json_output: bool):
     """Sistem genel durumunu göster."""
-    client, ok = _get_client()
+    client, ok = get_client()
     if not ok:
         return
     result = client.overview()
@@ -63,7 +52,7 @@ def current_values(json_output: bool, alarm_only: bool, watch_interval: int):
     from datetime import datetime
 
     def _render() -> bool:
-        client, ok = _get_client()
+        client, ok = get_client()
         if not ok:
             return False
         result = client.current_values()
@@ -122,7 +111,7 @@ def current_values(json_output: bool, alarm_only: bool, watch_interval: int):
 @click.option("--json-output", is_flag=True, help="JSON çıktı")
 def trend(tag_ids: tuple[int, ...], hours: int, json_output: bool):
     """Tag'lerin trend verisini getir."""
-    client, ok = _get_client()
+    client, ok = get_client()
     if not ok:
         return
     result = client.trend(list(tag_ids), hours)

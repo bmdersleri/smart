@@ -455,7 +455,7 @@ function TagTreeView({
 
 export default function Tags() {
   const { t } = useTranslation(['tags', 'common'])
-  const { user } = useAuth()
+  const { user, can } = useAuth()
   const qc = useQueryClient()
   const [showAdd, setShowAdd] = useState(false)
   const [showImport, setShowImport] = useState(false)
@@ -529,9 +529,11 @@ export default function Tags() {
               <button onClick={() => setShowFormat(true)} className="px-3 py-2 text-sm bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg border border-gray-700 transition-colors">
                 {t('format_btn')}
               </button>
-              <button onClick={() => setShowAdd(true)} className="px-3 py-2 text-sm bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors">
-                {t('add_tag_btn')}
-              </button>
+              {can('tag:create') && (
+                <button onClick={() => setShowAdd(true)} className="px-3 py-2 text-sm bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors">
+                  {t('add_tag_btn')}
+                </button>
+              )}
             </>
           )}
         </div>

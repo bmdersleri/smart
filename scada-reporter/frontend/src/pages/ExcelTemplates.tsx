@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "../context/AuthContext";
 
 export type Agg = "sum" | "avg" | "min" | "max" | "last" | "delta";
 
@@ -90,6 +91,7 @@ async function fileToB64(file: File): Promise<string> {
 }
 
 export default function ExcelTemplates() {
+  const { can } = useAuth();
   const qc = useQueryClient();
   const [view, setView] = useState<"list" | "map">("list");
   const [rows, setRows] = useState<MappingRow[]>([]);
@@ -206,15 +208,17 @@ export default function ExcelTemplates() {
   return (
     <div className="p-6 text-gray-900 dark:text-gray-100">
       <h1 className="text-xl font-semibold mb-4">Excel Şablonları</h1>
-      <label className="inline-block mb-4 px-3 py-1 rounded bg-blue-600 text-white cursor-pointer">
-        + Şablon Yükle
-        <input
-          type="file"
-          accept=".xlsx"
-          className="hidden"
-          onChange={(e) => e.target.files?.[0] && onUpload(e.target.files[0])}
-        />
-      </label>
+      {can('report_template:create') && (
+        <label className="inline-block mb-4 px-3 py-1 rounded bg-blue-600 text-white cursor-pointer">
+          + Şablon Yükle
+          <input
+            type="file"
+            accept=".xlsx"
+            className="hidden"
+            onChange={(e) => e.target.files?.[0] && onUpload(e.target.files[0])}
+          />
+        </label>
+      )}
       <table className="w-full text-sm">
         <thead>
           <tr className="text-left border-b dark:border-gray-700">

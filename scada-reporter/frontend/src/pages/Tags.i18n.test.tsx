@@ -22,7 +22,7 @@ vi.mock('../api/client', () => ({
 }))
 
 vi.mock('../context/AuthContext', () => ({
-  useAuth: () => ({ user: { id: 1, username: 'admin', role: 'admin', full_name: 'Admin', language: 'en' } }),
+  useAuth: () => ({ user: { id: 1, username: 'admin', role: 'admin', full_name: 'Admin', language: 'en' }, can: () => true }),
 }))
 
 function renderTags() {
