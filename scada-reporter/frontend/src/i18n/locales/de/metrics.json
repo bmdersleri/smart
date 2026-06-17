@@ -32,5 +32,14 @@
   "col_read_count": "Leseanzahl",
   "col_avg_time": "Ø Zeit",
   "col_latency": "Latenz",
-  "empty_plcs": "Noch keine SPS-Lesemetriken (Poller wärmt auf)."
+  "empty_plcs": "Noch keine SPS-Lesemetriken (Poller wärmt auf).",
+  "console_title": "Live-Backend-Konsole",
+  "console_sub": "Echtzeit-Log-Stream — Poller, SPS-Verbindung, App",
+  "filter_all": "Alle (INFO+)",
+  "filter_warning": "Warnungen+",
+  "filter_error": "Nur Fehler",
+  "btn_pause": "Pause",
+  "btn_resume": "Fortsetzen",
+  "btn_clear": "Leeren",
+  "console_empty": "Warte auf Backend-Nachrichten…"
 }

@@ -32,5 +32,14 @@
   "col_read_count": "Okuma Sayısı",
   "col_avg_time": "Ort. Süre",
   "col_latency": "Gecikme",
-  "empty_plcs": "Henüz PLC okuma metriği yok (poller ısınıyor)."
+  "empty_plcs": "Henüz PLC okuma metriği yok (poller ısınıyor).",
+  "console_title": "Canlı Backend Konsolu",
+  "console_sub": "Gerçek-zamanlı log akışı — poller, PLC bağlantısı, uygulama",
+  "filter_all": "Tümü (INFO+)",
+  "filter_warning": "Uyarılar+",
+  "filter_error": "Sadece hatalar",
+  "btn_pause": "Duraklat",
+  "btn_resume": "Devam",
+  "btn_clear": "Temizle",
+  "console_empty": "Backend mesajları bekleniyor…"
 }

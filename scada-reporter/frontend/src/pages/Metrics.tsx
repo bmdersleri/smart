@@ -1,9 +1,12 @@
+import { useRef, useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { getMetrics, getDeadbandSavings } from '../api/client'
 import type { MetricsSummary } from '../api/client'
 import { useSortable } from '../hooks/useSortable'
 import SortHeader from '../components/SortHeader'
+import { useLogStream } from '../hooks/useLogStream'
+import type { LogLine } from '../hooks/useLogStream'
 
 function StatCard({ label, value, sub, accent }: { label: string; value: string; sub?: string; accent?: string }) {
   return (
@@ -23,6 +26,81 @@ function fmtMs(s: number | null): string {
 function fmtPct(r: number | null): string {
   if (r === null) return '—'
   return `${(r * 100).toFixed(2)} %`
+}
+
+const LEVEL_COLOR: Record<string, string> = {
+  ERROR: 'text-red-400',
+  CRITICAL: 'text-red-400',
+  WARNING: 'text-amber-400',
+  INFO: 'text-gray-400',
+  DEBUG: 'text-gray-600',
+}
+
+function LiveConsole() {
+  const { t, i18n } = useTranslation(['metrics', 'common'])
+  const [level, setLevel] = useState('INFO')
+  const [paused, setPaused] = useState(false)
+  const { lines, clear } = useLogStream(level, !paused)
+  const bodyRef = useRef<HTMLDivElement>(null)
+
+  // Auto-scroll to bottom on new lines unless paused.
+  useEffect(() => {
+    if (!paused && bodyRef.current) {
+      bodyRef.current.scrollTop = bodyRef.current.scrollHeight
+    }
+  }, [lines, paused])
+
+  const fmtTime = (ts: string) => {
+    const d = new Date(ts)
+    return isNaN(d.getTime()) ? ts : d.toLocaleTimeString(i18n.language)
+  }
+
+  return (
+    <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+      <div className="px-4 py-3 border-b border-gray-800 flex items-center justify-between gap-2">
+        <div>
+          <h2 className="text-sm font-medium text-white">{t('console_title')}</h2>
+          <p className="text-xs text-gray-500">{t('console_sub')}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <select
+            value={level}
+            onChange={(e) => setLevel(e.target.value)}
+            className="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200"
+          >
+            <option value="INFO">{t('filter_all')}</option>
+            <option value="WARNING">{t('filter_warning')}</option>
+            <option value="ERROR">{t('filter_error')}</option>
+          </select>
+          <button
+            onClick={() => setPaused((p) => !p)}
+            className="px-2 py-1 text-xs rounded border border-gray-700 text-gray-200 hover:bg-gray-800"
+          >
+            {paused ? t('btn_resume') : t('btn_pause')}
+          </button>
+          <button
+            onClick={clear}
+            className="px-2 py-1 text-xs rounded border border-gray-700 text-gray-200 hover:bg-gray-800"
+          >
+            {t('btn_clear')}
+          </button>
+        </div>
+      </div>
+      <div ref={bodyRef} className="h-72 overflow-y-auto font-mono text-xs p-3 space-y-0.5">
+        {lines.length === 0 && (
+          <p className="text-gray-600 text-center py-8">{t('console_empty')}</p>
+        )}
+        {lines.map((l: LogLine) => (
+          <div key={l.seq} className="flex gap-2 whitespace-pre-wrap break-all">
+            <span className="text-gray-600 shrink-0">{fmtTime(l.ts)}</span>
+            <span className={`shrink-0 w-16 ${LEVEL_COLOR[l.level] ?? 'text-gray-400'}`}>{l.level}</span>
+            <span className="text-gray-500 shrink-0">{l.name}</span>
+            <span className={LEVEL_COLOR[l.level] ?? 'text-gray-300'}>{l.msg}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
 }
 
 export default function Metrics() {
@@ -158,6 +236,8 @@ export default function Metrics() {
               </tbody>
             </table>
           </div>
+
+          <LiveConsole />
         </>
       )}
     </div>
