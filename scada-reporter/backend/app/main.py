@@ -30,6 +30,7 @@ from app.collector.s7_collector import plc_manager
 from app.core import metrics
 from app.core.config import settings
 from app.core.database import Base, engine
+from app.core.log_buffer import log_buffer
 from app.core.timescaledb import (
     init_continuous_aggregates,
     init_daily_rollup,
@@ -44,7 +45,8 @@ from app.services.scheduler import get_scheduler, start_scheduler
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 logger = logging.getLogger(__name__)
-
+log_buffer.setLevel(logging.INFO)
+logging.getLogger().addHandler(log_buffer)
 
 if settings.SENTRY_DSN:
     sentry_sdk.init(

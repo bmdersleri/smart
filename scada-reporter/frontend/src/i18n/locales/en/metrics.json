@@ -32,5 +32,14 @@
   "col_read_count": "Read Count",
   "col_avg_time": "Avg. Time",
   "col_latency": "Latency",
-  "empty_plcs": "No PLC read metrics yet (poller warming up)."
+  "empty_plcs": "No PLC read metrics yet (poller warming up).",
+  "console_title": "Live Backend Console",
+  "console_sub": "Real-time log stream — poller, PLC connection, app",
+  "filter_all": "All (INFO+)",
+  "filter_warning": "Warnings+",
+  "filter_error": "Errors only",
+  "btn_pause": "Pause",
+  "btn_resume": "Resume",
+  "btn_clear": "Clear",
+  "console_empty": "Waiting for backend messages…"
 }

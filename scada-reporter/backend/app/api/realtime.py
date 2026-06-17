@@ -8,6 +8,7 @@ doğrulama query-param token ile yapılır.
 
 import asyncio
 import json
+import logging
 from collections.abc import AsyncGenerator
 
 from fastapi import APIRouter, Depends, Query
@@ -18,6 +19,7 @@ from app.api.auth import authenticate_token
 from app.collector.cache import CachedReading, latest_cache
 from app.core.config import settings
 from app.core.database import get_db
+from app.core.log_buffer import log_buffer
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
@@ -59,6 +61,46 @@ async def stream(
     interval = settings.OPCUA_SERVER_UPDATE_INTERVAL or 2
     return StreamingResponse(
         latest_event_stream(tag_ids, interval, max_events=limit),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
+
+
+async def log_event_stream(
+    after: int = 0,
+    min_level: int = logging.INFO,
+    interval: float = 1.0,
+    *,
+    max_events: int | None = None,
+) -> AsyncGenerator[str, None]:
+    """Halka tampondaki yeni log kayıtlarını SSE frame'i (JSON dizisi) olarak akıt."""
+    last = after
+    sent = 0
+    while max_events is None or sent < max_events:
+        recs = log_buffer.snapshot(after_seq=last, min_level=min_level)
+        if recs:
+            last = recs[-1]["seq"]
+            yield f"data: {json.dumps(recs)}\n\n"
+            sent += 1
+            if max_events is not None and sent >= max_events:
+                break
+        await asyncio.sleep(interval)
+
+
+@router.get("/logs/stream")
+async def logs_stream(
+    token: str = Query(...),
+    after: int = Query(default=0, ge=0),
+    level: str = Query(default="INFO"),
+    limit: int | None = Query(default=None, ge=1),
+    db: AsyncSession = Depends(get_db),
+):
+    await authenticate_token(token, db)
+    min_level = logging.getLevelName(level.upper())
+    if not isinstance(min_level, int):
+        min_level = logging.INFO
+    return StreamingResponse(
+        log_event_stream(after, min_level, max_events=limit),
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
