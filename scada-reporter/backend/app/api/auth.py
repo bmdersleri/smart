@@ -86,7 +86,11 @@ async def login(form: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = 
 
 
 @router.post("/register", status_code=201)
-async def register(data: UserCreate, db: AsyncSession = Depends(get_db)):
+async def register(
+    data: UserCreate,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(require_role("admin")),
+):
     result = await db.execute(select(User).where(User.username == data.username))
     if result.scalar_one_or_none():
         raise HTTPException(status_code=400, detail="Kullanici adi zaten mevcut")

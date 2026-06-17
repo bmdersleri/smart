@@ -2,8 +2,11 @@
 
 import pytest
 from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.dashboard import downsample, pick_rollup
+from app.core.security import hash_password
+from app.models.user import User
 
 
 def test_pick_rollup_short_window_uses_raw():
@@ -24,12 +27,14 @@ def test_pick_rollup_long_window_uses_1h():
 
 
 @pytest.mark.asyncio
-async def test_trend_agg_falls_back_to_raw_on_sqlite(client: AsyncClient):
+async def test_trend_agg_falls_back_to_raw_on_sqlite(client: AsyncClient, db_session: AsyncSession):
     # SQLite'da continuous aggregate view'ı yok -> ham veriye düşer, çökmemeli
-    await client.post(
-        "/api/auth/register",
-        json={"username": "agg", "email": "a@t.com", "password": "test123", "role": "admin"},
+    db_session.add(
+        User(
+            username="agg", email="a@t.com", hashed_password=hash_password("test123"), role="admin"
+        )
     )
+    await db_session.commit()
     tok = await client.post("/api/auth/token", data={"username": "agg", "password": "test123"})
     headers = {"Authorization": f"Bearer {tok.json()['access_token']}"}
 

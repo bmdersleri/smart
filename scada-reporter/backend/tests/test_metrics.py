@@ -3,8 +3,11 @@
 import pytest
 from httpx import AsyncClient
 from prometheus_client import REGISTRY
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core import metrics
+from app.core.security import hash_password
+from app.models.user import User
 
 
 def _sample(name: str, labels: dict | None = None) -> float:
@@ -75,11 +78,13 @@ async def test_metrics_summary_endpoint_requires_auth(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_metrics_summary_endpoint_returns_json(client: AsyncClient):
-    await client.post(
-        "/api/auth/register",
-        json={"username": "mx", "email": "mx@t.com", "password": "test123", "role": "admin"},
+async def test_metrics_summary_endpoint_returns_json(client: AsyncClient, db_session: AsyncSession):
+    db_session.add(
+        User(
+            username="mx", email="mx@t.com", hashed_password=hash_password("test123"), role="admin"
+        )
     )
+    await db_session.commit()
     tok = await client.post("/api/auth/token", data={"username": "mx", "password": "test123"})
     headers = {"Authorization": f"Bearer {tok.json()['access_token']}"}
     resp = await client.get("/api/dashboard/metrics", headers=headers)
@@ -90,11 +95,15 @@ async def test_metrics_summary_endpoint_returns_json(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_metrics_summary_enriches_plc_name_and_tag_count(client: AsyncClient):
-    await client.post(
-        "/api/auth/register",
-        json={"username": "mn", "email": "mn@t.com", "password": "test123", "role": "admin"},
+async def test_metrics_summary_enriches_plc_name_and_tag_count(
+    client: AsyncClient, db_session: AsyncSession
+):
+    db_session.add(
+        User(
+            username="mn", email="mn@t.com", hashed_password=hash_password("test123"), role="admin"
+        )
     )
+    await db_session.commit()
     tok = await client.post("/api/auth/token", data={"username": "mn", "password": "test123"})
     headers = {"Authorization": f"Bearer {tok.json()['access_token']}"}
 

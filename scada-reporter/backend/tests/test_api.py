@@ -1,5 +1,32 @@
+from types import SimpleNamespace
+
 import pytest
 from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.api.auth import get_current_user
+from app.core.security import hash_password
+from app.main import app
+from app.models.user import User
+
+
+async def _make_user(
+    db: AsyncSession, username: str, password: str = "test123", role: str = "operator"
+) -> None:
+    """Insert a user directly into the DB (bypasses the register endpoint)."""
+    user = User(
+        username=username,
+        email=f"{username}@test.com",
+        hashed_password=hash_password(password),
+        role=role,
+    )
+    db.add(user)
+    await db.commit()
+
+
+async def _login(client: AsyncClient, username: str, password: str = "test123") -> str:
+    r = await client.post("/api/auth/token", data={"username": username, "password": password})
+    return r.json()["access_token"]
 
 
 @pytest.mark.asyncio
@@ -12,49 +39,41 @@ async def test_health(client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_login_register(client: AsyncClient):
-    register_resp = await client.post(
-        "/api/auth/register",
-        json={
-            "username": "testuser",
-            "email": "test@example.com",
-            "password": "test123",
-            "full_name": "Test User",
-            "role": "admin",
-        },
+    """Register endpoint now requires admin auth — inject an admin override."""
+    app.dependency_overrides[get_current_user] = lambda: SimpleNamespace(
+        id=99, username="admin", role="admin", permission_overrides={}, is_active=True
     )
-    assert register_resp.status_code == 201
+    try:
+        register_resp = await client.post(
+            "/api/auth/register",
+            json={
+                "username": "testuser",
+                "email": "test@example.com",
+                "password": "test123",
+                "full_name": "Test User",
+                "role": "admin",
+            },
+        )
+        assert register_resp.status_code == 201
 
-    login_resp = await client.post(
-        "/api/auth/token",
-        data={
-            "username": "testuser",
-            "password": "test123",
-        },
-    )
-    assert login_resp.status_code == 200
-    token = login_resp.json()["access_token"]
-    assert token
+        login_resp = await client.post(
+            "/api/auth/token",
+            data={
+                "username": "testuser",
+                "password": "test123",
+            },
+        )
+        assert login_resp.status_code == 200
+        token = login_resp.json()["access_token"]
+        assert token
+    finally:
+        app.dependency_overrides.pop(get_current_user, None)
 
 
 @pytest.mark.asyncio
-async def test_me(client: AsyncClient):
-    await client.post(
-        "/api/auth/register",
-        json={
-            "username": "meuser",
-            "email": "me@example.com",
-            "password": "test123",
-            "full_name": "Me User",
-        },
-    )
-    login_resp = await client.post(
-        "/api/auth/token",
-        data={
-            "username": "meuser",
-            "password": "test123",
-        },
-    )
-    token = login_resp.json()["access_token"]
+async def test_me(client: AsyncClient, db_session: AsyncSession):
+    await _make_user(db_session, "meuser", role="operator")
+    token = await _login(client, "meuser")
 
     resp = await client.get("/api/auth/me", headers={"Authorization": f"Bearer {token}"})
     assert resp.status_code == 200
@@ -62,21 +81,9 @@ async def test_me(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_patch_tag_alarm_thresholds(client: AsyncClient):
-    # Create a tag first
-    await client.post(
-        "/api/auth/register",
-        json={
-            "username": "patchuser",
-            "email": "p@test.com",
-            "password": "test123",
-            "role": "admin",
-        },
-    )
-    token_r = await client.post(
-        "/api/auth/token", data={"username": "patchuser", "password": "test123"}
-    )
-    token = token_r.json()["access_token"]
+async def test_patch_tag_alarm_thresholds(client: AsyncClient, db_session: AsyncSession):
+    await _make_user(db_session, "patchuser", role="admin")
+    token = await _login(client, "patchuser")
     headers = {"Authorization": f"Bearer {token}"}
 
     tag_r = await client.post(
@@ -104,15 +111,10 @@ async def test_patch_tag_alarm_thresholds(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_patch_tag_deadband(client: AsyncClient):
-    await client.post(
-        "/api/auth/register",
-        json={"username": "dbuser", "email": "db@test.com", "password": "test123", "role": "admin"},
-    )
-    token_r = await client.post(
-        "/api/auth/token", data={"username": "dbuser", "password": "test123"}
-    )
-    headers = {"Authorization": f"Bearer {token_r.json()['access_token']}"}
+async def test_patch_tag_deadband(client: AsyncClient, db_session: AsyncSession):
+    await _make_user(db_session, "dbuser", role="admin")
+    token = await _login(client, "dbuser")
+    headers = {"Authorization": f"Bearer {token}"}
 
     tag_r = await client.post(
         "/api/tags/",
@@ -129,20 +131,10 @@ async def test_patch_tag_deadband(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_report_history(client: AsyncClient):
-    await client.post(
-        "/api/auth/register",
-        json={
-            "username": "histuser",
-            "email": "h@test.com",
-            "password": "test123",
-            "role": "admin",
-        },
-    )
-    token_r = await client.post(
-        "/api/auth/token", data={"username": "histuser", "password": "test123"}
-    )
-    headers = {"Authorization": f"Bearer {token_r.json()['access_token']}"}
+async def test_report_history(client: AsyncClient, db_session: AsyncSession):
+    await _make_user(db_session, "histuser", role="admin")
+    token = await _login(client, "histuser")
+    headers = {"Authorization": f"Bearer {token}"}
 
     # History starts empty
     hist_r = await client.get("/api/reports/history", headers=headers)

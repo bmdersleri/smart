@@ -6,26 +6,28 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.security import hash_password
 from app.models.tag import Tag
+from app.models.user import User
 
 
-async def _admin(client: AsyncClient, username: str) -> str:
-    await client.post(
-        "/api/auth/register",
-        json={
-            "username": username,
-            "email": f"{username}@t.com",
-            "password": "pw123",
-            "role": "admin",
-        },
+async def _admin(client: AsyncClient, db: AsyncSession, username: str) -> str:
+    db.add(
+        User(
+            username=username,
+            email=f"{username}@t.com",
+            hashed_password=hash_password("pw123"),
+            role="admin",
+        )
     )
+    await db.commit()
     r = await client.post("/api/auth/token", data={"username": username, "password": "pw123"})
     return r.json()["access_token"]
 
 
 @pytest.mark.asyncio
 async def test_export_csv_contains_tag(client: AsyncClient, db_session: AsyncSession):
-    tok = await _admin(client, "exp_csv")
+    tok = await _admin(client, db_session, "exp_csv")
     h = {"Authorization": f"Bearer {tok}"}
     db_session.add(
         Tag(node_id="EXP,DD0", name="ExpTag", plc_name="PLC9", unit="bar", long_term=True)
@@ -43,7 +45,7 @@ async def test_export_csv_contains_tag(client: AsyncClient, db_session: AsyncSes
 
 @pytest.mark.asyncio
 async def test_export_xlsx_returns_spreadsheet(client: AsyncClient, db_session: AsyncSession):
-    tok = await _admin(client, "exp_xlsx")
+    tok = await _admin(client, db_session, "exp_xlsx")
     h = {"Authorization": f"Bearer {tok}"}
     db_session.add(Tag(node_id="EXP2,DD0", name="ExpTag2", long_term=True))
     await db_session.commit()
@@ -55,8 +57,8 @@ async def test_export_xlsx_returns_spreadsheet(client: AsyncClient, db_session: 
 
 
 @pytest.mark.asyncio
-async def test_import_csv_creates_tags(client: AsyncClient):
-    tok = await _admin(client, "imp_csv")
+async def test_import_csv_creates_tags(client: AsyncClient, db_session: AsyncSession):
+    tok = await _admin(client, db_session, "imp_csv")
     h = {"Authorization": f"Bearer {tok}"}
     # WinCC adresleri virgül içerir -> CSV'de tırnaklanır (export aynısını yapar)
     csv = (
@@ -75,8 +77,8 @@ async def test_import_csv_creates_tags(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_import_csv_skips_duplicates(client: AsyncClient):
-    tok = await _admin(client, "imp_dup")
+async def test_import_csv_skips_duplicates(client: AsyncClient, db_session: AsyncSession):
+    tok = await _admin(client, db_session, "imp_dup")
     h = {"Authorization": f"Bearer {tok}"}
     csv = "node_id,name,plc_name\nDUP:1,DupTag,PLCX\n"
     files = {"file": ("t.csv", io.BytesIO(csv.encode()), "text/csv")}
@@ -90,16 +92,16 @@ async def test_import_csv_skips_duplicates(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_import_csv_requires_role(client: AsyncClient):
-    await client.post(
-        "/api/auth/register",
-        json={
-            "username": "imp_viewer",
-            "email": "imp_viewer@t.com",
-            "password": "pw123",
-            "role": "viewer",
-        },
+async def test_import_csv_requires_role(client: AsyncClient, db_session: AsyncSession):
+    db_session.add(
+        User(
+            username="imp_viewer",
+            email="imp_viewer@t.com",
+            hashed_password=hash_password("pw123"),
+            role="viewer",
+        )
     )
+    await db_session.commit()
     tok = (
         await client.post("/api/auth/token", data={"username": "imp_viewer", "password": "pw123"})
     ).json()["access_token"]

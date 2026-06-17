@@ -6,26 +6,28 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.security import hash_password
 from app.models.tag import Tag, TagReading
+from app.models.user import User
 
 
-async def _admin(client: AsyncClient, username: str) -> str:
-    await client.post(
-        "/api/auth/register",
-        json={
-            "username": username,
-            "email": f"{username}@t.com",
-            "password": "pw123",
-            "role": "admin",
-        },
+async def _admin(client: AsyncClient, db: AsyncSession, username: str) -> str:
+    db.add(
+        User(
+            username=username,
+            email=f"{username}@t.com",
+            hashed_password=hash_password("pw123"),
+            role="admin",
+        )
     )
+    await db.commit()
     r = await client.post("/api/auth/token", data={"username": username, "password": "pw123"})
     return r.json()["access_token"]
 
 
 @pytest.mark.asyncio
 async def test_trend_range_returns_only_window(client: AsyncClient, db_session: AsyncSession):
-    tok = await _admin(client, "range_user")
+    tok = await _admin(client, db_session, "range_user")
     h = {"Authorization": f"Bearer {tok}"}
     tag = Tag(node_id="RNG,REAL0", name="RngTag", unit="m3", long_term=True)
     db_session.add(tag)
@@ -59,7 +61,7 @@ async def test_trend_range_returns_only_window(client: AsyncClient, db_session: 
 
 @pytest.mark.asyncio
 async def test_trend_range_empty_window(client: AsyncClient, db_session: AsyncSession):
-    tok = await _admin(client, "range_empty")
+    tok = await _admin(client, db_session, "range_empty")
     h = {"Authorization": f"Bearer {tok}"}
     tag = Tag(node_id="RNG2,REAL0", name="RngTag2", long_term=True)
     db_session.add(tag)

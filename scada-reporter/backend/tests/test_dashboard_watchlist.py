@@ -6,19 +6,20 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.security import hash_password
 from app.models.tag import Tag, TagReading
+from app.models.user import User
 
 
-async def _register_and_login(client: AsyncClient, username: str) -> str:
-    await client.post(
-        "/api/auth/register",
-        json={
-            "username": username,
-            "email": f"{username}@test.com",
-            "password": "pw123",
-            "full_name": username,
-        },
+async def _register_and_login(client: AsyncClient, db: AsyncSession, username: str) -> str:
+    user = User(
+        username=username,
+        email=f"{username}@test.com",
+        hashed_password=hash_password("pw123"),
+        full_name=username,
     )
+    db.add(user)
+    await db.commit()
     r = await client.post("/api/auth/token", data={"username": username, "password": "pw123"})
     return r.json()["access_token"]
 
@@ -34,7 +35,7 @@ async def _create_tag(db: AsyncSession, name: str, device: str = "DEV1") -> int:
 @pytest.mark.asyncio
 async def test_watchlist_add_idempotent(client: AsyncClient, db_session: AsyncSession):
     """Pinning same tag twice must not create duplicate entries."""
-    token = await _register_and_login(client, "wl_add_user")
+    token = await _register_and_login(client, db_session, "wl_add_user")
     tag_id = await _create_tag(db_session, "WL_ADD_TAG")
     headers = {"Authorization": f"Bearer {token}"}
 
@@ -52,7 +53,7 @@ async def test_watchlist_add_idempotent(client: AsyncClient, db_session: AsyncSe
 
 @pytest.mark.asyncio
 async def test_watchlist_list_and_remove(client: AsyncClient, db_session: AsyncSession):
-    token = await _register_and_login(client, "wl_list_user")
+    token = await _register_and_login(client, db_session, "wl_list_user")
     tag_id = await _create_tag(db_session, "WL_LIST_TAG")
     headers = {"Authorization": f"Bearer {token}"}
 
@@ -72,8 +73,8 @@ async def test_watchlist_list_and_remove(client: AsyncClient, db_session: AsyncS
 
 @pytest.mark.asyncio
 async def test_watchlist_user_isolation(client: AsyncClient, db_session: AsyncSession):
-    token_a = await _register_and_login(client, "wl_iso_a")
-    token_b = await _register_and_login(client, "wl_iso_b")
+    token_a = await _register_and_login(client, db_session, "wl_iso_a")
+    token_b = await _register_and_login(client, db_session, "wl_iso_b")
     tag_a = await _create_tag(db_session, "WL_ISO_TAG_A")
     tag_b = await _create_tag(db_session, "WL_ISO_TAG_B")
 
@@ -101,7 +102,7 @@ async def test_watchlist_user_isolation(client: AsyncClient, db_session: AsyncSe
 
 @pytest.mark.asyncio
 async def test_watchlist_includes_reading(client: AsyncClient, db_session: AsyncSession):
-    token = await _register_and_login(client, "wl_read_user")
+    token = await _register_and_login(client, db_session, "wl_read_user")
     tag_id = await _create_tag(db_session, "WL_READ_TAG")
     headers = {"Authorization": f"Bearer {token}"}
 
@@ -120,7 +121,7 @@ async def test_watchlist_includes_reading(client: AsyncClient, db_session: Async
 
 @pytest.mark.asyncio
 async def test_watchlist_404_unknown_tag(client: AsyncClient, db_session: AsyncSession):
-    token = await _register_and_login(client, "wl_404_user")
+    token = await _register_and_login(client, db_session, "wl_404_user")
     r = await client.post(
         "/api/dashboard/watchlist/999999", headers={"Authorization": f"Bearer {token}"}
     )

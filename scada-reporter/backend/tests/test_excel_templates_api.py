@@ -25,7 +25,9 @@ def _template_bytes() -> bytes:
 @pytest_asyncio.fixture(autouse=True)
 def _auth_override():
     # Prod get_current_user, User ORM nesnesi döner (.id). dict değil obje ver.
-    app.dependency_overrides[get_current_user] = lambda: SimpleNamespace(id=1, username="admin")
+    app.dependency_overrides[get_current_user] = lambda: SimpleNamespace(
+        id=1, username="admin", role="admin", permission_overrides={}, is_active=True
+    )
     yield
     app.dependency_overrides.pop(get_current_user, None)
 

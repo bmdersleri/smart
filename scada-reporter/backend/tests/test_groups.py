@@ -4,19 +4,21 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.security import hash_password
 from app.models.tag import Tag
+from app.models.user import User
 
 
-async def _admin_token(client: AsyncClient, username: str) -> str:
-    await client.post(
-        "/api/auth/register",
-        json={
-            "username": username,
-            "email": f"{username}@test.com",
-            "password": "pw123",
-            "role": "admin",
-        },
+async def _admin_token(client: AsyncClient, db: AsyncSession, username: str) -> str:
+    db.add(
+        User(
+            username=username,
+            email=f"{username}@test.com",
+            hashed_password=hash_password("pw123"),
+            role="admin",
+        )
     )
+    await db.commit()
     r = await client.post("/api/auth/token", data={"username": username, "password": "pw123"})
     return r.json()["access_token"]
 
@@ -30,8 +32,8 @@ async def _mk_tag(db: AsyncSession, name: str, plc_name: str = "", device: str =
 
 
 @pytest.mark.asyncio
-async def test_create_group(client: AsyncClient):
-    tok = await _admin_token(client, "grp_create")
+async def test_create_group(client: AsyncClient, db_session: AsyncSession):
+    tok = await _admin_token(client, db_session, "grp_create")
     h = {"Authorization": f"Bearer {tok}"}
     r = await client.post("/api/groups/", json={"name": "Site A"}, headers=h)
     assert r.status_code == 201
@@ -42,12 +44,17 @@ async def test_create_group(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_create_group_requires_role(client: AsyncClient):
+async def test_create_group_requires_role(client: AsyncClient, db_session: AsyncSession):
     # viewer cannot create
-    await client.post(
-        "/api/auth/register",
-        json={"username": "grp_viewer", "email": "v@t.com", "password": "pw123", "role": "viewer"},
+    db_session.add(
+        User(
+            username="grp_viewer",
+            email="v@t.com",
+            hashed_password=hash_password("pw123"),
+            role="viewer",
+        )
     )
+    await db_session.commit()
     tok = (
         await client.post("/api/auth/token", data={"username": "grp_viewer", "password": "pw123"})
     ).json()["access_token"]
@@ -59,7 +66,7 @@ async def test_create_group_requires_role(client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_manual_tree_nesting_with_tags(client: AsyncClient, db_session: AsyncSession):
-    tok = await _admin_token(client, "grp_tree")
+    tok = await _admin_token(client, db_session, "grp_tree")
     h = {"Authorization": f"Bearer {tok}"}
 
     site = (await client.post("/api/groups/", json={"name": "Plant"}, headers=h)).json()
@@ -82,7 +89,7 @@ async def test_manual_tree_nesting_with_tags(client: AsyncClient, db_session: As
 
 @pytest.mark.asyncio
 async def test_unassign_clears_group(client: AsyncClient, db_session: AsyncSession):
-    tok = await _admin_token(client, "grp_unassign")
+    tok = await _admin_token(client, db_session, "grp_unassign")
     h = {"Authorization": f"Bearer {tok}"}
     g = (await client.post("/api/groups/", json={"name": "G"}, headers=h)).json()
     tag_id = await _mk_tag(db_session, "UA_TAG")
@@ -98,7 +105,7 @@ async def test_unassign_clears_group(client: AsyncClient, db_session: AsyncSessi
 
 @pytest.mark.asyncio
 async def test_delete_group_unassigns_tags(client: AsyncClient, db_session: AsyncSession):
-    tok = await _admin_token(client, "grp_del")
+    tok = await _admin_token(client, db_session, "grp_del")
     h = {"Authorization": f"Bearer {tok}"}
     g = (await client.post("/api/groups/", json={"name": "Doomed"}, headers=h)).json()
     tag_id = await _mk_tag(db_session, "DEL_TAG")
@@ -118,7 +125,7 @@ async def test_delete_group_unassigns_tags(client: AsyncClient, db_session: Asyn
 
 @pytest.mark.asyncio
 async def test_auto_tree_derives_from_plc_and_device(client: AsyncClient, db_session: AsyncSession):
-    tok = await _admin_token(client, "grp_auto")
+    tok = await _admin_token(client, db_session, "grp_auto")
     h = {"Authorization": f"Bearer {tok}"}
     await _mk_tag(db_session, "AT1", plc_name="PLC_A", device="Pump1")
     await _mk_tag(db_session, "AT2", plc_name="PLC_A", device="Pump2")

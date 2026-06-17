@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from sqlalchemy import delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.auth import get_current_user
+from app.api.auth import get_current_user, require_perm
 from app.collector.s7_collector import plc_manager
 from app.core.database import get_db
 from app.models.plc_config import PlcConfig
@@ -88,7 +88,7 @@ async def list_plcs(db: AsyncSession = Depends(get_db), _=Depends(get_current_us
 async def create_plc(
     data: PlcCreate,
     db: AsyncSession = Depends(get_db),
-    _=Depends(get_current_user),
+    _=Depends(require_perm("plc:manage")),
 ):
     name = data.name.strip()
     if not name:
@@ -122,7 +122,7 @@ async def update_plc(
     name: str,
     data: PlcUpdate,
     db: AsyncSession = Depends(get_db),
-    _=Depends(get_current_user),
+    _=Depends(require_perm("plc:manage")),
 ):
     # Update tags
     await db.execute(
@@ -144,7 +144,7 @@ async def update_plc(
 async def delete_plc(
     name: str,
     db: AsyncSession = Depends(get_db),
-    _=Depends(get_current_user),
+    _=Depends(require_perm("plc:manage")),
 ):
     # Delete all tags belonging to this PLC
     await db.execute(delete(Tag).where(Tag.plc_name == name))

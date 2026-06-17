@@ -11,7 +11,7 @@ from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.auth import get_current_user, require_role
+from app.api.auth import get_current_user, require_perm, require_role
 from app.core.database import get_db
 from app.models.report_archive import ReportArchive
 from app.models.report_template import ReportTemplate
@@ -172,7 +172,7 @@ async def list_templates(
 async def create_template(
     body: TemplateCreate,
     db: AsyncSession = Depends(get_db),
-    user: User = Depends(require_role("admin", "operator")),
+    user: User = Depends(require_perm("report_template:create")),
 ):
     tmpl = ReportTemplate(
         name=body.name,
@@ -218,7 +218,7 @@ async def update_template(
     template_id: int,
     body: TemplateCreate,
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(require_role("admin", "operator")),
+    _: User = Depends(require_perm("report_template:edit")),
 ):
     tmpl = await db.get(ReportTemplate, template_id)
     if not tmpl:
@@ -251,7 +251,7 @@ async def update_template(
 async def delete_template(
     template_id: int,
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(require_role("admin")),
+    _: User = Depends(require_perm("report_template:delete")),
 ):
     tmpl = await db.get(ReportTemplate, template_id)
     if not tmpl:

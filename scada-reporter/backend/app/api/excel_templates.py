@@ -8,7 +8,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.api.auth import get_current_user
+from app.api.auth import get_current_user, require_perm
 from app.core.database import get_db
 from app.models.excel_template import ExcelTemplate, ExcelTemplateColumn
 from app.services.template_fill.fill_engine import fill_template
@@ -96,7 +96,7 @@ async def inspect(
 async def create_template(
     payload: TemplateIn,
     db: AsyncSession = Depends(get_db),
-    user=Depends(get_current_user),
+    user=Depends(require_perm("report_template:create")),
 ):
     try:
         blob = base64.b64decode(payload.file_b64)
@@ -143,7 +143,7 @@ async def list_templates(db: AsyncSession = Depends(get_db), user=Depends(get_cu
 async def delete_template(
     template_id: int,
     db: AsyncSession = Depends(get_db),
-    user=Depends(get_current_user),
+    user=Depends(require_perm("report_template:delete")),
 ):
     tpl = await db.get(ExcelTemplate, template_id)
     if tpl is None:

@@ -7,7 +7,9 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.dashboard import compute_deadband_savings
+from app.core.security import hash_password
 from app.models.tag import Tag, TagReading
+from app.models.user import User
 
 
 def test_savings_single_tag():
@@ -42,10 +44,15 @@ def test_savings_guards_zero_interval():
 
 @pytest.mark.asyncio
 async def test_endpoint_only_counts_deadband_tags(client: AsyncClient, db_session: AsyncSession):
-    await client.post(
-        "/api/auth/register",
-        json={"username": "db_sav", "email": "db_sav@t.com", "password": "pw123", "role": "admin"},
+    db_session.add(
+        User(
+            username="db_sav",
+            email="db_sav@t.com",
+            hashed_password=hash_password("pw123"),
+            role="admin",
+        )
     )
+    await db_session.commit()
     tok = (
         await client.post("/api/auth/token", data={"username": "db_sav", "password": "pw123"})
     ).json()["access_token"]

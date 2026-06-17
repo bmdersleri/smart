@@ -6,19 +6,22 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.security import hash_password
 from app.models.tag import Tag
+from app.models.user import User
 
 
-async def _login(client: AsyncClient, username: str, role: str = "operator") -> str:
-    await client.post(
-        "/api/auth/register",
-        json={
-            "username": username,
-            "email": f"{username}@t.com",
-            "password": "pw123",
-            "role": role,
-        },
+async def _login(
+    client: AsyncClient, db: AsyncSession, username: str, role: str = "operator"
+) -> str:
+    user = User(
+        username=username,
+        email=f"{username}@t.com",
+        hashed_password=hash_password("pw123"),
+        role=role,
     )
+    db.add(user)
+    await db.commit()
     r = await client.post("/api/auth/token", data={"username": username, "password": "pw123"})
     return r.json()["access_token"]
 
@@ -33,7 +36,7 @@ async def _mk_tag(db: AsyncSession, name: str) -> int:
 
 @pytest.mark.asyncio
 async def test_create_annotation_records_author(client: AsyncClient, db_session: AsyncSession):
-    tok = await _login(client, "ann_create")
+    tok = await _login(client, db_session, "ann_create")
     h = {"Authorization": f"Bearer {tok}"}
     tag_id = await _mk_tag(db_session, "ANN_TAG")
     ts = datetime.now(UTC).isoformat()
@@ -49,7 +52,7 @@ async def test_create_annotation_records_author(client: AsyncClient, db_session:
 
 @pytest.mark.asyncio
 async def test_list_filters_by_tag(client: AsyncClient, db_session: AsyncSession):
-    tok = await _login(client, "ann_tagfilter")
+    tok = await _login(client, db_session, "ann_tagfilter")
     h = {"Authorization": f"Bearer {tok}"}
     t1 = await _mk_tag(db_session, "ANN_T1")
     t2 = await _mk_tag(db_session, "ANN_T2")
@@ -66,7 +69,7 @@ async def test_list_filters_by_tag(client: AsyncClient, db_session: AsyncSession
 
 @pytest.mark.asyncio
 async def test_list_filters_by_range(client: AsyncClient, db_session: AsyncSession):
-    tok = await _login(client, "ann_range")
+    tok = await _login(client, db_session, "ann_range")
     h = {"Authorization": f"Bearer {tok}"}
     tag_id = await _mk_tag(db_session, "ANN_RANGE")
     now = datetime.now(UTC)
@@ -88,7 +91,7 @@ async def test_list_filters_by_range(client: AsyncClient, db_session: AsyncSessi
 
 @pytest.mark.asyncio
 async def test_owner_can_delete(client: AsyncClient, db_session: AsyncSession):
-    tok = await _login(client, "ann_owner")
+    tok = await _login(client, db_session, "ann_owner")
     h = {"Authorization": f"Bearer {tok}"}
     tag_id = await _mk_tag(db_session, "ANN_OWN")
     ts = datetime.now(UTC).isoformat()
@@ -103,8 +106,8 @@ async def test_owner_can_delete(client: AsyncClient, db_session: AsyncSession):
 
 @pytest.mark.asyncio
 async def test_non_owner_cannot_delete(client: AsyncClient, db_session: AsyncSession):
-    tok_a = await _login(client, "ann_a")
-    tok_b = await _login(client, "ann_b")
+    tok_a = await _login(client, db_session, "ann_a")
+    tok_b = await _login(client, db_session, "ann_b")
     tag_id = await _mk_tag(db_session, "ANN_PERM")
     ts = datetime.now(UTC).isoformat()
     aid = (
@@ -120,8 +123,8 @@ async def test_non_owner_cannot_delete(client: AsyncClient, db_session: AsyncSes
 
 @pytest.mark.asyncio
 async def test_admin_can_delete_others(client: AsyncClient, db_session: AsyncSession):
-    tok_user = await _login(client, "ann_u")
-    tok_admin = await _login(client, "ann_admin", role="admin")
+    tok_user = await _login(client, db_session, "ann_u")
+    tok_admin = await _login(client, db_session, "ann_admin", role="admin")
     tag_id = await _mk_tag(db_session, "ANN_ADMIN")
     ts = datetime.now(UTC).isoformat()
     aid = (

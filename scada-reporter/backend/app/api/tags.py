@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.auth import get_current_user, require_role
+from app.api.auth import get_current_user, require_perm, require_role
 from app.collector.s7_collector import read_tag_now
 from app.core.database import get_db
 from app.import_catalog import build_full_catalog
@@ -255,7 +255,7 @@ async def list_tags(db: AsyncSession = Depends(get_db), _=Depends(get_current_us
 async def create_tag(
     data: TagCreate,
     db: AsyncSession = Depends(get_db),
-    _=Depends(require_role("admin", "operator")),
+    _=Depends(require_perm("tag:create")),
 ):
     payload = data.model_dump()
     # node_id verilmemişse türet (benzersizlik için)

@@ -41,11 +41,16 @@ async def test_stream_emits_multiple_events():
     assert len(frames) == 3
 
 
-async def _token(client: AsyncClient) -> str:
-    await client.post(
-        "/api/auth/register",
-        json={"username": "sse", "email": "s@t.com", "password": "test123", "role": "admin"},
+async def _token(client: AsyncClient, db) -> str:
+    from app.core.security import hash_password
+    from app.models.user import User
+
+    db.add(
+        User(
+            username="sse", email="s@t.com", hashed_password=hash_password("test123"), role="admin"
+        )
     )
+    await db.commit()
     r = await client.post("/api/auth/token", data={"username": "sse", "password": "test123"})
     return r.json()["access_token"]
 
@@ -57,9 +62,9 @@ async def test_stream_endpoint_requires_valid_token(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_stream_endpoint_serves_event_stream(client: AsyncClient):
+async def test_stream_endpoint_serves_event_stream(client: AsyncClient, db_session):
     latest_cache.update(50303, 3.3, 192, datetime.now(UTC))
-    token = await _token(client)
+    token = await _token(client, db_session)
     r = await client.get(
         "/api/dashboard/stream",
         params={"token": token, "tag_ids": [50303], "limit": 1},
