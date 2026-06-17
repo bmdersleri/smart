@@ -12,7 +12,7 @@ from app.models.user import User
 
 def _admin():
     return SimpleNamespace(
-        id=1, username="admin", role="admin", permission_overrides={}, is_active=True
+        id=9999, username="admin", role="admin", permission_overrides={}, is_active=True
     )
 
 
@@ -139,3 +139,44 @@ async def test_non_admin_forbidden(client):
         assert resp.status_code == 403
     finally:
         app.dependency_overrides.pop(get_current_user, None)
+
+
+@pytest.mark.asyncio
+async def test_cannot_delete_self(client, as_admin, seed_admin):
+    # Create a non-admin user so the to-be-deleted user is not the last admin.
+    # Override admin to be that newly-created operator user (same id),
+    # so only the self-delete guard (not last-admin guard) fires.
+    created = (
+        await client.post(
+            "/api/users/",
+            json={
+                "username": "selfie",
+                "email": "selfie@scada.local",
+                "password": "secret1",
+                "role": "operator",
+            },
+        )
+    ).json()
+    real_id = created["id"]
+    app.dependency_overrides[get_current_user] = lambda: SimpleNamespace(
+        id=real_id, username="selfie", role="admin", permission_overrides={}, is_active=True
+    )
+    try:
+        resp = await client.delete(f"/api/users/{real_id}")
+        assert resp.status_code == 400
+    finally:
+        app.dependency_overrides.pop(get_current_user, None)
+
+
+@pytest.mark.asyncio
+async def test_cannot_deactivate_last_active_admin(client, as_admin, seed_admin):
+    resp = await client.patch(f"/api/users/{seed_admin.id}", json={"is_active": False})
+    assert resp.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_create_duplicate_email_409(client, as_admin):
+    payload = {"username": "user1", "email": "dup@scada.local", "password": "secret1"}
+    assert (await client.post("/api/users/", json=payload)).status_code == 201
+    payload2 = {"username": "user2", "email": "dup@scada.local", "password": "secret1"}
+    assert (await client.post("/api/users/", json=payload2)).status_code == 409

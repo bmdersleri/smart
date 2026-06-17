@@ -49,7 +49,7 @@ def _to_out(user: User) -> UserOut:
         id=user.id,
         username=user.username,
         email=user.email,
-        full_name=user.full_name,
+        full_name=user.full_name or "",
         role=user.role,
         is_active=user.is_active,
         permission_overrides=user.permission_overrides or {},
@@ -158,7 +158,7 @@ async def delete_user(
     user = await db.get(User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="Kullanici bulunamadi")
-    if isinstance(admin, User) and user.id == admin.id:
+    if user.id == admin.id:
         raise HTTPException(status_code=400, detail="Kendinizi silemezsiniz")
     await _guard_last_admin(db, user, removing=True)
     await db.delete(user)
