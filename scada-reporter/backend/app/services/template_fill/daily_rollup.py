@@ -77,7 +77,8 @@ async def _daily_timescale(
     db: AsyncSession, tag_id: int, year: int, month: int, agg: str, tz_offset_hours: int
 ) -> dict[int, float]:
     start, end = _month_bounds(year, month)
-    shift = f"INTERVAL '{tz_offset_hours} hours'"
+    # int() koruması: shift SQL string'ine girdiği için tip değişmezini sabitle
+    shift = f"INTERVAL '{int(tz_offset_hours)} hours'"
     if agg == "delta":
         rows = await db.execute(
             text(

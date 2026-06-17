@@ -96,3 +96,49 @@ async def init_continuous_aggregates(conn: AsyncConnection) -> None:
             logger.info("Continuous aggregate ready: %s (%s)", view, bucket)
         except Exception as e:
             logger.info("Continuous aggregate skipped/exists: %s - %s", view, e)
+
+
+async def init_daily_rollup(conn: AsyncConnection) -> None:
+    """Uzun saklamalı günlük toplama (rapor şablonları için).
+
+    avg/min/max/sum/first/last/count saklar. Retention YOK — yıllarca tutulur.
+
+    Günler tesis-yerel saatte kovalanır (UTC değil): time_bucket'a
+    `offset => -REPORT_TZ_OFFSET_HOURS saat` verilir, böylece kova sınırı
+    yerel gece yarısına denk gelir. Okuma sorgusu (daily_rollup._daily_timescale)
+    `bucket + REPORT_TZ_OFFSET_HOURS saat` ile yerel gün numarasını çıkarır;
+    iki taraf aynı ofseti kullanmalı. Ofset, view OLUŞTURMA anında sabitlenir —
+    REPORT_TZ_OFFSET_HOURS değişirse view yeniden oluşturulmalıdır.
+
+    NOT (first/last): bunlar CAGG SELECT'ine gömülüdür. Bir Timescale sürümü
+    sürekli toplamada first/last'ı reddederse CREATE komutu tümüyle başarısız
+    olur ve tag_readings_1d HİÇ oluşmaz — bu durumda prod'da TÜM agg'ler
+    (sadece last/delta değil) bu view'dan okunamaz. Modern Timescale (>=2.7)
+    first/last'ı destekler; hata loglanır ve atlanır.
+    """
+    off = int(settings.REPORT_TZ_OFFSET_HOURS)
+    try:
+        await conn.execute(
+            text(
+                "CREATE MATERIALIZED VIEW IF NOT EXISTS tag_readings_1d "
+                "WITH (timescaledb.continuous) AS "
+                "SELECT tag_id, "
+                f"time_bucket(INTERVAL '1 day', timestamp, offset => INTERVAL '{-off} hours') "
+                "AS bucket, "
+                "avg(value) AS avg, min(value) AS min, max(value) AS max, "
+                "sum(value) AS sum, count(*) AS n, "
+                "first(value, timestamp) AS first_v, last(value, timestamp) AS last_v "
+                "FROM tag_readings GROUP BY tag_id, bucket WITH NO DATA"
+            )
+        )
+        await conn.execute(
+            text(
+                "SELECT add_continuous_aggregate_policy('tag_readings_1d', "
+                "start_offset => INTERVAL '7 days', "
+                "end_offset => INTERVAL '1 hour', "
+                "schedule_interval => INTERVAL '1 hour', if_not_exists => TRUE)"
+            )
+        )
+        logger.info("Daily rollup ready: tag_readings_1d (no retention)")
+    except Exception as e:
+        logger.info("Daily rollup skipped/exists: %s", e)
