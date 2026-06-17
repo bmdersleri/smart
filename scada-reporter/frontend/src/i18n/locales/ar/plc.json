@@ -1,0 +1,22 @@
+{
+  "title": "إدارة PLC",
+  "subtitle": "تكوين عنوان IP ومنفذ الاتصال",
+  "connected": "متصل",
+  "disconnected": "لا يوجد اتصال",
+  "connected_count": "{{connected}}/{{total}} متصل",
+  "add_plc": "إضافة PLC جديد",
+  "name_placeholder": "اسم الـ PLC",
+  "ip_placeholder": "192.168.x.x",
+  "col_name": "اسم الـ PLC",
+  "col_ip": "عنوان IP",
+  "col_rack": "الرف",
+  "col_slot": "الفتحة",
+  "col_tag_count": "عدد العلامات",
+  "col_status": "الحالة",
+  "confirm_delete_tags": "سيتم حذف {{count}} علامات!",
+  "confirm_delete": "هل أنت متأكد؟",
+  "load_error": "تعذّر تحميل قائمة الـ PLC",
+  "empty": "لم يتم تسجيل أي PLC بعد. ابدأ بـ \"إضافة PLC جديد\".",
+  "footer_note": "عند تغيير IP، يُنشأ الاتصال الجديد في دورة الاستطلاع التالية. حذف PLC يزيل جميع العلامات المرتبطة به.",
+  "error_add_failed": "تعذّر الإضافة"
+}

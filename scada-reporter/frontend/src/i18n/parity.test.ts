@@ -4,79 +4,91 @@ import enCommon from './locales/en/common.json'
 import trCommon from './locales/tr/common.json'
 import ruCommon from './locales/ru/common.json'
 import deCommon from './locales/de/common.json'
+import arCommon from './locales/ar/common.json'
 
 import enLogin from './locales/en/login.json'
 import trLogin from './locales/tr/login.json'
 import ruLogin from './locales/ru/login.json'
 import deLogin from './locales/de/login.json'
+import arLogin from './locales/ar/login.json'
 
 import enSettings from './locales/en/settings.json'
 import trSettings from './locales/tr/settings.json'
 import ruSettings from './locales/ru/settings.json'
 import deSettings from './locales/de/settings.json'
+import arSettings from './locales/ar/settings.json'
 
 import enDashboard from './locales/en/dashboard.json'
 import trDashboard from './locales/tr/dashboard.json'
 import ruDashboard from './locales/ru/dashboard.json'
 import deDashboard from './locales/de/dashboard.json'
+import arDashboard from './locales/ar/dashboard.json'
 
 import enTags from './locales/en/tags.json'
 import trTags from './locales/tr/tags.json'
 import ruTags from './locales/ru/tags.json'
 import deTags from './locales/de/tags.json'
+import arTags from './locales/ar/tags.json'
 
 import enTrend from './locales/en/trend.json'
 import trTrend from './locales/tr/trend.json'
 import ruTrend from './locales/ru/trend.json'
 import deTrend from './locales/de/trend.json'
+import arTrend from './locales/ar/trend.json'
 
 import enReports from './locales/en/reports.json'
 import trReports from './locales/tr/reports.json'
 import ruReports from './locales/ru/reports.json'
 import deReports from './locales/de/reports.json'
+import arReports from './locales/ar/reports.json'
 
 import enAdvancedReports from './locales/en/advancedReports.json'
 import trAdvancedReports from './locales/tr/advancedReports.json'
 import ruAdvancedReports from './locales/ru/advancedReports.json'
 import deAdvancedReports from './locales/de/advancedReports.json'
+import arAdvancedReports from './locales/ar/advancedReports.json'
 
 import enPlc from './locales/en/plc.json'
 import trPlc from './locales/tr/plc.json'
 import ruPlc from './locales/ru/plc.json'
 import dePlc from './locales/de/plc.json'
+import arPlc from './locales/ar/plc.json'
 
 import enMetrics from './locales/en/metrics.json'
 import trMetrics from './locales/tr/metrics.json'
 import ruMetrics from './locales/ru/metrics.json'
 import deMetrics from './locales/de/metrics.json'
+import arMetrics from './locales/ar/metrics.json'
 
 import enUsers from './locales/en/users.json'
 import trUsers from './locales/tr/users.json'
 import ruUsers from './locales/ru/users.json'
 import deUsers from './locales/de/users.json'
+import arUsers from './locales/ar/users.json'
 
 type Dict = Record<string, unknown>
 
 const NAMESPACES: Record<string, Record<string, Dict>> = {
-  common: { en: enCommon, tr: trCommon, ru: ruCommon, de: deCommon },
-  login: { en: enLogin, tr: trLogin, ru: ruLogin, de: deLogin },
-  settings: { en: enSettings, tr: trSettings, ru: ruSettings, de: deSettings },
-  dashboard: { en: enDashboard, tr: trDashboard, ru: ruDashboard, de: deDashboard },
-  tags: { en: enTags, tr: trTags, ru: ruTags, de: deTags },
-  trend: { en: enTrend, tr: trTrend, ru: ruTrend, de: deTrend },
-  reports: { en: enReports, tr: trReports, ru: ruReports, de: deReports },
+  common: { en: enCommon, tr: trCommon, ru: ruCommon, de: deCommon, ar: arCommon },
+  login: { en: enLogin, tr: trLogin, ru: ruLogin, de: deLogin, ar: arLogin },
+  settings: { en: enSettings, tr: trSettings, ru: ruSettings, de: deSettings, ar: arSettings },
+  dashboard: { en: enDashboard, tr: trDashboard, ru: ruDashboard, de: deDashboard, ar: arDashboard },
+  tags: { en: enTags, tr: trTags, ru: ruTags, de: deTags, ar: arTags },
+  trend: { en: enTrend, tr: trTrend, ru: ruTrend, de: deTrend, ar: arTrend },
+  reports: { en: enReports, tr: trReports, ru: ruReports, de: deReports, ar: arReports },
   advancedReports: {
     en: enAdvancedReports,
     tr: trAdvancedReports,
     ru: ruAdvancedReports,
     de: deAdvancedReports,
+    ar: arAdvancedReports,
   },
-  plc: { en: enPlc, tr: trPlc, ru: ruPlc, de: dePlc },
-  metrics: { en: enMetrics, tr: trMetrics, ru: ruMetrics, de: deMetrics },
-  users: { en: enUsers, tr: trUsers, ru: ruUsers, de: deUsers },
+  plc: { en: enPlc, tr: trPlc, ru: ruPlc, de: dePlc, ar: arPlc },
+  metrics: { en: enMetrics, tr: trMetrics, ru: ruMetrics, de: deMetrics, ar: arMetrics },
+  users: { en: enUsers, tr: trUsers, ru: ruUsers, de: deUsers, ar: arUsers },
 }
 
-const TARGET_LANGS = ['tr', 'ru', 'de'] as const
+const TARGET_LANGS = ['tr', 'ru', 'de', 'ar'] as const
 
 // Recursively collect dotted key paths so nested objects are compared too.
 function collectKeys(obj: Dict, prefix = ''): string[] {

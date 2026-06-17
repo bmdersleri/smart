@@ -1,0 +1,13 @@
+{
+  "title": "الإعدادات",
+  "appearance": "المظهر",
+  "theme": "الثيم",
+  "theme_hint": "نظام الألوان الفاتح / الداكن",
+  "theme_dark": "داكن",
+  "theme_light": "فاتح",
+  "language": "اللغة",
+  "language_hint": "لغة الواجهة",
+  "trend_chart": "مخطط الاتجاه",
+  "chart_height": "ارتفاع المخطط",
+  "selected": "محدد"
+}

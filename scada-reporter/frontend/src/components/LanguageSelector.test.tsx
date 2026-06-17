@@ -10,10 +10,10 @@ vi.mock('../api/client', () => ({
 describe('LanguageSelector', () => {
   beforeEach(async () => { await i18n.changeLanguage('en') })
 
-  it('renders all four languages', () => {
+  it('renders all five languages', () => {
     render(<LanguageSelector />)
     const select = screen.getByRole('combobox') as HTMLSelectElement
-    expect(select.options).toHaveLength(4)
+    expect(select.options).toHaveLength(5)
   })
 
   it('changes i18n language and persists on select', async () => {

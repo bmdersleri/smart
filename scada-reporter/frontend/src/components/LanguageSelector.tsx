@@ -4,7 +4,7 @@ import { SUPPORTED_LANGS } from '../i18n'
 import type { Lang } from '../i18n'
 import { updateMe } from '../api/client'
 
-const LABELS: Record<Lang, string> = { en: 'English', tr: 'Türkçe', ru: 'Русский', de: 'Deutsch' }
+const LABELS: Record<Lang, string> = { en: 'English', tr: 'Türkçe', ru: 'Русский', de: 'Deutsch', ar: 'العربية' }
 
 export default function LanguageSelector() {
   const { t, i18n } = useTranslation()
