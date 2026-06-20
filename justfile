@@ -11,9 +11,18 @@ fe := "scada-reporter/frontend"
 dev:
     Start-Process powershell -ArgumentList "-NoProfile -Command just run-backend"; just run-frontend
 
-# Backend başlat (hot reload)
+# Backend başlat (hot reload) — watcher yalnız app/ kodunu izler; DB yazımları
+# (scada_reporter.db + WAL/SHM) reload tetiklemez, böylece poller çalışırken
+# sunucu sürekli yeniden başlamaz / kilide takılmaz.
 run-backend:
-    cd {{be}} && .venv/Scripts/uvicorn app.main:app --reload --host 0.0.0.0 --port 8001
+    cd {{be}} && .venv/Scripts/uvicorn app.main:app --reload --reload-dir app --reload-exclude "*.db" --reload-exclude "*.db-wal" --reload-exclude "*.db-shm" --host 0.0.0.0 --port 8001
+
+# Backend'i kesin yeniden başlat — reload takılırsa/asılırsa kullanılacak yol.
+# --reload reloader parent + child spawn ettiğinden port'tan kill yetmez;
+# tüm python süreçlerini durdurup tek temiz başlatma yapar (dev-only).
+restart-backend:
+    powershell -NoProfile -Command "Get-Process python -ErrorAction SilentlyContinue | Stop-Process -Force"
+    just run-backend
 
 # Bağımsız collector process'i (poller + OPC UA); API'den ayrı çalıştırmak için
 run-collector:

@@ -266,6 +266,7 @@
 - **E2E browser tests**: Playwright (`pnpm e2e`, chromium) + puppeteer-core system-Chrome fallback (`pnpm e2e:verify`). Backend must be on :8001 for data
 - **Auth**: the `/api/auth/token` endpoint expects OAuth2 **form-data**, not JSON. `curl -d "username=...&password=..."`
 - **Default users**: `just seed-users` → admin/admin123, operator/operator123
+- **Backend reload (dev)**: `just run-backend` runs uvicorn `--reload --reload-dir app --reload-exclude "*.db*"` so the watcher only follows `app/` code, not the dev DB churn (poller writes). If reload wedges (reloader parent respawns its child, so a port kill isn't enough), use `just restart-backend` (stops all `python`, then starts clean). Override `OPCUA_SERVER_PORT`/`DATABASE_URL` env to run a second instance without clashing on :4840.
 - **Architecture**: S7 PLC → Snap7 (s7_collector) → SQLite (dev) / PostgreSQL (prod) → built-in OPC UA server (port 4840) + REST API. No paid third-party software (KEPServerEX) required.
 - **Stats engine**: numpy-only (scipy yok) — `np.polyfit` + manuel R²
 - **Docker not installed on host** — compose files ready, needs Docker Desktop or Docker Engine
