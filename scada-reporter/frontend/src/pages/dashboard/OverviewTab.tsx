@@ -14,6 +14,11 @@ function fmtCompact(n: number, lang: string): string {
   return n.toLocaleString(lang, { notation: 'compact', maximumFractionDigits: 1 })
 }
 
+// locale-aware percent placement: tr "%92,9" / en "92.9%" / de "92,9 %" (value is 0-100)
+function fmtPercent(n: number, lang: string): string {
+  return (n / 100).toLocaleString(lang, { style: 'percent', maximumFractionDigits: 1 })
+}
+
 // ── Stat card ──────────────────────────────────────────────────────────────
 
 function StatCard({ label, value, sub, flash, flip, accent }: {
@@ -334,7 +339,7 @@ export default function OverviewTab({ active }: { active: boolean }) {
         />
         <StatCard
           label={t('stat_data_quality')}
-          value={overview?.quality_rate != null ? `%${overview.quality_rate}` : '—'}
+          value={overview?.quality_rate != null ? fmtPercent(overview.quality_rate, i18n.language) : '—'}
           sub={t('stat_quality_sub')}
           accent={qualityAccent}
           flip
@@ -351,7 +356,7 @@ export default function OverviewTab({ active }: { active: boolean }) {
         <StatCard label={t('stat_plc_connection')} value={plcLabel} sub={t('stat_plc_sub')} />
         <StatCard
           label={t('stat_deadband_savings')}
-          value={savings?.savings_pct != null ? `%${savings.savings_pct}` : '—'}
+          value={savings?.savings_pct != null ? fmtPercent(savings.savings_pct, i18n.language) : '—'}
           sub={savings ? t('saved_rows_per_day', { value: fmtCompact(savings.saved_rows_per_day, i18n.language) }) : t('stat_deadband_sub_24h')}
           accent="text-emerald-400"
         />
