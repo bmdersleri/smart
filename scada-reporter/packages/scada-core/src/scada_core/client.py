@@ -103,5 +103,56 @@ class AsyncScadaClient:
     async def health(self) -> Result:
         return await self._request("GET", ep.HEALTH)
 
+    # -- Composed capabilities ----------------------------------------------
+    async def resolve_ids(self, names: list[str]) -> Result:
+        # /api/ai/resolve gövdesi düz JSON listesidir (descriptions: list[str])
+        return await self._request("POST", ep.AI_RESOLVE, json=names)
+
+    async def current_values(self, tag_names: list[str] | None = None) -> Result:
+        res = await self._request("GET", ep.DASHBOARD_TAGS)
+        if not res.ok:
+            return res
+        rows = res.data.get("items", res.data) if isinstance(res.data, dict) else res.data
+        if tag_names:
+            wanted = set(tag_names)
+            rows = [r for r in rows if r.get("name") in wanted]
+        return ok(rows)
+
+    async def query_trend(self, tags: list[str], start: str, end: str) -> Result:
+        resolved = await self.resolve_ids(tags)
+        if not resolved.ok:
+            return resolved
+        tag_ids = resolved.data.get("tag_ids", [])
+        if not tag_ids:
+            return fail("not_found", f"No tags matched: {tags}")
+        return await self._request(
+            "GET",
+            ep.TREND_RANGE,
+            params={"tag_ids": tag_ids, "start": start, "end": end},
+        )
+
+    async def resolve_tag(self, query: str) -> Result:
+        resolved = await self.resolve_ids([query])
+        if not resolved.ok:
+            return resolved
+        tag_ids = set(resolved.data.get("tag_ids", []))
+        listing = await self.list_tags()
+        if not listing.ok:
+            return listing
+        matches = [t for t in listing.data if t.get("id") in tag_ids]
+        return ok({"query": query, "matches": matches, "count": len(matches)})
+
+    async def system_health(self) -> Result:
+        health = await self.health()
+        plcs = await self.list_plcs()
+        tags = await self.list_tags()
+        return ok(
+            {
+                "health": health.data if health.ok else None,
+                "plc_count": len(plcs.data) if plcs.ok and isinstance(plcs.data, list) else 0,
+                "tag_count": len(tags.data) if tags.ok and isinstance(tags.data, list) else 0,
+            }
+        )
+
     async def aclose(self) -> None:
         await self._client.aclose()
