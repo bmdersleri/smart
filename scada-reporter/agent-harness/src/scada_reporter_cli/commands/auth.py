@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import click
-from scada_reporter_cli.client import ScadaClient
+from scada_core.client import SyncScadaClient
+from scada_reporter_cli.utils.client_helper import unwrap
 from scada_reporter_cli.utils.config import get_api_url, set_token
 from scada_reporter_cli.utils.repl_skin import success, error, fmt_json
 
@@ -21,8 +22,8 @@ def login(username: str, password: str | None, json_output: bool):
     """API'ye giris yap ve JWT token al."""
     if password is None:
         password = click.prompt("Sifre", hide_input=True)
-    client = ScadaClient(get_api_url())
-    result = client.login(username, password)
+    client = SyncScadaClient(get_api_url())
+    result = unwrap(client.login(username, password))
     if "error" in result and result["error"]:
         click.echo(error(f"Giris basarisiz: {result.get('detail', 'bilinmeyen hata')}"))
         return
@@ -45,9 +46,9 @@ def me(json_output: bool):
     if not token:
         click.echo(error("Önce `scada auth login` ile giriş yapın"))
         return
-    client = ScadaClient(get_api_url())
+    client = SyncScadaClient(get_api_url())
     client.set_token(token)
-    result = client.me()
+    result = unwrap(client.me())
     if "error" in result and result["error"]:
         click.echo(error(f"Hata: {result.get('detail', 'bilinmeyen hata')}"))
     elif json_output:
@@ -75,8 +76,8 @@ def register(
     json_output: bool,
 ):
     """Yeni kullanıcı kaydet."""
-    client = ScadaClient(get_api_url())
-    result = client.register(username, email, password, full_name, role)
+    client = SyncScadaClient(get_api_url())
+    result = unwrap(client.register(username, email, password, full_name, role))
     if "error" in result and result["error"]:
         click.echo(error(f"Kayıt başarısız: {result.get('detail', 'bilinmeyen hata')}"))
     elif json_output:

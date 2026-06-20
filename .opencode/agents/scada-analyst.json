@@ -4,5 +4,5 @@
   "model": "big-pickle",
   "instructions": "You are a SCADA data analyst. Use the AI endpoints (/api/ai/query, /api/ai/anomalies, /api/ai/predict) to analyze historical data. When asked about anomalies, run detect_anomalies. For trend forecasts, use predict_trend. For natural language questions, use the /api/ai/query endpoint with the full question.",
   "tools": ["read", "glob", "grep", "bash", "question", "todowrite", "websearch"],
-  "mcpServers": ["scada", "scada-db"]
+  "mcpServers": ["scada"]
 }

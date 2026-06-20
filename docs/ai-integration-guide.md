@@ -154,13 +154,6 @@ Add an `mcp.json` at the project root so MCP-compatible agents discover the serv
         "SCADA_API_URL": "http://localhost:8001"
       }
     },
-    "scada-db": {
-      "command": "uv",
-      "args": ["run", "mcp-server-scada-db"],
-      "env": {
-        "DATABASE_URL": "postgresql+asyncpg://scada:scada123@localhost:5432/scada_reporter"
-      }
-    },
     "filesystem": {
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-filesystem", "C:\\project\\smart"]
@@ -168,6 +161,8 @@ Add an `mcp.json` at the project root so MCP-compatible agents discover the serv
   }
 }
 ```
+
+> **Note:** The former `scada-db` MCP server (direct-DB SQL) has been removed. Read-only SQL queries are now served by the API's `run_sql_query` tool via the `scada` MCP server.
 
 ---
 

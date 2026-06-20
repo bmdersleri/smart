@@ -6,6 +6,7 @@ requires-python = ">=3.12"
 dependencies = [
     "mcp>=1.0.0",
     "httpx>=0.27.0",
+    "scada-core",
 ]
 
 [project.scripts]
@@ -13,3 +14,6 @@ mcp-server-scada = "mcp_scada.server:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"

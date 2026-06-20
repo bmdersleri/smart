@@ -5,7 +5,8 @@ import shlex
 
 import click
 
-from scada_reporter_cli.client import ScadaClient
+from scada_core.client import SyncScadaClient
+from scada_reporter_cli.utils.client_helper import unwrap
 from scada_reporter_cli.utils.config import get_api_url, get_token
 from scada_reporter_cli.utils.repl_skin import banner, success, error, info, fmt_json
 from scada_reporter_cli.commands.auth import auth_cmd
@@ -56,7 +57,7 @@ def repl(ctx: click.Context) -> None:
     print(info("API: {} | Cikmak icin: exit, quit".format(api_url)))
     print()
 
-    client = ScadaClient(api_url)
+    client = SyncScadaClient(api_url)
     token = get_token()
     if token:
         client.set_token(token)
@@ -136,11 +137,11 @@ Yerel degiskenler:
 def health(ctx: click.Context, json_output: bool):
     """Sistem saglik kontrolu."""
     api_url = ctx.obj.get("API_URL", get_api_url())
-    client = ScadaClient(api_url)
+    client = SyncScadaClient(api_url)
     token = get_token()
     if token:
         client.set_token(token)
-    result = client.health()
+    result = unwrap(client.health())
     if "error" in result and result["error"]:
         click.echo(error("API yanit vermiyor: {}".format(result.get("detail"))))
     elif json_output:

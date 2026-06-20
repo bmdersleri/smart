@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import click
-from scada_reporter_cli.utils.client_helper import get_client
+from scada_reporter_cli.utils.client_helper import get_client, unwrap
 from scada_reporter_cli.utils.repl_skin import success, error, info, fmt_table, fmt_json
 
 
@@ -17,7 +17,7 @@ def overview(json_output: bool):
     client, ok = get_client()
     if not ok:
         return
-    result = client.overview()
+    result = unwrap(client.overview())
     if "error" in result and result["error"]:
         click.echo(error(f"Hata: {result.get('detail', 'bilinmeyen hata')}"))
     elif json_output:
@@ -55,7 +55,7 @@ def current_values(json_output: bool, alarm_only: bool, watch_interval: int):
         client, ok = get_client()
         if not ok:
             return False
-        result = client.current_values()
+        result = unwrap(client.current_values())
         client.close()
         if isinstance(result, list) and result and "error" in result[0]:
             click.echo(error(f"Hata: {result[0].get('detail', 'bilinmeyen hata')}"))
@@ -114,7 +114,7 @@ def trend(tag_ids: tuple[int, ...], hours: int, json_output: bool):
     client, ok = get_client()
     if not ok:
         return
-    result = client.trend(list(tag_ids), hours)
+    result = unwrap(client.trend(list(tag_ids), hours))
     if isinstance(result, list) and result and "error" in result[0]:
         click.echo(error(f"Hata: {result[0].get('detail', 'bilinmeyen hata')}"))
     elif json_output:

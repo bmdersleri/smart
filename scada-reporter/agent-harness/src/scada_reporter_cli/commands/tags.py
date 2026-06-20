@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import click
-from scada_reporter_cli.utils.client_helper import get_client
+from scada_reporter_cli.utils.client_helper import get_client, unwrap
 from scada_reporter_cli.utils.repl_skin import success, error, fmt_table, fmt_json
 
 
@@ -17,7 +17,7 @@ def list_tags(json_output: bool):
     client, ok = get_client()
     if not ok:
         return
-    result = client.list_tags()
+    result = unwrap(client.list_tags())
     if isinstance(result, list) and result and "error" in result[0]:
         click.echo(error(f"Hata: {result[0].get('detail', 'bilinmeyen hata')}"))
     elif json_output:
@@ -52,7 +52,9 @@ def create(
     client, ok = get_client()
     if not ok:
         return
-    result = client.create_tag(node_id, name, description, unit, channel, device)
+    result = unwrap(
+        client.create_tag(node_id, name, description, unit, channel, device)
+    )
     if "error" in result and result["error"]:
         click.echo(
             error(f"Oluşturma başarısız: {result.get('detail', 'bilinmeyen hata')}")
@@ -72,7 +74,7 @@ def delete(tag_id: int, json_output: bool):
     client, ok = get_client()
     if not ok:
         return
-    result = client.delete_tag(tag_id)
+    result = unwrap(client.delete_tag(tag_id))
     if "error" in result and result["error"]:
         click.echo(error(f"Silme başarısız: {result.get('detail', 'bilinmeyen hata')}"))
     elif json_output:
@@ -113,14 +115,16 @@ def update(
     client, ok = get_client()
     if not ok:
         return
-    result = client.update_tag(
-        tag_id,
-        unit=unit,
-        device=device,
-        channel=channel,
-        description=description,
-        min_alarm=min_alarm,
-        max_alarm=max_alarm,
+    result = unwrap(
+        client.update_tag(
+            tag_id,
+            unit=unit,
+            device=device,
+            channel=channel,
+            description=description,
+            min_alarm=min_alarm,
+            max_alarm=max_alarm,
+        )
     )
     if "error" in result and result["error"]:
         click.echo(
@@ -161,7 +165,7 @@ def get_readings(
     client, ok = get_client()
     if not ok:
         return
-    result = client.get_readings(tag_id, start, end, limit)
+    result = unwrap(client.get_readings(tag_id, start, end, limit))
     if isinstance(result, list) and result and "error" in result[0]:
         click.echo(error(f"Hata: {result[0].get('detail', 'bilinmeyen hata')}"))
     elif json_output:

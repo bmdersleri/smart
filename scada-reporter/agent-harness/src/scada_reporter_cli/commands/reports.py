@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import click
-from scada_reporter_cli.utils.client_helper import get_client
+from scada_reporter_cli.utils.client_helper import get_client, unwrap
 from scada_reporter_cli.utils.repl_skin import success, error, info, fmt_json, fmt_table
 
 
@@ -46,7 +46,9 @@ def generate(
         return
 
     ids = [int(x.strip()) for x in tag_ids.split(",")]
-    result = client.generate_report(ids, start, end, interval, output_format)
+    result = unwrap(
+        client.reports_generate_by_ids(ids, start, end, interval, output_format)
+    )
 
     if isinstance(result, dict) and "error" in result and result["error"]:
         click.echo(error(f"Rapor hatası: {result.get('detail', 'bilinmeyen hata')}"))
@@ -82,7 +84,7 @@ def list_history(json_output: bool):
     client, ok = get_client()
     if not ok:
         return
-    result = client.list_report_history()
+    result = unwrap(client.list_report_history())
     if (
         isinstance(result, list)
         and result
@@ -125,7 +127,7 @@ def download_history(history_id: int, output: str | None, json_output: bool):
     client, ok = get_client()
     if not ok:
         return
-    result = client.download_report_history(history_id)
+    result = unwrap(client.download_report_history(history_id))
     if isinstance(result, dict) and result.get("error"):
         click.echo(error(f"İndirme hatası: {result.get('detail', 'bilinmeyen hata')}"))
         client.close()

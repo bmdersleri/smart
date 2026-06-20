@@ -4,7 +4,8 @@ import sys
 import code
 
 import click
-from scada_reporter_cli.client import ScadaClient
+from scada_core.client import SyncScadaClient
+from scada_reporter_cli.utils.client_helper import unwrap
 from scada_reporter_cli.utils.config import get_api_url, get_token
 from scada_reporter_cli.utils.repl_skin import banner, info, success
 
@@ -14,7 +15,7 @@ def _setup_context() -> dict:
     ctx: dict = {}
 
     ctx["API_URL"] = get_api_url()
-    ctx["client"] = ScadaClient(ctx["API_URL"])
+    ctx["client"] = SyncScadaClient(ctx["API_URL"])
     token = get_token()
     if token:
         ctx["client"].set_token(token)
@@ -31,7 +32,7 @@ def _setup_context() -> dict:
 
         def load_tags() -> pd.DataFrame:
             """Tag listesini DataFrame olarak yukle."""
-            data = ctx["client"].list_tags()
+            data = unwrap(ctx["client"].list_tags())
             if isinstance(data, list) and data and "error" in data[0]:
                 print("Hata:", data[0].get("detail"))
                 return pd.DataFrame()
@@ -39,7 +40,7 @@ def _setup_context() -> dict:
 
         def load_readings(tag_id: int, limit: int = 1000) -> pd.DataFrame:
             """Tag okumalarini DataFrame olarak yukle."""
-            data = ctx["client"].get_readings(tag_id, limit=limit)
+            data = unwrap(ctx["client"].get_readings(tag_id, limit=limit))
             if isinstance(data, list) and data and "error" in data[0]:
                 print("Hata:", data[0].get("detail"))
                 return pd.DataFrame()
@@ -47,7 +48,7 @@ def _setup_context() -> dict:
 
         def load_current() -> pd.DataFrame:
             """Canli degerleri DataFrame olarak yukle."""
-            data = ctx["client"].current_values()
+            data = unwrap(ctx["client"].current_values())
             if isinstance(data, list) and data and "error" in data[0]:
                 print("Hata:", data[0].get("detail"))
                 return pd.DataFrame()
@@ -55,7 +56,7 @@ def _setup_context() -> dict:
 
         def query(sql: str, limit: int = 5000) -> pd.DataFrame:
             """SQL sorgusu calistir, sonucu DataFrame olarak getir."""
-            result = ctx["client"].run_query(sql, limit=limit)
+            result = unwrap(ctx["client"].run_sql(sql, limit=limit))
             if "error" in result and result["error"]:
                 print("Hata:", result.get("detail"))
                 return pd.DataFrame()
@@ -87,10 +88,10 @@ def _setup_context() -> dict:
 @click.command(name="shell")
 @click.option("--no-banner", is_flag=True, help="Banner gosterme")
 def shell(no_banner: bool):
-    """Python REPL ac — on-yuklu ScadaClient + Pandas.
+    """Python REPL ac — on-yuklu SyncScadaClient + Pandas.
 
     Hazir degiskenler:
-      client      — ScadaClient (tokenli)
+      client      — SyncScadaClient (tokenli)
       load_tags() — Tag listesi DataFrame
       load_readings(id, limit) — Tag okumalari DataFrame
       load_current() — Canli degerler DataFrame

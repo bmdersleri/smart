@@ -4,7 +4,7 @@ import time
 from datetime import datetime, timezone
 
 import click
-from scada_reporter_cli.utils.client_helper import get_client
+from scada_reporter_cli.utils.client_helper import get_client, unwrap
 from scada_reporter_cli.utils.repl_skin import (
     success,
     error,
@@ -51,14 +51,14 @@ def monitor(interval: int, tags: str, threshold: float, once: bool, json_output:
         stale_count = 0
 
         # 1. System health check
-        health = client.health()
+        health = unwrap(client.health())
         if "error" in health:
             findings.append(
                 ("system", "error", health.get("detail", "API ulasilamiyor"))
             )
 
         # 2. Query current values
-        current = client.current_values()
+        current = unwrap(client.current_values())
         readings = current if isinstance(current, list) else []
         if tag_list:
             readings = [r for r in readings if r.get("name") in tag_list]
@@ -83,7 +83,7 @@ def monitor(interval: int, tags: str, threshold: float, once: bool, json_output:
         scan_tags = [r.get("name") for r in readings[:10]]
         for tn in scan_tags:
             if tn:
-                anom = client.ai_anomalies(tag_name=tn, threshold=threshold)
+                anom = unwrap(client.detect_anomalies(tag_name=tn, threshold=threshold))
                 if anom and "error" not in anom:
                     count = anom.get("anomaly_rate_pct", 0)
                     if count > 0:
@@ -151,7 +151,7 @@ def ask(question: str, json_output: bool):
     client, ok = get_client()
     if not ok:
         return
-    result = client.ai_query(question)
+    result = unwrap(client.ai_query(question))
     if "error" in result:
         click.echo(error(f"Hata: {result.get('detail', 'bilinmeyen hata')}"))
         return
@@ -186,7 +186,7 @@ def anomalies(tag_name: str, window: str, threshold: float, json_output: bool):
     client, ok = get_client()
     if not ok:
         return
-    result = client.ai_anomalies(tag_name, window, threshold)
+    result = unwrap(client.detect_anomalies(tag_name, window, threshold))
     if "error" in result:
         click.echo(error(f"Hata: {result.get('detail', 'bilinmeyen hata')}"))
         return
@@ -218,7 +218,7 @@ def forecast(tag_name: str, horizon: str, json_output: bool):
     client, ok = get_client()
     if not ok:
         return
-    result = client.ai_predict(tag_name, horizon)
+    result = unwrap(client.predict_trend(tag_name, horizon))
     if "error" in result:
         click.echo(error(f"Hata: {result.get('detail', 'bilinmeyen hata')}"))
         return
@@ -246,7 +246,7 @@ def status(json_output: bool):
     client, ok = get_client()
     if not ok:
         return
-    result = client.ai_health()
+    result = unwrap(client.ai_health())
     if "error" in result:
         click.echo(error(f"AI servislerine ulasilamiyor: {result.get('detail', '?')}"))
         return

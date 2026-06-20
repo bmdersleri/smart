@@ -19,6 +19,7 @@ setup(
         "click>=8.1",
         "httpx>=0.27",
         "tabulate>=0.10",
+        "scada-core",
     ],
     entry_points={
         "console_scripts": [

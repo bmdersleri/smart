@@ -23,8 +23,8 @@ decisions:
 - id: 004
   date: "2026-06-17"
   title: Agent Communication Protocol
-  decision: Agents communicate via MCP tools (scada + scada-db), not direct function calls
-  rationale: Decouples agent implementation from backend; any MCP-compatible agent can participate
+  decision: Agents communicate via MCP tools (scada), not direct function calls; read-only SQL via run_sql_query (API)
+  rationale: Decouples agent implementation from backend; any MCP-compatible agent can participate; mcp-db removed
   status: active
 
 - id: 005

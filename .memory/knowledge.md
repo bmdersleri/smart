@@ -25,6 +25,6 @@
 
 - Primary model: big-pickle
 - Tools: read, glob, grep, bash, question, todowrite (+ websearch for analyst)
-- MCP servers: scada, scada-db
+- MCP servers: scada (read-only SQL via run_sql_query tool; mcp-db removed)
 - Agent configs in .opencode/agents/*.json
 - Slash commands in .opencode/commands/*.json

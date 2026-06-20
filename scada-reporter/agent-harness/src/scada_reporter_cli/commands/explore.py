@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import click
-from scada_reporter_cli.utils.client_helper import get_client
+from scada_reporter_cli.utils.client_helper import get_client, unwrap
 from scada_reporter_cli.utils.repl_skin import success, error, info, fmt_json, fmt_table
 
 
@@ -17,7 +17,7 @@ def schema(json_output: bool):
     client, ok = get_client()
     if not ok:
         return
-    result = client.explore_schema()
+    result = unwrap(client.explore_schema())
     if "error" in result and result["error"]:
         click.echo(error(f"Hata: {result['error']}"))
     elif json_output:
@@ -45,7 +45,7 @@ def summary(json_output: bool):
     client, ok = get_client()
     if not ok:
         return
-    result = client.explore_summary()
+    result = unwrap(client.explore_summary())
     if "error" in result and result["error"]:
         click.echo(error(f"Hata: {result['error']}"))
     elif json_output:
@@ -86,7 +86,7 @@ def explore_tags(json_output: bool):
     client, ok = get_client()
     if not ok:
         return
-    tags = client.list_tags()
+    tags = unwrap(client.list_tags())
     client.close()
 
     if isinstance(tags, list) and tags and "error" in tags[0]:

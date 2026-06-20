@@ -8,13 +8,6 @@
         "SCADA_TOKEN": ""
       }
     },
-    "scada-db": {
-      "command": "uv",
-      "args": ["run", "--directory", "mcp-servers/mcp-db", "mcp-server-scada-db"],
-      "env": {
-        "DATABASE_URL": "postgresql+asyncpg://scada:scada123@localhost:5432/scada_reporter"
-      }
-    },
     "filesystem": {
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-filesystem", "."]
