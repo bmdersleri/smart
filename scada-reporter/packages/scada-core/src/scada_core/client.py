@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import os
 from typing import Any
 
@@ -156,3 +157,29 @@ class AsyncScadaClient:
 
     async def aclose(self) -> None:
         await self._client.aclose()
+
+
+class SyncScadaClient:
+    """AsyncScadaClient üzerine senkron facade — CLI bunu kullanır."""
+
+    def __init__(self, *args, **kwargs) -> None:
+        self._async = AsyncScadaClient(*args, **kwargs)
+
+    def _run(self, coro):
+        return asyncio.run(coro)
+
+    def set_token(self, token: str) -> None:
+        self._async.set_token(token)
+
+    def __getattr__(self, name: str):
+        attr = getattr(self._async, name)
+        if asyncio.iscoroutinefunction(attr):
+
+            def wrapper(*a, **kw):
+                return self._run(attr(*a, **kw))
+
+            return wrapper
+        return attr
+
+    def close(self) -> None:
+        self._run(self._async.aclose())
