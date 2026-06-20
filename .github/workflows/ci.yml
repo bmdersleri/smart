@@ -41,6 +41,28 @@ jobs:
       - name: Security — bandit
         run: uv run --no-sync bandit -r app/ -ll
 
+  cli:
+    name: Agent CLI (test)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: scada-reporter/agent-harness
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          uv venv .venv
+          uv pip install -e . pytest
+
+      - name: Tests — pytest
+        run: uv run --no-sync pytest tests/ -v --tb=short
+
   frontend:
     name: Frontend (tsc · lint · test)
     runs-on: ubuntu-latest

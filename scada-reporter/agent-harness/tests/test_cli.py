@@ -25,7 +25,7 @@ def test_health_no_api():
 def test_list_tags_no_auth():
     """Token olmadan tags list auth hatasi vermeli."""
     _clear_token()
-    with patch("scada_reporter_cli.commands.tags.get_token", return_value=None):
+    with patch("scada_reporter_cli.utils.client_helper.get_token", return_value=None):
         result = runner.invoke(cli, ["tags", "list"])
     assert result.exit_code == 0
     assert "login" in result.output.lower()
@@ -34,7 +34,7 @@ def test_list_tags_no_auth():
 def test_dashboard_overview_no_auth():
     """Token olmadan dashboard overview auth hatasi vermeli."""
     _clear_token()
-    with patch("scada_reporter_cli.commands.dashboard.get_token", return_value=None):
+    with patch("scada_reporter_cli.utils.client_helper.get_token", return_value=None):
         result = runner.invoke(cli, ["dashboard", "overview"])
     assert result.exit_code == 0
     assert "login" in result.output.lower()
@@ -217,9 +217,9 @@ def test_tags_update_success():
         "min_alarm": 0.0,
         "max_alarm": 5000.0,
     }
-    with (
-        patch("scada_reporter_cli.commands.tags.get_token", return_value="tok"),
-        patch("scada_reporter_cli.commands.tags.ScadaClient", return_value=mock_client),
+    with patch(
+        "scada_reporter_cli.commands.tags.get_client",
+        return_value=(mock_client, True),
     ):
         result = runner.invoke(
             cli,
@@ -251,9 +251,9 @@ def test_tags_update_success():
 def test_tags_update_validation_error():
     """tags update blocks min >= max without hitting the API."""
     mock_client = MagicMock()
-    with (
-        patch("scada_reporter_cli.commands.tags.get_token", return_value="tok"),
-        patch("scada_reporter_cli.commands.tags.ScadaClient", return_value=mock_client),
+    with patch(
+        "scada_reporter_cli.commands.tags.get_client",
+        return_value=(mock_client, True),
     ):
         result = runner.invoke(
             cli,
@@ -288,9 +288,9 @@ def test_tags_update_json_output():
         "min_alarm": None,
         "max_alarm": None,
     }
-    with (
-        patch("scada_reporter_cli.commands.tags.get_token", return_value="tok"),
-        patch("scada_reporter_cli.commands.tags.ScadaClient", return_value=mock_client),
+    with patch(
+        "scada_reporter_cli.commands.tags.get_client",
+        return_value=(mock_client, True),
     ):
         result = runner.invoke(
             cli,
@@ -347,12 +347,9 @@ def test_current_values_shows_alarm_column():
     """current-values table includes alarm_state column."""
     mock_client = MagicMock()
     mock_client.current_values.return_value = _SAMPLE_VALUES
-    with (
-        patch("scada_reporter_cli.commands.dashboard.get_token", return_value="tok"),
-        patch(
-            "scada_reporter_cli.commands.dashboard.ScadaClient",
-            return_value=mock_client,
-        ),
+    with patch(
+        "scada_reporter_cli.commands.dashboard.get_client",
+        return_value=(mock_client, True),
     ):
         result = runner.invoke(cli, ["dashboard", "current-values"])
     assert result.exit_code == 0
@@ -364,12 +361,9 @@ def test_current_values_alarm_only_filter():
     """--alarm-only shows only rows with alarm_state != None."""
     mock_client = MagicMock()
     mock_client.current_values.return_value = _SAMPLE_VALUES
-    with (
-        patch("scada_reporter_cli.commands.dashboard.get_token", return_value="tok"),
-        patch(
-            "scada_reporter_cli.commands.dashboard.ScadaClient",
-            return_value=mock_client,
-        ),
+    with patch(
+        "scada_reporter_cli.commands.dashboard.get_client",
+        return_value=(mock_client, True),
     ):
         result = runner.invoke(cli, ["dashboard", "current-values", "--alarm-only"])
     assert result.exit_code == 0
@@ -383,12 +377,9 @@ def test_current_values_json_includes_alarm_state():
 
     mock_client = MagicMock()
     mock_client.current_values.return_value = _SAMPLE_VALUES
-    with (
-        patch("scada_reporter_cli.commands.dashboard.get_token", return_value="tok"),
-        patch(
-            "scada_reporter_cli.commands.dashboard.ScadaClient",
-            return_value=mock_client,
-        ),
+    with patch(
+        "scada_reporter_cli.commands.dashboard.get_client",
+        return_value=(mock_client, True),
     ):
         result = runner.invoke(cli, ["dashboard", "current-values", "--json-output"])
     assert result.exit_code == 0
@@ -424,11 +415,9 @@ def test_reports_list_history_table():
     """list-history prints a table with id, date, tag count, interval, format."""
     mock_client = MagicMock()
     mock_client.list_report_history.return_value = _SAMPLE_HISTORY
-    with (
-        patch("scada_reporter_cli.commands.reports.get_token", return_value="tok"),
-        patch(
-            "scada_reporter_cli.commands.reports.ScadaClient", return_value=mock_client
-        ),
+    with patch(
+        "scada_reporter_cli.commands.reports.get_client",
+        return_value=(mock_client, True),
     ):
         result = runner.invoke(cli, ["reports", "list-history"])
     assert result.exit_code == 0
@@ -441,11 +430,9 @@ def test_reports_list_history_empty():
     """list-history shows empty message when no history."""
     mock_client = MagicMock()
     mock_client.list_report_history.return_value = []
-    with (
-        patch("scada_reporter_cli.commands.reports.get_token", return_value="tok"),
-        patch(
-            "scada_reporter_cli.commands.reports.ScadaClient", return_value=mock_client
-        ),
+    with patch(
+        "scada_reporter_cli.commands.reports.get_client",
+        return_value=(mock_client, True),
     ):
         result = runner.invoke(cli, ["reports", "list-history"])
     assert result.exit_code == 0
@@ -458,11 +445,9 @@ def test_reports_list_history_json():
 
     mock_client = MagicMock()
     mock_client.list_report_history.return_value = _SAMPLE_HISTORY
-    with (
-        patch("scada_reporter_cli.commands.reports.get_token", return_value="tok"),
-        patch(
-            "scada_reporter_cli.commands.reports.ScadaClient", return_value=mock_client
-        ),
+    with patch(
+        "scada_reporter_cli.commands.reports.get_client",
+        return_value=(mock_client, True),
     ):
         result = runner.invoke(cli, ["reports", "list-history", "--json-output"])
     assert result.exit_code == 0
@@ -479,11 +464,9 @@ def test_reports_download_history_saves_file(tmp_path):
         "filename": "report.xlsx",
     }
     out_file = str(tmp_path / "out.xlsx")
-    with (
-        patch("scada_reporter_cli.commands.reports.get_token", return_value="tok"),
-        patch(
-            "scada_reporter_cli.commands.reports.ScadaClient", return_value=mock_client
-        ),
+    with patch(
+        "scada_reporter_cli.commands.reports.get_client",
+        return_value=(mock_client, True),
     ):
         result = runner.invoke(
             cli,
@@ -543,11 +526,9 @@ def test_explore_tags_groups_by_device():
     """explore tags groups output by device."""
     mock_client = MagicMock()
     mock_client.list_tags.return_value = _SAMPLE_TAGS_FOR_EXPLORE
-    with (
-        patch("scada_reporter_cli.commands.explore.get_token", return_value="tok"),
-        patch(
-            "scada_reporter_cli.commands.explore.ScadaClient", return_value=mock_client
-        ),
+    with patch(
+        "scada_reporter_cli.commands.explore.get_client",
+        return_value=(mock_client, True),
     ):
         result = runner.invoke(cli, ["explore", "tags"])
     assert result.exit_code == 0
@@ -562,11 +543,9 @@ def test_explore_tags_shows_alarm_info():
     """explore tags shows alarm threshold when set."""
     mock_client = MagicMock()
     mock_client.list_tags.return_value = _SAMPLE_TAGS_FOR_EXPLORE
-    with (
-        patch("scada_reporter_cli.commands.explore.get_token", return_value="tok"),
-        patch(
-            "scada_reporter_cli.commands.explore.ScadaClient", return_value=mock_client
-        ),
+    with patch(
+        "scada_reporter_cli.commands.explore.get_client",
+        return_value=(mock_client, True),
     ):
         result = runner.invoke(cli, ["explore", "tags"])
     assert result.exit_code == 0
@@ -580,11 +559,9 @@ def test_explore_tags_json():
 
     mock_client = MagicMock()
     mock_client.list_tags.return_value = _SAMPLE_TAGS_FOR_EXPLORE
-    with (
-        patch("scada_reporter_cli.commands.explore.get_token", return_value="tok"),
-        patch(
-            "scada_reporter_cli.commands.explore.ScadaClient", return_value=mock_client
-        ),
+    with patch(
+        "scada_reporter_cli.commands.explore.get_client",
+        return_value=(mock_client, True),
     ):
         result = runner.invoke(cli, ["explore", "tags", "--json-output"])
     assert result.exit_code == 0

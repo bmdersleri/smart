@@ -14,6 +14,19 @@
 | `test_repl_invalid_command` | An invalid command should not crash |
 | `test_group_help` | Each group (auth/tags/dashboard/reports) --help should run |
 
+## Mocking Convention
+
+Command tests mock the **client seam** — `scada_reporter_cli.commands.<mod>.get_client`
+(imported into each command module from `utils.client_helper`) — never the internal
+`get_token` / `ScadaClient` names (commands no longer import those directly, so patching
+them raises `AttributeError`).
+
+- **Authenticated path:** `patch("scada_reporter_cli.commands.<mod>.get_client",
+  return_value=(mock_client, True))` and shape `mock_client` to return the fixtures the
+  assertions expect.
+- **No-auth path:** patch `scada_reporter_cli.utils.client_helper.get_token` to `None`,
+  letting the real `get_client` emit the friendly "auth login" message that the test asserts.
+
 ## E2E Tests
 
 While the backend is running:
@@ -32,5 +45,8 @@ pytest tests/ -v --api-url http://localhost:8001
 ## Test Results
 
 ```
-(pending)
+34 passed
 ```
+
+Run in CI (`.github/workflows/ci.yml` → `cli` job) and locally:
+`../backend/.venv/Scripts/pytest tests/ -q`
