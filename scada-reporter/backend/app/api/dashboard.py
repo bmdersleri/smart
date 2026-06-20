@@ -84,6 +84,24 @@ async def deadband_savings(
     window_seconds = hours * 3600
     since = datetime.now(UTC) - timedelta(hours=hours)
 
+    # Etkin toplama süresi: beklenen satırları nominal pencereye değil,
+    # collector'ın pencere içinde GERÇEKTEN veri ürettiği aralığa (ilk→son
+    # kayıt) göre hesapla. Aksi halde collector kapalıyken geçen süre sahte
+    # "tasarruf" gibi görünür (ör. 1 saattir çalışan sistem %99.9 gösterir).
+    span = (
+        await db.execute(
+            select(func.min(TagReading.timestamp), func.max(TagReading.timestamp)).where(
+                TagReading.timestamp >= since
+            )
+        )
+    ).one()
+    first_ts, last_ts = span
+    effective_seconds = (
+        min(window_seconds, int((last_ts - first_ts).total_seconds()))
+        if first_ts and last_ts
+        else 0
+    )
+
     rows = await db.execute(
         select(
             Tag.id,
@@ -98,10 +116,13 @@ async def deadband_savings(
         .group_by(Tag.id, Tag.sample_interval)
     )
     items = [{"sample_interval": si or 5, "actual": cnt} for _id, si, cnt in rows.all()]
-    out = compute_deadband_savings(items, window_seconds)
+    out = compute_deadband_savings(items, effective_seconds)
     out["window_hours"] = hours
-    # 24 saate ölçekli kaydedilmeyen satır tahmini (kapasite planlama için)
-    out["saved_rows_per_day"] = round(out["saved_rows"] * 24 / hours) if hours else 0
+    out["effective_seconds"] = effective_seconds
+    # Gözlenen tasarruf hızını tam güne ölçekle (kapasite planlama için)
+    out["saved_rows_per_day"] = (
+        round(out["saved_rows"] * 86400 / effective_seconds) if effective_seconds else 0
+    )
     return out
 
 

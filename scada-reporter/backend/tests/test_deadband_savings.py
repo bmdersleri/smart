@@ -80,6 +80,8 @@ async def test_endpoint_only_counts_deadband_tags(client: AsyncClient, db_sessio
     body = r.json()
     assert body["deadband_tags"] == 1  # yalnız deadband'li sayılır
     assert body["actual_rows"] == 10
-    assert body["expected_rows"] == 720
-    assert body["saved_rows"] == 710
+    # Veri yalnız 9 dk yayılıyor → etkin pencere 540 sn, nominal 3600 değil
+    assert body["effective_seconds"] == 540
+    assert body["expected_rows"] == 108  # 540 / 5 sn
+    assert body["saved_rows"] == 98
     assert body["savings_pct"] > 90
