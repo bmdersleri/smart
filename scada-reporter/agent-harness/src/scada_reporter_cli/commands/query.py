@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import click
-from scada_reporter_cli.utils.client_helper import get_client
+from scada_reporter_cli.utils.client_helper import get_client, unwrap
 from scada_reporter_cli.utils.repl_skin import success, error, fmt_json, fmt_table
 
 
@@ -25,7 +25,7 @@ def run(sql: str, limit: int, json_output: bool):
     client, ok = get_client()
     if not ok:
         return
-    result = client.run_query(sql, limit=limit)
+    result = unwrap(client.run_sql(sql, limit=limit))
     if "error" in result and result["error"]:
         detail = result.get("detail", "bilinmeyen hata")
         click.echo(error(f"Sorgu hatasi: {detail}"))
