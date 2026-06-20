@@ -61,6 +61,6 @@ class TagReading(Base):
     tag_id: Mapped[int] = mapped_column(Integer, ForeignKey("tags.id"), nullable=False)
     value: Mapped[float] = mapped_column(Float, nullable=True)
     quality: Mapped[int] = mapped_column(Integer, default=192)  # OPC quality: 192=Good
-    timestamp: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    timestamp: Mapped[datetime] = mapped_column(DateTime, nullable=False, index=True)
 
     tag: Mapped["Tag"] = relationship(back_populates="readings")
