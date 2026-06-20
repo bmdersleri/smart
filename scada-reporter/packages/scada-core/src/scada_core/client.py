@@ -156,6 +156,161 @@ class AsyncScadaClient:
             }
         )
 
+    # -- Auth extras ---------------------------------------------------------
+    async def register(
+        self,
+        username: str,
+        email: str,
+        password: str,
+        full_name: str = "",
+        role: str = "operator",
+    ) -> Result:
+        return await self._request(
+            "POST",
+            ep.AUTH_REGISTER,
+            json={
+                "username": username,
+                "email": email,
+                "password": password,
+                "full_name": full_name,
+                "role": role,
+            },
+        )
+
+    async def me(self) -> Result:
+        return await self._request("GET", ep.AUTH_ME)
+
+    # -- Tag writes / readings ----------------------------------------------
+    async def create_tag(
+        self,
+        node_id: str,
+        name: str,
+        description: str = "",
+        unit: str = "",
+        channel: str = "",
+        device: str = "",
+    ) -> Result:
+        return await self._request(
+            "POST",
+            ep.TAGS,
+            json={
+                "node_id": node_id,
+                "name": name,
+                "description": description,
+                "unit": unit,
+                "channel": channel,
+                "device": device,
+            },
+        )
+
+    async def delete_tag(self, tag_id: int) -> Result:
+        res = await self._request("DELETE", ep.TAG_ITEM.format(tag_id=tag_id))
+        if not res.ok:
+            return res
+        return ok({"deleted": True, "tag_id": tag_id})
+
+    async def update_tag(
+        self,
+        tag_id: int,
+        unit: str | None = None,
+        device: str | None = None,
+        channel: str | None = None,
+        description: str | None = None,
+        min_alarm: float | None = None,
+        max_alarm: float | None = None,
+    ) -> Result:
+        payload: dict[str, Any] = {}
+        if unit is not None:
+            payload["unit"] = unit
+        if device is not None:
+            payload["device"] = device
+        if channel is not None:
+            payload["channel"] = channel
+        if description is not None:
+            payload["description"] = description
+        if min_alarm is not None:
+            payload["min_alarm"] = min_alarm
+        if max_alarm is not None:
+            payload["max_alarm"] = max_alarm
+        if not payload:
+            raise ValueError("update_tag: at least one field must be provided")
+        return await self._request("PATCH", ep.TAG_ITEM.format(tag_id=tag_id), json=payload)
+
+    async def get_readings(
+        self,
+        tag_id: int,
+        start: str | None = None,
+        end: str | None = None,
+        limit: int = 1000,
+    ) -> Result:
+        params: dict[str, Any] = {"limit": limit}
+        if start:
+            params["start"] = start
+        if end:
+            params["end"] = end
+        return await self._request("GET", ep.TAG_READINGS.format(tag_id=tag_id), params=params)
+
+    # -- Dashboard / trend (by id) ------------------------------------------
+    async def overview(self) -> Result:
+        return await self._request("GET", ep.DASHBOARD_OVERVIEW)
+
+    async def trend(self, tag_ids: list[int], hours: int = 24) -> Result:
+        return await self._request("GET", ep.TREND, params={"tag_ids": tag_ids, "hours": hours})
+
+    # -- Reports (by id) -----------------------------------------------------
+    async def reports_generate_by_ids(
+        self,
+        tag_ids: list[int],
+        start: str,
+        end: str,
+        interval: str = "hourly",
+        output_format: str = "json",
+    ) -> Result:
+        return await self._request(
+            "POST",
+            ep.REPORTS_GENERATE,
+            json={
+                "tag_ids": tag_ids,
+                "start": start,
+                "end": end,
+                "interval": interval,
+                "format": output_format,
+            },
+        )
+
+    async def list_report_history(self) -> Result:
+        return await self._request("GET", ep.REPORTS_HISTORY)
+
+    async def download_report_history(self, history_id: int) -> Result:
+        path = f"{ep.REPORTS_HISTORY}/{history_id}/download"
+        try:
+            resp = await self._client.request("GET", "/" + path.lstrip("/"))
+        except httpx.HTTPError as exc:
+            return fail("connection", str(exc))
+        if resp.status_code >= 400:
+            return from_http_error(resp)
+        cd = resp.headers.get("content-disposition", "")
+        filename = f"scada_rapor_{history_id}.bin"
+        for token in (t.strip() for t in cd.split(";")):
+            if token.lower().startswith("filename="):
+                filename = token[len("filename=") :].strip('"').strip("'")
+                break
+        return ok({"content": resp.content, "filename": filename})
+
+    # -- Explore -------------------------------------------------------------
+    async def explore_schema(self) -> Result:
+        return await self._request("GET", ep.EXPLORE_SCHEMA)
+
+    async def explore_summary(self) -> Result:
+        return await self._request("GET", ep.EXPLORE_SUMMARY)
+
+    # -- AI passthrough ------------------------------------------------------
+    async def ai_health(self) -> Result:
+        return await self._request("GET", ep.AI_HEALTH)
+
+    async def ai_query(self, question: str) -> Result:
+        return await self._request("POST", ep.AI_QUERY, json={"question": question})
+
     async def aclose(self) -> None:
         await self._client.aclose()
 

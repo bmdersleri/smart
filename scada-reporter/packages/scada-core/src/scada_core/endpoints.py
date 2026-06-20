@@ -27,5 +27,7 @@ AI_ANOMALIES = "api/ai/anomalies"
 AI_PREDICT = "api/ai/predict"
 AI_RESOLVE = "api/ai/resolve"
 AI_REPORTS_GENERATE = "api/ai/reports/generate"
+AI_HEALTH = "api/ai/health"
+AI_QUERY = "api/ai/query"
 
 HEALTH = "health"
