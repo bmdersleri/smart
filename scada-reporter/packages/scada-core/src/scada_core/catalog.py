@@ -16,7 +16,7 @@ class Capability:
     description: str
     input_schema: dict
     handler: Handler
-    read_only: bool = True
+    tier: str = "read"  # "read" | "write" | "destructive"
 
 
 def _obj(props: dict, required: list[str] | None = None) -> dict:

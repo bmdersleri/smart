@@ -29,4 +29,14 @@ def test_catalog_integrity():
 
 def test_lookup_by_name():
     assert CATALOG["run_sql_query"].name == "run_sql_query"
-    assert CATALOG["run_sql_query"].read_only is True
+    assert CATALOG["run_sql_query"].tier == "read"
+
+
+def test_all_existing_capabilities_are_read_tier():
+    for cap in CAPABILITIES:
+        assert cap.tier == "read"
+
+
+def test_tier_values_are_valid():
+    for cap in CAPABILITIES:
+        assert cap.tier in {"read", "write", "destructive"}
