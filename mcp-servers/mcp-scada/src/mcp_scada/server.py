@@ -5,7 +5,6 @@ import os
 from mcp.server.fastmcp import FastMCP
 from mcp.server.fastmcp.prompts.base import Prompt
 
-from scada_core import endpoints as ep
 from scada_core.catalog import CATALOG
 from scada_core.client import AsyncScadaClient
 from scada_core.envelope import fail
@@ -160,7 +159,7 @@ def _register_resources() -> None:
     async def _schema() -> str:
         client = _make_client()
         try:
-            return to_json(await client._request("GET", ep.EXPLORE_SCHEMA))
+            return to_json(await client.explore_schema())
         finally:
             await client.aclose()
 
