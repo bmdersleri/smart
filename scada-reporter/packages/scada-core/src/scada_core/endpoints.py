@@ -33,8 +33,6 @@ AI_QUERY = "api/ai/query"
 HEALTH = "health"
 
 # --- Spec 2: write endpoints ---
-TAG_IMPORT_CSV = "api/tags/import_csv"
-
 WATCHLIST_ITEM = "api/dashboard/watchlist/{tag_id}"
 
 ANNOTATIONS = "api/annotations/"

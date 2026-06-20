@@ -14,10 +14,12 @@ def users_cmd():
 @click.option("--password", required=True)
 @click.option("--full-name", default="")
 @click.option("--role", default="operator")
-def create(username, email, password, full_name, role):
+@click.option("--confirm", is_flag=True, default=False)
+def create(username, email, password, full_name, role, confirm):
     client, ok = get_client()
     if not ok:
         return
+    require_confirm(confirm, "user_create", username)
     click.echo(
         json.dumps(
             unwrap(client.user_create(username, email, password, full_name, role)),
@@ -33,10 +35,12 @@ def create(username, email, password, full_name, role):
 @click.option("--full-name", default=None)
 @click.option("--role", default=None)
 @click.option("--is-active", type=bool, default=None)
-def update(user_id, email, full_name, role, is_active):
+@click.option("--confirm", is_flag=True, default=False)
+def update(user_id, email, full_name, role, is_active, confirm):
     client, ok = get_client()
     if not ok:
         return
+    require_confirm(confirm, "user_update", user_id)
     click.echo(
         json.dumps(
             unwrap(client.user_update(user_id, email, full_name, role, is_active)),
@@ -49,10 +53,12 @@ def update(user_id, email, full_name, role, is_active):
 @users_cmd.command(name="set-password")
 @click.argument("user_id", type=int)
 @click.option("--password", required=True)
-def set_password(user_id, password):
+@click.option("--confirm", is_flag=True, default=False)
+def set_password(user_id, password, confirm):
     client, ok = get_client()
     if not ok:
         return
+    require_confirm(confirm, "user_set_password", user_id)
     click.echo(
         json.dumps(
             unwrap(client.user_set_password(user_id, password)),

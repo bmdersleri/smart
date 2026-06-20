@@ -56,5 +56,4 @@ def test_catalog_tiers_for_tag_watch_anno():
     assert CATALOG["watchlist_add"].tier == "write"
     assert CATALOG["annotation_delete"].tier == "write"
     assert CATALOG["delete_tag"].tier == "destructive"
-    assert CATALOG["import_csv_tags"].tier == "destructive"
     assert CATALOG["update_tag"].tier == "write"

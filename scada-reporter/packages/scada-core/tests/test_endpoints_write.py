@@ -2,7 +2,6 @@ from scada_core import endpoints as ep
 
 
 def test_write_endpoint_constants():
-    assert ep.TAG_IMPORT_CSV == "api/tags/import_csv"
     assert ep.WATCHLIST_ITEM == "api/dashboard/watchlist/{tag_id}"
     assert ep.ANNOTATIONS == "api/annotations/"
     assert ep.ANNOTATION_ITEM == "api/annotations/{annotation_id}"

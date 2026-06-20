@@ -145,10 +145,6 @@ async def delete_tag(tag_id: int) -> str:
     return await call_capability("delete_tag", {"tag_id": tag_id})
 
 
-async def import_csv_tags(payload: dict) -> str:
-    return await call_capability("import_csv_tags", {"payload": payload})
-
-
 async def watchlist_add(tag_id: int) -> str:
     return await call_capability("watchlist_add", {"tag_id": tag_id})
 
@@ -328,7 +324,6 @@ _TOOL_REGISTRY = [
     (resolve_tag, "resolve_tag"),
     (update_tag, "update_tag"),
     (delete_tag, "delete_tag"),
-    (import_csv_tags, "import_csv_tags"),
     (watchlist_add, "watchlist_add"),
     (watchlist_remove, "watchlist_remove"),
     (annotation_add, "annotation_add"),

@@ -170,13 +170,6 @@ CAPABILITIES: list[Capability] = [
         tier="destructive",
     ),
     Capability(
-        "import_csv_tags",
-        "CSV gövdesinden toplu tag içe aktar.",
-        _obj({"payload": {"type": "object"}}, ["payload"]),
-        lambda c, a: c.import_csv_tags(a["payload"]),
-        tier="destructive",
-    ),
-    Capability(
         "watchlist_add",
         "Bir tag'i izleme listesine ekle.",
         _obj({"tag_id": {"type": "integer"}}, ["tag_id"]),

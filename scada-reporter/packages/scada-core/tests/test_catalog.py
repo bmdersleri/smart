@@ -15,7 +15,6 @@ EXPECTED = {
     "resolve_tag",
     "update_tag",
     "delete_tag",
-    "import_csv_tags",
     "watchlist_add",
     "watchlist_remove",
     "annotation_add",

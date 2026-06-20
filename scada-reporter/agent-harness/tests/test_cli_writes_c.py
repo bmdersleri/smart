@@ -29,3 +29,32 @@ def test_user_delete_runs_with_confirm():
         result = runner.invoke(cli, ["users", "delete", "2", "--confirm"])
     assert result.exit_code == 0
     mc.user_delete.assert_called_once_with(2)
+
+
+def test_user_create_requires_confirm():
+    mc = MagicMock()
+    with patch("scada_reporter_cli.commands.users.get_client", return_value=(mc, True)):
+        result = runner.invoke(
+            cli,
+            ["users", "create", "u1", "--email", "u1@x.com", "--password", "secret6"],
+        )
+    assert result.exit_code == 2
+    mc.user_create.assert_not_called()
+
+
+def test_user_update_requires_confirm():
+    mc = MagicMock()
+    with patch("scada_reporter_cli.commands.users.get_client", return_value=(mc, True)):
+        result = runner.invoke(cli, ["users", "update", "2", "--role", "admin"])
+    assert result.exit_code == 2
+    mc.user_update.assert_not_called()
+
+
+def test_user_set_password_requires_confirm():
+    mc = MagicMock()
+    with patch("scada_reporter_cli.commands.users.get_client", return_value=(mc, True)):
+        result = runner.invoke(
+            cli, ["users", "set-password", "2", "--password", "newpass"]
+        )
+    assert result.exit_code == 2
+    mc.user_set_password.assert_not_called()

@@ -312,9 +312,6 @@ class AsyncScadaClient:
         return await self._request("POST", ep.AI_QUERY, json={"question": question})
 
     # -- Spec 2: tag / watchlist / annotation writes --------------------------
-    async def import_csv_tags(self, payload: dict) -> Result:
-        return await self._request("POST", ep.TAG_IMPORT_CSV, json=payload)
-
     async def watchlist_add(self, tag_id: int) -> Result:
         return await self._request("POST", ep.WATCHLIST_ITEM.format(tag_id=tag_id))
 
