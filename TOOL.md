@@ -64,7 +64,7 @@
 | caveman-code | | `caveman-code` (npm) |
 | RTK | 0.42.4 | `rtk` — Rust Token Killer (LLM token optimizer) |
 | FCC (Free Claude Code) | | `fcc-claude`, `fcc-init`, `fcc-server` |
-| scada | | `scada` — SCADA Reporter agent CLI (agent-harness) |
+| scada | | `scada` — EKONT SMART REPORT agent CLI (agent-harness) |
 
 ## Project CLI (`scada`)
 | Command | Description |

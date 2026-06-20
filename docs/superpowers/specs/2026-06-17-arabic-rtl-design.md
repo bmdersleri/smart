@@ -6,7 +6,7 @@
 
 ## Goal
 
-Add Arabic (`ar`) as a selectable UI language across the SCADA Reporter web
+Add Arabic (`ar`) as a selectable UI language across the EKONT SMART REPORT web
 app, with right-to-left (RTL) layout support, and localize the generated
 Excel/PDF reports into Arabic. The existing four languages (en/tr/ru/de) and
 their selection/persistence flow stay unchanged.

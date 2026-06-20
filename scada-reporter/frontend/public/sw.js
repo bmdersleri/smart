@@ -1,4 +1,4 @@
-// SCADA Reporter — minimal service worker (uygulama kabuğu offline önbelleği).
+// EKONT SMART REPORT — minimal service worker (uygulama kabuğu offline önbelleği).
 // API çağrıları ASLA önbelleklenmez (canlı veri); yalnız statik kabuk + navigasyon.
 const CACHE = 'scada-shell-v1'
 const SHELL = ['/', '/index.html', '/icon.svg', '/manifest.webmanifest']

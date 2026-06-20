@@ -1,8 +1,8 @@
-# SCADA Reporter — Agent Guide
+# EKONT SMART REPORT — Agent Guide
 
 This project is designed **agent-native** following the CLI-Anything approach.
 Coding agents (Claude Code, OpenCode, GitHub Copilot, Cursor, Windsurf)
-can use the SCADA Reporter system seamlessly through the tools below.
+can use the EKONT SMART REPORT system seamlessly through the tools below.
 
 ## Agent CLI
 

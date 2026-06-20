@@ -30,7 +30,7 @@ from scada_reporter_cli.commands.agent import agent_cmd
 )
 @click.pass_context
 def cli(ctx: click.Context, api_url: str, json_output: bool):
-    """SCADA Reporter — Su/Atiksu tesisi SCADA veri toplama ve raporlama ara yuzu."""
+    """EKONT SMART REPORT — Su/Atiksu tesisi SCADA veri toplama ve raporlama ara yuzu."""
     ctx.ensure_object(dict)
     ctx.obj["API_URL"] = api_url
     ctx.obj["JSON_OUTPUT"] = json_output

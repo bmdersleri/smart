@@ -195,7 +195,7 @@ Expected: FAIL — cannot resolve `./locales/ar/common.json` (files not created 
 
 For each namespace `<ns>` in `common, login, settings, dashboard, tags, trend, reports, advancedReports, plc, metrics, users`:
 - Read `src/i18n/locales/en/<ns>.json`.
-- Create `src/i18n/locales/ar/<ns>.json` with the EXACT same key structure (including nested objects) and the SAME `{{placeholder}}` tokens in each value, translating each English value into Modern Standard Arabic. Do not add, remove, or rename any key. Do not translate placeholder tokens (`{{count}}` stays `{{count}}`). Keep non-translatable tokens (units, `R²`, product name "SCADA Reporter", numbers) as-is.
+- Create `src/i18n/locales/ar/<ns>.json` with the EXACT same key structure (including nested objects) and the SAME `{{placeholder}}` tokens in each value, translating each English value into Modern Standard Arabic. Do not add, remove, or rename any key. Do not translate placeholder tokens (`{{count}}` stays `{{count}}`). Keep non-translatable tokens (units, `R²`, product name "EKONT SMART REPORT", numbers) as-is.
 - For the `common` namespace, ensure `nav_users` and all `nav_*` keys are translated, and `language` (the selector aria-label) is translated.
 
 Translation quality: Modern Standard Arabic, concise UI register. These are AI drafts (per Global Constraints).

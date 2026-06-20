@@ -7,7 +7,7 @@ from typing import Any
 def banner() -> str:
     return """
 ╔══════════════════════════════════════════╗
-║        SCADA Reporter Agent CLI         ║
+║        EKONT SMART REPORT Agent CLI        ║
 ║     Su/Atıksu Tesisi SCADA Sistemi       ║
 ╚══════════════════════════════════════════╝
 """

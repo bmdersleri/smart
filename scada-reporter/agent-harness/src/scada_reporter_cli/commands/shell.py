@@ -101,14 +101,14 @@ def shell(no_banner: bool):
     """
     if not no_banner:
         print(banner())
-        print(info("SCADA Reporter Python Shell"))
+        print(info("EKONT SMART REPORT Python Shell"))
         print()
 
     ctx = _setup_context()
     print()
 
     shell_banner = (
-        "Python {} | SCADA Reporter Shell\n"
+        "Python {} | EKONT SMART REPORT Shell\n"
         "Hazir: client, load_tags(), load_readings(), load_current(), query(), pd, json"
     ).format(sys.version.split()[0])
 

@@ -1,4 +1,4 @@
-# Agent Setup — SCADA Reporter
+# Agent Setup — EKONT SMART REPORT
 
 ## 1. Start the Backend
 

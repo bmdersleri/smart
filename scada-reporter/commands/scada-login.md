@@ -1,6 +1,6 @@
 # scada-login
 
-SCADA Reporter API'sine kimlik doğrulama. JWT token alır ve `~/.config/scada-reporter/config.json` dosyasına kaydeder.
+EKONT SMART REPORT API'sine kimlik doğrulama. JWT token alır ve `~/.config/scada-reporter/config.json` dosyasına kaydeder.
 
 ## Kullanım
 

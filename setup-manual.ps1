@@ -1,7 +1,7 @@
-# SCADA Reporter - Manuel Kurulum Scripti
+# EKONT SMART REPORT - Manuel Kurulum Scripti
 # Çalıştırmak için: powershell -ExecutionPolicy Bypass -File setup-manual.ps1
 
-Write-Host "=== SCADA Reporter - Manuel Kurulum ===" -ForegroundColor Cyan
+Write-Host "=== EKONT SMART REPORT - Manuel Kurulum ===" -ForegroundColor Cyan
 Write-Host ""
 
 # ---- 1. Docker Desktop ----

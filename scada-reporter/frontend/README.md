@@ -1,6 +1,6 @@
-# SCADA Reporter — Frontend
+# EKONT SMART REPORT — Frontend
 
-React 19 + Vite + Tailwind CSS v4 + TanStack Query web interface for the SCADA Reporter system.
+React 19 + Vite + Tailwind CSS v4 + TanStack Query web interface for the EKONT SMART REPORT system.
 Talks to the FastAPI backend (`http://localhost:8001`) through a generated OpenAPI TypeScript client.
 
 ## Tech Stack

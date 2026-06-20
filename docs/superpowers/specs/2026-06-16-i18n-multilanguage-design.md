@@ -6,7 +6,7 @@
 
 ## Goal
 
-Add internationalization (i18n) to the SCADA Reporter so the React UI and the
+Add internationalization (i18n) to the EKONT SMART REPORT so the React UI and the
 generated Excel/PDF reports render in the user's chosen language. Ship four
 languages in v1: Turkish (tr), English (en), Russian (ru), German (de).
 

@@ -51,7 +51,7 @@ def test_cli_invocation():
     """CLI --help calismali."""
     result = runner.invoke(cli, ["--help"])
     assert result.exit_code == 0
-    assert "SCADA Reporter" in result.output
+    assert "EKONT SMART REPORT" in result.output
 
 
 def test_repl_exit():

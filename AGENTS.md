@@ -1,4 +1,4 @@
-# SCADA Reporter — Agent Usage Guide
+# EKONT SMART REPORT — Agent Usage Guide
 
 This project is structured **agent-native** following the CLI-Anything approach.
 Detailed guide: `scada-reporter/AGENTS.md`

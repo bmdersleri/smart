@@ -1,7 +1,7 @@
 ---
 name: scada-reporter-cli
-description: Agent-native CLI for SCADA Reporter — PLC tag management, live values, trend analysis and report generation
-author: SCADA Reporter Team
+description: Agent-native CLI for EKONT SMART REPORT — PLC tag management, live values, trend analysis and report generation
+author: EKONT SMART REPORT Team
 commands:
   # Auth
   - scada auth login <username>
@@ -41,7 +41,7 @@ alarm_state_values:
   null: "normal, no alarm"
 ---
 
-# SCADA Reporter Agent CLI
+# EKONT SMART REPORT Agent CLI
 
 Coding agent access to the water/wastewater plant SCADA data acquisition and reporting system.
 

@@ -1,4 +1,4 @@
-# Test Plan — SCADA Reporter Agent CLI
+# Test Plan — EKONT SMART REPORT Agent CLI
 
 ## Unit Tests
 

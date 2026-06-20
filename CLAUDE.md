@@ -1,4 +1,4 @@
-# SCADA Reporter
+# EKONT SMART REPORT
 
 Water/wastewater plant SCADA data acquisition and reporting system.
 

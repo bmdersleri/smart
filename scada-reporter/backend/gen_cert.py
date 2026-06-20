@@ -23,8 +23,8 @@ key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
 
 subject = x509.Name(
     [
-        x509.NameAttribute(NameOID.COMMON_NAME, "SCADA Reporter OPC UA Client"),
-        x509.NameAttribute(NameOID.ORGANIZATION_NAME, "SCADA Reporter"),
+        x509.NameAttribute(NameOID.COMMON_NAME, "EKONT SMART REPORT OPC UA Client"),
+        x509.NameAttribute(NameOID.ORGANIZATION_NAME, "EKONT SMART REPORT"),
         x509.NameAttribute(NameOID.ORGANIZATIONAL_UNIT_NAME, "Engineering"),
     ]
 )

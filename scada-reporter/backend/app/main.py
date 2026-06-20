@@ -124,7 +124,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="SCADA Reporter",
+    title="EKONT SMART REPORT",
     description="Su/Atıksu tesisi SCADA veri toplama ve raporlama sistemi",
     version="1.0.0",
     lifespan=lifespan,

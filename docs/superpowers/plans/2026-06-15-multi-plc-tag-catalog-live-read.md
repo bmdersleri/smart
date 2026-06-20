@@ -8,7 +8,7 @@
 
 ## 1. Context
 
-SCADA Reporter currently connects to a **single PLC** (`settings.S7_HOST`) and uses each
+EKONT SMART REPORT currently connects to a **single PLC** (`settings.S7_HOST`) and uses each
 tag's `node_id` field directly as its S7 address. The real plant has **30 separate PLCs**
 (each on its own IP) and thousands of tags. These tags are described in three WinCC Excel
 exports placed in `xlsx/`:

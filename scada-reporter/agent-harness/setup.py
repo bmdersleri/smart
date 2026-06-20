@@ -3,11 +3,11 @@ from setuptools import setup
 setup(
     name="scada-reporter-cli",
     version="1.0.0",
-    description="SCADA Reporter Agent CLI — coding agent'lar için REST API wrapper",
-    long_description="SCADA Reporter sistemini coding agent'lar (Claude Code, OpenCode, "
+    description="EKONT SMART REPORT Agent CLI — coding agent'lar için REST API wrapper",
+    long_description="EKONT SMART REPORT sistemini coding agent'lar (Claude Code, OpenCode, "
     "GitHub Copilot, Cursor vb.) tarafından kullanılabilir kılan CLI aracı. "
     "Tüm komutlar --json flag'i ile makine-okunabilir çıktı üretir.",
-    author="SCADA Reporter Team",
+    author="EKONT SMART REPORT Team",
     package_dir={"": "src"},
     packages=[
         "scada_reporter_cli",

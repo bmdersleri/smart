@@ -1,4 +1,4 @@
-# SCADA Reporter
+# EKONT SMART REPORT
 
 **Snap7-based SCADA data acquisition and reporting system** for water and wastewater plants.
 

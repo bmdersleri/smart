@@ -1,6 +1,6 @@
-# Agent Workflow — SCADA Reporter
+# Agent Workflow — EKONT SMART REPORT
 
-This guide describes how coding agents work with SCADA Reporter.
+This guide describes how coding agents work with EKONT SMART REPORT.
 
 ## Discovery Flow
 

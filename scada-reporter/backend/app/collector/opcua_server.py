@@ -23,7 +23,7 @@ class OpcUaServer:
     async def start(self) -> None:
         await self.server.init()
         self.server.set_endpoint(f"opc.tcp://0.0.0.0:{settings.OPCUA_SERVER_PORT}")
-        self.server.set_server_name("SCADA Reporter OPC UA Server")
+        self.server.set_server_name("EKONT SMART REPORT OPC UA Server")
         self._idx = await self.server.register_namespace(settings.OPCUA_SERVER_URI)
 
         root = self.server.nodes.objects

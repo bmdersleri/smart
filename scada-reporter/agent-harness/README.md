@@ -1,7 +1,7 @@
-# SCADA Reporter Agent CLI
+# EKONT SMART REPORT Agent CLI
 
 A CLI tool designed for coding agents (Claude Code, OpenCode, GitHub Copilot,
-Cursor, Windsurf, etc.) to use the SCADA Reporter REST API.
+Cursor, Windsurf, etc.) to use the EKONT SMART REPORT REST API.
 
 ## Installation
 
