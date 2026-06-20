@@ -9,8 +9,6 @@ const SRC = fileURLToPath(new URL('../src', import.meta.url))
 
 // Files that legitimately contain Turkish characters and are NOT migration misses:
 const ALLOWLIST = [
-  // Concurrent feature (Excel template-fill) — owns its own i18n pass, pending.
-  'pages/ExcelTemplates.tsx',
   // Native language name "Türkçe" in the language switcher — must stay literal.
   'components/LanguageSelector.tsx',
   // The following carry Turkish ONLY in code comments (not UI), not user-facing:

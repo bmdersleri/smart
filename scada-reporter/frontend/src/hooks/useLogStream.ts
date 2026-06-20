@@ -10,10 +10,10 @@ export interface LogLine {
 }
 
 /**
- * SSE ile canlı backend log akışı. Backend /api/dashboard/logs/stream halka
- * tampondan yeni kayıtları JSON dizisi olarak push eder. EventSource başlık
- * gönderemediği için token query-param ile iletilir. `level` değiştiğinde
- * akış yeniden açılır ve tampon sıfırlanır.
+ * Live backend log stream over SSE. The backend /api/dashboard/logs/stream
+ * pushes new records from a ring buffer as a JSON array. EventSource cannot
+ * send headers, so the token is passed as a query param. When `level` changes
+ * the stream is reopened and the buffer is reset.
  */
 export function useLogStream(
   level: string,
@@ -28,6 +28,9 @@ export function useLogStream(
     const token = localStorage.getItem('token')
     if (!token) return
 
+    // Reset the buffer when (re)subscribing to a new stream. This effect is a
+    // genuine external-system subscription, so the reset belongs with it.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLines([])
     const params = new URLSearchParams()
     params.set('token', token)
@@ -43,10 +46,10 @@ export function useLogStream(
           return next.length > cap ? next.slice(next.length - cap) : next
         })
       } catch {
-        /* hatalı frame -> atla */
+        /* malformed frame -> skip */
       }
     }
-    // Hata durumunda tarayıcı otomatik yeniden bağlanır.
+    // On error the browser reconnects automatically.
 
     return () => es.close()
   }, [level, enabled, cap])

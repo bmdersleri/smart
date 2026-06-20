@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { applyAggChange, authHeaders, toSavePayload, type MappingRow } from "./ExcelTemplates";
+import { applyAggChange, authHeaders, toSavePayload, type MappingRow } from "./excelTemplates.helpers";
 
 const rows: MappingRow[] = [
   { col_letter: "E", source_code: "410BF103", label: "DEBİ m3/gün", tag_id: 1, agg: "sum", enabled: true },

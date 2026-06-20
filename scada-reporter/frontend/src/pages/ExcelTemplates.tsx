@@ -2,56 +2,15 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
-
-export type Agg = "sum" | "avg" | "min" | "max" | "last" | "delta";
-
-export interface MappingRow {
-  col_letter: string;
-  source_code: string;
-  label: string;
-  tag_id: number | null;
-  agg: Agg;
-  enabled: boolean;
-}
-
-export interface TemplateMeta {
-  name: string;
-  description: string;
-  file_b64: string;
-  sheet_name: string;
-  header_row: number;
-  date_col: string;
-  data_start_row: number;
-  date_mode: "write" | "match";
-}
-
-// --- pure helpers (unit-tested) ---
-export function applyAggChange(rows: MappingRow[], col: string, agg: Agg): MappingRow[] {
-  return rows.map((r) => (r.col_letter === col ? { ...r, agg } : r));
-}
-
-export function toSavePayload(meta: TemplateMeta, rows: MappingRow[]) {
-  return {
-    ...meta,
-    columns: rows
-      .filter((r) => r.enabled && r.tag_id != null)
-      .map((r) => ({
-        col_letter: r.col_letter,
-        tag_id: r.tag_id,
-        agg: r.agg,
-        source_code: r.source_code,
-        enabled: r.enabled,
-      })),
-  };
-}
-
-const AGGS: Agg[] = ["sum", "avg", "min", "max", "last", "delta"];
-
-// JWT'yi axios client'ı gibi ekle (localStorage 'token'); raw fetch yoksa 401 olur.
-export function authHeaders(extra: Record<string, string> = {}): Record<string, string> {
-  const token = localStorage.getItem("token");
-  return token ? { ...extra, Authorization: `Bearer ${token}` } : { ...extra };
-}
+import {
+  AGGS,
+  applyAggChange,
+  authHeaders,
+  toSavePayload,
+  type Agg,
+  type MappingRow,
+  type TemplateMeta,
+} from "./excelTemplates.helpers";
 
 async function apiInspect(file: File): Promise<{
   sheet_name: string; header_row: number; date_col: string;
@@ -59,7 +18,7 @@ async function apiInspect(file: File): Promise<{
 }> {
   const fd = new FormData();
   fd.append("file", file);
-  // FormData'da Content-Type'ı tarayıcı (boundary ile) koyar; elle koyma.
+  // The browser sets Content-Type (with the boundary) for FormData; don't set it manually.
   const res = await fetch("/api/excel-templates/inspect", {
     method: "POST",
     headers: authHeaders(),
