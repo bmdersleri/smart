@@ -4,7 +4,6 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 from httpx import AsyncClient
-from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.dashboard import compute_deadband_savings
@@ -120,11 +119,6 @@ async def test_endpoint_only_counts_deadband_tags(client: AsyncClient, db_sessio
 @pytest.mark.asyncio
 async def test_endpoint_per_tag_spans(client: AsyncClient, db_session: AsyncSession):
     """İki deadband tag'i farklı yayılımda → her biri KENDİ span'ine göre beklenir."""
-    # Endpoint global toplar; testler arası izolasyon olmadığından önceki
-    # testlerden sızan tag/okumaları temizle (sıraya bağımlı olmamak için).
-    await db_session.execute(delete(TagReading))
-    await db_session.execute(delete(Tag))
-    await db_session.commit()
     db_session.add(
         User(
             username="db_span",
