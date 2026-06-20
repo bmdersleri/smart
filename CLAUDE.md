@@ -13,7 +13,7 @@ scada-reporter/
 │   │   ├── core/       # Config, DB, security (JWT)
 │   │   ├── models/     # Tag, User, PlcConfig, Watchlist, ReportHistory/Template/Scheduled/Archive
 │   │   └── reports/    # Excel / PDF generators
-│   ├── tests/          # pytest async tests (185+)
+│   ├── tests/          # pytest async tests (247+, parallel + randomized)
 │   ├── alembic/        # DB migration files
 │   ├── seed_users.py   # admin + operator user creation
 │   ├── pyproject.toml  # pytest/ruff/mypy config
@@ -45,9 +45,10 @@ docker/        # TimescaleDB + Redis + Grafana
 - **Install dependencies:** `just install`
 
 ### Test
-- **Run tests:** `just test`
+- **Run tests:** `just test` *(247+ tests, parallel via pytest-xdist `-n auto`, randomized order via pytest-randomly)*
 - **Coverage report:** `just test-cov`
 - **TDD hot reload:** `just test-watch`
+- **Serial run (debug):** `just test` then add `-n0` to disable parallelism, or `-p no:randomly` to fix order
 
 ### Database
 - **Apply migration:** `just migrate`
@@ -118,6 +119,7 @@ docker/        # TimescaleDB + Redis + Grafana
 | dust | 1.2.4 | Disk usage analysis |
 | hyperfine | 1.20.0 | Benchmark |
 | just | 1.52.0 | Command runner |
+| codegraph | 1.0.1 | Semantic code intelligence (`codegraph explore/node`) |
 
 ## Notes
 
@@ -131,3 +133,6 @@ docker/        # TimescaleDB + Redis + Grafana
 - Fast package install with `uv pip install ...`
 - pre-commit hooks are active — ruff + mypy + format checks run on every commit
 - Update the frontend TS client: `just gen-client` while the backend is running
+- **Test DB isolation**: tests share one in-memory SQLite engine (StaticPool); an autouse fixture in `tests/conftest.py` clears every table before each test (FK-safe order), so tests are order-independent. Do **not** rely on data written by another test. Savepoint-rollback isolation does **not** work here — pysqlite never emits a real outer `BEGIN`, so app commits hit the DB and an outer rollback is a no-op.
+- **codegraph** (semantic code intelligence): the repo is indexed (`.codegraph/`, gitignored). Prefer `codegraph explore "<question/symbols>"` and `codegraph node <symbol|file>` over grep/find when locating or understanding code — they return the blast radius (callers + covering tests) plus verbatim source in one call. The `codegraph_explore`/`codegraph_node` MCP tools load after a Claude Code restart; the shell commands always work.
+- **Windows env**: `python3` does not exist — use `python`. Tools/hooks that assume `python3` fall back to a `~/bin/python3.exe` shim.

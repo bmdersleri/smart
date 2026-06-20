@@ -61,6 +61,8 @@ Collects data directly from Siemens S7-1500 PLCs, stores it in a time-series dat
 | Validation | Pydantic v2 |
 | Frontend | React 19, Vite, Tailwind CSS v4, TanStack Query |
 | Charts | Recharts |
+| Internationalization | i18next — 5 locales (en/tr/ru/de/ar), Arabic drives RTL |
+| Testing | pytest (async, parallel via xdist, randomized via pytest-randomly); Vitest + Testing Library + Playwright (frontend) |
 | Package managers | uv (backend), pnpm (frontend) |
 | Task runner | just |
 | Containers | Docker Compose (prod) |
@@ -101,7 +103,7 @@ scada-reporter/
 │   │   │   └── report_archive.py    # Archived reports
 │   │   ├── reports/            # Excel / PDF generators
 │   │   └── main.py             # FastAPI application entry point
-│   ├── tests/                  # pytest async tests (185+)
+│   ├── tests/                  # pytest async tests (247+, parallel + randomized)
 │   ├── alembic/                # DB migration files
 │   ├── seed_users.py           # Default user creation
 │   ├── pyproject.toml          # pytest / ruff / mypy config
@@ -164,7 +166,7 @@ just seed-users       # Default users (admin + operator)
 just seed-catalog     # Load tag catalog from WinCC xlsx
 
 # Test & Quality
-just test             # pytest
+just test             # pytest (247+ tests, parallel via xdist, randomized order)
 just test-cov         # Coverage report
 just lint             # ruff
 just typecheck        # mypy

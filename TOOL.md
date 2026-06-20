@@ -59,7 +59,7 @@
 | Gemini CLI | 0.46.0 | `gemini` (npm) |
 | opencode | 1.17.6 | `opencode` (npm) |
 | Codex | | `C:\Users\Administrator\AppData\Local\Programs\OpenAI\Codex\bin\codex.exe` |
-| codegraph | 1.0.1 | `codegraph` (npm) |
+| codegraph | 1.0.1 | `codegraph` — semantic code intelligence; connected as Claude Code MCP, repo indexed (`.codegraph/`) |
 | Kalfa | 1.0.0 | `kalfa` (npm) |
 | caveman-code | | `caveman-code` (npm) |
 | RTK | 0.42.4 | `rtk` — Rust Token Killer (LLM token optimizer) |
@@ -120,6 +120,8 @@
 | pytest | 9.1.0 | Test framework |
 | pytest-asyncio | 1.4.0 | Async test support |
 | pytest-cov | 7.1.0 | Test coverage |
+| pytest-xdist | 3.8.0 | Parallel test execution (`-n auto`, default via addopts) |
+| pytest-randomly | 4.1.0 | Randomized test order (surfaces cross-test leakage) |
 | pytest-watch | 4.2.0 | TDD hot reload (`ptw`) |
 | python-jose | 3.3.0 | JWT tokens |
 | python-multipart | 0.0.12 | Form parsing |
@@ -214,7 +216,7 @@
 | Alembic | `backend/alembic/` | Async migration (`env.py` async engine) |
 | pre-commit | `.pre-commit-config.yaml` | Hooks **active** (`.git/hooks/pre-commit`); `ruff`, `ruff-format`, `mypy`, `trailing-whitespace`, `end-of-file-fixer`, `check-yaml/json/toml` |
 | pyproject.toml | `backend/pyproject.toml` | pytest `asyncio_mode=auto`, ruff `line-length=100`, mypy config |
-| GitHub Actions CI | `.github/workflows/ci.yml` | 2 parallel jobs: backend (ruff·mypy·pytest·bandit) + frontend (tsc·eslint·vitest); triggers on push/PR to master |
+| GitHub Actions CI | `.github/workflows/ci.yml` | 3 jobs: backend (ruff·mypy·pytest·bandit) + frontend (tsc·eslint·vitest) + cli (agent-harness tests); triggers on push/PR to master |
 
 ## Build Tools
 | Tool | Version | Notes |
@@ -268,6 +270,9 @@
 - **Stats engine**: numpy-only (scipy yok) — `np.polyfit` + manuel R²
 - **Docker not installed on host** — compose files ready, needs Docker Desktop or Docker Engine
 - **RTK** installed for LLM token optimization. Run `rtk init -g` for Claude Code integration.
+- **codegraph** connected as a Claude Code MCP server (`~/.claude.json`) and the repo is indexed (204 files / 2530 nodes / 4861 edges; `.codegraph/` is gitignored). Use `codegraph explore "<question>"` / `codegraph node <symbol|file>` to get callers + covering tests + verbatim source in one call. MCP tools (`codegraph_explore`/`codegraph_node`) require a Claude Code restart; the shell CLI always works. Keep the index fresh with `codegraph sync`.
+- **Test DB isolation**: backend tests share one in-memory SQLite engine (StaticPool); an autouse fixture in `tests/conftest.py` clears all tables before each test, so order is irrelevant (`pytest-randomly` shuffles every run). Savepoint-rollback isolation is unreliable on pysqlite (no real outer BEGIN). Default run is parallel (`pytest-xdist -n auto`); use `-n0` to debug serially.
+- **Windows**: no `python3` — use `python`; a `~/bin/python3.exe` shim covers tools/hooks that hard-code `python3`.
 - **GitHub Actions CI**: `.github/workflows/ci.yml` — on push/PR, backend (ruff·mypy·pytest·bandit) + frontend (tsc·eslint·vitest) run automatically
 - **Security scan**: `just security` → bandit (Python code) + safety (dependency CVEs)
 - **GitHub Pages**: User site at `b110rpsrv2` (this machine)
