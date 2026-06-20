@@ -44,7 +44,7 @@ export default function Layout() {
               </svg>
             </div>
             <div>
-              <p className="text-white font-semibold text-sm leading-tight">SCADA Reporter</p>
+              <p className="text-white font-semibold text-sm leading-tight">EKONT SMART REPORT</p>
               <p className="text-gray-500 text-xs">{t('app_subtitle')}</p>
             </div>
           </div>
@@ -117,7 +117,7 @@ export default function Layout() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-          <span className="text-white font-semibold text-sm">SCADA Reporter</span>
+          <span className="text-white font-semibold text-sm">EKONT SMART REPORT</span>
         </div>
         <Outlet />
       </main>

@@ -12,7 +12,7 @@
   "stat_last_data": "Son Veri",
   "stat_plc_connection": "PLC Bağlantı",
   "stat_plc_sub": "bağlı / toplam",
-  "stat_deadband_savings": "♻ Deadband Tasarrufu",
+  "stat_deadband_savings": "♻ EKONT SMART Tasarruf",
   "stat_deadband_sub_24h": "son 24 saat",
   "rate_reads_per_hour": "~{{value}} okuma/sa",
   "rate_reads_per_min": "~{{value}} okuma/dk",

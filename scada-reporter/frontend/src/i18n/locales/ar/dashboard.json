@@ -12,7 +12,7 @@
   "stat_last_data": "آخر بيانات",
   "stat_plc_connection": "اتصال PLC",
   "stat_plc_sub": "متصل / الإجمالي",
-  "stat_deadband_savings": "♻ توفير Deadband",
+  "stat_deadband_savings": "♻ توفير EKONT SMART",
   "stat_deadband_sub_24h": "آخر 24 ساعة",
   "rate_reads_per_hour": "~{{value}} قراءة/ساعة",
   "rate_reads_per_min": "~{{value}} قراءة/دقيقة",

@@ -12,7 +12,7 @@
   "stat_last_data": "Letzte Daten",
   "stat_plc_connection": "SPS-Verbindung",
   "stat_plc_sub": "verbunden / gesamt",
-  "stat_deadband_savings": "♻ Totband-Einsparung",
+  "stat_deadband_savings": "♻ EKONT SMART-Einsparung",
   "stat_deadband_sub_24h": "letzte 24 Stunden",
   "rate_reads_per_hour": "~{{value}} Messungen/Std",
   "rate_reads_per_min": "~{{value}} Messungen/Min",

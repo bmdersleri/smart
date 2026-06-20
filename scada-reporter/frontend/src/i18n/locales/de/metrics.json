@@ -11,7 +11,7 @@
   "bad_ratio_sub": "bad / gesamt",
   "avg_tick": "Durchschnittlicher Tick",
   "avg_tick_sub": "{{value}} Ticks",
-  "deadband_title": "Deadband-Datenersparnis",
+  "deadband_title": "EKONT SMART-Datenersparnis",
   "deadband_sub": "Letzte {{hours}} Stunden · {{tags}} Deadband-Tags · report-by-exception",
   "write_savings": "Schreibersparnis",
   "rows_prevented_bar": "{{value}} Zeilen vermieden",

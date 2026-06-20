@@ -12,7 +12,7 @@
   "stat_last_data": "Последние данные",
   "stat_plc_connection": "Подключение ПЛК",
   "stat_plc_sub": "подключено / всего",
-  "stat_deadband_savings": "♻ Экономия зоны нечувствительности",
+  "stat_deadband_savings": "♻ Экономия EKONT SMART",
   "stat_deadband_sub_24h": "за последние 24 часа",
   "rate_reads_per_hour": "~{{value}} чтений/ч",
   "rate_reads_per_min": "~{{value}} чтений/мин",

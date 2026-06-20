@@ -12,7 +12,7 @@
   "stat_last_data": "Last Data",
   "stat_plc_connection": "PLC Connection",
   "stat_plc_sub": "connected / total",
-  "stat_deadband_savings": "♻ Deadband Savings",
+  "stat_deadband_savings": "♻ EKONT SMART Savings",
   "stat_deadband_sub_24h": "last 24 hours",
   "rate_reads_per_hour": "~{{value}} reads/h",
   "rate_reads_per_min": "~{{value}} reads/min",

@@ -11,7 +11,7 @@
   "bad_ratio_sub": "bad / всего",
   "avg_tick": "Средний тик",
   "avg_tick_sub": "{{value}} тиков",
-  "deadband_title": "Экономия данных Deadband",
+  "deadband_title": "Экономия данных EKONT SMART",
   "deadband_sub": "Последние {{hours}} ч · {{tags}} тегов с deadband · report-by-exception",
   "write_savings": "экономия записи",
   "rows_prevented_bar": "Предотвращено строк: {{value}}",

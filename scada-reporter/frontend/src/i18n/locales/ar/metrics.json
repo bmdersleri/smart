@@ -11,7 +11,7 @@
   "bad_ratio_sub": "سيئ / الإجمالي",
   "avg_tick": "متوسط النبضة",
   "avg_tick_sub": "{{value}} نبضات",
-  "deadband_title": "توفير بيانات Deadband",
+  "deadband_title": "توفير بيانات EKONT SMART",
   "deadband_sub": "آخر {{hours}} ساعات · {{tags}} علامات deadband · تقرير عند الاستثناء",
   "write_savings": "توفير الكتابة",
   "rows_prevented_bar": "{{value}} صف تم تفاديه",

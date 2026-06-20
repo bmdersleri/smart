@@ -11,7 +11,7 @@
   "bad_ratio_sub": "bad / toplam",
   "avg_tick": "Ortalama Tick",
   "avg_tick_sub": "{{value}} tick",
-  "deadband_title": "Deadband Veri Tasarrufu",
+  "deadband_title": "EKONT SMART Veri Tasarrufu",
   "deadband_sub": "Son {{hours}} saat · {{tags}} deadband'li tag · report-by-exception",
   "write_savings": "yazma tasarrufu",
   "rows_prevented_bar": "{{value}} satır önlendi",

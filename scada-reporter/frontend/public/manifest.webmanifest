@@ -1,6 +1,6 @@
 {
-  "name": "SCADA Reporter",
-  "short_name": "SCADA",
+  "name": "EKONT SMART REPORT",
+  "short_name": "EKONT SMART",
   "description": "Su/Atıksu tesisi SCADA veri toplama ve raporlama sistemi",
   "start_url": "/",
   "scope": "/",

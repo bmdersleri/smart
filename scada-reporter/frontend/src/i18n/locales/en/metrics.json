@@ -11,7 +11,7 @@
   "bad_ratio_sub": "bad / total",
   "avg_tick": "Average Tick",
   "avg_tick_sub": "{{value}} ticks",
-  "deadband_title": "Deadband Data Savings",
+  "deadband_title": "EKONT SMART Data Savings",
   "deadband_sub": "Last {{hours}} hours · {{tags}} deadband tags · report-by-exception",
   "write_savings": "write savings",
   "rows_prevented_bar": "{{value}} rows prevented",
