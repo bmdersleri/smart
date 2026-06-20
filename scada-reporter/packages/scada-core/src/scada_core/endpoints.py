@@ -1,21 +1,31 @@
-"""API endpoint constants for the SCADA Reporter."""
+# Tüm REST yolları — tek kaynak. Hiçbir başka modül URL stringi yazmaz.
 
-# Auth
-AUTH_TOKEN = "auth/token"
+AUTH_TOKEN = "api/auth/token"
+AUTH_REGISTER = "api/auth/register"
+AUTH_ME = "api/auth/me"
 
-# Tags
-TAGS = "tags/"
+TAGS = "api/tags/"
+TAG_ITEM = "api/tags/{tag_id}"
+TAG_READINGS = "api/tags/{tag_id}/readings"
 
-# PLC
-PLC = "plc/"
+DASHBOARD_TAGS = "api/dashboard/tags"  # latest reading + quality (current values)
+DASHBOARD_OVERVIEW = "api/dashboard/overview"
+TREND = "api/dashboard/trend"  # tag_ids + hours
+TREND_RANGE = "api/dashboard/trend_range"  # tag_ids + start + end
 
-# Query
-QUERY_RUN = "query/run"
+PLC = "api/plc/"
 
-# AI
-AI_ANOMALIES = "ai/anomalies"
-AI_PREDICT = "ai/predict"
-AI_REPORTS_GENERATE = "ai/reports/generate"
+QUERY_RUN = "api/query/run"  # body {sql, params, limit}
 
-# Health
+EXPLORE_SCHEMA = "api/explore/schema"
+EXPLORE_SUMMARY = "api/explore/summary"
+
+REPORTS_GENERATE = "api/reports/generate"
+REPORTS_HISTORY = "api/reports/history"
+
+AI_ANOMALIES = "api/ai/anomalies"
+AI_PREDICT = "api/ai/predict"
+AI_RESOLVE = "api/ai/resolve"
+AI_REPORTS_GENERATE = "api/ai/reports/generate"
+
 HEALTH = "health"

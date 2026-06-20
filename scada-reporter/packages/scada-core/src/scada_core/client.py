@@ -35,7 +35,7 @@ class AsyncScadaClient:
 
     async def _request(self, method: str, path: str, **kw: Any) -> Result:
         try:
-            resp = await self._client.request(method, "/api/" + path.lstrip("/"), **kw)
+            resp = await self._client.request(method, "/" + path.lstrip("/"), **kw)
         except httpx.HTTPError as exc:
             return fail("connection", str(exc))
         if resp.status_code >= 400:
