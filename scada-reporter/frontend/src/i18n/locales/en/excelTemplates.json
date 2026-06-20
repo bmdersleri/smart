@@ -1,0 +1,18 @@
+{
+  "title": "Excel Templates",
+  "upload": "+ Upload Template",
+  "col_name": "Name",
+  "col_sheet": "Sheet",
+  "col_mapped": "Mapped Columns",
+  "col_action": "Action",
+  "generate": "Generate",
+  "map_title": "Template Mapping — {{name}}",
+  "map_col": "Column",
+  "map_label": "Label",
+  "map_sensor": "Sensor Code",
+  "map_tag_id": "Tag ID",
+  "map_agg": "Aggregation",
+  "map_enabled": "Active",
+  "save": "Save",
+  "cancel": "Cancel"
+}

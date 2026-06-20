@@ -1,0 +1,18 @@
+{
+  "title": "قوالب Excel",
+  "upload": "+ رفع قالب",
+  "col_name": "الاسم",
+  "col_sheet": "الورقة",
+  "col_mapped": "الأعمدة المعيّنة",
+  "col_action": "الإجراء",
+  "generate": "إنشاء",
+  "map_title": "تعيين القالب — {{name}}",
+  "map_col": "العمود",
+  "map_label": "التسمية",
+  "map_sensor": "رمز المستشعر",
+  "map_tag_id": "معرّف العلامة",
+  "map_agg": "التجميع",
+  "map_enabled": "مفعّل",
+  "save": "حفظ",
+  "cancel": "إلغاء"
+}

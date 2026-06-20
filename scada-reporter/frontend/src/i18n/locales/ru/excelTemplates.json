@@ -1,0 +1,18 @@
+{
+  "title": "Шаблоны Excel",
+  "upload": "+ Загрузить шаблон",
+  "col_name": "Название",
+  "col_sheet": "Лист",
+  "col_mapped": "Сопоставленные столбцы",
+  "col_action": "Действие",
+  "generate": "Создать",
+  "map_title": "Сопоставление шаблона — {{name}}",
+  "map_col": "Столбец",
+  "map_label": "Метка",
+  "map_sensor": "Код датчика",
+  "map_tag_id": "ID тега",
+  "map_agg": "Агрегация",
+  "map_enabled": "Активно",
+  "save": "Сохранить",
+  "cancel": "Отмена"
+}

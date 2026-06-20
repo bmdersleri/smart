@@ -1,0 +1,18 @@
+{
+  "title": "Excel-Vorlagen",
+  "upload": "+ Vorlage hochladen",
+  "col_name": "Name",
+  "col_sheet": "Blatt",
+  "col_mapped": "Zugeordnete Spalten",
+  "col_action": "Aktion",
+  "generate": "Erstellen",
+  "map_title": "Vorlagenzuordnung — {{name}}",
+  "map_col": "Spalte",
+  "map_label": "Bezeichnung",
+  "map_sensor": "Sensorcode",
+  "map_tag_id": "Tag-ID",
+  "map_agg": "Aggregation",
+  "map_enabled": "Aktiv",
+  "save": "Speichern",
+  "cancel": "Abbrechen"
+}

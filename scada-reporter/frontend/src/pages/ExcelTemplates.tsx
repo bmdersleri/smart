@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
 
 export type Agg = "sum" | "avg" | "min" | "max" | "last" | "delta";
@@ -91,6 +92,7 @@ async function fileToB64(file: File): Promise<string> {
 }
 
 export default function ExcelTemplates() {
+  const { t } = useTranslation("excelTemplates");
   const { can } = useAuth();
   const qc = useQueryClient();
   const [view, setView] = useState<"list" | "map">("list");
@@ -152,24 +154,24 @@ export default function ExcelTemplates() {
 
   if (view === "map" && meta) {
     return (
-      <div className="p-6 text-gray-900 dark:text-gray-100">
-        <h1 className="text-xl font-semibold mb-4">Şablon Eşleme — {meta.name}</h1>
-        <table className="w-full text-sm">
+      <div className="p-6">
+        <h1 className="text-xl font-semibold mb-4 text-white">{t("map_title", { name: meta.name })}</h1>
+        <table className="w-full text-sm text-gray-300">
           <thead>
-            <tr className="text-left border-b dark:border-gray-700">
-              <th>Sütun</th><th>Etiket</th><th>Sensör Kodu</th><th>Tag ID</th><th>Toplama</th><th>Aktif</th>
+            <tr className="text-start border-b border-gray-800 text-gray-400">
+              <th>{t("map_col")}</th><th>{t("map_label")}</th><th>{t("map_sensor")}</th><th>{t("map_tag_id")}</th><th>{t("map_agg")}</th><th>{t("map_enabled")}</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((r) => (
-              <tr key={r.col_letter} className="border-b dark:border-gray-800">
+              <tr key={r.col_letter} className="border-b border-gray-800">
                 <td>{r.col_letter}</td>
                 <td>{r.label}</td>
                 <td>{r.source_code || "—"}</td>
                 <td>
                   <input
                     type="number"
-                    className="w-20 bg-transparent border rounded px-1"
+                    className="w-20 bg-transparent border border-gray-700 rounded px-1"
                     value={r.tag_id ?? ""}
                     onChange={(e) =>
                       setRows((rs) => rs.map((x) => x.col_letter === r.col_letter
@@ -178,7 +180,7 @@ export default function ExcelTemplates() {
                 </td>
                 <td>
                   <select
-                    className="bg-transparent border rounded px-1"
+                    className="bg-transparent border border-gray-700 rounded px-1"
                     value={r.agg}
                     onChange={(e) => setRows((rs) => applyAggChange(rs, r.col_letter, e.target.value as Agg))}
                   >
@@ -198,19 +200,19 @@ export default function ExcelTemplates() {
           </tbody>
         </table>
         <div className="mt-4 flex gap-2">
-          <button className="px-3 py-1 rounded bg-blue-600 text-white" onClick={() => saveMut.mutate()}>Kaydet</button>
-          <button className="px-3 py-1 rounded border" onClick={() => setView("list")}>İptal</button>
+          <button className="px-3 py-1 rounded bg-blue-600 text-white" onClick={() => saveMut.mutate()}>{t("save")}</button>
+          <button className="px-3 py-1 rounded border border-gray-700 text-gray-300" onClick={() => setView("list")}>{t("cancel")}</button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 text-gray-900 dark:text-gray-100">
-      <h1 className="text-xl font-semibold mb-4">Excel Şablonları</h1>
+    <div className="p-6">
+      <h1 className="text-xl font-semibold mb-4 text-white">{t("title")}</h1>
       {can('report_template:create') && (
         <label className="inline-block mb-4 px-3 py-1 rounded bg-blue-600 text-white cursor-pointer">
-          + Şablon Yükle
+          {t("upload")}
           <input
             type="file"
             accept=".xlsx"
@@ -219,19 +221,19 @@ export default function ExcelTemplates() {
           />
         </label>
       )}
-      <table className="w-full text-sm">
+      <table className="w-full text-sm text-gray-300">
         <thead>
-          <tr className="text-left border-b dark:border-gray-700">
-            <th>Ad</th><th>Sayfa</th><th>Eşlenen Sütun</th><th>İşlem</th>
+          <tr className="text-start border-b border-gray-800 text-gray-400">
+            <th>{t("col_name")}</th><th>{t("col_sheet")}</th><th>{t("col_mapped")}</th><th>{t("col_action")}</th>
           </tr>
         </thead>
         <tbody>
-          {(templates.data ?? []).map((t: { id: number; name: string; sheet_name: string; columns: unknown[] }) => (
-            <tr key={t.id} className="border-b dark:border-gray-800">
-              <td>{t.name}</td>
-              <td>{t.sheet_name}</td>
-              <td>{t.columns.length}</td>
-              <td><button className="px-2 py-0.5 rounded bg-green-600 text-white" onClick={() => generate(t.id)}>Oluştur</button></td>
+          {(templates.data ?? []).map((tpl: { id: number; name: string; sheet_name: string; columns: unknown[] }) => (
+            <tr key={tpl.id} className="border-b border-gray-800">
+              <td>{tpl.name}</td>
+              <td>{tpl.sheet_name}</td>
+              <td>{tpl.columns.length}</td>
+              <td><button className="px-2 py-0.5 rounded bg-green-600 text-white" onClick={() => generate(tpl.id)}>{t("generate")}</button></td>
             </tr>
           ))}
         </tbody>

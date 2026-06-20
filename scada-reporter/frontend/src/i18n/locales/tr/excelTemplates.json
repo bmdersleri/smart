@@ -1,0 +1,18 @@
+{
+  "title": "Excel Şablonları",
+  "upload": "+ Şablon Yükle",
+  "col_name": "Ad",
+  "col_sheet": "Sayfa",
+  "col_mapped": "Eşlenen Sütun",
+  "col_action": "İşlem",
+  "generate": "Oluştur",
+  "map_title": "Şablon Eşleme — {{name}}",
+  "map_col": "Sütun",
+  "map_label": "Etiket",
+  "map_sensor": "Sensör Kodu",
+  "map_tag_id": "Tag ID",
+  "map_agg": "Toplama",
+  "map_enabled": "Aktif",
+  "save": "Kaydet",
+  "cancel": "İptal"
+}
