@@ -329,6 +329,48 @@ class AsyncScadaClient:
     async def annotation_delete(self, annotation_id: int) -> Result:
         return await self._request("DELETE", ep.ANNOTATION_ITEM.format(annotation_id=annotation_id))
 
+    # -- Spec 2: report templates / scheduled ------------------------------
+    async def template_create(self, payload: dict) -> Result:
+        return await self._request("POST", ep.ADV_TEMPLATES, json=payload)
+
+    async def template_update(self, template_id: int, payload: dict) -> Result:
+        return await self._request(
+            "PUT", ep.ADV_TEMPLATE_ITEM.format(template_id=template_id), json=payload
+        )
+
+    async def template_run(
+        self, template_id: int, start: str | None = None, end: str | None = None
+    ) -> Result:
+        return await self._request(
+            "POST",
+            ep.ADV_TEMPLATE_RUN.format(template_id=template_id),
+            json={"start": start, "end": end},
+        )
+
+    async def template_delete(self, template_id: int) -> Result:
+        return await self._request("DELETE", ep.ADV_TEMPLATE_ITEM.format(template_id=template_id))
+
+    async def scheduled_create(self, payload: dict) -> Result:
+        return await self._request("POST", ep.ADV_SCHEDULED, json=payload)
+
+    async def scheduled_update(self, scheduled_id: int, payload: dict) -> Result:
+        return await self._request(
+            "PUT", ep.ADV_SCHEDULED_ITEM.format(scheduled_id=scheduled_id), json=payload
+        )
+
+    async def scheduled_toggle(self, scheduled_id: int) -> Result:
+        return await self._request(
+            "PATCH", ep.ADV_SCHEDULED_TOGGLE.format(scheduled_id=scheduled_id)
+        )
+
+    async def scheduled_delete(self, scheduled_id: int) -> Result:
+        return await self._request(
+            "DELETE", ep.ADV_SCHEDULED_ITEM.format(scheduled_id=scheduled_id)
+        )
+
+    async def archive_delete(self, archive_id: int) -> Result:
+        return await self._request("DELETE", ep.ADV_ARCHIVE_ITEM.format(archive_id=archive_id))
+
     async def aclose(self) -> None:
         await self._client.aclose()
 

@@ -207,6 +207,82 @@ CAPABILITIES: list[Capability] = [
         lambda c, a: c.annotation_delete(a["annotation_id"]),
         tier="write",
     ),
+    Capability(
+        "template_create",
+        "Rapor şablonu oluştur (name + tag_ids zorunlu).",
+        _obj({"payload": {"type": "object"}}, ["payload"]),
+        lambda c, a: c.template_create(a["payload"]),
+        tier="write",
+    ),
+    Capability(
+        "template_update",
+        "Rapor şablonunu güncelle.",
+        _obj(
+            {"template_id": {"type": "integer"}, "payload": {"type": "object"}},
+            ["template_id", "payload"],
+        ),
+        lambda c, a: c.template_update(a["template_id"], a["payload"]),
+        tier="write",
+    ),
+    Capability(
+        "template_run",
+        "Rapor şablonunu çalıştır (opsiyonel start/end).",
+        _obj(
+            {
+                "template_id": {"type": "integer"},
+                "start": {"type": "string"},
+                "end": {"type": "string"},
+            },
+            ["template_id"],
+        ),
+        lambda c, a: c.template_run(a["template_id"], a.get("start"), a.get("end")),
+        tier="write",
+    ),
+    Capability(
+        "template_delete",
+        "Rapor şablonunu sil.",
+        _obj({"template_id": {"type": "integer"}}, ["template_id"]),
+        lambda c, a: c.template_delete(a["template_id"]),
+        tier="destructive",
+    ),
+    Capability(
+        "scheduled_create",
+        "Zamanlanmış rapor oluştur.",
+        _obj({"payload": {"type": "object"}}, ["payload"]),
+        lambda c, a: c.scheduled_create(a["payload"]),
+        tier="write",
+    ),
+    Capability(
+        "scheduled_update",
+        "Zamanlanmış raporu güncelle.",
+        _obj(
+            {"scheduled_id": {"type": "integer"}, "payload": {"type": "object"}},
+            ["scheduled_id", "payload"],
+        ),
+        lambda c, a: c.scheduled_update(a["scheduled_id"], a["payload"]),
+        tier="write",
+    ),
+    Capability(
+        "scheduled_toggle",
+        "Zamanlanmış raporu etkinleştir/devre dışı bırak.",
+        _obj({"scheduled_id": {"type": "integer"}}, ["scheduled_id"]),
+        lambda c, a: c.scheduled_toggle(a["scheduled_id"]),
+        tier="write",
+    ),
+    Capability(
+        "scheduled_delete",
+        "Zamanlanmış raporu sil.",
+        _obj({"scheduled_id": {"type": "integer"}}, ["scheduled_id"]),
+        lambda c, a: c.scheduled_delete(a["scheduled_id"]),
+        tier="destructive",
+    ),
+    Capability(
+        "archive_delete",
+        "Bir arşiv kaydını sil.",
+        _obj({"archive_id": {"type": "integer"}}, ["archive_id"]),
+        lambda c, a: c.archive_delete(a["archive_id"]),
+        tier="destructive",
+    ),
 ]
 
 CATALOG: dict[str, Capability] = {c.name: c for c in CAPABILITIES}

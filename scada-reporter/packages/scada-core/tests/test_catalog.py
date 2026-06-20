@@ -20,6 +20,15 @@ EXPECTED = {
     "watchlist_remove",
     "annotation_add",
     "annotation_delete",
+    "template_create",
+    "template_update",
+    "template_run",
+    "template_delete",
+    "scheduled_create",
+    "scheduled_update",
+    "scheduled_toggle",
+    "scheduled_delete",
+    "archive_delete",
 }
 
 
