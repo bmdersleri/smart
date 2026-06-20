@@ -42,19 +42,21 @@ async def metrics_summary(db: AsyncSession = Depends(get_db), _=Depends(get_curr
     return data
 
 
-def compute_deadband_savings(items: list[dict], window_seconds: int) -> dict:
+def compute_deadband_savings(items: list[dict]) -> dict:
     """Deadband ile önlenen yazma sayısını tahmin et.
 
-    Her tag için beklenen satır = pencere / sample_interval; gerçek = DB'deki
-    satır sayısı. Tasarruf = beklenen - gerçek (negatif olmaz). Tasarruf oranı
-    toplam beklenene göre yüzde.
+    Her tag için beklenen satır = tag'in KENDİ etkin süresi (effective_seconds)
+    / sample_interval; gerçek = DB'deki satır sayısı. Etkin süre, tag'in pencere
+    içinde gerçekten veri ürettiği aralık (ilk→son kayıt) olduğundan, az yayılan
+    veya hiç kaydı olmayan (effective=0) tag'ler sahte tasarruf üretmez.
+    Tasarruf = beklenen - gerçek (negatif olmaz); oran toplam beklenene göre.
     """
     expected_total = 0
     actual_total = 0
     saved_total = 0
     for it in items:
         si = max(1, int(it["sample_interval"]))
-        expected = window_seconds // si
+        expected = max(0, int(it["effective_seconds"])) // si
         actual = int(it["actual"])
         expected_total += expected
         actual_total += actual
@@ -84,29 +86,18 @@ async def deadband_savings(
     window_seconds = hours * 3600
     since = datetime.now(UTC) - timedelta(hours=hours)
 
-    # Etkin toplama süresi: beklenen satırları nominal pencereye değil,
-    # collector'ın pencere içinde GERÇEKTEN veri ürettiği aralığa (ilk→son
-    # kayıt) göre hesapla. Aksi halde collector kapalıyken geçen süre sahte
-    # "tasarruf" gibi görünür (ör. 1 saattir çalışan sistem %99.9 gösterir).
-    span = (
-        await db.execute(
-            select(func.min(TagReading.timestamp), func.max(TagReading.timestamp)).where(
-                TagReading.timestamp >= since
-            )
-        )
-    ).one()
-    first_ts, last_ts = span
-    effective_seconds = (
-        min(window_seconds, int((last_ts - first_ts).total_seconds()))
-        if first_ts and last_ts
-        else 0
-    )
-
+    # Etkin toplama süresi PER-TAG hesaplanır: her tag'in beklenen satırı,
+    # o tag'in pencere içinde GERÇEKTEN veri ürettiği aralığa (kendi ilk→son
+    # kaydı, pencereyle sınırlı) göre belirlenir. Tek global span kullanmak,
+    # az yayılan tag'leri şişirir ve pencerede hiç kaydı olmayan tag'lere sahte
+    # "tasarruf" atfeder (collector kapalıyken geçen süre %99.9 gibi görünür).
     rows = await db.execute(
         select(
             Tag.id,
             Tag.sample_interval,
             func.count(TagReading.timestamp),
+            func.min(TagReading.timestamp),
+            func.max(TagReading.timestamp),
         )
         .outerjoin(
             TagReading,
@@ -115,14 +106,23 @@ async def deadband_savings(
         .where(Tag.is_active, Tag.long_term, Tag.deadband.isnot(None), Tag.deadband > 0)
         .group_by(Tag.id, Tag.sample_interval)
     )
-    items = [{"sample_interval": si or 5, "actual": cnt} for _id, si, cnt in rows.all()]
-    out = compute_deadband_savings(items, effective_seconds)
+    items = []
+    for _id, si, cnt, tmin, tmax in rows.all():
+        span = int((tmax - tmin).total_seconds()) if tmin and tmax else 0
+        items.append(
+            {
+                "sample_interval": si or 5,
+                "actual": cnt,
+                "effective_seconds": min(window_seconds, span),
+            }
+        )
+    out = compute_deadband_savings(items)
     out["window_hours"] = hours
-    out["effective_seconds"] = effective_seconds
+    # Temsili etkin süre = en uzun gözlem penceresi (gün ölçeklemesi için)
+    rep_seconds = max((it["effective_seconds"] for it in items), default=0)
+    out["effective_seconds"] = rep_seconds
     # Gözlenen tasarruf hızını tam güne ölçekle (kapasite planlama için)
-    out["saved_rows_per_day"] = (
-        round(out["saved_rows"] * 86400 / effective_seconds) if effective_seconds else 0
-    )
+    out["saved_rows_per_day"] = round(out["saved_rows"] * 86400 / rep_seconds) if rep_seconds else 0
     return out
 
 
