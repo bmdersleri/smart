@@ -283,6 +283,164 @@ CAPABILITIES: list[Capability] = [
         lambda c, a: c.archive_delete(a["archive_id"]),
         tier="destructive",
     ),
+    Capability(
+        "group_create",
+        "Tag grubu oluştur.",
+        _obj(
+            {
+                "name": {"type": "string"},
+                "parent_id": {"type": "integer"},
+                "sort_order": {"type": "integer"},
+            },
+            ["name"],
+        ),
+        lambda c, a: c.group_create(a["name"], a.get("parent_id"), a.get("sort_order", 0)),
+        tier="write",
+    ),
+    Capability(
+        "group_update",
+        "Tag grubunu güncelle.",
+        _obj(
+            {
+                "group_id": {"type": "integer"},
+                "name": {"type": "string"},
+                "parent_id": {"type": "integer"},
+                "sort_order": {"type": "integer"},
+            },
+            ["group_id"],
+        ),
+        lambda c, a: c.group_update(
+            a["group_id"], a.get("name"), a.get("parent_id"), a.get("sort_order")
+        ),
+        tier="write",
+    ),
+    Capability(
+        "group_assign",
+        "Tag'leri bir gruba ata.",
+        _obj(
+            {
+                "group_id": {"type": "integer"},
+                "tag_ids": {"type": "array", "items": {"type": "integer"}},
+            },
+            ["group_id", "tag_ids"],
+        ),
+        lambda c, a: c.group_assign(a["group_id"], a["tag_ids"]),
+        tier="write",
+    ),
+    Capability(
+        "group_unassign",
+        "Tag'lerin grup atamasını kaldır.",
+        _obj({"tag_ids": {"type": "array", "items": {"type": "integer"}}}, ["tag_ids"]),
+        lambda c, a: c.group_unassign(a["tag_ids"]),
+        tier="write",
+    ),
+    Capability(
+        "group_delete",
+        "Tag grubunu sil.",
+        _obj({"group_id": {"type": "integer"}}, ["group_id"]),
+        lambda c, a: c.group_delete(a["group_id"]),
+        tier="destructive",
+    ),
+    Capability(
+        "plc_create",
+        "PLC bağlantı yapılandırması oluştur.",
+        _obj(
+            {
+                "name": {"type": "string"},
+                "ip": {"type": "string"},
+                "rack": {"type": "integer"},
+                "slot": {"type": "integer"},
+            },
+            ["name"],
+        ),
+        lambda c, a: c.plc_create(a["name"], a.get("ip", ""), a.get("rack", 0), a.get("slot", 1)),
+        tier="write",
+    ),
+    Capability(
+        "plc_update",
+        "PLC bağlantı yapılandırmasını güncelle.",
+        _obj(
+            {
+                "name": {"type": "string"},
+                "ip": {"type": "string"},
+                "rack": {"type": "integer"},
+                "slot": {"type": "integer"},
+            },
+            ["name", "ip"],
+        ),
+        lambda c, a: c.plc_update(a["name"], a["ip"], a.get("rack", 0), a.get("slot", 1)),
+        tier="write",
+    ),
+    Capability(
+        "plc_delete",
+        "PLC yapılandırmasını sil.",
+        _obj({"name": {"type": "string"}}, ["name"]),
+        lambda c, a: c.plc_delete(a["name"]),
+        tier="destructive",
+    ),
+    Capability(
+        "user_create",
+        "Kullanıcı oluştur (admin).",
+        _obj(
+            {
+                "username": {"type": "string"},
+                "email": {"type": "string"},
+                "password": {"type": "string"},
+                "full_name": {"type": "string"},
+                "role": {"type": "string"},
+            },
+            ["username", "email", "password"],
+        ),
+        lambda c, a: c.user_create(
+            a["username"],
+            a["email"],
+            a["password"],
+            a.get("full_name", ""),
+            a.get("role", "operator"),
+            a.get("permission_overrides"),
+        ),
+        tier="destructive",
+    ),
+    Capability(
+        "user_update",
+        "Kullanıcıyı güncelle (admin).",
+        _obj(
+            {
+                "user_id": {"type": "integer"},
+                "email": {"type": "string"},
+                "full_name": {"type": "string"},
+                "role": {"type": "string"},
+                "is_active": {"type": "boolean"},
+            },
+            ["user_id"],
+        ),
+        lambda c, a: c.user_update(
+            a["user_id"],
+            a.get("email"),
+            a.get("full_name"),
+            a.get("role"),
+            a.get("is_active"),
+            a.get("permission_overrides"),
+        ),
+        tier="destructive",
+    ),
+    Capability(
+        "user_set_password",
+        "Kullanıcı parolasını değiştir (admin).",
+        _obj(
+            {"user_id": {"type": "integer"}, "password": {"type": "string"}},
+            ["user_id", "password"],
+        ),
+        lambda c, a: c.user_set_password(a["user_id"], a["password"]),
+        tier="destructive",
+    ),
+    Capability(
+        "user_delete",
+        "Kullanıcıyı sil (admin).",
+        _obj({"user_id": {"type": "integer"}}, ["user_id"]),
+        lambda c, a: c.user_delete(a["user_id"]),
+        tier="destructive",
+    ),
 ]
 
 CATALOG: dict[str, Capability] = {c.name: c for c in CAPABILITIES}

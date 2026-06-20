@@ -29,6 +29,18 @@ EXPECTED = {
     "scheduled_toggle",
     "scheduled_delete",
     "archive_delete",
+    "group_create",
+    "group_update",
+    "group_assign",
+    "group_unassign",
+    "group_delete",
+    "plc_create",
+    "plc_update",
+    "plc_delete",
+    "user_create",
+    "user_update",
+    "user_set_password",
+    "user_delete",
 }
 
 

@@ -371,6 +371,114 @@ class AsyncScadaClient:
     async def archive_delete(self, archive_id: int) -> Result:
         return await self._request("DELETE", ep.ADV_ARCHIVE_ITEM.format(archive_id=archive_id))
 
+    # -- Spec 2: group / plc / user writes ---------------------------------
+    async def group_create(
+        self, name: str, parent_id: int | None = None, sort_order: int = 0
+    ) -> Result:
+        return await self._request(
+            "POST",
+            ep.GROUPS,
+            json={"name": name, "parent_id": parent_id, "sort_order": sort_order},
+        )
+
+    async def group_update(
+        self,
+        group_id: int,
+        name: str | None = None,
+        parent_id: int | None = None,
+        sort_order: int | None = None,
+    ) -> Result:
+        payload: dict[str, Any] = {}
+        if name is not None:
+            payload["name"] = name
+        if parent_id is not None:
+            payload["parent_id"] = parent_id
+        if sort_order is not None:
+            payload["sort_order"] = sort_order
+        if not payload:
+            raise ValueError("group_update: at least one field required")
+        return await self._request("PATCH", ep.GROUP_ITEM.format(group_id=group_id), json=payload)
+
+    async def group_assign(self, group_id: int, tag_ids: list[int]) -> Result:
+        return await self._request(
+            "POST", ep.GROUP_ASSIGN.format(group_id=group_id), json={"tag_ids": tag_ids}
+        )
+
+    async def group_unassign(self, tag_ids: list[int]) -> Result:
+        return await self._request("POST", ep.GROUP_UNASSIGN, json={"tag_ids": tag_ids})
+
+    async def group_delete(self, group_id: int) -> Result:
+        return await self._request("DELETE", ep.GROUP_ITEM.format(group_id=group_id))
+
+    async def plc_create(self, name: str, ip: str = "", rack: int = 0, slot: int = 1) -> Result:
+        return await self._request(
+            "POST", ep.PLC, json={"name": name, "ip": ip, "rack": rack, "slot": slot}
+        )
+
+    async def plc_update(self, name: str, ip: str, rack: int = 0, slot: int = 1) -> Result:
+        return await self._request(
+            "PATCH",
+            ep.PLC_ITEM.format(name=name),
+            json={"ip": ip, "rack": rack, "slot": slot},
+        )
+
+    async def plc_delete(self, name: str) -> Result:
+        return await self._request("DELETE", ep.PLC_ITEM.format(name=name))
+
+    async def user_create(
+        self,
+        username: str,
+        email: str,
+        password: str,
+        full_name: str = "",
+        role: str = "operator",
+        permission_overrides: dict | None = None,
+    ) -> Result:
+        return await self._request(
+            "POST",
+            ep.USERS,
+            json={
+                "username": username,
+                "email": email,
+                "password": password,
+                "full_name": full_name,
+                "role": role,
+                "permission_overrides": permission_overrides or {},
+            },
+        )
+
+    async def user_update(
+        self,
+        user_id: int,
+        email: str | None = None,
+        full_name: str | None = None,
+        role: str | None = None,
+        is_active: bool | None = None,
+        permission_overrides: dict | None = None,
+    ) -> Result:
+        payload: dict[str, Any] = {}
+        if email is not None:
+            payload["email"] = email
+        if full_name is not None:
+            payload["full_name"] = full_name
+        if role is not None:
+            payload["role"] = role
+        if is_active is not None:
+            payload["is_active"] = is_active
+        if permission_overrides is not None:
+            payload["permission_overrides"] = permission_overrides
+        if not payload:
+            raise ValueError("user_update: at least one field required")
+        return await self._request("PATCH", ep.USER_ITEM.format(user_id=user_id), json=payload)
+
+    async def user_set_password(self, user_id: int, password: str) -> Result:
+        return await self._request(
+            "POST", ep.USER_PASSWORD.format(user_id=user_id), json={"password": password}
+        )
+
+    async def user_delete(self, user_id: int) -> Result:
+        return await self._request("DELETE", ep.USER_ITEM.format(user_id=user_id))
+
     async def aclose(self) -> None:
         await self._client.aclose()
 
