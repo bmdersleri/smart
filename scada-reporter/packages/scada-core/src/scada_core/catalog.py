@@ -136,6 +136,77 @@ CAPABILITIES: list[Capability] = [
         _obj({"query": {"type": "string"}}, ["query"]),
         lambda c, a: c.resolve_tag(a["query"]),
     ),
+    Capability(
+        "update_tag",
+        "Bir tag'in alanlarını güncelle (unit/device/channel/alarm).",
+        _obj(
+            {
+                "tag_id": {"type": "integer"},
+                "unit": {"type": "string"},
+                "device": {"type": "string"},
+                "channel": {"type": "string"},
+                "description": {"type": "string"},
+                "min_alarm": {"type": "number"},
+                "max_alarm": {"type": "number"},
+            },
+            ["tag_id"],
+        ),
+        lambda c, a: c.update_tag(
+            a["tag_id"],
+            a.get("unit"),
+            a.get("device"),
+            a.get("channel"),
+            a.get("description"),
+            a.get("min_alarm"),
+            a.get("max_alarm"),
+        ),
+        tier="write",
+    ),
+    Capability(
+        "delete_tag",
+        "Bir tag'i kalıcı olarak sil.",
+        _obj({"tag_id": {"type": "integer"}}, ["tag_id"]),
+        lambda c, a: c.delete_tag(a["tag_id"]),
+        tier="destructive",
+    ),
+    Capability(
+        "import_csv_tags",
+        "CSV gövdesinden toplu tag içe aktar.",
+        _obj({"payload": {"type": "object"}}, ["payload"]),
+        lambda c, a: c.import_csv_tags(a["payload"]),
+        tier="destructive",
+    ),
+    Capability(
+        "watchlist_add",
+        "Bir tag'i izleme listesine ekle.",
+        _obj({"tag_id": {"type": "integer"}}, ["tag_id"]),
+        lambda c, a: c.watchlist_add(a["tag_id"]),
+        tier="write",
+    ),
+    Capability(
+        "watchlist_remove",
+        "Bir tag'i izleme listesinden çıkar.",
+        _obj({"tag_id": {"type": "integer"}}, ["tag_id"]),
+        lambda c, a: c.watchlist_remove(a["tag_id"]),
+        tier="write",
+    ),
+    Capability(
+        "annotation_add",
+        "Bir zaman damgasına (opsiyonel tag'e) not ekle.",
+        _obj(
+            {"ts": {"type": "string"}, "text": {"type": "string"}, "tag_id": {"type": "integer"}},
+            ["ts", "text"],
+        ),
+        lambda c, a: c.annotation_add(a["ts"], a["text"], a.get("tag_id")),
+        tier="write",
+    ),
+    Capability(
+        "annotation_delete",
+        "Bir annotation'ı sil.",
+        _obj({"annotation_id": {"type": "integer"}}, ["annotation_id"]),
+        lambda c, a: c.annotation_delete(a["annotation_id"]),
+        tier="write",
+    ),
 ]
 
 CATALOG: dict[str, Capability] = {c.name: c for c in CAPABILITIES}

@@ -311,6 +311,24 @@ class AsyncScadaClient:
     async def ai_query(self, question: str) -> Result:
         return await self._request("POST", ep.AI_QUERY, json={"question": question})
 
+    # -- Spec 2: tag / watchlist / annotation writes --------------------------
+    async def import_csv_tags(self, payload: dict) -> Result:
+        return await self._request("POST", ep.TAG_IMPORT_CSV, json=payload)
+
+    async def watchlist_add(self, tag_id: int) -> Result:
+        return await self._request("POST", ep.WATCHLIST_ITEM.format(tag_id=tag_id))
+
+    async def watchlist_remove(self, tag_id: int) -> Result:
+        return await self._request("DELETE", ep.WATCHLIST_ITEM.format(tag_id=tag_id))
+
+    async def annotation_add(self, ts: str, text: str, tag_id: int | None = None) -> Result:
+        return await self._request(
+            "POST", ep.ANNOTATIONS, json={"ts": ts, "text": text, "tag_id": tag_id}
+        )
+
+    async def annotation_delete(self, annotation_id: int) -> Result:
+        return await self._request("DELETE", ep.ANNOTATION_ITEM.format(annotation_id=annotation_id))
+
     async def aclose(self) -> None:
         await self._client.aclose()
 

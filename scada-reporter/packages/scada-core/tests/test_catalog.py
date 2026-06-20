@@ -13,6 +13,13 @@ EXPECTED = {
     "predict_trend",
     "get_system_health",
     "resolve_tag",
+    "update_tag",
+    "delete_tag",
+    "import_csv_tags",
+    "watchlist_add",
+    "watchlist_remove",
+    "annotation_add",
+    "annotation_delete",
 }
 
 
@@ -33,8 +40,22 @@ def test_lookup_by_name():
 
 
 def test_all_existing_capabilities_are_read_tier():
+    # Spec 2 Task 3: read-only capabilities remain read; write/destructive are new
+    read_only = {
+        "query_current_values",
+        "query_trend",
+        "generate_report",
+        "list_tags",
+        "list_plcs",
+        "run_sql_query",
+        "detect_anomalies",
+        "predict_trend",
+        "get_system_health",
+        "resolve_tag",
+    }
     for cap in CAPABILITIES:
-        assert cap.tier == "read"
+        if cap.name in read_only:
+            assert cap.tier == "read", f"{cap.name} should be read"
 
 
 def test_tier_values_are_valid():
