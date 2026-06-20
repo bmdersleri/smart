@@ -1,8 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { format, parseISO } from 'date-fns'
+import { format } from 'date-fns'
 import { useEffect, useMemo, useState } from 'react'
 import { addWatchlist, getDashboardDevices, getDashboardTags } from '../../api/client'
+import { parseUtc } from '../../utils/time'
 import type { DashboardTag } from '../../api/client'
 import { useSortable } from '../../hooks/useSortable'
 import SortHeader from '../../components/SortHeader'
@@ -18,7 +19,7 @@ function formatValue(item: DashboardTag): string {
 
 function formatTs(ts: string | null): string {
   if (!ts) return '—'
-  return format(parseISO(ts + 'Z'), 'HH:mm:ss')
+  return format(parseUtc(ts), 'HH:mm:ss')
 }
 
 function useDebounce<T>(value: T, delay: number): T {

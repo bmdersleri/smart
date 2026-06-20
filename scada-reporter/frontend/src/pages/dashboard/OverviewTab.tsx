@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { format, parseISO } from 'date-fns'
+import { format } from 'date-fns'
 import { enUS, tr, ru, de } from 'date-fns/locale'
 import { getDashboardDevices, getOverview, listPlcs, getDeadbandSavings } from '../../api/client'
+import { parseUtc } from '../../utils/time'
 import type { PlcEntry } from '../../api/client'
 
 // date-fns locale follows the active language (month/day names)
@@ -315,7 +316,7 @@ export default function OverviewTab({ active }: { active: boolean }) {
         : 'text-red-400'
 
   const lastTs = overview?.last_reading
-    ? format(parseISO(overview.last_reading + 'Z'), 'HH:mm:ss')
+    ? format(parseUtc(overview.last_reading), 'HH:mm:ss')
     : '—'
 
   return (
@@ -350,7 +351,7 @@ export default function OverviewTab({ active }: { active: boolean }) {
           flip
           value={lastTs}
           sub={overview?.last_reading
-            ? format(parseISO(overview.last_reading + 'Z'), 'dd MMM yyyy', { locale: DATE_LOCALES[i18n.language] ?? enUS })
+            ? format(parseUtc(overview.last_reading), 'dd MMM yyyy', { locale: DATE_LOCALES[i18n.language] ?? enUS })
             : undefined}
         />
         <StatCard label={t('stat_plc_connection')} value={plcLabel} sub={t('stat_plc_sub')} />

@@ -13,8 +13,9 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Brush, ResponsiveContainer,
   ReferenceLine,
 } from 'recharts'
-import { format, parseISO } from 'date-fns'
+import { format } from 'date-fns'
 import { toPng } from 'html-to-image'
+import { parseUtc } from '../utils/time'
 
 const COLORS = ['#f87171', '#34d399', '#facc15', '#60a5fa', '#a78bfa', '#fb923c', '#f472b6', '#38bdf8']
 const HOURS = [
@@ -215,7 +216,7 @@ export default function Trend() {
   const timeline: Record<string, Record<string, number | string>> = {}
   series.forEach((s) => {
     s.data.forEach(({ t: ts, v }) => {
-      const key = format(parseISO(ts + 'Z'), 'dd.MM HH:mm')
+      const key = format(parseUtc(ts), 'dd.MM HH:mm')
       timeline[key] ??= { t: key, _iso: ts }
       timeline[key][s.name] = v
     })
@@ -225,7 +226,7 @@ export default function Trend() {
     const shiftMs = hours * 3600_000
     prevSeries.forEach((s) => {
       s.data.forEach(({ t: ts, v }) => {
-        const shifted = new Date(parseISO(ts + 'Z').getTime() + shiftMs)
+        const shifted = new Date(parseUtc(ts).getTime() + shiftMs)
         const key = format(shifted, 'dd.MM HH:mm')
         timeline[key] ??= { t: key, _iso: shifted.toISOString() }
         timeline[key][`${s.name} ${t('previous_suffix')}`] = v
@@ -379,7 +380,7 @@ export default function Trend() {
   // bucket keys of annotations on the chart (for ReferenceLine)
   const chartKeys = new Set(chartData.map((d) => String(d.t)))
   const annotationLines = annotations
-    .map((a) => ({ ...a, key: format(parseISO(a.ts + 'Z'), 'dd.MM HH:mm') }))
+    .map((a) => ({ ...a, key: format(parseUtc(a.ts), 'dd.MM HH:mm') }))
     .filter((a) => chartKeys.has(a.key))
 
   useEffect(() => {
@@ -757,7 +758,7 @@ export default function Trend() {
             {annotations.map((a) => (
               <div key={a.id} className="flex items-center gap-2 text-xs group">
                 <span className="text-gray-500 font-mono w-28 flex-shrink-0">
-                  {format(parseISO(a.ts + 'Z'), 'dd.MM HH:mm')}
+                  {format(parseUtc(a.ts), 'dd.MM HH:mm')}
                 </span>
                 <span className="text-gray-200 flex-1">{a.text}</span>
                 <span className="text-gray-600">{a.username}</span>

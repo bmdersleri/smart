@@ -2,8 +2,9 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext'
-import { format, parseISO } from 'date-fns'
+import { format } from 'date-fns'
 import { enUS, tr, ru, de } from 'date-fns/locale'
+import { parseUtc } from '../utils/time'
 import {
   listTemplates, createTemplate, updateTemplate, deleteTemplate, runTemplate,
   listScheduled, createScheduled, toggleScheduled, deleteScheduled,
@@ -21,7 +22,7 @@ import SortHeader from '../components/SortHeader'
 const DATE_LOCALES: Record<string, typeof tr> = { en: enUS, tr, ru, de }
 
 const fmtDate = (s: string | null, lang: string) =>
-  s ? format(parseISO(s.endsWith('Z') ? s : s + 'Z'), 'dd.MM.yy HH:mm', { locale: DATE_LOCALES[lang] ?? enUS }) : '—'
+  s ? format(parseUtc(s), 'dd.MM.yy HH:mm', { locale: DATE_LOCALES[lang] ?? enUS }) : '—'
 
 const fmtBytes = (n: number | null) => {
   if (!n) return '—'

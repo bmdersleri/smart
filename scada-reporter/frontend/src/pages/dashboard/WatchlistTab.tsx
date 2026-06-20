@@ -1,7 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { format, parseISO } from 'date-fns'
+import { format } from 'date-fns'
 import { getWatchlist, removeWatchlist } from '../../api/client'
+import { parseUtc } from '../../utils/time'
 import type { WatchlistItem } from '../../api/client'
 import { useLatestStream } from '../../hooks/useLatestStream'
 import { useSortable } from '../../hooks/useSortable'
@@ -31,9 +32,8 @@ function formatValue(item: WatchlistItem): string {
 
 function formatTs(ts: string | null): string {
   if (!ts) return '—'
-  // REST naive (no-tz) ts -> append 'Z'; SSE ts already carries tz (+00:00/Z)
-  const iso = ts.endsWith('Z') || ts.includes('+') ? ts : ts + 'Z'
-  return format(parseISO(iso), 'HH:mm:ss')
+  // parseUtc handles both offset-aware (REST/SSE) and legacy offset-less strings.
+  return format(parseUtc(ts), 'HH:mm:ss')
 }
 
 export default function WatchlistTab({ active }: { active: boolean }) {
