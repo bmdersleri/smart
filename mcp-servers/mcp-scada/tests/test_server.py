@@ -42,3 +42,17 @@ async def test_call_tool_error_is_marked(monkeypatch):
     )
     result = await srv.call_capability("list_plcs", {})
     assert '"ok": false' in result.lower()
+
+
+@pytest.mark.asyncio
+async def test_tools_expose_typed_parameter_schemas():
+    tools = await srv.mcp.list_tools()
+    by = {t.name: t for t in tools}
+    # detect_anomalies must advertise its real params, not an opaque dict
+    props = by["detect_anomalies"].inputSchema["properties"]
+    assert "tag_name" in props
+    assert "window" in props and "threshold" in props
+    # query_trend requires tags/start/end
+    qt = by["query_trend"].inputSchema
+    assert "tags" in qt["properties"] and "start" in qt["properties"]
+    assert set(qt.get("required", [])) >= {"tags", "start", "end"}

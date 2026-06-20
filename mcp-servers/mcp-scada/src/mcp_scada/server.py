@@ -4,8 +4,9 @@ import os
 
 from mcp.server.fastmcp import FastMCP
 
-from scada_core.catalog import CAPABILITIES, CATALOG
+from scada_core.catalog import CATALOG
 from scada_core.client import AsyncScadaClient
+from scada_core.envelope import fail
 from scada_core.formatting import to_json
 
 SCADA_API_URL = os.environ.get("SCADA_API_URL", "http://localhost:8001")
@@ -23,29 +24,100 @@ async def call_capability(name: str, args: dict) -> str:
     client = _make_client()
     try:
         result = await cap.handler(client, args)
+    except Exception as exc:
+        result = fail("error", str(exc))
     finally:
         await client.aclose()
     return to_json(result)
 
 
-def _make_tool(cap_name: str):
-    async def _tool(arguments: dict | None = None) -> str:
-        return await call_capability(cap_name, arguments or {})
-
-    _tool.__name__ = cap_name
-    return _tool
-
-
-def _register() -> None:
-    for cap in CAPABILITIES:
-        mcp.add_tool(
-            _make_tool(cap.name),
-            name=cap.name,
-            description=cap.description,
-        )
+# ---------------------------------------------------------------------------
+# Typed per-capability tool functions
+# FastMCP derives the input JSON schema from each function's signature,
+# which restores typed parameters for MCP clients.
+# ---------------------------------------------------------------------------
 
 
-_register()
+async def query_current_values(tag_names: list[str] | None = None) -> str:
+    return await call_capability("query_current_values", {"tag_names": tag_names})
+
+
+async def query_trend(tags: list[str], start: str, end: str) -> str:
+    return await call_capability(
+        "query_trend", {"tags": tags, "start": start, "end": end}
+    )
+
+
+async def generate_report(
+    tags: list[str],
+    start: str,
+    end: str,
+    format: str = "excel",
+    aggregation: str = "raw",
+) -> str:
+    return await call_capability(
+        "generate_report",
+        {
+            "tags": tags,
+            "start": start,
+            "end": end,
+            "format": format,
+            "aggregation": aggregation,
+        },
+    )
+
+
+async def list_tags() -> str:
+    return await call_capability("list_tags", {})
+
+
+async def list_plcs() -> str:
+    return await call_capability("list_plcs", {})
+
+
+async def run_sql_query(query: str) -> str:
+    return await call_capability("run_sql_query", {"query": query})
+
+
+async def detect_anomalies(
+    tag_name: str, window: str = "7d", threshold: float = 3.0
+) -> str:
+    return await call_capability(
+        "detect_anomalies",
+        {"tag_name": tag_name, "window": window, "threshold": threshold},
+    )
+
+
+async def predict_trend(tag_name: str, horizon: str = "24h") -> str:
+    return await call_capability(
+        "predict_trend", {"tag_name": tag_name, "horizon": horizon}
+    )
+
+
+async def get_system_health() -> str:
+    return await call_capability("get_system_health", {})
+
+
+async def resolve_tag(query: str) -> str:
+    return await call_capability("resolve_tag", {"query": query})
+
+
+# Register each tool with its capability name and description from the catalog.
+_TOOL_REGISTRY = [
+    (query_current_values, "query_current_values"),
+    (query_trend, "query_trend"),
+    (generate_report, "generate_report"),
+    (list_tags, "list_tags"),
+    (list_plcs, "list_plcs"),
+    (run_sql_query, "run_sql_query"),
+    (detect_anomalies, "detect_anomalies"),
+    (predict_trend, "predict_trend"),
+    (get_system_health, "get_system_health"),
+    (resolve_tag, "resolve_tag"),
+]
+
+for _fn, _cap_name in _TOOL_REGISTRY:
+    mcp.add_tool(_fn, name=_cap_name, description=CATALOG[_cap_name].description)
 
 
 def main() -> None:
