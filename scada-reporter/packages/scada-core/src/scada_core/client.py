@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import inspect
 import os
 from typing import Any
 
@@ -173,7 +174,7 @@ class SyncScadaClient:
 
     def __getattr__(self, name: str):
         attr = getattr(self._async, name)
-        if asyncio.iscoroutinefunction(attr):
+        if inspect.iscoroutinefunction(attr):
 
             def wrapper(*a, **kw):
                 return self._run(attr(*a, **kw))
