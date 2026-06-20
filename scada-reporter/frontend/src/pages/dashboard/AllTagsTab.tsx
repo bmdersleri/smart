@@ -163,8 +163,8 @@ export default function AllTagsTab({ active }: { active: boolean }) {
                   <tr key={item.tag_id} className="border-t border-gray-800 hover:bg-gray-800/40 transition-colors">
                     <td className="px-4 py-2.5 text-sm text-white font-medium">{item.name}</td>
                     <td className="px-4 py-2.5 text-sm text-gray-400">{item.device || '—'}</td>
-                    <td className="px-4 py-2.5 text-sm text-right font-mono text-cyan-300">{formatValue(item)}</td>
-                    <td className="px-4 py-2.5 text-sm text-gray-400 text-right">{formatTs(item.timestamp)}</td>
+                    <td className="px-4 py-2.5 text-sm text-end font-mono text-cyan-300">{formatValue(item)}</td>
+                    <td className="px-4 py-2.5 text-sm text-gray-400 text-end">{formatTs(item.timestamp)}</td>
                     <td className="px-4 py-2.5 text-center"><QualityDot ok={item.quality_ok} /></td>
                     <td className="px-4 py-2.5 text-center">
                       <button

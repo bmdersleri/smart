@@ -94,10 +94,10 @@ export default function WatchlistTab({ active }: { active: boolean }) {
             <tr key={item.tag_id} className="border-t border-gray-800 hover:bg-gray-800/40 transition-colors">
               <td className="px-4 py-3 text-sm text-gray-400">{item.device || '—'}</td>
               <td className="px-4 py-3 text-sm text-white font-medium">{item.name}</td>
-              <td className="px-4 py-3 text-sm text-right font-mono">
+              <td className="px-4 py-3 text-sm text-end font-mono">
                 <FlipCell value={formatValue(item)} className="text-cyan-300" />
               </td>
-              <td className="px-4 py-3 text-sm text-right">
+              <td className="px-4 py-3 text-sm text-end">
                 <FlipCell value={formatTs(item.timestamp)} className="text-gray-400" />
               </td>
               <td className="px-4 py-3 text-center"><QualityDot ok={item.quality_ok} /></td>

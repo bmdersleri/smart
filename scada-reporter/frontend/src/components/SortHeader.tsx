@@ -16,12 +16,14 @@ export default function SortHeader({ label, sortKey, sort, onToggle, align = 'le
   const active = sort.key === sortKey
   const arrow = active ? (sort.dir === 'asc' ? '▲' : '▼') : '↕'
   const justify = align === 'right' ? 'justify-end' : align === 'center' ? 'justify-center' : 'justify-start'
+  // Logical text alignment so RTL mirrors (left→start, right→end); justify-* is already direction-aware.
+  const textAlign = align === 'right' ? 'text-end' : align === 'center' ? 'text-center' : 'text-start'
   // Padding/color come from the caller (className); here only behavior + alignment.
   const pad = className || 'px-4 py-2'
   return (
     <th
       onClick={() => onToggle(sortKey)}
-      className={`cursor-pointer select-none hover:text-gray-300 transition-colors text-${align} ${pad}`}
+      className={`cursor-pointer select-none hover:text-gray-300 transition-colors ${textAlign} ${pad}`}
       title={t('sort_hint')}
     >
       <span className={`inline-flex items-center gap-1 ${justify}`}>

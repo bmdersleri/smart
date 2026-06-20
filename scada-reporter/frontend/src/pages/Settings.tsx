@@ -61,7 +61,7 @@ export default function Settings() {
                   const v = Number(e.target.value)
                   if (v >= MIN_H && v <= MAX_H) set('trendChartHeight', v)
                 }}
-                className="w-20 bg-gray-800 border border-gray-700 rounded-lg px-2 py-1 text-sm text-white text-right focus:outline-none focus:border-blue-500"
+                className="w-20 bg-gray-800 border border-gray-700 rounded-lg px-2 py-1 text-sm text-white text-end focus:outline-none focus:border-blue-500"
               />
               <span className="text-sm text-gray-400">px</span>
             </div>

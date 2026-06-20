@@ -163,7 +163,7 @@ export default function Metrics() {
                     {t('deadband_sub', { hours: savings.window_hours, tags: savings.deadband_tags.toLocaleString(i18n.language) })}
                   </p>
                 </div>
-                <div className="text-right">
+                <div className="text-end">
                   <p className="text-4xl font-bold font-mono text-emerald-400">
                     {savings.savings_pct === null ? '—' : `${savings.savings_pct}%`}
                   </p>
@@ -203,7 +203,7 @@ export default function Metrics() {
                   <SortHeader label={t('col_tag_count')} sortKey="tag_count" sort={sort} onToggle={toggle} align="right" />
                   <SortHeader label={t('col_read_count')} sortKey="count" sort={sort} onToggle={toggle} align="right" />
                   <SortHeader label={t('col_avg_time')} sortKey="avg_seconds" sort={sort} onToggle={toggle} align="right" />
-                  <th className="px-4 py-2 text-left w-1/4">{t('col_latency')}</th>
+                  <th className="px-4 py-2 text-start w-1/4">{t('col_latency')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -215,9 +215,9 @@ export default function Metrics() {
                       <tr key={p.plc} className="border-t border-gray-800 hover:bg-gray-800/40">
                         <td className="px-4 py-2 text-sm text-white">{p.name || '—'}</td>
                         <td className="px-4 py-2 text-sm font-mono text-gray-400">{p.plc}</td>
-                        <td className="px-4 py-2 text-sm text-right text-gray-300 font-mono">{p.tag_count.toLocaleString(i18n.language)}</td>
-                        <td className="px-4 py-2 text-sm text-right text-gray-400 font-mono">{p.count.toLocaleString(i18n.language)}</td>
-                        <td className={`px-4 py-2 text-sm text-right font-mono ${slow ? 'text-red-400' : 'text-gray-200'}`}>{fmtMs(p.avg_seconds)}</td>
+                        <td className="px-4 py-2 text-sm text-end text-gray-300 font-mono">{p.tag_count.toLocaleString(i18n.language)}</td>
+                        <td className="px-4 py-2 text-sm text-end text-gray-400 font-mono">{p.count.toLocaleString(i18n.language)}</td>
+                        <td className={`px-4 py-2 text-sm text-end font-mono ${slow ? 'text-red-400' : 'text-gray-200'}`}>{fmtMs(p.avg_seconds)}</td>
                         <td className="px-4 py-2">
                           <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
                             <div className={`h-full rounded-full ${slow ? 'bg-red-500' : 'bg-blue-500'}`} style={{ width: `${pct}%` }} />

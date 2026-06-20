@@ -253,11 +253,11 @@ export default function Reports() {
                     })}
                   >
                     {p.name}
-                    <span className="ml-1.5 text-xs text-gray-500">{t('tag_count', { value: p.tag_ids.length })}</span>
+                    <span className="ms-1.5 text-xs text-gray-500">{t('tag_count', { value: p.tag_ids.length })}</span>
                   </button>
                   <button
                     onClick={() => deleteReportPreset(p.name)}
-                    className="opacity-0 group-hover:opacity-100 text-gray-600 hover:text-red-400 text-xs transition-all ml-1"
+                    className="opacity-0 group-hover:opacity-100 text-gray-600 hover:text-red-400 text-xs transition-all ms-1"
                     title={t('delete_title')}
                   >
                     ✕

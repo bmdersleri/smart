@@ -76,7 +76,7 @@ function AddTagModal({ onClose }: { onClose: () => void }) {
         {result && (
           <div className="bg-gray-800/60 border border-gray-700 rounded-lg p-3 text-sm">
             <p className="text-gray-300">{t('current_value')}
-              <span className="text-white font-mono ml-1">{result.current_value ?? '—'}</span>
+              <span className="text-white font-mono ms-1">{result.current_value ?? '—'}</span>
               {result.unit ? ` ${result.unit}` : ''}
             </p>
             <p className="text-xs mt-1">
@@ -358,11 +358,11 @@ function TagRow({
 }) {
   const { t } = useTranslation(['tags', 'common'])
   return (
-    <div className="flex items-center gap-2 py-1.5 pr-2 hover:bg-gray-800/40 rounded-lg" style={{ paddingLeft: indent }}>
+    <div className="flex items-center gap-2 py-1.5 pe-2 hover:bg-gray-800/40 rounded-lg" style={{ paddingInlineStart: indent }}>
       <span className="w-1.5 h-1.5 rounded-full bg-gray-600 flex-shrink-0" />
       <span className="text-sm text-white truncate flex-1">{tag.name}</span>
       <span className="text-xs font-mono text-gray-600 hidden sm:inline">{tag.s7_address ?? '—'}</span>
-      <span className="text-xs text-gray-500 w-10 text-right">{tag.unit}</span>
+      <span className="text-xs text-gray-500 w-10 text-end">{tag.unit}</span>
       <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${tag.is_active ? 'bg-green-900/50 text-green-400' : 'bg-gray-800 text-gray-500'}`}>
         {tag.is_active ? t('status_active') : t('status_passive')}
       </span>
@@ -395,12 +395,12 @@ function TagTreeNode({
       <button
         onClick={() => setOpen((v) => !v)}
         className="w-full flex items-center gap-1.5 py-1.5 text-sm text-gray-200 hover:text-white"
-        style={{ paddingLeft: depth * 16 + 4 }}
+        style={{ paddingInlineStart: depth * 16 + 4 }}
       >
         <span className="text-gray-500 w-3">{open ? '▾' : '▸'}</span>
         <svg className="w-4 h-4 text-indigo-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" /></svg>
         <span className="font-medium truncate">{node.name}</span>
-        <span className="text-xs text-gray-600 ml-1">{count(node)}</span>
+        <span className="text-xs text-gray-600 ms-1">{count(node)}</span>
       </button>
       {open && (
         <div>
@@ -511,10 +511,10 @@ export default function Tags() {
         <h1 className="text-xl font-bold text-white">{t('title')}</h1>
         <div className="flex gap-2 flex-wrap">
           <div className="flex">
-            <button onClick={() => doExport('csv')} className="px-3 py-2 text-sm bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-l-lg border border-gray-700 transition-colors">
+            <button onClick={() => doExport('csv')} className="px-3 py-2 text-sm bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-s-lg border border-gray-700 transition-colors">
               {t('export_csv')}
             </button>
-            <button onClick={() => doExport('xlsx')} className="px-3 py-2 text-sm bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-r-lg border border-l-0 border-gray-700 transition-colors">
+            <button onClick={() => doExport('xlsx')} className="px-3 py-2 text-sm bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-e-lg border border-s-0 border-gray-700 transition-colors">
               {t('export_xlsx')}
             </button>
           </div>
@@ -627,8 +627,8 @@ export default function Tags() {
                   <td className="px-4 py-3 text-sm text-gray-400">{row.plc_name || row.device}</td>
                   <td className="px-4 py-3 text-sm font-medium text-white">
                     {row.name}
-                    {row.long_term && <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-blue-900/50 text-blue-300">{t('badge_long_term')}</span>}
-                    {row.daily_tracking && <span className="ml-1 text-[10px] px-1.5 py-0.5 rounded bg-purple-900/50 text-purple-300">{t('badge_daily')}</span>}
+                    {row.long_term && <span className="ms-2 text-[10px] px-1.5 py-0.5 rounded bg-blue-900/50 text-blue-300">{t('badge_long_term')}</span>}
+                    {row.daily_tracking && <span className="ms-1 text-[10px] px-1.5 py-0.5 rounded bg-purple-900/50 text-purple-300">{t('badge_daily')}</span>}
                   </td>
                   <td className="px-4 py-3 text-xs font-mono text-gray-500">{row.plc_ip ?? '—'}</td>
                   <td className="px-4 py-3 text-xs font-mono text-gray-500">{row.s7_address ?? '—'}</td>
@@ -644,7 +644,7 @@ export default function Tags() {
                       {row.is_active ? t('status_active') : t('status_passive')}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-4 py-3 text-end">
                     {canEdit && (
                       <div className="flex gap-2 justify-end">
                         <button

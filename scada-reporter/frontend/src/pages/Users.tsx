@@ -74,7 +74,7 @@ export default function Users() {
 
       {/* User table */}
       <table className="w-full text-sm">
-        <thead className="text-gray-400 text-left">
+        <thead className="text-gray-400 text-start">
           <tr><th className="py-2">{t('username')}</th><th>{t('full_name')}</th><th>{t('role')}</th><th>{t('active')}</th><th>{t('permissions')}</th><th /></tr>
         </thead>
         <tbody>
@@ -85,7 +85,7 @@ export default function Users() {
               <td>{t(`role_${u.role}`)}</td>
               <td>{u.is_active ? '✓' : '—'}</td>
               <td className="text-gray-500 text-xs">{u.permissions.join(', ')}</td>
-              <td className="text-right space-x-2">
+              <td className="text-end space-x-2">
                 <button className="text-blue-400" onClick={() => setEditing(u)}>{t('edit')}</button>
                 <button className="text-amber-400" onClick={() => { const p = prompt(t('reset_password')); if (p) resetUserPassword(u.id, p).catch((e: unknown) => { const ax = e as { response?: { data?: { detail?: string } } }; alert(ax.response?.data?.detail || t('last_admin_error')) }) }}>{t('reset_password')}</button>
                 <button className="text-red-400" onClick={() => { if (confirm(t('confirm_delete'))) delMut.mutate(u.id) }}>{t('delete')}</button>

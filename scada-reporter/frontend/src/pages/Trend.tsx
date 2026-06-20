@@ -54,7 +54,7 @@ function TreeNode({
       <button
         onClick={() => setOpen((v) => !v)}
         className="w-full flex items-center gap-1 px-1 py-1 text-xs text-gray-300 hover:text-white"
-        style={{ paddingLeft: depth * 10 + 4 }}
+        style={{ paddingInlineStart: depth * 10 + 4 }}
       >
         <span className="text-gray-500 w-3">{hasContent ? (open ? '▾' : '▸') : '·'}</span>
         <span className="truncate font-medium">{node.name}</span>
@@ -73,8 +73,8 @@ function TreeNode({
               <button
                 key={t.id}
                 onClick={() => onToggle(t.id)}
-                className={`w-full text-left py-1 rounded-lg text-sm flex items-center gap-2 ${sel ? 'bg-gray-800/60 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
-                style={{ paddingLeft: (depth + 1) * 10 + 8 }}
+                className={`w-full text-start py-1 rounded-lg text-sm flex items-center gap-2 ${sel ? 'bg-gray-800/60 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
+                style={{ paddingInlineStart: (depth + 1) * 10 + 8 }}
               >
                 <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
                 <span className="truncate">{t.name}</span>
@@ -548,7 +548,7 @@ export default function Trend() {
                 <div key={p.name} className="flex items-center gap-1 group">
                   <button
                     onClick={() => loadPreset(p)}
-                    className="flex-1 text-left px-2 py-1 rounded-lg text-xs text-gray-300 hover:bg-gray-800 hover:text-white transition-colors truncate"
+                    className="flex-1 text-start px-2 py-1 rounded-lg text-xs text-gray-300 hover:bg-gray-800 hover:text-white transition-colors truncate"
                     title={`${p.tag_ids.length} tag · ${hk ? t(hk) : p.hours + 'h'}`}
                   >
                     {p.name}
@@ -580,7 +580,7 @@ export default function Trend() {
                   <button
                     key={t.id}
                     onClick={() => toggle(t.id)}
-                    className={`w-full text-left px-2 py-1.5 rounded-lg text-sm transition-colors flex items-center gap-2 ${
+                    className={`w-full text-start px-2 py-1.5 rounded-lg text-sm transition-colors flex items-center gap-2 ${
                       selIdx >= 0
                         ? 'bg-gray-800/60 text-white'
                         : 'text-gray-400 hover:bg-gray-800 hover:text-white'
@@ -728,7 +728,7 @@ export default function Trend() {
             <thead>
               <tr className="text-gray-500">
                 <SortHeader label={t('col_tag')} sortKey="name" sort={pSort} onToggle={pToggle} className="pb-1 font-normal" />
-                <SortHeader label={t('col_value')} sortKey="value" sort={pSort} onToggle={pToggle} align="right" className="pb-1 font-normal pr-4" />
+                <SortHeader label={t('col_value')} sortKey="value" sort={pSort} onToggle={pToggle} align="right" className="pb-1 font-normal pe-4" />
                 <SortHeader label={t('col_unit')} sortKey="unit" sort={pSort} onToggle={pToggle} className="pb-1 font-normal" />
               </tr>
             </thead>
@@ -741,7 +741,7 @@ export default function Trend() {
                       <span className="truncate max-w-[200px]" style={{ color: row.color }}>{row.name}</span>
                     </span>
                   </td>
-                  <td className="py-0.5 text-right pr-4 font-mono text-white">{row.value.toFixed(2)}</td>
+                  <td className="py-0.5 text-end pe-4 font-mono text-white">{row.value.toFixed(2)}</td>
                   <td className="py-0.5 text-gray-400">{row.unit}</td>
                 </tr>
               ))}
@@ -789,14 +789,14 @@ export default function Trend() {
           <button
             onClick={() => { exportPNG(); setCtxMenu(null) }}
             disabled={selected.length === 0 || chartData.length === 0}
-            className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+            className="w-full text-start px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
           >
             <span className="text-gray-500">↓</span> {t('ctx_save_png')}
           </button>
           <button
             onClick={() => { exportReport(); setCtxMenu(null) }}
             disabled={selected.length === 0 || exporting}
-            className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+            className="w-full text-start px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
           >
             <span className="text-gray-500">↓</span> {t('ctx_excel_report')}
           </button>
@@ -804,14 +804,14 @@ export default function Trend() {
           <button
             onClick={() => { setBrushIndices(null); setCtxMenu(null) }}
             disabled={brushIndices === null}
-            className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+            className="w-full text-start px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
           >
             <span className="text-gray-500">↺</span> {t('ctx_reset_zoom')}
           </button>
           <button
             onClick={() => { setSelected([]); setCtxMenu(null) }}
             disabled={selected.length === 0}
-            className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-red-400 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+            className="w-full text-start px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-red-400 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
           >
             <span className="text-gray-500">✕</span> {t('ctx_clear_selection')}
           </button>

@@ -486,13 +486,13 @@ function TemplatesTab({ onRunDone }: { onRunDone: () => void }) {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-800 text-left text-gray-500">
+                <tr className="border-b border-gray-800 text-start text-gray-500">
                   <SortHeader label={t('col_name')} sortKey="name" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
                   <SortHeader label={t('col_format')} sortKey="output_format" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
                   <SortHeader label={t('col_interval')} sortKey="interval" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
                   <SortHeader label={t('col_tag')} sortKey="tag" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
                   <SortHeader label={t('col_created')} sortKey="created_at" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
-                  <th className="pb-2 text-gray-500 font-medium text-right">{t('col_action')}</th>
+                  <th className="pb-2 text-gray-500 font-medium text-end">{t('col_action')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -503,7 +503,7 @@ function TemplatesTab({ onRunDone }: { onRunDone: () => void }) {
                     <td className="py-3 text-gray-400 capitalize">{tpl.interval}</td>
                     <td className="py-3 text-gray-400">{tpl.tag_ids.length}</td>
                     <td className="py-3 text-gray-500">{fmtDate(tpl.created_at, i18n.language)}</td>
-                    <td className="py-3 text-right">
+                    <td className="py-3 text-end">
                       <div className="flex gap-2 justify-end">
                         <button onClick={() => runMut.mutate(tpl.id)} disabled={runMut.isPending}
                           className="text-xs text-blue-400 hover:text-blue-300 disabled:opacity-50">{t('run')}</button>
@@ -576,7 +576,7 @@ function ScheduledTab() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-800 text-left text-gray-500">
+                <tr className="border-b border-gray-800 text-start text-gray-500">
                   <SortHeader label={t('col_name')} sortKey="name" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
                   <SortHeader label={t('col_template')} sortKey="template" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
                   <SortHeader label={t('col_type')} sortKey="schedule_type" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
@@ -584,7 +584,7 @@ function ScheduledTab() {
                   <SortHeader label={t('col_last_run')} sortKey="last_run_at" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
                   <SortHeader label={t('col_status')} sortKey="last_run_status" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
                   <SortHeader label={t('col_next')} sortKey="next_run_at" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
-                  <th className="pb-2 text-right text-gray-500 font-medium">{t('col_action')}</th>
+                  <th className="pb-2 text-end text-gray-500 font-medium">{t('col_action')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -604,7 +604,7 @@ function ScheduledTab() {
                     <td className="py-3 text-gray-500 text-xs">{fmtDate(sr.last_run_at, i18n.language)}</td>
                     <td className="py-3">{sr.last_run_status ? <StatusBadge status={sr.last_run_status} /> : <span className="text-gray-600 text-xs">—</span>}</td>
                     <td className="py-3 text-gray-500 text-xs">{fmtDate(sr.next_run_at, i18n.language)}</td>
-                    <td className="py-3 text-right">
+                    <td className="py-3 text-end">
                       <button onClick={() => { if (confirm(t('confirm_delete_schedule'))) delMut.mutate(sr.id) }}
                         className="text-xs text-red-500 hover:text-red-400">{t('common:delete')}</button>
                     </td>
@@ -715,7 +715,7 @@ function ArchiveTab() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-800 text-left text-gray-500">
+                <tr className="border-b border-gray-800 text-start text-gray-500">
                   <SortHeader label={t('col_date')} sortKey="created_at" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
                   <SortHeader label={t('col_template')} sortKey="template" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
                   <SortHeader label={t('col_trigger')} sortKey="trigger" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
@@ -723,7 +723,7 @@ function ArchiveTab() {
                   <SortHeader label={t('col_format')} sortKey="output_format" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
                   <SortHeader label={t('col_status')} sortKey="status" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
                   <SortHeader label={t('col_size')} sortKey="file_size_bytes" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
-                  <th className="pb-2 text-right text-gray-500 font-medium">{t('col_download')}</th>
+                  <th className="pb-2 text-end text-gray-500 font-medium">{t('col_download')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -742,7 +742,7 @@ function ArchiveTab() {
                     <td className="py-3 text-gray-400 text-xs uppercase">{e.output_format}</td>
                     <td className="py-3"><StatusBadge status={e.status} /></td>
                     <td className="py-3 text-gray-500 text-xs">{fmtBytes(e.file_size_bytes)}</td>
-                    <td className="py-3 text-right">
+                    <td className="py-3 text-end">
                       {e.status === 'completed'
                         ? <button onClick={() => download(e)} disabled={downloading === e.id}
                             className="text-xs text-blue-400 hover:text-blue-300 disabled:opacity-50">

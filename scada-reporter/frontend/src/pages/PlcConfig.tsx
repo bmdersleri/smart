@@ -68,7 +68,7 @@ function EditRow({
       </td>
       <td className="px-4 py-2.5 text-sm text-gray-400">{plc.tag_count.toLocaleString(i18n.language)}</td>
       <td className="px-4 py-2.5"><ConnBadge connected={plc.connected} /></td>
-      <td className="px-4 py-2.5 text-right">
+      <td className="px-4 py-2.5 text-end">
         <div className="flex items-center justify-end gap-2">
           <button
             onClick={() => onSave(ip, rack, slot)}
@@ -140,7 +140,7 @@ function AddRow({
       </td>
       <td className="px-4 py-2.5 text-sm text-gray-600">—</td>
       <td className="px-4 py-2.5 text-sm text-gray-600">—</td>
-      <td className="px-4 py-2.5 text-right">
+      <td className="px-4 py-2.5 text-end">
         <div className="flex items-center justify-end gap-2">
           <button
             onClick={() => name.trim() && onSave(name.trim(), ip, rack, slot)}
@@ -183,7 +183,7 @@ function PlcRow({
       <td className="px-4 py-3 text-sm text-gray-400">{plc.slot}</td>
       <td className="px-4 py-3 text-sm text-gray-400">{plc.tag_count.toLocaleString(i18n.language)}</td>
       <td className="px-4 py-3"><ConnBadge connected={plc.connected} /></td>
-      <td className="px-4 py-3 text-right">
+      <td className="px-4 py-3 text-end">
         {canManage && (confirming ? (
           <div className="flex items-center justify-end gap-2">
             <span className="text-xs text-red-400">
@@ -327,7 +327,7 @@ export default function PlcConfig() {
                 <SortHeader label={t('col_slot')} sortKey="slot" sort={sort} onToggle={toggle} />
                 <SortHeader label={t('col_tag_count')} sortKey="tag_count" sort={sort} onToggle={toggle} />
                 <SortHeader label={t('col_status')} sortKey="connected" sort={sort} onToggle={toggle} />
-                <th className="px-4 py-2 text-right"></th>
+                <th className="px-4 py-2 text-end"></th>
               </tr>
             </thead>
             <tbody>
