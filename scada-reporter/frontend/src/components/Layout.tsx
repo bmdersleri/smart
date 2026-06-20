@@ -32,9 +32,9 @@ export default function Layout() {
       )}
       {/* Sidebar */}
       <aside
-        className={`w-56 bg-gray-900 border-e border-gray-800 flex flex-col fixed md:static inset-y-0 start-0 z-40 transform transition-transform duration-200 ${
-          mobileNav ? 'translate-x-0' : '-translate-x-full rtl:translate-x-full'
-        } md:translate-x-0`}
+        className={`w-56 bg-gray-900 border-e border-gray-800 flex flex-col fixed md:static inset-y-0 start-0 z-40 transform transition-transform duration-200 md:translate-x-0 ${
+          mobileNav ? 'translate-x-0' : 'max-md:-translate-x-full max-md:rtl:translate-x-full'
+        }`}
       >
         <div className="p-4 border-b border-gray-800">
           <div className="flex items-center gap-2.5">
