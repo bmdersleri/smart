@@ -3,11 +3,14 @@ from __future__ import annotations
 import os
 
 from mcp.server.fastmcp import FastMCP
+from mcp.server.fastmcp.prompts.base import Prompt
 
+from scada_core import endpoints as ep
 from scada_core.catalog import CATALOG
 from scada_core.client import AsyncScadaClient
 from scada_core.envelope import fail
 from scada_core.formatting import to_json
+from scada_core.prompts import PROMPTS
 
 SCADA_API_URL = os.environ.get("SCADA_API_URL", "http://localhost:8001")
 SCADA_TOKEN = os.environ.get("SCADA_TOKEN", "") or None
@@ -118,6 +121,52 @@ _TOOL_REGISTRY = [
 
 for _fn, _cap_name in _TOOL_REGISTRY:
     mcp.add_tool(_fn, name=_cap_name, description=CATALOG[_cap_name].description)
+
+
+def _register_prompts() -> None:
+    """Register workflow prompt templates from scada_core.prompts."""
+    for pname, template in PROMPTS.items():
+
+        def make_handler(t: str):
+            def handler(**kwargs: str) -> str:
+                return t.format_map(kwargs)
+
+            return handler
+
+        prompt = Prompt.from_function(make_handler(template), name=pname)
+        mcp.add_prompt(prompt)
+
+
+def _register_resources() -> None:
+    """Register read-only SCADA data resources."""
+
+    @mcp.resource("scada://tags")
+    async def _tags() -> str:
+        client = _make_client()
+        try:
+            return to_json(await client.list_tags())
+        finally:
+            await client.aclose()
+
+    @mcp.resource("scada://plcs")
+    async def _plcs() -> str:
+        client = _make_client()
+        try:
+            return to_json(await client.list_plcs())
+        finally:
+            await client.aclose()
+
+    @mcp.resource("scada://schema")
+    async def _schema() -> str:
+        client = _make_client()
+        try:
+            return to_json(await client._request("GET", ep.EXPLORE_SCHEMA))
+        finally:
+            await client.aclose()
+
+
+_register_prompts()
+_register_resources()
 
 
 def main() -> None:
