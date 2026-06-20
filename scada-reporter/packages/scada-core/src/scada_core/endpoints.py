@@ -31,3 +31,30 @@ AI_HEALTH = "api/ai/health"
 AI_QUERY = "api/ai/query"
 
 HEALTH = "health"
+
+# --- Spec 2: write endpoints ---
+TAG_IMPORT_CSV = "api/tags/import_csv"
+
+WATCHLIST_ITEM = "api/dashboard/watchlist/{tag_id}"
+
+ANNOTATIONS = "api/annotations/"
+ANNOTATION_ITEM = "api/annotations/{annotation_id}"
+
+ADV_TEMPLATES = "api/advanced-reports/templates"
+ADV_TEMPLATE_ITEM = "api/advanced-reports/templates/{template_id}"
+ADV_TEMPLATE_RUN = "api/advanced-reports/templates/{template_id}/run"
+ADV_SCHEDULED = "api/advanced-reports/scheduled"
+ADV_SCHEDULED_ITEM = "api/advanced-reports/scheduled/{scheduled_id}"
+ADV_SCHEDULED_TOGGLE = "api/advanced-reports/scheduled/{scheduled_id}/toggle"
+ADV_ARCHIVE_ITEM = "api/advanced-reports/archive/{archive_id}"
+
+GROUPS = "api/groups/"
+GROUP_ITEM = "api/groups/{group_id}"
+GROUP_ASSIGN = "api/groups/{group_id}/assign"
+GROUP_UNASSIGN = "api/groups/unassign"
+
+PLC_ITEM = "api/plc/{name}"
+
+USERS = "api/users/"
+USER_ITEM = "api/users/{user_id}"
+USER_PASSWORD = "api/users/{user_id}/password"
