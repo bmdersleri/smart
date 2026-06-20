@@ -130,7 +130,7 @@
 | sentry-sdk | 2.62.0 | Error tracking |
 | sqlalchemy | 2.0.36 | ORM |
 | uvicorn | 0.30.0 | ASGI server |
-| weasyprint | 62.3 | PDF generation |
+| weasyprint | 69.0 | PDF generation (GTK3 runtime required) |
 
 ## npm Global Packages
 | Package | Version |
@@ -150,11 +150,13 @@
 | react | 19.x | UI framework |
 | react-dom | 19.x | DOM renderer |
 | react-router-dom | 7.x | Routing |
+| i18next | 26.x | i18n core — 5 locales (en/tr/ru/de/ar) |
+| react-i18next | 17.x | React i18n bindings; Arabic (`ar`) drives RTL (`html dir/lang`) |
 | @tanstack/react-query | 5.x | Server state / data fetching |
 | axios | 1.x | HTTP client |
 | recharts | 3.x | Chart library |
 | lucide-react | 1.x | Icon set |
-| date-fns | 4.x | Date utilities |
+| date-fns | 4.x | Date utilities (locale-aware) |
 | html-to-image | 1.x | PNG export from DOM nodes |
 | tailwindcss | 4.x | CSS framework |
 | vite | 8.x | Dev server + bundler |
@@ -162,6 +164,8 @@
 | @testing-library/react | 16.x | React component testing |
 | @testing-library/user-event | 14.x | User interaction simulation |
 | jsdom | 29.x | DOM environment for tests |
+| @playwright/test | 1.61.x | E2E browser tests (`pnpm e2e`; chromium installed) |
+| puppeteer-core | 25.x | System-Chrome E2E driver (`pnpm e2e:verify`, `scripts/verify-dashboard.mjs`) |
 | @hey-api/openapi-ts | 0.98.x | TypeScript client gen from OpenAPI spec (`pnpm gen-client`) |
 
 ## CLI Utilities
@@ -224,7 +228,7 @@
 | dotnet | 10.0.301 | .NET SDK |
 | MinGW GCC | 15.2.0 | C/C++ compiler (posix-seh-ucrt) |
 | GTK3 Runtime | | For WeasyPrint PDF (Win64) |
-| WeasyPrint | | Python PDF generator (GTK runtime required) |
+| WeasyPrint | 69.0 | Python PDF generator (GTK runtime required) |
 | Node.js | 24.16.0 | JS/TS build |
 | Prettier | 3.8.4 | Code formatter |
 
@@ -254,8 +258,10 @@
 - **Python 3.12** still available at `C:\Program Files\Python312\python.exe`
 - **scada-reporter backend venv**: `scada-reporter/backend/.venv/` (Python 3.14, uv-managed)
 - **scada CLI** requires `uv pip install -e scada-reporter/agent-harness` from project root (`just install-agent`)
-- **Backend API**: 8 router grubu — auth, tags, dashboard, reports, advanced-reports, plc, query, explore (`/api/*`)
-- **Frontend pages**: Dashboard (3 tabs), Trend (zoom/pan/PNG/Excel/right-click menu/height setting), Reports, Advanced Reports, Tags, PLC Management, Settings
+- **Backend API**: 14 router grubu — auth, tags, dashboard, reports, advanced_reports, excel_templates, plc, query, explore, groups, annotations, realtime (SSE), users, ai (`/api/*`)
+- **Frontend pages**: Dashboard (3 tabs), Trend (zoom/pan/PNG/Excel/right-click menu/height setting), Reports, Advanced Reports, Excel Templates, Tags, PLC Management, Live Metrics, User Operations (admin), Settings
+- **i18n / RTL**: 5 languages (en/tr/ru/de/ar) via i18next; Arabic flips layout to RTL (`html dir/lang`, logical Tailwind utilities). Language persists per-user (`/api/auth/me`) + localStorage
+- **E2E browser tests**: Playwright (`pnpm e2e`, chromium) + puppeteer-core system-Chrome fallback (`pnpm e2e:verify`). Backend must be on :8001 for data
 - **Auth**: the `/api/auth/token` endpoint expects OAuth2 **form-data**, not JSON. `curl -d "username=...&password=..."`
 - **Default users**: `just seed-users` → admin/admin123, operator/operator123
 - **Architecture**: S7 PLC → Snap7 (s7_collector) → SQLite (dev) / PostgreSQL (prod) → built-in OPC UA server (port 4840) + REST API. No paid third-party software (KEPServerEX) required.
