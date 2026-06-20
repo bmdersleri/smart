@@ -482,7 +482,7 @@ async def get_system_health(db: AsyncSession) -> dict[str, Any]:
     return {
         "tags": {"total": tag_count, "active": active_count},
         "ai_services": ["anomaly_detection", "trend_prediction", "nl_query", "auto_report"],
-        "mcp_servers": ["scada", "scada-db"],
+        "mcp_servers": ["scada"],
     }
 
 
