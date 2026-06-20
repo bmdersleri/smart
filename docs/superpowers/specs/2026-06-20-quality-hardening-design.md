@@ -86,6 +86,20 @@ Close a set of quality gaps surfaced while shipping the Arabic/RTL + rebrand wor
 
 **Acceptance.** No `/dashboard/*` read shows a full `tag_readings` scan in its query plan; representative queries are sub-100 ms on the 11M-row dev DB.
 
+**Audit result (2026-06-20).** `EXPLAIN QUERY PLAN` + timings on the 11M-row dev DB confirm **no new index is needed** — the existing schema already serves every hot path:
+
+| Query | Plan | Time |
+|-------|------|------|
+| overview `max(timestamp)` | COVERING `ix_tag_readings_timestamp` | 0.2 ms |
+| overview `count` 24 h | COVERING `ix_tag_readings_timestamp` (range) | 59 ms |
+| overview `count` + `quality` 1 h | `ix_tag_readings_timestamp` (range) + row filter | 0.1 ms |
+| deadband `min/max` 24 h | COVERING `ix_tag_readings_timestamp` (range) | 109 ms |
+| deadband per-tag join | SCAN `tags` (3 027 rows) + PK `(tag_id, timestamp)` | 125 ms |
+| watchlist latest-per-tag | COVERING PK `(tag_id=?)` | 24 ms |
+| trend (5 busiest, 24 h) | PK `(tag_id=? AND timestamp≥?)` + temp-btree sort | 52 ms |
+
+The only `SCAN` is over the small `tags` table (3 027 rows) in the deadband aggregation — expected and cheap; its filters (`is_active`/`long_term`/`deadband>0`) aren't selective enough to index. `tag_readings` is never fully scanned; tag-scoped ranges use the PK, time-windowed reads use `ix_tag_readings_timestamp`. The remaining costs (counting/min-max over a bounded range, trend's merge-sort across tags) are query-shape inherent and not addressable by an index. The prior `a7c2e9f04b18` migration closed the real gap; this audit ships no migration.
+
 ### 6. Deadband metric — per-tag effective span
 
 **Current state.** `deadband_savings` computes one **global** effective window (`min(window, last_ts − first_ts)` across all readings) and applies it to every deadband tag's expected-row count. A tag that started collecting later than the global `first_ts` gets its expected rows overstated.
