@@ -26,6 +26,17 @@ async def start_scheduler(db_url: str) -> None:
     _scheduler.start()
     await _sync_db_to_scheduler()
 
+    from app.monitor.retention import prune_resolved_incidents
+
+    _scheduler.add_job(
+        prune_resolved_incidents,
+        "cron",
+        id="plc_incident_prune",
+        hour=3,
+        minute=30,
+        replace_existing=True,
+    )
+
 
 async def register_job(scheduled) -> str:
     assert _scheduler is not None

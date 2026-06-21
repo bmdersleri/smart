@@ -61,6 +61,11 @@ import trExcelTemplates from './locales/tr/excelTemplates.json'
 import ruExcelTemplates from './locales/ru/excelTemplates.json'
 import deExcelTemplates from './locales/de/excelTemplates.json'
 import arExcelTemplates from './locales/ar/excelTemplates.json'
+import enPlcHealth from './locales/en/plcHealth.json'
+import trPlcHealth from './locales/tr/plcHealth.json'
+import ruPlcHealth from './locales/ru/plcHealth.json'
+import dePlcHealth from './locales/de/plcHealth.json'
+import arPlcHealth from './locales/ar/plcHealth.json'
 
 export const SUPPORTED_LANGS = ['en', 'tr', 'ru', 'de', 'ar'] as const
 export type Lang = (typeof SUPPORTED_LANGS)[number]
@@ -81,15 +86,15 @@ const initialLng = (SUPPORTED_LANGS as readonly string[]).includes(stored ?? '')
 
 i18n.use(initReactI18next).init({
   resources: {
-    en: { common: enCommon, login: enLogin, settings: enSettings, dashboard: enDashboard, tags: enTags, trend: enTrend, reports: enReports, advancedReports: enAdvancedReports, plc: enPlc, metrics: enMetrics, users: enUsers, excelTemplates: enExcelTemplates },
-    tr: { common: trCommon, login: trLogin, settings: trSettings, dashboard: trDashboard, tags: trTags, trend: trTrend, reports: trReports, advancedReports: trAdvancedReports, plc: trPlc, metrics: trMetrics, users: trUsers, excelTemplates: trExcelTemplates },
-    ru: { common: ruCommon, login: ruLogin, settings: ruSettings, dashboard: ruDashboard, tags: ruTags, trend: ruTrend, reports: ruReports, advancedReports: ruAdvancedReports, plc: ruPlc, metrics: ruMetrics, users: ruUsers, excelTemplates: ruExcelTemplates },
-    de: { common: deCommon, login: deLogin, settings: deSettings, dashboard: deDashboard, tags: deTags, trend: deTrend, reports: deReports, advancedReports: deAdvancedReports, plc: dePlc, metrics: deMetrics, users: deUsers, excelTemplates: deExcelTemplates },
-    ar: { common: arCommon, login: arLogin, settings: arSettings, dashboard: arDashboard, tags: arTags, trend: arTrend, reports: arReports, advancedReports: arAdvancedReports, plc: arPlc, metrics: arMetrics, users: arUsers, excelTemplates: arExcelTemplates },
+    en: { common: enCommon, login: enLogin, settings: enSettings, dashboard: enDashboard, tags: enTags, trend: enTrend, reports: enReports, advancedReports: enAdvancedReports, plc: enPlc, metrics: enMetrics, users: enUsers, excelTemplates: enExcelTemplates, plcHealth: enPlcHealth },
+    tr: { common: trCommon, login: trLogin, settings: trSettings, dashboard: trDashboard, tags: trTags, trend: trTrend, reports: trReports, advancedReports: trAdvancedReports, plc: trPlc, metrics: trMetrics, users: trUsers, excelTemplates: trExcelTemplates, plcHealth: trPlcHealth },
+    ru: { common: ruCommon, login: ruLogin, settings: ruSettings, dashboard: ruDashboard, tags: ruTags, trend: ruTrend, reports: ruReports, advancedReports: ruAdvancedReports, plc: ruPlc, metrics: ruMetrics, users: ruUsers, excelTemplates: ruExcelTemplates, plcHealth: ruPlcHealth },
+    de: { common: deCommon, login: deLogin, settings: deSettings, dashboard: deDashboard, tags: deTags, trend: deTrend, reports: deReports, advancedReports: deAdvancedReports, plc: dePlc, metrics: deMetrics, users: deUsers, excelTemplates: deExcelTemplates, plcHealth: dePlcHealth },
+    ar: { common: arCommon, login: arLogin, settings: arSettings, dashboard: arDashboard, tags: arTags, trend: arTrend, reports: arReports, advancedReports: arAdvancedReports, plc: arPlc, metrics: arMetrics, users: arUsers, excelTemplates: arExcelTemplates, plcHealth: arPlcHealth },
   },
   lng: initialLng,
   fallbackLng: 'en',
-  ns: ['common', 'login', 'settings', 'dashboard', 'tags', 'trend', 'reports', 'advancedReports', 'plc', 'metrics', 'users', 'excelTemplates'],
+  ns: ['common', 'login', 'settings', 'dashboard', 'tags', 'trend', 'reports', 'advancedReports', 'plc', 'metrics', 'users', 'excelTemplates', 'plcHealth'],
   defaultNS: 'common',
   interpolation: { escapeValue: false },
 })

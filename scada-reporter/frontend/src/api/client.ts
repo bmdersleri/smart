@@ -183,6 +183,33 @@ export const createPlc = (data: PlcCreate) => api.post<PlcEntry>('/plc/', data)
 export const updatePlc = (name: string, data: PlcUpdate) => api.patch<{ updated: boolean }>(`/plc/${encodeURIComponent(name)}`, data)
 export const deletePlc = (name: string) => api.delete(`/plc/${encodeURIComponent(name)}`)
 
+// PLC sağlık & incident'lar
+export interface PlcHealthRow {
+  plc_ip: string; plc_name: string; rack: number; slot: number; connected: boolean
+  last_success_at: string | null; consecutive_fail: number; last_error: string | null
+  good_last_cycle: number; bad_last_cycle: number; reconnects_last_min: number
+  open_incident_count: number; updated_at: string
+}
+export interface PlcIncidentRow {
+  id: number; plc_ip: string; plc_name: string; kind: string
+  severity: 'critical' | 'warning'; message: string; detail: Record<string, unknown>
+  opened_at: string; resolved_at: string | null
+  acknowledged_by: string | null; acknowledged_at: string | null
+}
+export interface IncidentSummary { open_total: number; critical: number; warning: number }
+
+export const getPlcHealth = () => api.get<PlcHealthRow[]>('/plc/health')
+export const getPlcIncidents = (params?: { open?: boolean; plc?: string; limit?: number }) => {
+  const q = new URLSearchParams()
+  if (params?.open !== undefined) q.set('open', String(params.open))
+  if (params?.plc) q.set('plc', params.plc)
+  if (params?.limit) q.set('limit', String(params.limit))
+  const qs = q.toString()
+  return api.get<PlcIncidentRow[]>(`/plc/incidents${qs ? `?${qs}` : ''}`)
+}
+export const getIncidentSummary = () => api.get<IncidentSummary>('/plc/incidents/summary')
+export const ackIncident = (id: number) => api.post(`/plc/incidents/${id}/ack`)
+
 export const getTrend = (tagIds: number[], hours: number, maxPoints = 2000) =>
   api.get<{ tag_id: number; name: string; unit: string; data: { t: string; v: number }[] }[]>(
     `/dashboard/trend?${tagIds.map((id) => `tag_ids=${id}`).join('&')}&hours=${hours}&max_points=${maxPoints}`

@@ -78,7 +78,7 @@ async def init_continuous_aggregates(conn: AsyncConnection) -> None:
         try:
             await conn.execute(
                 text(
-                    f"CREATE MATERIALIZED VIEW IF NOT EXISTS {view} "
+                    f"CREATE MATERIALIZED VIEW IF NOT EXISTS {view} "  # nosec B608 — view/bucket are literals from the CAGGS constant, not user input
                     "WITH (timescaledb.continuous) AS "
                     f"SELECT tag_id, time_bucket(INTERVAL '{bucket}', timestamp) AS bucket, "
                     "avg(value) AS avg, min(value) AS min, max(value) AS max, count(*) AS n "
@@ -120,7 +120,7 @@ async def init_daily_rollup(conn: AsyncConnection) -> None:
     try:
         await conn.execute(
             text(
-                "CREATE MATERIALIZED VIEW IF NOT EXISTS tag_readings_1d "
+                "CREATE MATERIALIZED VIEW IF NOT EXISTS tag_readings_1d "  # nosec B608 — only the int()-cast offset is interpolated; rest is a literal
                 "WITH (timescaledb.continuous) AS "
                 "SELECT tag_id, "
                 f"time_bucket(INTERVAL '1 day', timestamp, offset => INTERVAL '{-off} hours') "

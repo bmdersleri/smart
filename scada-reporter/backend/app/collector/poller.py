@@ -16,7 +16,8 @@ from sqlalchemy import insert, select
 from sqlalchemy.exc import IntegrityError
 
 from app.collector.cache import latest_cache
-from app.collector.s7_collector import BAD, ReadSpec, parse_address, plc_manager
+from app.collector.plc_health_tracker import health_tracker
+from app.collector.s7_collector import BAD, GOOD, ReadSpec, parse_address, plc_manager
 from app.core import metrics
 from app.core.config import settings
 from app.core.database import AsyncSessionLocal
@@ -61,6 +62,7 @@ async def read_plc_group(
     ip, rack, slot = key
     specs = [spec for _, spec in items]
     read_start = time.monotonic()
+    read_error: str | None = None
     try:
         results = await asyncio.wait_for(
             plc_manager.read_plc_batch(ip, rack, slot, specs), timeout=timeout
@@ -68,12 +70,18 @@ async def read_plc_group(
     except Exception as e:
         logger.warning("PLC grup okuma hatasi/zaman asimi %s: %s", ip, e)
         results = [(None, BAD)] * len(specs)
+        # asyncio.TimeoutError str()'i boş; tip adına düş
+        read_error = str(e) or e.__class__.__name__
     finally:
         metrics.observe_plc_read(ip, time.monotonic() - read_start)
-    return [
+    rows = [
         (tag_id, value, quality)
         for (tag_id, _), (value, quality) in zip(items, results, strict=False)
     ]
+    good = sum(1 for _, _, q in rows if q == GOOD)
+    bad = len(rows) - good
+    health_tracker.record_read(key, "", good, bad, time.monotonic(), error=read_error)
+    return rows
 
 
 def should_store(
