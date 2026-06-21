@@ -71,7 +71,7 @@ export default function PlcHealth() {
                   <span className="font-medium">{i.plc_name || i.plc_ip}</span>
                   <span className="mx-2 opacity-60">·</span>
                   <span>{i.message}</span>
-                  <span className="ml-2 text-xs opacity-60">{new Date(i.opened_at).toLocaleString()}</span>
+                  <span className="ms-2 text-xs opacity-60">{new Date(i.opened_at).toLocaleString()}</span>
                 </div>
                 {can('plc:manage') && !i.acknowledged_by && (
                   <button onClick={() => ack.mutate(i.id)} className="text-xs px-2 py-1 rounded bg-gray-800 hover:bg-gray-700 text-gray-200">
