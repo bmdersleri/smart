@@ -38,6 +38,8 @@ from app.core.timescaledb import (
 )
 from app.models import annotation as _annotation  # noqa: F401
 from app.models import excel_template as _excel_template  # noqa: F401
+from app.models import plc_health as _plc_health  # noqa: F401
+from app.models import plc_incident as _plc_incident  # noqa: F401
 from app.models import report_archive, report_template, scheduled_report  # noqa: F401
 from app.models import tag_group as _tag_group  # noqa: F401
 from app.models.report_history import ReportHistory as _ReportHistory  # noqa: F401
