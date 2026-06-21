@@ -200,7 +200,38 @@ async def test_reset_password_writes_audit_no_password(client, db_session, as_ad
     detail_str = row.detail or ""
     assert "newpass1" not in detail_str
     assert "secret1" not in detail_str
-    assert "password" not in detail_str.lower() or "username" in detail_str.lower()
+    assert "password" not in detail_str.lower()
+
+
+@pytest.mark.asyncio
+async def test_register_writes_audit(client, db_session, as_admin):
+    """POST /auth/register creates exactly 1 audit row with action=user.create."""
+    resp = await client.post(
+        "/api/auth/register",
+        json={
+            "username": "newbie",
+            "email": "newbie@audit.local",
+            "password": "secret42",
+            "full_name": "New User",
+            "role": "operator",
+        },
+    )
+    assert resp.status_code == 201, resp.text
+
+    created_id = resp.json()["id"]
+
+    rows = await _all_audit(db_session)
+    assert len(rows) == 1
+    row = rows[0]
+    assert row.action == "user.create"
+    assert row.target_type == "user"
+    assert row.actor_username == "admin"
+    assert row.target_id == str(created_id)
+    assert row.detail_dict.get("username") == "newbie"
+    # Password must never appear in the audit detail
+    detail_str = row.detail or ""
+    assert "secret42" not in detail_str
+    assert "password" not in detail_str.lower()
 
 
 @pytest.mark.asyncio
