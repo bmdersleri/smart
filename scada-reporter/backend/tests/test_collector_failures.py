@@ -73,21 +73,6 @@ async def test_read_plc_group_connection_error_marks_all_bad(monkeypatch):
         assert value is None
 
 
-@pytest.mark.asyncio
-async def test_read_plc_group_timeout_increments_bad_metric(monkeypatch):
-    """A timeout triggers a read, and run_once increments bad_quality metric."""
-
-    async def slow_batch(ip, rack, slot, specs, name=""):
-        await asyncio.sleep(10)
-
-    monkeypatch.setattr(poller.plc_manager, "read_plc_batch", slow_batch)
-
-    items = [(5, ReadSpec("DB", 1, 0, 0, 4, "REAL"))]
-    # Just call read_plc_group; metric increment happens in run_once, not here
-    rows = await poller.read_plc_group(("10.3.3.3", 0, 1), items, timeout=0.05)
-    assert rows[0][2] == BAD
-
-
 # ── run_once end-to-end with failing PLC ────────────────────────────────────
 
 
@@ -118,30 +103,21 @@ async def test_run_once_with_plc_timeout_stores_bad_quality(db_engine, monkeypat
     monkeypatch.setattr(poller.plc_manager, "read_plc_batch", slow_batch)
 
     bad_before = _sample("scada_bad_quality_total")
-    try:
-        written, _ = await poller.run_once({}, now=5000.0, sessionmaker=sm, timeout=0.05)
+    written, _ = await poller.run_once({}, now=5000.0, sessionmaker=sm, timeout=0.05)
 
-        # One BAD-quality row should have been written to DB
-        assert written == 1
+    # One BAD-quality row should have been written to DB
+    assert written == 1
 
-        # bad_quality counter must have gone up by 1
-        assert _sample("scada_bad_quality_total") - bad_before == 1.0
+    # bad_quality counter must have gone up by 1
+    assert _sample("scada_bad_quality_total") - bad_before == 1.0
 
-        # Verify DB row has quality == BAD (0)
-        async with sm() as s:
-            result = await s.execute(select(TagReading).where(TagReading.tag_id == tid))
-            readings = result.scalars().all()
-        assert len(readings) == 1
-        assert readings[0].quality == BAD
-        assert readings[0].value is None
-
-    finally:
-        from sqlalchemy import delete
-
-        async with sm() as s:
-            await s.execute(delete(TagReading).where(TagReading.tag_id == tid))
-            await s.execute(delete(Tag).where(Tag.id == tid))
-            await s.commit()
+    # Verify DB row has quality == BAD (0)
+    async with sm() as s:
+        result = await s.execute(select(TagReading).where(TagReading.tag_id == tid))
+        readings = result.scalars().all()
+    assert len(readings) == 1
+    assert readings[0].quality == BAD
+    assert readings[0].value is None
 
 
 @pytest.mark.asyncio
@@ -170,25 +146,16 @@ async def test_run_once_with_plc_error_stores_bad_quality(db_engine, monkeypatch
     monkeypatch.setattr(poller.plc_manager, "read_plc_batch", error_batch)
 
     bad_before = _sample("scada_bad_quality_total")
-    try:
-        written, _ = await poller.run_once({}, now=6000.0, sessionmaker=sm, timeout=5)
+    written, _ = await poller.run_once({}, now=6000.0, sessionmaker=sm, timeout=5)
 
-        assert written == 1
-        assert _sample("scada_bad_quality_total") - bad_before >= 1.0
+    assert written == 1
+    assert _sample("scada_bad_quality_total") - bad_before >= 1.0
 
-        async with sm() as s:
-            result = await s.execute(select(TagReading).where(TagReading.tag_id == tid))
-            readings = result.scalars().all()
-        assert len(readings) == 1
-        assert readings[0].quality == BAD
-
-    finally:
-        from sqlalchemy import delete
-
-        async with sm() as s:
-            await s.execute(delete(TagReading).where(TagReading.tag_id == tid))
-            await s.execute(delete(Tag).where(Tag.id == tid))
-            await s.commit()
+    async with sm() as s:
+        result = await s.execute(select(TagReading).where(TagReading.tag_id == tid))
+        readings = result.scalars().all()
+    assert len(readings) == 1
+    assert readings[0].quality == BAD
 
 
 # ── bad-quality storage distinct from good-quality ──────────────────────────
@@ -233,26 +200,14 @@ async def test_bad_quality_reading_stored_with_correct_quality_value(db_engine, 
 
     monkeypatch.setattr(poller.plc_manager, "read_plc_batch", mixed_batch)
 
-    try:
-        written, _ = await poller.run_once({}, now=7000.0, sessionmaker=sm, timeout=5)
-        assert written == 2
+    written, _ = await poller.run_once({}, now=7000.0, sessionmaker=sm, timeout=5)
+    assert written == 2
 
-        async with sm() as s:
-            result = await s.execute(
-                select(TagReading).where(TagReading.tag_id.in_([good_id, bad_id]))
-            )
-            readings = {r.tag_id: r for r in result.scalars().all()}
+    async with sm() as s:
+        result = await s.execute(select(TagReading).where(TagReading.tag_id.in_([good_id, bad_id])))
+        readings = {r.tag_id: r for r in result.scalars().all()}
 
-        assert readings[good_id].quality == GOOD
-        assert readings[good_id].value == 42.0
-        assert readings[bad_id].quality == BAD
-        assert readings[bad_id].value is None
-
-    finally:
-        from sqlalchemy import delete
-
-        async with sm() as s:
-            ids = [good_id, bad_id]
-            await s.execute(delete(TagReading).where(TagReading.tag_id.in_(ids)))
-            await s.execute(delete(Tag).where(Tag.id.in_(ids)))
-            await s.commit()
+    assert readings[good_id].quality == GOOD
+    assert readings[good_id].value == 42.0
+    assert readings[bad_id].quality == BAD
+    assert readings[bad_id].value is None

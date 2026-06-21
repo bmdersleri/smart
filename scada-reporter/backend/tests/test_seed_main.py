@@ -62,8 +62,8 @@ async def test_seed_tags_main_creates_tags(db_engine, monkeypatch):
         result = await db.execute(select(Tag))
         tags = result.scalars().all()
 
-    # The seed file defines TAGS — we just check there are some
-    assert len(tags) == len(seed_tags_mod.TAGS)
+    # The seed file defines TAGS — assert the exact count so a silent truncation fails
+    assert len(tags) == 27
     node_ids = {t.node_id for t in tags}
     # Spot-check a few known node IDs from the seed data
     assert "DB171,REAL0" in node_ids
@@ -83,4 +83,4 @@ async def test_seed_tags_main_idempotent(db_engine, monkeypatch):
         result = await db.execute(select(Tag))
         tags = result.scalars().all()
 
-    assert len(tags) == len(seed_tags_mod.TAGS)
+    assert len(tags) == 27
