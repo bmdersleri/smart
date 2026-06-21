@@ -18,7 +18,9 @@ function walk(dir) {
   for (const name of readdirSync(dir)) {
     const p = join(dir, name)
     if (statSync(p).isDirectory()) {
-      if (!p.includes('i18n')) walk(p)
+      // Skip generated (auto-generated code) and i18n (translation catalogs).
+      if (p.includes('i18n') || p.replace(/\\/g, '/').includes('api/generated')) continue
+      walk(p)
       continue
     }
     if (!/\.(tsx|ts)$/.test(p) || p.endsWith('.test.ts') || p.endsWith('.test.tsx')) continue
