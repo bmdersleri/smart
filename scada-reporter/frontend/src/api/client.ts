@@ -1,5 +1,8 @@
 import axios from 'axios'
 
+// Role union — mirrors backend Literal["admin", "operator", "viewer"]
+export type UserRole = 'admin' | 'operator' | 'viewer'
+
 export const api = axios.create({ baseURL: '/api' })
 
 api.interceptors.request.use((config) => {
@@ -23,25 +26,25 @@ api.interceptors.response.use(
 export const login = (username: string, password: string) =>
   api.post<{ access_token: string }>('/auth/token', new URLSearchParams({ username, password }))
 
-export const getMe = () => api.get<{ id: number; username: string; role: string; full_name: string; language: string; permissions: string[] }>('/auth/me')
+export const getMe = () => api.get<{ id: number; username: string; role: UserRole; full_name: string; language: string; permissions: string[] }>('/auth/me')
 
 export const updateMe = (language: string) =>
-  api.patch<{ id: number; username: string; role: string; full_name: string; language: string; permissions: string[] }>(
+  api.patch<{ id: number; username: string; role: UserRole; full_name: string; language: string; permissions: string[] }>(
     '/auth/me',
     { language },
   )
 
 export interface ManagedUser {
   id: number; username: string; email: string; full_name: string
-  role: string; is_active: boolean
+  role: UserRole; is_active: boolean
   permission_overrides: Record<string, boolean>; permissions: string[]
 }
 export interface UserCreatePayload {
   username: string; email: string; password: string
-  full_name?: string; role?: string; permission_overrides?: Record<string, boolean>
+  full_name?: string; role?: UserRole; permission_overrides?: Record<string, boolean>
 }
 export interface UserPatchPayload {
-  email?: string; full_name?: string; role?: string
+  email?: string; full_name?: string; role?: UserRole
   is_active?: boolean; permission_overrides?: Record<string, boolean>
 }
 export const listUsers = () => api.get<ManagedUser[]>('/users/')

@@ -7,7 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.permissions import effective_permissions, user_can
+from app.core.permissions import Role, effective_permissions, user_can
 from app.core.security import (
     create_access_token,
     decode_token,
@@ -25,7 +25,7 @@ class UserCreate(BaseModel):
     email: str
     password: str
     full_name: str = ""
-    role: str = "operator"
+    role: Role = "operator"
 
 
 class TokenResponse(BaseModel):

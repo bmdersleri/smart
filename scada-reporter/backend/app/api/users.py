@@ -1,3 +1,5 @@
+from typing import cast
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import func, select
@@ -5,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.auth import require_role
 from app.core.database import get_db
-from app.core.permissions import ALL_PERMISSIONS, effective_permissions
+from app.core.permissions import ALL_PERMISSIONS, Role, effective_permissions
 from app.core.security import hash_password
 from app.models.user import User
 
@@ -17,7 +19,7 @@ class UserOut(BaseModel):
     username: str
     email: str
     full_name: str
-    role: str
+    role: Role
     is_active: bool
     permission_overrides: dict
     permissions: list[str]
@@ -28,7 +30,7 @@ class UserCreateIn(BaseModel):
     email: str
     password: str = Field(min_length=6)
     full_name: str = ""
-    role: str = "operator"
+    role: Role = "operator"
     permission_overrides: dict = {}
 
     @field_validator("permission_overrides")
@@ -45,7 +47,7 @@ class UserCreateIn(BaseModel):
 class UserPatchIn(BaseModel):
     email: str | None = None
     full_name: str | None = None
-    role: str | None = None
+    role: Role | None = None
     is_active: bool | None = None
     permission_overrides: dict | None = None
 
@@ -70,7 +72,7 @@ def _to_out(user: User) -> UserOut:
         username=user.username,
         email=user.email,
         full_name=user.full_name or "",
-        role=user.role,
+        role=cast(Role, user.role),
         is_active=user.is_active,
         permission_overrides=user.permission_overrides or {},
         permissions=sorted(effective_permissions(user)),
