@@ -126,8 +126,23 @@ format:
 typecheck:
     cd {{be}} && .venv/Scripts/mypy app/
 
-# Tüm kontroller (CI benzeri)
-check: lint format-check typecheck test
+# Backend kontrolleri (lint + format + type + test)
+backend-check: lint format-check typecheck test
+
+# Frontend kontrolleri (TypeScript + lint + test)
+frontend-check:
+    cd {{fe}} && pnpm tsc --noEmit && pnpm lint && pnpm test
+
+# Agent CLI kontrolleri
+cli-check:
+    cd {{ah}} && ../backend/.venv/Scripts/pytest tests/ -v
+
+# MCP server kontrolleri
+mcp-check:
+    cd mcp-servers/mcp-scada && ../../scada-reporter/backend/.venv/Scripts/python -m pytest tests/ -v
+
+# Tüm kontroller (CI benzeri) — backend + frontend + CLI + MCP
+check: backend-check frontend-check cli-check mcp-check
 
 # ── Araçlar ──────────────────────────────────────────────────────────────────
 
