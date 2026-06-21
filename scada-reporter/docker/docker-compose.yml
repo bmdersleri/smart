@@ -1,4 +1,14 @@
-version: "3.9"
+# =============================================================================
+# YEREL / GELİŞTİRME ALTYAPISI — ÜRETİM DAĞITIM ŞABLONU DEĞİLDİR
+# =============================================================================
+# Bu compose dosyası YALNIZCA yerel geliştirme ortamı için tasarlanmıştır.
+# Başlatılan servisler: TimescaleDB (PostgreSQL), Redis, Grafana, Portainer.
+# Uygulama (API / collector / frontend) servisleri ve Dockerfile'lar Faz 4'e
+# ertelenmiştir — bu dosyaya EKLEMEYIN.
+#
+# Üretim ortamında DB ve Grafana parolalarını .env dosyasıyla mutlaka
+# override edin. Bkz. docker/.env.example ve DOCKER.md.
+# =============================================================================
 
 services:
   db:
@@ -6,7 +16,7 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: scada
-      POSTGRES_PASSWORD: scada123
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-scada123}
       POSTGRES_DB: scada_reporter
     ports:
       - "5432:5432"
@@ -29,8 +39,8 @@ services:
     ports:
       - "3000:3000"
     environment:
-      GF_SECURITY_ADMIN_USER: admin
-      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_SECURITY_ADMIN_USER: ${GF_SECURITY_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD:-admin}
       GF_INSTALL_PLUGINS: grafana-piechart-panel
     volumes:
       - grafana-data:/var/lib/grafana
