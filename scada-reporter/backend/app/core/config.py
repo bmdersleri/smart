@@ -22,6 +22,10 @@ class Settings(BaseSettings):
     # ayırmak için: API worker'larında False, ayrı collector process'inde True.
     RUN_COLLECTOR: bool = True
 
+    # Başlangıçta Base.metadata.create_all() çağrılsın mı? Dev'de True (varsayılan)
+    # yeterli; production'da False yapın — şema Alembic migration'larıyla yönetilir.
+    AUTO_CREATE_TABLES: bool = True
+
     S7_HOST: str = "192.168.112.50"
     S7_RACK: int = 0
     S7_SLOT: int = 1

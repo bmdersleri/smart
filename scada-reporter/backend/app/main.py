@@ -62,6 +62,15 @@ if settings.SENTRY_DSN:
     logger.info("Sentry initialized")
 
 
+async def init_database_schema(conn) -> None:
+    """create_all yalnız AUTO_CREATE_TABLES ise; init_timescaledb her zaman (idempotent)."""
+    if settings.AUTO_CREATE_TABLES:
+        await conn.run_sync(Base.metadata.create_all)
+    else:
+        logger.info("AUTO_CREATE_TABLES=False — şema Alembic'ten bekleniyor (alembic upgrade head)")
+    await init_timescaledb(conn)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Prod yapılandırma sağlık kontrolü — tehlikeli varsayılanlarda durdur
@@ -79,8 +88,7 @@ async def lifespan(app: FastAPI):
 
     # Veritabanı tablolarını oluştur
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-        await init_timescaledb(conn)
+        await init_database_schema(conn)
     logger.info("Veritabani tablolari hazir")
 
     # Sürekli toplama view'ları ayrı AUTOCOMMIT bağlantısında (CAGG DDL transaction'sız)
