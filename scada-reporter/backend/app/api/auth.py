@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.audit import record_audit
 from app.core.database import get_db
 from app.core.permissions import Role, effective_permissions, user_can
+from app.core.rate_limit import check_and_raise, record_failure, reset
 from app.core.security import (
     create_access_token,
     decode_token,
@@ -91,22 +92,38 @@ def _issue_token(user: User) -> TokenResponse:
 
 
 @router.post("/token", response_model=TokenResponse)
-async def login(form: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)):
+async def login(
+    request: Request,
+    form: OAuth2PasswordRequestForm = Depends(),
+    db: AsyncSession = Depends(get_db),
+):
+    ip = request.client.host if request.client else None
+    check_and_raise(ip, form.username)
     result = await db.execute(select(User).where(User.username == form.username))
     user = result.scalar_one_or_none()
     if not user or not verify_password(form.password, user.hashed_password):
+        record_failure(ip, form.username)
         raise HTTPException(status_code=400, detail="Kullanici adi veya sifre yanlis")
+    reset(ip, form.username)
     return _issue_token(user)
 
 
 @router.post("/login", response_model=TokenResponse)
-async def login_json(data: LoginRequest, db: AsyncSession = Depends(get_db)):
+async def login_json(
+    request: Request,
+    data: LoginRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    ip = request.client.host if request.client else None
+    check_and_raise(ip, data.username)
     result = await db.execute(select(User).where(User.username == data.username))
     user = result.scalar_one_or_none()
     if not user or not verify_password(data.password, user.hashed_password):
+        record_failure(ip, data.username)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Kullanici adi veya sifre yanlis"
         )
+    reset(ip, data.username)
     return _issue_token(user)
 
 

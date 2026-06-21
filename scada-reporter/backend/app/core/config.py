@@ -47,6 +47,11 @@ class Settings(BaseSettings):
 
     SENTRY_DSN: str = ""
 
+    # ── Login rate limiting (brute-force koruması) ──
+    LOGIN_RATE_LIMIT_ENABLED: bool = True
+    LOGIN_RATE_LIMIT_MAX: int = 10  # pencere içinde max başarısız deneme
+    LOGIN_RATE_LIMIT_WINDOW_SECONDS: int = 60  # pencere uzunluğu (saniye)
+
     FACILITY_NAME: str = "Su/Atıksu Tesisi"
     REPORT_ARCHIVE_KEEP_DAYS: int = 365
     # Rapor gün sınırı için yerel saat ofseti (UTC+3 İstanbul). Günlük

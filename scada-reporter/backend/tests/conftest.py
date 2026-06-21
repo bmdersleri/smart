@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from sqlalchemy.pool import StaticPool
 
 from app.core.database import Base, get_db
+from app.core.rate_limit import reset_all
 from app.main import app
 
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
@@ -44,6 +45,9 @@ async def _isolate_db(db_engine):
     async with db_engine.begin() as conn:
         for table in reversed(Base.metadata.sorted_tables):
             await conn.execute(table.delete())
+    # Login rate limiter modül-global state'ini de sıfırla; aksi halde diğer
+    # testlerdeki başarısız denemeler birikerek flaky 429 hatalarına yol açar.
+    reset_all()
     yield
 
 
