@@ -1,11 +1,12 @@
 from typing import Literal
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.audit import record_audit
 from app.core.database import get_db
 from app.core.permissions import Role, effective_permissions, user_can
 from app.core.security import (
@@ -111,9 +112,10 @@ async def login_json(data: LoginRequest, db: AsyncSession = Depends(get_db)):
 
 @router.post("/register", status_code=201)
 async def register(
+    request: Request,
     data: UserCreate,
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(require_role("admin")),
+    actor: User = Depends(require_role("admin")),
 ):
     result = await db.execute(select(User).where(User.username == data.username))
     if result.scalar_one_or_none():
@@ -126,6 +128,16 @@ async def register(
         role=data.role,
     )
     db.add(user)
+    await db.flush()  # populate user.id before audit row
+    await record_audit(
+        db,
+        actor=actor,
+        action="user.create",
+        target_type="user",
+        target_id=user.id,
+        detail={"username": user.username, "role": user.role},
+        ip=request.client.host if request.client else None,
+    )
     await db.commit()
     return {"id": user.id, "username": user.username}
 

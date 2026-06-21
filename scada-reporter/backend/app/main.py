@@ -12,6 +12,7 @@ from app.api import (
     advanced_reports,
     ai,
     annotations,
+    audit,
     auth,
     dashboard,
     excel_templates,
@@ -37,6 +38,7 @@ from app.core.timescaledb import (
     init_timescaledb,
 )
 from app.models import annotation as _annotation  # noqa: F401
+from app.models import audit_log as _audit_log  # noqa: F401
 from app.models import excel_template as _excel_template  # noqa: F401
 from app.models import plc_health as _plc_health  # noqa: F401
 from app.models import plc_incident as _plc_incident  # noqa: F401
@@ -172,6 +174,7 @@ app.include_router(plc.router, prefix="/api")
 app.include_router(groups.router, prefix="/api")
 app.include_router(annotations.router, prefix="/api")
 app.include_router(users.router, prefix="/api")
+app.include_router(audit.router, prefix="/api")
 app.include_router(ai.router, prefix="/api")
 
 
