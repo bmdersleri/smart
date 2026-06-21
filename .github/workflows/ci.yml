@@ -24,7 +24,7 @@ jobs:
       - name: Install dependencies
         run: |
           uv venv .venv
-          uv pip install -r requirements.txt ruff mypy bandit safety
+          uv pip install -r requirements-dev.lock
 
       - name: Lint — ruff
         run: uv run --no-sync ruff check app/
@@ -58,7 +58,7 @@ jobs:
       - name: Install dependencies
         run: |
           uv venv .venv
-          uv pip install -e . pytest
+          uv pip install -e ../packages/scada-core -e . pytest
 
       - name: Tests — pytest
         run: uv run --no-sync pytest tests/ -v --tb=short
@@ -84,7 +84,7 @@ jobs:
           cache-dependency-path: scada-reporter/frontend/pnpm-lock.yaml
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       - name: TypeScript check
         run: pnpm tsc --noEmit
@@ -94,3 +94,28 @@ jobs:
 
       - name: Tests — vitest
         run: pnpm test
+
+  mcp:
+    name: MCP scada (install · import · test)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mcp-servers/mcp-scada
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          uv venv .venv
+          uv pip install -e ../../scada-reporter/packages/scada-core -e . pytest pytest-asyncio
+
+      - name: Import smoke
+        run: uv run --no-sync python -c "import mcp_scada.server"
+
+      - name: Tests — pytest
+        run: uv run --no-sync pytest -v --tb=short
