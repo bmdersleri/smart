@@ -32,10 +32,14 @@ run-collector:
 run-frontend:
     cd {{fe}} && pnpm dev
 
-# Bağımlılıkları yükle (backend + frontend)
+# Bağımlılıkları yükle (backend + frontend) — committed lock dosyalarından
 install:
-    cd {{be}} && uv pip install -r requirements.txt
+    cd {{be}} && uv pip install -r requirements.lock
     cd {{fe}} && pnpm install
+
+# Geliştirme bağımlılıklarını yükle (backend) — committed lock dosyasından
+install-dev:
+    cd {{be}} && uv pip install -r requirements-dev.lock
 
 # ── Test ─────────────────────────────────────────────────────────────────────
 
