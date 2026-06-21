@@ -1,0 +1,23 @@
+{
+  "title": "SPS-Zustand",
+  "subtitle": "Überwachung von SPS-Verbindung und Datengesundheit",
+  "nav": "SPS-Zustand",
+  "open_incidents": "Offene Vorfälle",
+  "all_healthy": "Alle SPSen sind in Ordnung",
+  "per_plc": "Status pro SPS",
+  "history": "Verlauf",
+  "critical": "Kritisch",
+  "warning": "Warnung",
+  "ack": "Bestätigen",
+  "resolved": "behoben",
+  "connected": "Verbunden",
+  "disconnected": "Getrennt",
+  "col_plc": "SPS",
+  "col_status": "Status",
+  "col_last_success": "Letzter erfolgreicher Lesevorgang",
+  "col_fail": "Aufeinanderfolgende Fehler",
+  "col_reconnects": "Verbindungswiederherstellungen/min",
+  "alerts": "{{count}} Probleme",
+  "open_problems": "{{count}} offene Probleme",
+  "all_healthy_short": "In Ordnung"
+}

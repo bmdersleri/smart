@@ -1,17 +1,21 @@
 import { render } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi } from 'vitest'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import Layout from './Layout'
 
 vi.mock('../context/AuthContext', () => ({
-  useAuth: () => ({ user: { username: 'admin', role: 'admin', full_name: 'Admin' }, logout: vi.fn() }),
+  useAuth: () => ({ user: { username: 'admin', role: 'admin', full_name: 'Admin' }, logout: vi.fn(), can: () => false }),
 }))
 
 function renderLayout() {
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
-    <MemoryRouter>
-      <Layout />
-    </MemoryRouter>,
+    <QueryClientProvider client={qc}>
+      <MemoryRouter>
+        <Layout />
+      </MemoryRouter>
+    </QueryClientProvider>,
   )
 }
 

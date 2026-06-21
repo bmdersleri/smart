@@ -14,6 +14,7 @@
   "nav_dashboard": "Dashboard",
   "nav_tags": "Tag Management",
   "nav_plc": "PLC Management",
+  "nav_plc_health": "PLC Health",
   "nav_trend": "Trend Chart",
   "nav_reports": "Reports",
   "nav_advanced_reports": "Advanced Reports",

@@ -1,0 +1,23 @@
+{
+  "title": "PLC Sağlık",
+  "subtitle": "PLC bağlantı ve veri sağlığı izleme",
+  "nav": "PLC Sağlık",
+  "open_incidents": "Açık Sorunlar",
+  "all_healthy": "Tüm PLC'ler sağlıklı",
+  "per_plc": "PLC Bazında Durum",
+  "history": "Geçmiş",
+  "critical": "Kritik",
+  "warning": "Uyarı",
+  "ack": "Onayla",
+  "resolved": "çözüldü",
+  "connected": "Bağlı",
+  "disconnected": "Kopuk",
+  "col_plc": "PLC",
+  "col_status": "Durum",
+  "col_last_success": "Son Başarılı Okuma",
+  "col_fail": "Ardışık Hata",
+  "col_reconnects": "Reconnect/dk",
+  "alerts": "{{count}} sorun",
+  "open_problems": "{{count}} açık sorun",
+  "all_healthy_short": "Sağlıklı"
+}

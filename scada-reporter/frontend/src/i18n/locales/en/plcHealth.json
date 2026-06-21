@@ -1,0 +1,23 @@
+{
+  "title": "PLC Health",
+  "subtitle": "PLC connection and data health monitoring",
+  "nav": "PLC Health",
+  "open_incidents": "Open Incidents",
+  "all_healthy": "All PLCs healthy",
+  "per_plc": "Per-PLC Status",
+  "history": "History",
+  "critical": "Critical",
+  "warning": "Warning",
+  "ack": "Acknowledge",
+  "resolved": "resolved",
+  "connected": "Connected",
+  "disconnected": "Disconnected",
+  "col_plc": "PLC",
+  "col_status": "Status",
+  "col_last_success": "Last Successful Read",
+  "col_fail": "Consecutive Failures",
+  "col_reconnects": "Reconnects/min",
+  "alerts": "{{count}} issues",
+  "open_problems": "{{count}} open issues",
+  "all_healthy_short": "Healthy"
+}
