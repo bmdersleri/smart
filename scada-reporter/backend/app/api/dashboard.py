@@ -487,7 +487,7 @@ async def trend_agg(
         rows = (
             await db.execute(
                 text(
-                    f"SELECT r.tag_id, t.name, t.unit, r.bucket, r.avg "
+                    f"SELECT r.tag_id, t.name, t.unit, r.bucket, r.avg "  # nosec B608 — {view} is a fixed rollup name from pick_rollup(); ids/since bound via bindparams
                     f"FROM {view} r JOIN tags t ON t.id = r.tag_id "
                     "WHERE r.tag_id = ANY(:ids) AND r.bucket >= :since "
                     "ORDER BY r.bucket ASC"

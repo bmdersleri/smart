@@ -82,7 +82,7 @@ async def _daily_timescale(
     if agg == "delta":
         rows = await db.execute(
             text(
-                "SELECT EXTRACT(DAY FROM (bucket + " + shift + "))::int AS d, "
+                "SELECT EXTRACT(DAY FROM (bucket + " + shift + "))::int AS d, "  # nosec B608 — shift is an int()-guarded INTERVAL literal; tid/s/e bound as params
                 "(last_v - first_v) AS val, n "
                 "FROM tag_readings_1d "
                 "WHERE tag_id = :tid AND (bucket + " + shift + ") >= :s "
@@ -94,7 +94,7 @@ async def _daily_timescale(
     col = _CAGG_COL[agg]
     rows = await db.execute(
         text(
-            "SELECT EXTRACT(DAY FROM (bucket + " + shift + "))::int AS d, "
+            "SELECT EXTRACT(DAY FROM (bucket + " + shift + "))::int AS d, "  # nosec B608 — shift int()-guarded; col from _CAGG_COL whitelist; tid/s/e bound as params
             f"{col} AS val FROM tag_readings_1d "
             "WHERE tag_id = :tid AND (bucket + " + shift + ") >= :s "
             "AND (bucket + " + shift + ") < :e"
