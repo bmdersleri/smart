@@ -53,6 +53,27 @@ class Settings(BaseSettings):
     # toplamalar bu ofsetle kaydırılmış tarihe göre gruplanır.
     REPORT_TZ_OFFSET_HOURS: int = 3
 
+    # ── PLC sağlık izleme ──
+    PLC_MONITOR_INTERVAL: int = 10  # monitor değerlendirme periyodu (sn)
+    PLC_STALE_SECONDS: float = 60.0  # bağlı ama bu süre GOOD okuma yoksa stale
+    PLC_PARTIAL_BAD_RATIO: float = 0.5  # tick BAD oranı bu üstündeyse kısmi hata
+    PLC_PARTIAL_BAD_CYCLES: int = 3  # kısmi hata için ardışık tick
+    PLC_FLAP_WINDOW_SECONDS: float = 120.0  # flapping penceresi
+    PLC_FLAP_COUNT: int = 3  # pencerede bu kadar reconnect = flapping
+    PLC_RECOVER_CYCLES: int = 2  # auto-resolve için temiz tick (histerezis)
+    PLC_INCIDENT_RETENTION_DAYS: int = 90  # resolved incident saklama
+
+    # ── Uyarı kanalları (varsayılan kapalı) ──
+    ALERT_MIN_SEVERITY: str = "warning"  # warning | critical (e-posta/webhook kapısı)
+    ALERT_EMAIL_ENABLED: bool = False
+    SMTP_HOST: str = ""
+    SMTP_PORT: int = 587
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""
+    ALERT_EMAIL_FROM: str = ""
+    ALERT_EMAIL_TO: str = ""  # virgülle ayrılmış alıcılar
+    ALERT_WEBHOOK_URL: str = ""
+
     @property
     def is_production(self) -> bool:
         return self.ENVIRONMENT.lower() == "production"
@@ -104,6 +125,11 @@ class Settings(BaseSettings):
             warnings.append(
                 "RUN_COLLECTOR=True — bu bir API process'iyse collector'ı ayırın"
                 " (RUN_COLLECTOR=False)."
+            )
+        if self.ALERT_EMAIL_ENABLED and not (self.SMTP_HOST and self.ALERT_EMAIL_TO):
+            warnings.append(
+                "ALERT_EMAIL_ENABLED=True ama SMTP_HOST/ALERT_EMAIL_TO eksik —"
+                " e-posta uyarıları gönderilemez."
             )
         return warnings
 

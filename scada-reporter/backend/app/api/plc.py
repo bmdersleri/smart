@@ -1,3 +1,5 @@
+from datetime import UTC, datetime
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy import delete, func, select, update
@@ -7,6 +9,8 @@ from app.api.auth import get_current_user, require_perm
 from app.collector.s7_collector import plc_manager
 from app.core.database import get_db
 from app.models.plc_config import PlcConfig
+from app.models.plc_health import PlcHealth
+from app.models.plc_incident import PlcIncident
 from app.models.tag import Tag
 
 router = APIRouter(prefix="/plc", tags=["plc"])
@@ -151,3 +155,89 @@ async def delete_plc(
     # Delete plc_config if exists
     await db.execute(delete(PlcConfig).where(PlcConfig.name == name))
     await db.commit()
+
+
+@router.get("/health")
+async def plc_health(db: AsyncSession = Depends(get_db), _=Depends(get_current_user)):
+    rows = (await db.execute(select(PlcHealth).order_by(PlcHealth.plc_name))).scalars().all()
+    return [
+        {
+            "plc_ip": r.plc_ip,
+            "plc_name": r.plc_name,
+            "rack": r.rack,
+            "slot": r.slot,
+            "connected": r.connected,
+            "last_success_at": r.last_success_at,
+            "consecutive_fail": r.consecutive_fail,
+            "last_error": r.last_error,
+            "good_last_cycle": r.good_last_cycle,
+            "bad_last_cycle": r.bad_last_cycle,
+            "reconnects_last_min": r.reconnects_last_min,
+            "open_incident_count": r.open_incident_count,
+            "updated_at": r.updated_at,
+        }
+        for r in rows
+    ]
+
+
+def _incident_dict(r: PlcIncident) -> dict:
+    return {
+        "id": r.id,
+        "plc_ip": r.plc_ip,
+        "plc_name": r.plc_name,
+        "kind": r.kind,
+        "severity": r.severity,
+        "message": r.message,
+        "detail": r.detail,
+        "opened_at": r.opened_at,
+        "resolved_at": r.resolved_at,
+        "acknowledged_by": r.acknowledged_by,
+        "acknowledged_at": r.acknowledged_at,
+    }
+
+
+@router.get("/incidents/summary")
+async def incidents_summary(db: AsyncSession = Depends(get_db), _=Depends(get_current_user)):
+    rows = (
+        (await db.execute(select(PlcIncident).where(PlcIncident.resolved_at.is_(None))))
+        .scalars()
+        .all()
+    )
+    critical = sum(1 for r in rows if r.severity == "critical")
+    warning = sum(1 for r in rows if r.severity == "warning")
+    return {"open_total": len(rows), "critical": critical, "warning": warning}
+
+
+@router.get("/incidents")
+async def list_incidents(
+    open: bool | None = None,
+    plc: str | None = None,
+    limit: int = 100,
+    db: AsyncSession = Depends(get_db),
+    _=Depends(get_current_user),
+):
+    stmt = select(PlcIncident).order_by(PlcIncident.opened_at.desc())
+    if open is True:
+        stmt = stmt.where(PlcIncident.resolved_at.is_(None))
+    elif open is False:
+        stmt = stmt.where(PlcIncident.resolved_at.is_not(None))
+    if plc:
+        stmt = stmt.where(PlcIncident.plc_ip == plc)
+    stmt = stmt.limit(limit)
+    rows = (await db.execute(stmt)).scalars().all()
+    return [_incident_dict(r) for r in rows]
+
+
+@router.post("/incidents/{incident_id}/ack")
+async def ack_incident(
+    incident_id: int,
+    db: AsyncSession = Depends(get_db),
+    user=Depends(require_perm("plc:manage")),
+):
+    inc = await db.get(PlcIncident, incident_id)
+    if inc is None:
+        raise HTTPException(status_code=404, detail="Incident bulunamadı")
+    inc.acknowledged_by = user.username
+    inc.acknowledged_at = datetime.now(UTC)
+    await db.commit()
+    return {"acknowledged": True, "id": incident_id}

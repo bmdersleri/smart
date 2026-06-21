@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { AxiosError } from 'axios'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -466,6 +466,8 @@ export default function Tags() {
   const [groupFilter, setGroupFilter] = useState<number | 'all' | 'none'>('all')
   const [viewMode, setViewMode] = useState<'table' | 'tree'>('table')
   const [treeSource, setTreeSource] = useState<'manual' | 'auto'>('manual')
+  const [page, setPage] = useState(1)
+  const PAGE_SIZE = 50
 
   const { data: tags = [], isLoading } = useQuery({
     queryKey: ['tags'],
@@ -504,6 +506,19 @@ export default function Tags() {
   const { sorted, sort, toggle } = useSortable(filtered, (t, k) =>
     k === 'plc' ? t.plc_name || t.device : (t as unknown as Record<string, unknown>)[k]
   )
+
+  // Client-side pagination for the table view — rendering all ~3000 rows at once
+  // freezes the page, so only one page of rows is mounted at a time.
+  const total = sorted.length
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
+  const pageClamped = Math.min(page, totalPages)
+  const pageRows = sorted.slice((pageClamped - 1) * PAGE_SIZE, pageClamped * PAGE_SIZE)
+
+  // Reset to the first page whenever the result set changes.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setPage(1)
+  }, [search, groupFilter])
 
   return (
     <div className="p-6 space-y-4">
@@ -622,7 +637,7 @@ export default function Tags() {
               </tr>
             </thead>
             <tbody>
-              {sorted.map((row: Tag) => (
+              {pageRows.map((row: Tag) => (
                 <tr key={row.id} className="border-t border-gray-800 hover:bg-gray-800/40">
                   <td className="px-4 py-3 text-sm text-gray-400">{row.plc_name || row.device}</td>
                   <td className="px-4 py-3 text-sm font-medium text-white">
@@ -674,6 +689,37 @@ export default function Tags() {
           </table>
         )}
       </div>
+
+      {viewMode === 'table' && !isLoading && total > 0 && (
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <span className="text-xs text-gray-500">
+            {t('pagination_showing', {
+              from: (pageClamped - 1) * PAGE_SIZE + 1,
+              to: Math.min(pageClamped * PAGE_SIZE, total),
+              total,
+            })}
+          </span>
+          {totalPages > 1 && (
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={pageClamped === 1}
+                className="px-3 py-1.5 text-sm bg-gray-800 text-gray-300 rounded-lg border border-gray-700 disabled:opacity-40 hover:bg-gray-700 transition-colors"
+              >
+                {t('prev')}
+              </button>
+              <span className="text-sm text-gray-400">{t('page_of', { page: pageClamped, total: totalPages })}</span>
+              <button
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={pageClamped === totalPages}
+                className="px-3 py-1.5 text-sm bg-gray-800 text-gray-300 rounded-lg border border-gray-700 disabled:opacity-40 hover:bg-gray-700 transition-colors"
+              >
+                {t('next')}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {showAdd && <AddTagModal onClose={() => setShowAdd(false)} />}
       {showImport && <ImportTagModal onClose={() => setShowImport(false)} />}

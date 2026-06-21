@@ -12,6 +12,7 @@ import Reports from './pages/Reports'
 import AdvancedReports from './pages/AdvancedReports'
 import ExcelTemplates from './pages/ExcelTemplates'
 import PlcConfig from './pages/PlcConfig'
+import PlcHealth from './pages/PlcHealth'
 import Metrics from './pages/Metrics'
 import Settings from './pages/Settings'
 import Users from './pages/Users'
@@ -49,6 +50,7 @@ export default function App() {
               <Route path="advanced-reports" element={<AdvancedReports />} />
               <Route path="excel-templates" element={<ExcelTemplates />} />
               <Route path="plc" element={<PlcConfig />} />
+              <Route path="plc-health" element={<PlcHealth />} />
               <Route path="metrics" element={<Metrics />} />
               <Route path="settings" element={<Settings />} />
               <Route path="users" element={<AdminRoute><Users /></AdminRoute>} />

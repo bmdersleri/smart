@@ -97,5 +97,9 @@
   "groups_parent_root": "Üst grup: (kök)",
   "groups_add": "+ Grup Ekle",
   "groups_none": "Henüz grup yok.",
-  "groups_confirm_delete": "\"{{name}}\" grubu silinsin mi? Tag'ler gruplanmamış olur."
+  "groups_confirm_delete": "\"{{name}}\" grubu silinsin mi? Tag'ler gruplanmamış olur.",
+  "prev": "← Önceki",
+  "next": "Sonraki →",
+  "page_of": "Sayfa {{page}} / {{total}}",
+  "pagination_showing": "{{total}} kayıttan {{from}}–{{to}} arası gösteriliyor"
 }

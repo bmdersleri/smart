@@ -97,5 +97,9 @@
   "groups_parent_root": "المجموعة الأصل: (جذر)",
   "groups_add": "+ إضافة مجموعة",
   "groups_none": "لا توجد مجموعات بعد.",
-  "groups_confirm_delete": "حذف مجموعة \"{{name}}\"؟ ستصبح علاماتها بدون مجموعة."
+  "groups_confirm_delete": "حذف مجموعة \"{{name}}\"؟ ستصبح علاماتها بدون مجموعة.",
+  "prev": "← السابق",
+  "next": "التالي →",
+  "page_of": "الصفحة {{page}} / {{total}}",
+  "pagination_showing": "عرض {{from}}–{{to}} من {{total}}"
 }

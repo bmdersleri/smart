@@ -38,6 +38,8 @@ from app.core.timescaledb import (
 )
 from app.models import annotation as _annotation  # noqa: F401
 from app.models import excel_template as _excel_template  # noqa: F401
+from app.models import plc_health as _plc_health  # noqa: F401
+from app.models import plc_incident as _plc_incident  # noqa: F401
 from app.models import report_archive, report_template, scheduled_report  # noqa: F401
 from app.models import tag_group as _tag_group  # noqa: F401
 from app.models.report_history import ReportHistory as _ReportHistory  # noqa: F401
@@ -106,6 +108,7 @@ async def lifespan(app: FastAPI):
     # python -m app.collector.runner
     poll_task: asyncio.Task | None = None
     opcua_task: asyncio.Task | None = None
+    monitor_task: asyncio.Task | None = None
     if settings.RUN_COLLECTOR:
         poll_task = asyncio.create_task(poll_loop())
         logger.info("S7 poller baslatildi (coklu PLC, lazy connect)")
@@ -118,6 +121,11 @@ async def lifespan(app: FastAPI):
                 logger.warning("OPC UA server baslatilamadi: %s", e)
 
         opcua_task = asyncio.create_task(_start_opcua())
+
+        from app.monitor.monitor import plc_monitor_loop
+
+        monitor_task = asyncio.create_task(plc_monitor_loop())
+        logger.info("PLC monitor baslatildi")
     else:
         logger.info("RUN_COLLECTOR=False — collector bu process'te baslatilmadi")
 
@@ -126,6 +134,8 @@ async def lifespan(app: FastAPI):
     sched = get_scheduler()
     if sched:
         sched.shutdown(wait=False)
+    if monitor_task:
+        monitor_task.cancel()
     if opcua_task:
         opcua_task.cancel()
         await opcua_server.stop()

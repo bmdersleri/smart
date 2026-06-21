@@ -97,5 +97,9 @@
   "groups_parent_root": "Родительская группа: (корень)",
   "groups_add": "+ Добавить группу",
   "groups_none": "Групп пока нет.",
-  "groups_confirm_delete": "Удалить группу \"{{name}}\"? Её теги станут без группы."
+  "groups_confirm_delete": "Удалить группу \"{{name}}\"? Её теги станут без группы.",
+  "prev": "← Назад",
+  "next": "Вперёд →",
+  "page_of": "Страница {{page}} / {{total}}",
+  "pagination_showing": "Показаны {{from}}–{{to}} из {{total}}"
 }
