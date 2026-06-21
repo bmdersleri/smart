@@ -14,8 +14,11 @@ dev:
 # Backend başlat (hot reload) — watcher yalnız app/ kodunu izler; DB yazımları
 # (scada_reporter.db + WAL/SHM) reload tetiklemez, böylece poller çalışırken
 # sunucu sürekli yeniden başlamaz / kilide takılmaz.
+# run_dev.py üzerinden çalışır: uvicorn CLI yerine uvicorn.run() — Windows'ta
+# Click'in glob genişletmesi "*.db" exclude'unu gerçek db dosya adlarına açıp
+# arg parse'ı patlatıyordu (run_dev.py docstring'e bak).
 run-backend:
-    cd {{be}} && .venv/Scripts/uvicorn app.main:app --reload --reload-dir app --reload-exclude "*.db" --reload-exclude "*.db-wal" --reload-exclude "*.db-shm" --host 0.0.0.0 --port 8001
+    cd {{be}} && .venv/Scripts/python run_dev.py
 
 # Backend'i kesin yeniden başlat — reload takılırsa/asılırsa kullanılacak yol.
 # --reload reloader parent + child spawn ettiğinden port'tan kill yetmez;
