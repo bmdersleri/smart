@@ -2,7 +2,7 @@
 
 ## Overview
 
-This project uses Docker **only for local infrastructure** (database, cache, observability). The application processes (API, collector, frontend) run directly on the host during development and will have their own Dockerfiles in Phase 4.
+This project uses Docker **only for local infrastructure** (database, cache, observability). The application processes (API, collector, frontend) run directly on the host — both in development and in production. See [docs/deployment.md](docs/deployment.md) for the production deployment guide.
 
 ---
 
@@ -24,7 +24,7 @@ just docker-up     # docker compose up -d (detached)
 just docker-down   # docker compose down
 ```
 
-> **Dev-only note:** The compose file is intentionally labelled as LOCAL/DEV infrastructure. It does NOT contain app, collector, or frontend services — those are deferred to Phase 4.
+> **Dev-only note:** The compose file is intentionally scoped to LOCAL/DEV infrastructure. It does NOT contain app, collector, or frontend services — those run as native OS processes (see [docs/deployment.md](docs/deployment.md)).
 
 ---
 
@@ -92,16 +92,30 @@ The compose file ships with **dev-only defaults** (`scada123` / `admin`). These 
 
 ---
 
-## Deferred to Phase 4
+## Phase 4 Status
 
-The following items are **not yet implemented** and are planned for Phase 4:
+### Completed in Phase 4
+
+- **Process-based deployment** (API + collector + frontend as native OS processes, no
+  Docker required for the app) — see **[docs/deployment.md](docs/deployment.md)** for
+  the full guide including Gunicorn/Uvicorn commands, nginx reverse-proxy config (with
+  SSE buffering notes), health-check usage, and systemd service units.
+- **Backup and restore** — see **[docs/backup-recovery.md](docs/backup-recovery.md)**
+  for TimescaleDB backup procedures, WAL archiving, and restore runbook.
+
+### In progress in Phase 4
+
+- **Grafana provisioning** — datasource and dashboard JSON files for production
+  (Task 3).
+
+### Out of scope (explicit decision)
+
+The project uses **process-based deployment** (no application containers). The following
+items are intentionally not planned:
 
 - `Dockerfile` for the FastAPI backend
 - `Dockerfile` for the frontend (Vite/React)
-- A production compose file with `app`, `collector`, and `frontend` services using compose profiles
-- Nginx / reverse-proxy configuration
-- Grafana provisioning (datasource + dashboard JSON files for production)
-- Backup and restore procedures for TimescaleDB
-- Health-check and restart policies for app containers
+- A production compose file with `app`, `collector`, and `frontend` services
 
-Until Phase 4, application processes are started directly on the host with `just run-backend`, `just run-frontend`, and (when needed) `just run-collector`.
+This is a deliberate architectural choice, not a deferred task. The supported
+production path is documented in [docs/deployment.md](docs/deployment.md).
