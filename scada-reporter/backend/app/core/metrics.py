@@ -1,14 +1,18 @@
-"""Prometheus metrikleri — poller/PLC okuma sağlığı.
+"""Prometheus metrikleri — poller/PLC okuma sağlığı + HTTP + DB pool.
 
 Toplama döngüsünü ayarlamak için gereken sinyaller: tick süresi, PLC başına
 okuma gecikmesi, yazılan satır sayısı, BAD-kalite oranı. /metrics endpoint'i
 ``render()`` çıktısını Prometheus text formatında sunar.
+
+HTTP istek sayacı ve gecikme histogramı Starlette middleware tarafından doldurulur
+(bkz. app/main.py). DB pool gauge'ları render() çağrısında güncellenir.
 """
 
 from prometheus_client import (
     CONTENT_TYPE_LATEST,
     REGISTRY,
     Counter,
+    Gauge,
     Histogram,
     generate_latest,
 )
@@ -29,6 +33,28 @@ rows_written = Counter(
 bad_quality = Counter(
     "scada_bad_quality_total",
     "BAD-kalite okuma sayısı",
+)
+
+# ── HTTP metrics (populated by middleware in main.py) ──────────────────────
+http_requests_total = Counter(
+    "scada_http_requests_total",
+    "Toplam HTTP istek sayısı",
+    ["method", "status"],
+)
+http_request_duration = Histogram(
+    "scada_http_request_seconds",
+    "HTTP istek süresi (saniye)",
+    ["method"],
+)
+
+# ── DB pool gauges (updated at scrape time in render()) ───────────────────
+db_pool_size = Gauge(
+    "scada_db_pool_size",
+    "DB bağlantı havuzu kapasitesi",
+)
+db_pool_checked_out = Gauge(
+    "scada_db_pool_checked_out",
+    "Şu an kullanımda olan DB bağlantısı",
 )
 
 CONTENT_TYPE = CONTENT_TYPE_LATEST
@@ -52,7 +78,28 @@ def add_bad_quality(n: int) -> None:
         bad_quality.inc(n)
 
 
+def _update_pool_gauges() -> None:
+    """Scrape-time pool stat update.
+
+    engine.pool is a StaticPool in tests (no .size()/.checkedout()) — guard
+    every attribute access so tests don't crash.
+    """
+    try:
+        from app.core.database import engine  # local import to avoid circular
+
+        pool = engine.pool
+        size = getattr(pool, "size", None)
+        checked = getattr(pool, "checkedout", None)
+        if callable(size):
+            db_pool_size.set(size())
+        if callable(checked):
+            db_pool_checked_out.set(checked())
+    except Exception:
+        pass  # never crash the /metrics endpoint due to pool probe
+
+
 def render() -> bytes:
+    _update_pool_gauges()
     return generate_latest()
 
 

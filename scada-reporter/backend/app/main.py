@@ -1,10 +1,11 @@
 import asyncio
 import logging
 import os
+import time
 from contextlib import asynccontextmanager
 
 import sentry_sdk
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 
@@ -24,6 +25,9 @@ from app.api import (
     reports,
     tags,
     users,
+)
+from app.api import (
+    health as health_router,  # liveness/readiness — mounted without /api prefix
 )
 from app.collector.opcua_server import opcua_server
 from app.collector.poller import poll_loop
@@ -161,6 +165,23 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+@app.middleware("http")
+async def http_metrics_middleware(request: Request, call_next):
+    """Record HTTP request count and latency in Prometheus metrics."""
+    start = time.perf_counter()
+    response = await call_next(request)
+    duration = time.perf_counter() - start
+    method = request.method
+    status = str(response.status_code)
+    metrics.http_requests_total.labels(method=method, status=status).inc()
+    metrics.http_request_duration.labels(method=method).observe(duration)
+    return response
+
+
+# Liveness / readiness — mounted WITHOUT /api prefix so they are at /live and /ready.
+app.include_router(health_router.router)
+
 app.include_router(auth.router, prefix="/api")
 app.include_router(tags.router, prefix="/api")
 app.include_router(dashboard.router, prefix="/api")
@@ -186,9 +207,12 @@ async def prometheus_metrics():
 @app.get("/health")
 async def health():
     plc_status = plc_manager.status()
+    sched = get_scheduler()
     return {
         "status": "ok",
         "plc_connected": sum(1 for v in plc_status.values() if v),
         "plc_total": len(plc_status),
         "plcs": plc_status,
+        "collector_running": settings.RUN_COLLECTOR,
+        "scheduler_running": sched is not None and getattr(sched, "running", False),
     }
