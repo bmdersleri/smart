@@ -3,9 +3,11 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import time
 from datetime import UTC, datetime
 
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.collector.plc_health_tracker import health_tracker
 from app.collector.s7_collector import plc_manager
@@ -48,7 +50,9 @@ def _message(kind: str) -> str:
 
 
 async def apply_result(
-    obs: PlcObservation, result: EvalResult, sessionmaker=AsyncSessionLocal
+    obs: PlcObservation,
+    result: EvalResult,
+    sessionmaker: async_sessionmaker[AsyncSession] = AsyncSessionLocal,
 ) -> None:
     ip, rack, slot = obs.key
     now_dt = datetime.now(UTC)
@@ -94,10 +98,13 @@ async def apply_result(
                 .scalars()
                 .all()
             )
-            for row in rows:
-                row.resolved_at = now_dt
-            sev = rows[0].severity if rows else "warning"
-            payloads.append(AlertPayload(ip, obs.name, kind, sev, _message(kind), "resolved", {}))
+            if rows:
+                for row in rows:
+                    row.resolved_at = now_dt
+                sev = rows[0].severity
+                payloads.append(
+                    AlertPayload(ip, obs.name, kind, sev, _message(kind), "resolved", {})
+                )
 
         # plc_health upsert
         health = (
@@ -133,8 +140,6 @@ async def apply_result(
 
 async def plc_monitor_loop() -> None:
     """Periyodik PLC sağlık değerlendirme döngüsü."""
-    import time
-
     logger.info("PLC monitor basladi (periyot: %ds)", settings.PLC_MONITOR_INTERVAL)
     cfg = _cfg()
     states: dict[tuple[str, int, int], PlcMonitorState] = {}
