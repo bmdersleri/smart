@@ -16,7 +16,7 @@ from app.monitor.detector import (
 KEY = ("10.0.0.1", 0, 1)
 
 
-def _obs(connected=False, good=0, bad=0):
+def _obs(connected=False, good=0, bad=0, last_error=None):
     return PlcObservation(
         key=KEY,
         name="PLC1",
@@ -25,6 +25,7 @@ def _obs(connected=False, good=0, bad=0):
         bad_count=bad,
         seconds_since_success=99.0,
         reconnects_in_window=0,
+        last_error=last_error,
     )
 
 
@@ -47,7 +48,7 @@ async def test_apply_result_opens_incident_and_upserts_health(
     result = EvalResult(
         state=PlcMonitorState(open={"disconnected": inc}), opened=[inc], resolved=[]
     )
-    await monitor.apply_result(_obs(), result, sessionmaker=sm)
+    await monitor.apply_result(_obs(last_error="Receive timeout"), result, sessionmaker=sm)
 
     incidents = (await db_session.execute(select(PlcIncident))).scalars().all()
     assert len(incidents) == 1
@@ -57,6 +58,7 @@ async def test_apply_result_opens_incident_and_upserts_health(
     health = (await db_session.execute(select(PlcHealth))).scalar_one()
     assert health.plc_ip == "10.0.0.1"
     assert health.open_incident_count == 1
+    assert health.last_error == "Receive timeout"
 
 
 @pytest.mark.asyncio

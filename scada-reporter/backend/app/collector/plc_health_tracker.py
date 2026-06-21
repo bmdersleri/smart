@@ -23,9 +23,12 @@ class PlcHealthTracker:
             "last_success_mono": None,
             "first_mono": now,
             "reconnect_times": [],
+            "last_error": None,
         }
 
-    def record_read(self, key: Key, name: str, good: int, bad: int, now: float) -> None:
+    def record_read(
+        self, key: Key, name: str, good: int, bad: int, now: float, error: str | None = None
+    ) -> None:
         with self._lock:
             d = self._data.setdefault(key, self._blank(name, now))
             if name:
@@ -34,6 +37,9 @@ class PlcHealthTracker:
             d["bad"] += bad
             if good > 0:
                 d["last_success_mono"] = now
+                d["last_error"] = None  # başarılı okuma hatayı temizler
+            if error is not None:
+                d["last_error"] = error
 
     def observe_connection(self, key: Key, name: str, connected: bool, now: float) -> None:
         with self._lock:
@@ -64,6 +70,7 @@ class PlcHealthTracker:
                         bad_count=d["bad"],
                         seconds_since_success=sss,
                         reconnects_in_window=len(d["reconnect_times"]),
+                        last_error=d["last_error"],
                     )
                 )
                 d["good"] = 0

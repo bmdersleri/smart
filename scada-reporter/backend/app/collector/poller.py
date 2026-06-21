@@ -62,6 +62,7 @@ async def read_plc_group(
     ip, rack, slot = key
     specs = [spec for _, spec in items]
     read_start = time.monotonic()
+    read_error: str | None = None
     try:
         results = await asyncio.wait_for(
             plc_manager.read_plc_batch(ip, rack, slot, specs), timeout=timeout
@@ -69,6 +70,8 @@ async def read_plc_group(
     except Exception as e:
         logger.warning("PLC grup okuma hatasi/zaman asimi %s: %s", ip, e)
         results = [(None, BAD)] * len(specs)
+        # asyncio.TimeoutError str()'i boş; tip adına düş
+        read_error = str(e) or e.__class__.__name__
     finally:
         metrics.observe_plc_read(ip, time.monotonic() - read_start)
     rows = [
@@ -77,7 +80,7 @@ async def read_plc_group(
     ]
     good = sum(1 for _, _, q in rows if q == GOOD)
     bad = len(rows) - good
-    health_tracker.record_read(key, "", good, bad, time.monotonic())
+    health_tracker.record_read(key, "", good, bad, time.monotonic(), error=read_error)
     return rows
 
 

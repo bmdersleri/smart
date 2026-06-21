@@ -19,6 +19,7 @@ class PlcObservation:
     bad_count: int
     seconds_since_success: float
     reconnects_in_window: int
+    last_error: str | None = None
 
 
 @dataclass(frozen=True)

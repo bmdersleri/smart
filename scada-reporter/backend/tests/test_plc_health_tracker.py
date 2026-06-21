@@ -38,3 +38,14 @@ def test_seconds_since_success_uses_first_seen_when_never_good():
     t.record_read(KEY, "PLC1", good=0, bad=3, now=10.0)
     obs = t.snapshot(now=80.0, flap_window=120.0)
     assert obs[0].seconds_since_success >= 70.0
+
+
+def test_last_error_surfaces_then_clears_on_good_read():
+    t = PlcHealthTracker()
+    t.record_read(KEY, "PLC1", good=0, bad=3, now=1.0, error="Receive timeout")
+    obs = t.snapshot(now=2.0, flap_window=120.0)
+    assert obs[0].last_error == "Receive timeout"
+    # başarılı okuma hatayı temizler
+    t.record_read(KEY, "PLC1", good=5, bad=0, now=3.0)
+    obs2 = t.snapshot(now=4.0, flap_window=120.0)
+    assert obs2[0].last_error is None

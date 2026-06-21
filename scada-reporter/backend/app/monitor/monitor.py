@@ -125,6 +125,7 @@ async def apply_result(
         health.consecutive_fail = result.state.disconnected_streak
         health.open_incident_count = len(result.state.open)
         health.updated_at = now_dt
+        health.last_error = obs.last_error  # None ise (başarı sonrası) temizlenir
         if obs.good_count > 0:
             health.last_success_at = now_dt
 
