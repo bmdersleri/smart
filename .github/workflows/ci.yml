@@ -111,7 +111,7 @@ jobs:
         working-directory: scada-reporter/backend
         run: |
           uv venv .venv
-          uv pip install -r requirements-dev.lock
+          uv pip install --python .venv/bin/python -r requirements-dev.lock
 
       # ── Frontend deps (to run pnpm openapi-ts) ───────────────────────────────
       - uses: pnpm/action-setup@v4
@@ -130,8 +130,12 @@ jobs:
 
       # ── Regenerate and check for drift ───────────────────────────────────────
       - name: Dump OpenAPI schema
+        # Use the venv's python explicitly. `uv run` resolves VIRTUAL_ENV
+        # (which setup-uv points at the repo-root .venv, not this job's
+        # backend .venv), so sentry_sdk etc. weren't importable. Same fix as
+        # the mcp job.
         working-directory: scada-reporter/backend
-        run: uv run --no-sync python ../../scripts/dump_openapi.py
+        run: .venv/bin/python ../../scripts/dump_openapi.py
 
       - name: Generate TypeScript client
         working-directory: scada-reporter/frontend
