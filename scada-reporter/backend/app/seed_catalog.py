@@ -16,13 +16,11 @@ import asyncio
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from sqlalchemy import delete, select
 
-from sqlalchemy import delete, select  # noqa: E402
-
-from app.core.database import AsyncSessionLocal  # noqa: E402
-from app.import_catalog import build_archive_catalog  # noqa: E402
-from app.models.tag import Tag, TagReading  # noqa: E402
+from app.core.database import AsyncSessionLocal
+from app.import_catalog import build_archive_catalog
+from app.models.tag import Tag, TagReading
 
 XLSX_DIR = Path(__file__).resolve().parents[3] / "xlsx"
 FULL = XLSX_DIR / "full_export.xlsx"
