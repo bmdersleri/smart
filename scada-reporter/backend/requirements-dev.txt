@@ -2,6 +2,7 @@
 pytest>=9.0.0
 pytest-asyncio>=1.4.0
 pytest-cov>=7.0.0
+pytest-timeout>=2.3.0
 pytest-xdist>=3.8.0
 pytest-randomly>=4.1.0
 aiosqlite>=0.20.0
