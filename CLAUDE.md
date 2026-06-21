@@ -40,7 +40,8 @@ docker/        # TimescaleDB + Redis + Grafana
 
 ### Development
 - **Backend + Frontend in parallel:** `just dev`
-- **Backend only:** `just run-backend`
+- **Backend only:** `just run-backend` *(hot reload watches `app/` only)*
+- **Restart backend (reload stuck):** `just restart-backend`
 - **Frontend only:** `just run-frontend`
 - **Install dependencies:** `just install`
 
@@ -129,7 +130,7 @@ docker/        # TimescaleDB + Redis + Grafana
 - **OAuth2 login**: `/api/auth/token` expects **form-data**, not JSON. The frontend sends it correctly; use `curl -d "username=...&password=..."`.
 - **WeasyPrint PDF**: requires the GTK3 runtime on Windows (installed — working).
 - **Stats engine**: numpy-only (scipy is not in the venv) — `np.polyfit` + manual R².
-- Start the backend with `just run-backend`
+- **Backend reload**: `just run-backend` scopes the watcher to `app/` and excludes `*.db*`, so the dev DB churn (poller writes to `scada_reporter.db` + WAL/SHM) no longer triggers endless reloads. If reload still wedges (the `--reload` reloader spawns a child, so a port-only kill leaves it respawning), use `just restart-backend` — it stops all `python` processes, then starts clean.
 - Fast package install with `uv pip install ...`
 - pre-commit hooks are active — ruff + mypy + format checks run on every commit
 - Update the frontend TS client: `just gen-client` while the backend is running

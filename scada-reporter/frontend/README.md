@@ -29,6 +29,8 @@ src/
 
 ## Commands
 
+**Package Manager:** Use `pnpm` only; do not use npm (the pnpm-lock.yaml is the sole lockfile).
+
 ```bash
 pnpm install        # Install dependencies
 pnpm dev            # Dev server (http://localhost:5173)

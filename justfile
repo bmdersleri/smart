@@ -11,9 +11,18 @@ fe := "scada-reporter/frontend"
 dev:
     Start-Process powershell -ArgumentList "-NoProfile -Command just run-backend"; just run-frontend
 
-# Backend başlat (hot reload)
+# Backend başlat (hot reload) — watcher yalnız app/ kodunu izler; DB yazımları
+# (scada_reporter.db + WAL/SHM) reload tetiklemez, böylece poller çalışırken
+# sunucu sürekli yeniden başlamaz / kilide takılmaz.
 run-backend:
-    cd {{be}} && .venv/Scripts/uvicorn app.main:app --reload --host 0.0.0.0 --port 8001
+    cd {{be}} && .venv/Scripts/uvicorn app.main:app --reload --reload-dir app --reload-exclude "*.db" --reload-exclude "*.db-wal" --reload-exclude "*.db-shm" --host 0.0.0.0 --port 8001
+
+# Backend'i kesin yeniden başlat — reload takılırsa/asılırsa kullanılacak yol.
+# --reload reloader parent + child spawn ettiğinden port'tan kill yetmez;
+# tüm python süreçlerini durdurup tek temiz başlatma yapar (dev-only).
+restart-backend:
+    powershell -NoProfile -Command "Get-Process python -ErrorAction SilentlyContinue | Stop-Process -Force"
+    just run-backend
 
 # Bağımsız collector process'i (poller + OPC UA); API'den ayrı çalıştırmak için
 run-collector:
@@ -23,10 +32,14 @@ run-collector:
 run-frontend:
     cd {{fe}} && pnpm dev
 
-# Bağımlılıkları yükle (backend + frontend)
+# Bağımlılıkları yükle (backend + frontend) — committed lock dosyalarından
 install:
-    cd {{be}} && uv pip install -r requirements.txt
+    cd {{be}} && uv pip install -r requirements.lock
     cd {{fe}} && pnpm install
+
+# Geliştirme bağımlılıklarını yükle (backend) — committed lock dosyasından
+install-dev:
+    cd {{be}} && uv pip install -r requirements-dev.lock
 
 # ── Test ─────────────────────────────────────────────────────────────────────
 
@@ -113,8 +126,29 @@ format:
 typecheck:
     cd {{be}} && .venv/Scripts/mypy app/
 
-# Tüm kontroller (CI benzeri)
-check: lint format-check typecheck test
+# Backend güvenlik taraması (yalnız bandit). NOT: `check`'e DAHİL DEĞİL — bandit
+# şu an app/'te pre-existing 5 Medium B608 (SQL string-concat) yüzünden exit 1
+# veriyor (CI'nin bandit adımı da aynı durumda). Bulgular giderilince check'e bağla.
+backend-security:
+    cd {{be}} && .venv/Scripts/bandit.exe -r app/ -ll
+
+# Backend kontrolleri (lint + format + type + test)
+backend-check: lint format-check typecheck test
+
+# Frontend kontrolleri (TypeScript + lint + test)
+frontend-check:
+    cd {{fe}} && pnpm tsc --noEmit && pnpm lint && pnpm test
+
+# Agent CLI kontrolleri
+cli-check:
+    cd {{ah}} && ../backend/.venv/Scripts/pytest tests/ -v
+
+# MCP server kontrolleri
+mcp-check:
+    cd mcp-servers/mcp-scada && ../../scada-reporter/backend/.venv/Scripts/python -m pytest tests/ -v
+
+# Tüm kontroller (CI benzeri) — backend + frontend + CLI + MCP
+check: backend-check frontend-check cli-check mcp-check
 
 # ── Araçlar ──────────────────────────────────────────────────────────────────
 

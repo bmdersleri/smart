@@ -129,7 +129,7 @@ docker/                         # TimescaleDB + Redis + Grafana
 ## Setup and Running
 
 ### Requirements
-- Python 3.12+ (managed with uv)
+- **Python 3.14+ (single supported baseline)** — managed with uv
 - Node.js 18+, pnpm
 - just (task runner)
 - Siemens S7-1500 PLC (or simulation mode)

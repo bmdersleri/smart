@@ -19,12 +19,12 @@ jobs:
 
       - uses: astral-sh/setup-uv@v5
         with:
-          python-version: "3.12"
+          python-version: "3.14"
 
       - name: Install dependencies
         run: |
           uv venv .venv
-          uv pip install -r requirements.txt ruff mypy bandit safety
+          uv pip install -r requirements-dev.lock
 
       - name: Lint — ruff
         run: uv run --no-sync ruff check app/
@@ -53,12 +53,12 @@ jobs:
 
       - uses: astral-sh/setup-uv@v5
         with:
-          python-version: "3.12"
+          python-version: "3.14"
 
       - name: Install dependencies
         run: |
           uv venv .venv
-          uv pip install -e . pytest
+          uv pip install -e ../packages/scada-core -e . pytest
 
       - name: Tests — pytest
         run: uv run --no-sync pytest tests/ -v --tb=short
@@ -84,7 +84,7 @@ jobs:
           cache-dependency-path: scada-reporter/frontend/pnpm-lock.yaml
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       - name: TypeScript check
         run: pnpm tsc --noEmit
@@ -94,3 +94,32 @@ jobs:
 
       - name: Tests — vitest
         run: pnpm test
+
+  mcp:
+    name: MCP scada (install · import · test)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mcp-servers/mcp-scada
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install dependencies
+        # Install into and run from .venv explicitly. mcp-scada has a pyproject,
+        # so `uv run` would target the project env while setup-uv's VIRTUAL_ENV
+        # points elsewhere — the mismatch left mcp_scada uninstalled. Pin both
+        # install and run to .venv/bin/python to avoid the ambiguity.
+        run: |
+          uv venv .venv
+          uv pip install --python .venv/bin/python -e ../../scada-reporter/packages/scada-core -e . pytest pytest-asyncio
+
+      - name: Import smoke
+        run: .venv/bin/python -c "import mcp_scada.server"
+
+      - name: Tests — pytest
+        run: .venv/bin/python -m pytest -v --tb=short

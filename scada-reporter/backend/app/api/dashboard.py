@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.auth import get_current_user
 from app.core import metrics
 from app.core.database import get_db
+from app.core.timeutils import as_utc, utc_iso
 from app.models.tag import Tag, TagReading
 from app.models.user import User
 from app.models.watchlist import Watchlist
@@ -151,7 +152,7 @@ async def overview(db: AsyncSession = Depends(get_db), _=Depends(get_current_use
     )
     return {
         "active_tags": tag_count,
-        "last_reading": last_reading,
+        "last_reading": as_utc(last_reading),
         "readings_24h": reading_count_24h,
         "readings_1h": reading_count_1h,
         "quality_rate": quality_rate,
@@ -218,7 +219,7 @@ async def _fetch_tags_with_readings(db: AsyncSession, tag_ids: list[int]) -> lis
             "device": r[2],
             "unit": r[3],
             "value": r[5],
-            "timestamp": r[6],
+            "timestamp": as_utc(r[6]),
             "quality_ok": r[7] == 192 if r[7] is not None else False,
         }
         for r in rows
@@ -358,7 +359,7 @@ async def dashboard_tags(
                 "device": t.device,
                 "unit": t.unit,
                 "value": value,
-                "timestamp": ts,
+                "timestamp": as_utc(ts),
                 "quality_ok": quality_ok,
             }
         )
@@ -419,7 +420,7 @@ async def _raw_series_window(
     for tag_id, name, unit, ts, value in result.all():
         if tag_id not in series:
             series[tag_id] = {"tag_id": tag_id, "name": name, "unit": unit, "data": []}
-        series[tag_id]["data"].append({"t": ts.isoformat(), "v": value})
+        series[tag_id]["data"].append({"t": utc_iso(ts), "v": value})
     out = list(series.values())
     for s in out:
         s["data"] = downsample(s["data"], max_points)
@@ -501,7 +502,7 @@ async def trend_agg(
     for tag_id, name, unit, bucket, avg in rows:
         if tag_id not in series:
             series[tag_id] = {"tag_id": tag_id, "name": name, "unit": unit, "data": []}
-        series[tag_id]["data"].append({"t": bucket.isoformat(), "v": avg})
+        series[tag_id]["data"].append({"t": utc_iso(bucket), "v": avg})
     out = list(series.values())
     for s in out:
         s["data"] = downsample(s["data"], max_points)

@@ -3,8 +3,9 @@ import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { getTags, generateReport, getReportHistory, downloadHistoryReport } from '../api/client'
 import type { ReportHistoryEntry } from '../api/client'
-import { format, subDays, startOfDay, endOfDay, parseISO } from 'date-fns'
+import { format, subDays, startOfDay, endOfDay } from 'date-fns'
 import { enUS, tr, ru, de } from 'date-fns/locale'
+import { parseUtc } from '../utils/time'
 
 const DATE_LOCALES: Record<string, typeof tr> = { en: enUS, tr, ru, de }
 
@@ -59,10 +60,10 @@ function HistoryRow({ entry }: { entry: ReportHistoryEntry }) {
     }
   }
 
-  const dateStr = format(parseISO(entry.created_at + 'Z'), 'dd.MM.yyyy HH:mm', { locale: dateLocale })
+  const dateStr = format(parseUtc(entry.created_at), 'dd.MM.yyyy HH:mm', { locale: dateLocale })
   const tagCount = entry.tag_ids.length
-  const rangeStart = format(parseISO(entry.start + 'Z'), 'dd.MM', { locale: dateLocale })
-  const rangeEnd = format(parseISO(entry.end + 'Z'), 'dd.MM', { locale: dateLocale })
+  const rangeStart = format(parseUtc(entry.start), 'dd.MM', { locale: dateLocale })
+  const rangeEnd = format(parseUtc(entry.end), 'dd.MM', { locale: dateLocale })
 
   return (
     <div className="flex items-center justify-between py-2.5 border-t border-gray-800">

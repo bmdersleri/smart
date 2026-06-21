@@ -61,8 +61,8 @@
 | Codex | | `C:\Users\Administrator\AppData\Local\Programs\OpenAI\Codex\bin\codex.exe` |
 | codegraph | 1.0.1 | `codegraph` — semantic code intelligence; connected as Claude Code MCP, repo indexed (`.codegraph/`) |
 | Kalfa | 1.0.0 | `kalfa` (npm) |
-| caveman-code | | `caveman-code` (npm) |
-| RTK | 0.42.4 | `rtk` — Rust Token Killer (LLM token optimizer) |
+| caveman | enabled plugin | `caveman@caveman` Claude Code plugin (user scope, ✔ enabled) — token-reduction skill; `/caveman` etc. activate after CC restart. Installer: `caveman-code` (npm) |
+| RTK | 0.42.4 | `C:\Users\aa\.local\bin\rtk.exe` (NOT on default bash/PowerShell PATH) — Rust Token Killer; prefix shell cmds (`rtk git status`) |
 | FCC (Free Claude Code) | | `fcc-claude`, `fcc-init`, `fcc-server` |
 | scada | | `scada` — EKONT SMART REPORT agent CLI (agent-harness) |
 
@@ -266,10 +266,12 @@
 - **E2E browser tests**: Playwright (`pnpm e2e`, chromium) + puppeteer-core system-Chrome fallback (`pnpm e2e:verify`). Backend must be on :8001 for data
 - **Auth**: the `/api/auth/token` endpoint expects OAuth2 **form-data**, not JSON. `curl -d "username=...&password=..."`
 - **Default users**: `just seed-users` → admin/admin123, operator/operator123
+- **Backend reload (dev)**: `just run-backend` runs uvicorn `--reload --reload-dir app --reload-exclude "*.db*"` so the watcher only follows `app/` code, not the dev DB churn (poller writes). If reload wedges (reloader parent respawns its child, so a port kill isn't enough), use `just restart-backend` (stops all `python`, then starts clean). Override `OPCUA_SERVER_PORT`/`DATABASE_URL` env to run a second instance without clashing on :4840.
 - **Architecture**: S7 PLC → Snap7 (s7_collector) → SQLite (dev) / PostgreSQL (prod) → built-in OPC UA server (port 4840) + REST API. No paid third-party software (KEPServerEX) required.
 - **Stats engine**: numpy-only (scipy yok) — `np.polyfit` + manuel R²
 - **Docker not installed on host** — compose files ready, needs Docker Desktop or Docker Engine
-- **RTK** installed for LLM token optimization. Run `rtk init -g` for Claude Code integration.
+- **RTK** (Rust Token Killer) v0.42.4 at `C:\Users\aa\.local\bin\rtk.exe` — **not on the default bash/PowerShell PATH** (so a bare `rtk`/`which rtk` fails; call the full path or add `~/.local/bin` to PATH). Wraps shell commands to cut output tokens: prefix commands (`rtk git status`, `rtk pytest -q`); `rtk gain` shows savings (~85% in a test), `rtk proxy <cmd>` runs raw, `rtk rewrite <cmd>` applies rewrite rules. Integrations present for other agents: opencode plugin `~/.config/opencode/plugins/rtk.ts` + Codex `~/.codex/RTK.md` (rule: "always prefix shell commands with `rtk`").
+- **caveman** token-reduction skill installed as an enabled Claude Code plugin (`caveman@caveman`, user scope — verify with `claude plugin list`). Slash commands `/caveman`, `/caveman-commit`, `/caveman-review`, `/caveman-stats`, `/caveman-compress` (and "caveman mode") activate only after a Claude Code **restart** (plugins load at session start). Installer: `npx -y github:JuliusBrussee/caveman` (npm `@juliusbrussee/caveman-code`); pins remote fetches to a release tag; uninstall via `... -- --uninstall`.
 - **codegraph** connected as a Claude Code MCP server (`~/.claude.json`) and the repo is indexed (204 files / 2530 nodes / 4861 edges; `.codegraph/` is gitignored). Use `codegraph explore "<question>"` / `codegraph node <symbol|file>` to get callers + covering tests + verbatim source in one call. MCP tools (`codegraph_explore`/`codegraph_node`) require a Claude Code restart; the shell CLI always works. Keep the index fresh with `codegraph sync`.
 - **Test DB isolation**: backend tests share one in-memory SQLite engine (StaticPool); an autouse fixture in `tests/conftest.py` clears all tables before each test, so order is irrelevant (`pytest-randomly` shuffles every run). Savepoint-rollback isolation is unreliable on pysqlite (no real outer BEGIN). Default run is parallel (`pytest-xdist -n auto`); use `-n0` to debug serially.
 - **Windows**: no `python3` — use `python`; a `~/bin/python3.exe` shim covers tools/hooks that hard-code `python3`.
