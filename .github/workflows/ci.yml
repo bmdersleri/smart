@@ -19,7 +19,7 @@ jobs:
 
       - uses: astral-sh/setup-uv@v5
         with:
-          python-version: "3.12"
+          python-version: "3.14"
 
       - name: Install dependencies
         run: |
@@ -53,7 +53,7 @@ jobs:
 
       - uses: astral-sh/setup-uv@v5
         with:
-          python-version: "3.12"
+          python-version: "3.14"
 
       - name: Install dependencies
         run: |
@@ -107,15 +107,19 @@ jobs:
 
       - uses: astral-sh/setup-uv@v5
         with:
-          python-version: "3.12"
+          python-version: "3.14"
 
       - name: Install dependencies
+        # Install into and run from .venv explicitly. mcp-scada has a pyproject,
+        # so `uv run` would target the project env while setup-uv's VIRTUAL_ENV
+        # points elsewhere — the mismatch left mcp_scada uninstalled. Pin both
+        # install and run to .venv/bin/python to avoid the ambiguity.
         run: |
           uv venv .venv
-          uv pip install -e ../../scada-reporter/packages/scada-core -e . pytest pytest-asyncio
+          uv pip install --python .venv/bin/python -e ../../scada-reporter/packages/scada-core -e . pytest pytest-asyncio
 
       - name: Import smoke
-        run: uv run --no-sync python -c "import mcp_scada.server"
+        run: .venv/bin/python -c "import mcp_scada.server"
 
       - name: Tests — pytest
-        run: uv run --no-sync pytest -v --tb=short
+        run: .venv/bin/python -m pytest -v --tb=short

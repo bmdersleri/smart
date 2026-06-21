@@ -14,7 +14,7 @@ setup(
         "scada_reporter_cli.commands",
         "scada_reporter_cli.utils",
     ],
-    python_requires=">=3.12",
+    python_requires=">=3.14",
     install_requires=[
         "click>=8.1",
         "httpx>=0.27",
@@ -32,8 +32,6 @@ setup(
         "Intended Audience :: Developers",
         "Intended Audience :: Manufacturing",
         "License :: OSI Approved :: MIT License",
-        "Programming Language :: Python :: 3.12",
-        "Programming Language :: Python :: 3.13",
         "Programming Language :: Python :: 3.14",
         "Topic :: System :: Monitoring",
         "Topic :: Scientific/Engineering :: Interface Engine/Protocol Translator",
