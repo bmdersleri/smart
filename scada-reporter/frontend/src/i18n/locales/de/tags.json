@@ -101,5 +101,7 @@
   "prev": "← Zurück",
   "next": "Weiter →",
   "page_of": "Seite {{page}} / {{total}}",
-  "pagination_showing": "{{from}}–{{to}} von {{total}}"
+  "pagination_showing": "{{from}}–{{to}} von {{total}}",
+  "per_page": "Pro Seite",
+  "go_to_page": "Zur Seite"
 }

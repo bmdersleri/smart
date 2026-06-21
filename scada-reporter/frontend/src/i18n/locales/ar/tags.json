@@ -101,5 +101,7 @@
   "prev": "← السابق",
   "next": "التالي →",
   "page_of": "الصفحة {{page}} / {{total}}",
-  "pagination_showing": "عرض {{from}}–{{to}} من {{total}}"
+  "pagination_showing": "عرض {{from}}–{{to}} من {{total}}",
+  "per_page": "لكل صفحة",
+  "go_to_page": "الذهاب إلى الصفحة"
 }

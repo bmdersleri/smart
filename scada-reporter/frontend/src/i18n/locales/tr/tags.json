@@ -101,5 +101,7 @@
   "prev": "← Önceki",
   "next": "Sonraki →",
   "page_of": "Sayfa {{page}} / {{total}}",
-  "pagination_showing": "{{total}} kayıttan {{from}}–{{to}} arası gösteriliyor"
+  "pagination_showing": "{{total}} kayıttan {{from}}–{{to}} arası gösteriliyor",
+  "per_page": "Sayfa başına",
+  "go_to_page": "Sayfaya git"
 }

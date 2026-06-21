@@ -101,5 +101,7 @@
   "prev": "← Назад",
   "next": "Вперёд →",
   "page_of": "Страница {{page}} / {{total}}",
-  "pagination_showing": "Показаны {{from}}–{{to}} из {{total}}"
+  "pagination_showing": "Показаны {{from}}–{{to}} из {{total}}",
+  "per_page": "На странице",
+  "go_to_page": "Перейти на страницу"
 }

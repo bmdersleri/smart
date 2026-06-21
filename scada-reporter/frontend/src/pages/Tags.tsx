@@ -467,7 +467,8 @@ export default function Tags() {
   const [viewMode, setViewMode] = useState<'table' | 'tree'>('table')
   const [treeSource, setTreeSource] = useState<'manual' | 'auto'>('manual')
   const [page, setPage] = useState(1)
-  const PAGE_SIZE = 50
+  const [pageSize, setPageSize] = useState(50)
+  const PAGE_SIZE_OPTIONS = [25, 50, 100, 200]
 
   const { data: tags = [], isLoading } = useQuery({
     queryKey: ['tags'],
@@ -510,15 +511,15 @@ export default function Tags() {
   // Client-side pagination for the table view — rendering all ~3000 rows at once
   // freezes the page, so only one page of rows is mounted at a time.
   const total = sorted.length
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
+  const totalPages = Math.max(1, Math.ceil(total / pageSize))
   const pageClamped = Math.min(page, totalPages)
-  const pageRows = sorted.slice((pageClamped - 1) * PAGE_SIZE, pageClamped * PAGE_SIZE)
+  const pageRows = sorted.slice((pageClamped - 1) * pageSize, pageClamped * pageSize)
 
-  // Reset to the first page whenever the result set changes.
+  // Reset to the first page whenever the result set or page size changes.
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setPage(1)
-  }, [search, groupFilter])
+  }, [search, groupFilter, pageSize])
 
   return (
     <div className="p-6 space-y-4">
@@ -692,13 +693,25 @@ export default function Tags() {
 
       {viewMode === 'table' && !isLoading && total > 0 && (
         <div className="flex items-center justify-between flex-wrap gap-3">
-          <span className="text-xs text-gray-500">
-            {t('pagination_showing', {
-              from: (pageClamped - 1) * PAGE_SIZE + 1,
-              to: Math.min(pageClamped * PAGE_SIZE, total),
-              total,
-            })}
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-gray-500">
+              {t('pagination_showing', {
+                from: (pageClamped - 1) * pageSize + 1,
+                to: Math.min(pageClamped * pageSize, total),
+                total,
+              })}
+            </span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs text-gray-500">{t('per_page')}</span>
+              <select
+                value={pageSize}
+                onChange={(e) => setPageSize(Number(e.target.value))}
+                className="bg-gray-900 border border-gray-800 rounded-lg px-2 py-1 text-sm text-white focus:outline-none focus:border-blue-500"
+              >
+                {PAGE_SIZE_OPTIONS.map((n) => <option key={n} value={n}>{n}</option>)}
+              </select>
+            </div>
+          </div>
           {totalPages > 1 && (
             <div className="flex items-center gap-3">
               <button
@@ -708,7 +721,19 @@ export default function Tags() {
               >
                 {t('prev')}
               </button>
-              <span className="text-sm text-gray-400">{t('page_of', { page: pageClamped, total: totalPages })}</span>
+              <div className="flex items-center gap-1.5 text-sm text-gray-400">
+                <select
+                  value={pageClamped}
+                  onChange={(e) => setPage(Number(e.target.value))}
+                  title={t('go_to_page')}
+                  className="bg-gray-900 border border-gray-800 rounded-lg px-2 py-1 text-sm text-white focus:outline-none focus:border-blue-500"
+                >
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                    <option key={p} value={p}>{p}</option>
+                  ))}
+                </select>
+                <span>/ {totalPages}</span>
+              </div>
               <button
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={pageClamped === totalPages}
