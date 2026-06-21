@@ -167,6 +167,8 @@ async def patch_user(
         user.role = data.role
     if data.is_active is not None:
         changed_fields["is_active"] = data.is_active
+        if data.is_active is False:
+            user.token_version += 1
         user.is_active = data.is_active
     if data.permission_overrides is not None:
         changed_fields["permission_overrides"] = data.permission_overrides
@@ -209,6 +211,7 @@ async def reset_password(
     if not user:
         raise HTTPException(status_code=404, detail="Kullanici bulunamadi")
     user.hashed_password = hash_password(data.password)
+    user.token_version += 1
     await record_audit(
         db,
         actor=actor,

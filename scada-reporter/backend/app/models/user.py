@@ -28,4 +28,7 @@ class User(Base):
         JSON, default=dict, server_default="{}", nullable=False
     )
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    token_version: Mapped[int] = mapped_column(
+        Integer, default=0, server_default="0", nullable=False
+    )
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)

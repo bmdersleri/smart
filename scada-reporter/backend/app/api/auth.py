@@ -56,6 +56,10 @@ async def authenticate_token(token: str, db: AsyncSession) -> User:
     user = result.scalar_one_or_none()
     if not user or not user.is_active:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Kullanici bulunamadi")
+    if payload.get("ver", 0) != user.token_version:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Token gecersiz (surum)"
+        )
     return user
 
 
@@ -87,7 +91,9 @@ def require_perm(perm: str):
 def _issue_token(user: User) -> TokenResponse:
     """Shared token-issuance helper — prevents drift between /token and /login."""
     return TokenResponse(
-        access_token=create_access_token({"sub": user.username, "role": user.role})
+        access_token=create_access_token(
+            {"sub": user.username, "role": user.role, "ver": user.token_version}
+        )
     )
 
 
