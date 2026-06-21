@@ -1,0 +1,22 @@
+# =============================================================================
+# Prometheus yapılandırması — EKONT SMART REPORT gözlemlenebilirlik yığını
+# =============================================================================
+# Backend (FastAPI) host sürecinde çalışır (konteyner değil).
+# Docker → host erişimi: host.docker.internal (Linux için extra_hosts gerekli).
+# =============================================================================
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: scada-backend
+    # Hedef: host sürecinde çalışan FastAPI backend (/metrics endpoint).
+    # host.docker.internal → Linux'ta extra_hosts: host.docker.internal:host-gateway
+    # ile eşlenir; Docker Desktop'ta otomatik olarak çalışır.
+    static_configs:
+      - targets:
+          - host.docker.internal:8001
+        labels:
+          env: local
+          app: scada-reporter

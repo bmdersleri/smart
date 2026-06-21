@@ -33,6 +33,23 @@ services:
     ports:
       - "6379:6379"
 
+  prometheus:
+    image: prom/prometheus:latest
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    # host.docker.internal → Linux'ta host.docker.internal:host-gateway ile eşlenir.
+    # Backend host sürecinde çalıştığından konteynerin host'a erişmesi gerekir.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=15d"
+
   grafana:
     image: grafana/grafana:latest
     restart: unless-stopped
@@ -42,6 +59,8 @@ services:
       GF_SECURITY_ADMIN_USER: ${GF_SECURITY_ADMIN_USER:-admin}
       GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD:-admin}
       GF_INSTALL_PLUGINS: grafana-piechart-panel
+      # TimescaleDB datasource şifre interpolasyonu için (grafana/datasources/timescaledb.yml)
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-scada123}
     volumes:
       - grafana-data:/var/lib/grafana
       - ./grafana/datasources:/etc/grafana/provisioning/datasources:ro
@@ -49,6 +68,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      prometheus:
+        condition: service_started
 
   portainer:
     image: portainer/portainer-ce:latest
@@ -63,3 +84,4 @@ volumes:
   pgdata:
   grafana-data:
   portainer-data:
+  prometheus-data:

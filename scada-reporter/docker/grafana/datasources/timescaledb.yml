@@ -7,8 +7,9 @@ datasources:
     url: db:5432
     database: scada_reporter
     user: scada
+    uid: timescaledb
     secureJsonData:
-      password: scada123
+      password: ${POSTGRES_PASSWORD:-scada123}
     jsonData:
       sslmode: disable
       postgresVersion: 1600

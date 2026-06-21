@@ -1,0 +1,53 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract changelog section
+        id: changelog
+        run: |
+          # Extract the section for this tag version from CHANGELOG.md.
+          # The tag is e.g. "v1.0.0"; the changelog heading is "[1.0.0]".
+          VERSION="${GITHUB_REF_NAME#v}"
+
+          # Use awk to print lines between the matching version heading and
+          # the next version heading (or EOF), excluding the heading lines.
+          NOTES=$(awk \
+            -v ver="$VERSION" \
+            'BEGIN { found=0 }
+             /^\#\# \[/ {
+               if (found) { exit }
+               if (index($0, "[" ver "]") > 0) { found=1; next }
+             }
+             found { print }' \
+            CHANGELOG.md | sed -e '/./,$!d')
+
+          if [ -z "$NOTES" ]; then
+            NOTES="See CHANGELOG.md for details."
+          fi
+
+          # Write notes to a file to preserve newlines safely.
+          echo "$NOTES" > /tmp/release-notes.md
+          echo "notes_file=/tmp/release-notes.md" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: "EKONT SMART REPORT ${{ github.ref_name }}"
+          body_path: ${{ steps.changelog.outputs.notes_file }}
+          draft: false
+          prerelease: ${{ contains(github.ref_name, '-rc') || contains(github.ref_name, '-beta') || contains(github.ref_name, '-alpha') }}

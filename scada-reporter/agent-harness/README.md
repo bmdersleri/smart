@@ -1,47 +1,38 @@
-# EKONT SMART REPORT Agent CLI
+# EKONT SMART REPORT Agent CLI — Harness
 
-A CLI tool designed for coding agents (Claude Code, OpenCode, GitHub Copilot,
-Cursor, Windsurf, etc.) to use the EKONT SMART REPORT REST API.
+> **For agent usage (setup, commands, workflows), see [`/AGENTS.md`](../../AGENTS.md).**
 
-## Installation
+This directory contains the `scada` CLI harness — a Click-based, agent-native
+command-line interface to the EKONT SMART REPORT REST API.
+
+## Install (editable / dev)
 
 ```bash
-pip install -e scada-reporter/agent-harness
-# or
+# From repo root (recommended):
+just install-agent
+
+# Or directly:
 uv pip install -e scada-reporter/agent-harness
 ```
 
-## Usage
+## Run Tests
 
 ```bash
-# Login
-scada auth login admin
-
-# List tags (--json for agents)
-scada tags list --json
-
-# Live values
-scada dashboard current-values
-
-# SQL query (read-only)
-scada query run "SELECT name, value, unit FROM tags LIMIT 5" --json
-
-# Database discovery
-scada explore schema
-scada explore tags
-
-# Python REPL (data loaded)
-scada shell
-
-# Agent-native usage
-scada tags readings 1 --limit 5 --json | jq '.[] | {t: .timestamp, v: .value}'
+just test-agent
+# or:
+cd scada-reporter/agent-harness && ../backend/.venv/Scripts/pytest tests/ -v
 ```
 
-## For Agents
+## Structure
 
-All commands produce machine-readable JSON output with the `--json` flag.
-The token is stored in `~/.config/scada-reporter/config.json` or read from
-the `SCADA_TOKEN` environment variable.
+```
+src/scada_reporter_cli/
+├── cli.py           # Click group + REPL entry point
+├── commands/        # auth, tags, dashboard, reports, query, explore, shell, …
+└── utils/           # config (token store), client helper, REPL skin
+skills/
+└── SKILL.md         # Machine-readable skill definition (do not edit manually)
+```
 
 ## Environment Variables
 
