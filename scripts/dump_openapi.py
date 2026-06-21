@@ -31,8 +31,10 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 repo_root = os.path.dirname(script_dir)
 out_path = os.path.join(repo_root, "scada-reporter", "frontend", "openapi.json")
 
-with open(out_path, "w", encoding="utf-8") as f:
-    json.dump(schema, f, indent=2, ensure_ascii=False)
+# newline="\n" forces LF on all platforms (Windows text mode would emit CRLF
+# and make the committed file drift vs the Linux-generated CI copy).
+with open(out_path, "w", encoding="utf-8", newline="\n") as f:
+    json.dump(schema, f, indent=2, ensure_ascii=False, sort_keys=True)
     f.write("\n")
 
 print(f"OpenAPI schema written to {out_path}")
