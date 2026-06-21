@@ -32,10 +32,14 @@ run-collector:
 run-frontend:
     cd {{fe}} && pnpm dev
 
-# Bağımlılıkları yükle (backend + frontend)
+# Bağımlılıkları yükle (backend + frontend) — committed lock dosyalarından
 install:
-    cd {{be}} && uv pip install -r requirements.txt
+    cd {{be}} && uv pip install -r requirements.lock
     cd {{fe}} && pnpm install
+
+# Geliştirme bağımlılıklarını yükle (backend) — committed lock dosyasından
+install-dev:
+    cd {{be}} && uv pip install -r requirements-dev.lock
 
 # ── Test ─────────────────────────────────────────────────────────────────────
 
@@ -122,8 +126,29 @@ format:
 typecheck:
     cd {{be}} && .venv/Scripts/mypy app/
 
-# Tüm kontroller (CI benzeri)
-check: lint format-check typecheck test
+# Backend güvenlik taraması (yalnız bandit). NOT: `check`'e DAHİL DEĞİL — bandit
+# şu an app/'te pre-existing 5 Medium B608 (SQL string-concat) yüzünden exit 1
+# veriyor (CI'nin bandit adımı da aynı durumda). Bulgular giderilince check'e bağla.
+backend-security:
+    cd {{be}} && .venv/Scripts/bandit.exe -r app/ -ll
+
+# Backend kontrolleri (lint + format + type + test)
+backend-check: lint format-check typecheck test
+
+# Frontend kontrolleri (TypeScript + lint + test)
+frontend-check:
+    cd {{fe}} && pnpm tsc --noEmit && pnpm lint && pnpm test
+
+# Agent CLI kontrolleri
+cli-check:
+    cd {{ah}} && ../backend/.venv/Scripts/pytest tests/ -v
+
+# MCP server kontrolleri
+mcp-check:
+    cd mcp-servers/mcp-scada && ../../scada-reporter/backend/.venv/Scripts/python -m pytest tests/ -v
+
+# Tüm kontroller (CI benzeri) — backend + frontend + CLI + MCP
+check: backend-check frontend-check cli-check mcp-check
 
 # ── Araçlar ──────────────────────────────────────────────────────────────────
 
