@@ -71,7 +71,7 @@ async def _send_email(payload: AlertPayload) -> None:
                 s.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
             s.send_message(msg)
 
-    await asyncio.get_event_loop().run_in_executor(None, _send_sync)
+    await asyncio.get_running_loop().run_in_executor(None, _send_sync)
 
 
 async def dispatch(payload: AlertPayload) -> None:
