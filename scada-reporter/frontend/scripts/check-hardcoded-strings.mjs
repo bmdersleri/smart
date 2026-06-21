@@ -17,6 +17,7 @@ const ALLOWLIST = [
   'context/SettingsContext.tsx',
   'hooks/useSortable.ts',
   'hooks/useLatestStream.ts',
+  'hooks/useLogStream.ts',
 ]
 
 function isAllowed(p) {

@@ -1,3 +1,4 @@
+from datetime import timedelta
 from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
@@ -7,6 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.audit import record_audit
+from app.core.config import settings
 from app.core.database import get_db
 from app.core.permissions import Role, effective_permissions, user_can
 from app.core.rate_limit import check_and_raise, record_failure, reset
@@ -35,6 +37,11 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
 
 
+class StreamTokenResponse(BaseModel):
+    stream_token: str
+    expires_in: int
+
+
 class LoginRequest(BaseModel):
     username: str
     password: str
@@ -46,12 +53,34 @@ class UserUpdate(BaseModel):
     new_password: str | None = Field(default=None, min_length=6)
 
 
-async def authenticate_token(token: str, db: AsyncSession) -> User:
+async def authenticate_token(token: str, db: AsyncSession, *, sse_allowed: bool = False) -> User:
     """Token string'i doğrula ve kullanıcıyı döndür. EventSource gibi başlık
-    gönderemeyen istemciler (SSE) bunu query-param token ile kullanır."""
+    gönderemeyen istemciler (SSE) bunu query-param token ile kullanır.
+
+    sse_allowed=True: SSE-scoped kısa ömürlü tokenlar kabul edilir (realtime.py).
+    sse_allowed=False (varsayılan): SSE-scoped tokenlar reddedilir; scope=None
+    (normal API tokenları) her zaman geçer.
+    """
     payload = decode_token(token)
     if not payload:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Gecersiz token")
+
+    # Scope kontrolü
+    scope = payload.get("scope")
+    if scope is not None:
+        if scope == "sse" and not sse_allowed:
+            # SSE-scoped token normal API endpoint'lerinde kabul edilmez
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="SSE token API erisimi icin kullanilamaz",
+            )
+        if scope != "sse":
+            # Bilinmeyen scope
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Gecersiz token scope"
+            )
+    # scope is None → normal API token → her zaman kabul (geriye uyumlu)
+
     result = await db.execute(select(User).where(User.username == payload.get("sub")))
     user = result.scalar_one_or_none()
     if not user or not user.is_active:
@@ -198,3 +227,25 @@ async def update_me(
     await db.commit()
     await db.refresh(user)
     return _me_payload(user)
+
+
+@router.post("/stream-token", response_model=StreamTokenResponse)
+async def get_stream_token(user: User = Depends(get_current_user)) -> StreamTokenResponse:
+    """SSE bağlantıları için kısa ömürlü, scope="sse" token üret.
+
+    Bu token yalnızca SSE endpoint'lerinde (/dashboard/stream, /dashboard/logs/stream)
+    kullanılabilir. Normal API endpoint'lerinde kullanılırsa 401 döner.
+    Token URL query-param olarak iletildiğinden (EventSource başlık gönderemez),
+    kısa TTL (STREAM_TOKEN_TTL_SECONDS) log sızıntısı riskini azaltır.
+    """
+    ttl = settings.STREAM_TOKEN_TTL_SECONDS
+    token = create_access_token(
+        {
+            "sub": user.username,
+            "role": user.role,
+            "ver": user.token_version,
+            "scope": "sse",
+        },
+        expires_delta=timedelta(seconds=ttl),
+    )
+    return StreamTokenResponse(stream_token=token, expires_in=ttl)

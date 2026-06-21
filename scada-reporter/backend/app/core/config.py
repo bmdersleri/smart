@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "postgresql+asyncpg://scada:scada123@localhost:5432/scada_reporter"
     SECRET_KEY: str = DEFAULT_SECRET
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 480
+    STREAM_TOKEN_TTL_SECONDS: int = 60
 
     # Virgülle ayrılmış izinli origin listesi (prod'da gerçek alan adlarıyla doldur)
     CORS_ORIGINS: str = "http://localhost:5173,http://localhost:3000"

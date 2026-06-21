@@ -28,6 +28,14 @@ export const login = (username: string, password: string) =>
 
 export const getMe = () => api.get<{ id: number; username: string; role: UserRole; full_name: string; language: string; permissions: string[] }>('/auth/me')
 
+/**
+ * SSE bağlantıları için kısa ömürlü stream token al.
+ * Normal Authorization başlığı ile çağrılır (axios interceptor otomatik ekler).
+ * Dönen token yalnızca SSE URL query param'ında kullanılır — localStorage'a yazılmaz.
+ */
+export const getStreamToken = () =>
+  api.post<{ stream_token: string; expires_in: number }>('/auth/stream-token')
+
 export const updateMe = (language: string) =>
   api.patch<{ id: number; username: string; role: UserRole; full_name: string; language: string; permissions: string[] }>(
     '/auth/me',
