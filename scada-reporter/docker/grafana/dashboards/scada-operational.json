@@ -118,7 +118,7 @@
       },
       "targets": [
         {
-          "rawSql": "SELECT\n  bucket AS time,\n  count AS \"Okuma Sayısı\"\nFROM tag_readings_1h\nWHERE bucket >= $__timeFrom()::timestamptz\n  AND bucket < $__timeTo()::timestamptz\nORDER BY bucket",
+          "rawSql": "SELECT\n  bucket AS time,\n  n AS \"Okuma Sayısı\"\nFROM tag_readings_1h\nWHERE bucket >= $__timeFrom()::timestamptz\n  AND bucket < $__timeTo()::timestamptz\nORDER BY bucket",
           "format": "time_series",
           "refId": "A"
         }
@@ -141,7 +141,7 @@
       },
       "targets": [
         {
-          "rawSql": "SELECT\n  r.bucket AS time,\n  t.name AS metric,\n  r.avg_value AS value\nFROM tag_readings_5m r\nINNER JOIN tags t ON t.id = r.tag_id\nWHERE r.bucket >= $__timeFrom()::timestamptz\n  AND r.bucket < $__timeTo()::timestamptz\n  AND r.tag_id IN (SELECT id FROM tags ORDER BY id LIMIT 5)\nORDER BY r.bucket, t.name",
+          "rawSql": "SELECT\n  r.bucket AS time,\n  t.name AS metric,\n  r.avg AS value\nFROM tag_readings_5m r\nINNER JOIN tags t ON t.id = r.tag_id\nWHERE r.bucket >= $__timeFrom()::timestamptz\n  AND r.bucket < $__timeTo()::timestamptz\n  AND r.tag_id IN (SELECT id FROM tags ORDER BY id LIMIT 5)\nORDER BY r.bucket, t.name",
           "format": "time_series",
           "refId": "A"
         }
@@ -164,7 +164,7 @@
       },
       "targets": [
         {
-          "rawSql": "SELECT\n  bucket AS time,\n  CASE WHEN count > 0 THEN bad_count::float / count ELSE 0 END AS \"BAD Oran\"\nFROM tag_readings_1h\nWHERE bucket >= $__timeFrom()::timestamptz\n  AND bucket < $__timeTo()::timestamptz\nORDER BY bucket",
+          "rawSql": "SELECT\n  time_bucket('1 hour', timestamp) AS time,\n  CASE WHEN count(*) > 0\n       THEN count(*) FILTER (WHERE quality <> 192)::float / count(*)\n       ELSE 0 END AS \"BAD Oran\"\nFROM tag_readings\nWHERE $__timeFilter(timestamp)\nGROUP BY 1\nORDER BY 1",
           "format": "time_series",
           "refId": "A"
         }
