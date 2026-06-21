@@ -97,5 +97,11 @@
   "groups_parent_root": "Parent group: (root)",
   "groups_add": "+ Add Group",
   "groups_none": "No groups yet.",
-  "groups_confirm_delete": "Delete the \"{{name}}\" group? Its tags become ungrouped."
+  "groups_confirm_delete": "Delete the \"{{name}}\" group? Its tags become ungrouped.",
+  "prev": "← Previous",
+  "next": "Next →",
+  "page_of": "Page {{page}} / {{total}}",
+  "pagination_showing": "Showing {{from}}–{{to}} of {{total}}",
+  "per_page": "Per page",
+  "go_to_page": "Go to page"
 }

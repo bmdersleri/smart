@@ -97,5 +97,11 @@
   "groups_parent_root": "Übergeordnete Gruppe: (Wurzel)",
   "groups_add": "+ Gruppe hinzufügen",
   "groups_none": "Noch keine Gruppen.",
-  "groups_confirm_delete": "Gruppe \"{{name}}\" löschen? Ihre Tags werden ohne Gruppe."
+  "groups_confirm_delete": "Gruppe \"{{name}}\" löschen? Ihre Tags werden ohne Gruppe.",
+  "prev": "← Zurück",
+  "next": "Weiter →",
+  "page_of": "Seite {{page}} / {{total}}",
+  "pagination_showing": "{{from}}–{{to}} von {{total}}",
+  "per_page": "Pro Seite",
+  "go_to_page": "Zur Seite"
 }
