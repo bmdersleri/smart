@@ -1,0 +1,132 @@
+// src/pages/PlcHealth.tsx
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
+import { useAuth } from '../context/AuthContext'
+import {
+  getPlcHealth, getPlcIncidents, getIncidentSummary, ackIncident,
+  type PlcIncidentRow,
+} from '../api/client'
+
+function sevClass(sev: string) {
+  return sev === 'critical' ? 'bg-red-900/30 text-red-300' : 'bg-yellow-900/30 text-yellow-300'
+}
+
+export default function PlcHealth() {
+  const { t } = useTranslation('plcHealth')
+  const { can } = useAuth()
+  const qc = useQueryClient()
+
+  const { data: summary } = useQuery({
+    queryKey: ['plc-incident-summary'],
+    queryFn: () => getIncidentSummary().then((r) => r.data),
+    refetchInterval: 10000,
+  })
+  const { data: open = [] } = useQuery({
+    queryKey: ['plc-incidents-open'],
+    queryFn: () => getPlcIncidents({ open: true }).then((r) => r.data),
+    refetchInterval: 10000,
+  })
+  const { data: health = [] } = useQuery({
+    queryKey: ['plc-health'],
+    queryFn: () => getPlcHealth().then((r) => r.data),
+    refetchInterval: 10000,
+  })
+  const { data: history = [] } = useQuery({
+    queryKey: ['plc-incidents-history'],
+    queryFn: () => getPlcIncidents({ open: false, limit: 50 }).then((r) => r.data),
+    refetchInterval: 30000,
+  })
+
+  const ack = useMutation({
+    mutationFn: (id: number) => ackIncident(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['plc-incidents-open'] }),
+  })
+
+  return (
+    <div className="p-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-bold text-white">{t('title')}</h1>
+          <p className="text-sm text-gray-500 mt-0.5">{t('subtitle')}</p>
+        </div>
+        <div className="flex gap-2 text-sm">
+          <span className="px-3 py-1.5 rounded-lg bg-red-900/30 text-red-300">
+            {t('critical')}: {summary?.critical ?? 0}
+          </span>
+          <span className="px-3 py-1.5 rounded-lg bg-yellow-900/30 text-yellow-300">
+            {t('warning')}: {summary?.warning ?? 0}
+          </span>
+        </div>
+      </div>
+
+      <section>
+        <h2 className="text-sm font-semibold text-gray-300 mb-2">{t('open_incidents')}</h2>
+        {open.length === 0 ? (
+          <p className="text-sm text-green-400">{t('all_healthy')}</p>
+        ) : (
+          <div className="grid gap-2">
+            {open.map((i: PlcIncidentRow) => (
+              <div key={i.id} className={`flex items-center justify-between px-4 py-2.5 rounded-lg ${sevClass(i.severity)}`}>
+                <div>
+                  <span className="font-medium">{i.plc_name || i.plc_ip}</span>
+                  <span className="mx-2 opacity-60">·</span>
+                  <span>{i.message}</span>
+                  <span className="ml-2 text-xs opacity-60">{new Date(i.opened_at).toLocaleString()}</span>
+                </div>
+                {can('plc:manage') && !i.acknowledged_by && (
+                  <button onClick={() => ack.mutate(i.id)} className="text-xs px-2 py-1 rounded bg-gray-800 hover:bg-gray-700 text-gray-200">
+                    {t('ack')}
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section>
+        <h2 className="text-sm font-semibold text-gray-300 mb-2">{t('per_plc')}</h2>
+        <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-xs text-gray-500 uppercase">
+                <th className="px-4 py-2 text-start">{t('col_plc')}</th>
+                <th className="px-4 py-2 text-start">{t('col_status')}</th>
+                <th className="px-4 py-2 text-start">{t('col_last_success')}</th>
+                <th className="px-4 py-2 text-start">{t('col_fail')}</th>
+                <th className="px-4 py-2 text-start">{t('col_reconnects')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {health.map((h) => (
+                <tr key={`${h.plc_ip}-${h.rack}-${h.slot}`} className="border-t border-gray-800">
+                  <td className="px-4 py-2 text-gray-200">{h.plc_name || h.plc_ip}</td>
+                  <td className="px-4 py-2">
+                    <span className={h.connected ? 'text-green-400' : 'text-red-400'}>
+                      {h.connected ? t('connected') : t('disconnected')}
+                    </span>
+                  </td>
+                  <td className="px-4 py-2 text-gray-400">{h.last_success_at ? new Date(h.last_success_at).toLocaleString() : '—'}</td>
+                  <td className="px-4 py-2 text-gray-400">{h.consecutive_fail}</td>
+                  <td className="px-4 py-2 text-gray-400">{h.reconnects_last_min}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section>
+        <h2 className="text-sm font-semibold text-gray-300 mb-2">{t('history')}</h2>
+        <div className="text-xs text-gray-500 space-y-1">
+          {history.map((i: PlcIncidentRow) => (
+            <div key={i.id}>
+              {new Date(i.opened_at).toLocaleString()} — {i.plc_name || i.plc_ip}: {i.message}
+              {i.resolved_at && ` (${t('resolved')}: ${new Date(i.resolved_at).toLocaleString()})`}
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  )
+}
