@@ -93,15 +93,18 @@ migrate-history:
 
 # S7 PLC tag'lerini veritabanına ekle (eski demo seti)
 seed-tags:
-    cd {{be}} && .venv/Scripts/python app/seed_tags.py
+    cd {{be}} && .venv/Scripts/python -m app.seed_tags
 
 # Varsayılan kullanıcıları ekle (admin/admin123, operator/operator123)
 seed-users:
-    cd {{be}} && .venv/Scripts/python app/seed_users.py
+    cd {{be}} && .venv/Scripts/python -m app.seed_users
 
 # WinCC export'larından uzun-süre tag kataloğunu yükle (xlsx/ klasöründen)
 seed-catalog *args:
     cd {{be}} && .venv/Scripts/python -m app.seed_catalog {{args}}
+
+# Tam seed (belgeli sıra): önce kullanıcılar, sonra uzun-süre tag kataloğu
+seed: seed-users seed-catalog
 
 # Tag tiplerine göre toplu deadband ayarla (--dry-run / --reset)
 seed-deadband *args:

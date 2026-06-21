@@ -63,6 +63,7 @@ pg17/
 scada-reporter/backend/certs/*.pem
 scada-reporter/frontend/.vite/
 .env.example
+!scada-reporter/docker/.env.example
 xlsx/
 .claude/worktrees/
 .commit_msg.txt

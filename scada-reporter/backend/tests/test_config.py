@@ -24,8 +24,14 @@ def test_config_errors_flags_default_secret_in_prod():
     assert any("SECRET_KEY" in e for e in errs)
 
 
-def test_config_errors_empty_when_secret_set_in_prod():
-    s = Settings(ENVIRONMENT="production", SECRET_KEY="a-real-long-random-secret-value-123456")
+def test_config_errors_empty_when_all_safe_in_prod():
+    s = Settings(
+        _env_file=None,
+        ENVIRONMENT="production",
+        SECRET_KEY="a-real-long-random-secret-value-123456",
+        DATABASE_URL="postgresql+asyncpg://u:strongpass@db.example:5432/scada",
+        CORS_ORIGINS="https://app.example.com",
+    )
     assert s.config_errors() == []
 
 
