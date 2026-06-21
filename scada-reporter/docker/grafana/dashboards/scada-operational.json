@@ -1,0 +1,214 @@
+{
+  "id": null,
+  "uid": "scada-operational-v1",
+  "title": "SCADA — Operasyonel Genel Bakış (TimescaleDB)",
+  "description": "TimescaleDB SQL sorguları: tag sayısı, okuma hacmi, veri tazeliği, CAGG trend örneği.",
+  "tags": ["scada", "timescaledb", "sql", "operational"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "refresh": "1m",
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "templating": {
+    "list": []
+  },
+  "annotations": {
+    "list": []
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Toplam Tag Sayısı",
+      "description": "Sistemde kayıtlı toplam tag adedi (tags tablosu).",
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 5 },
+      "datasource": { "type": "postgres", "uid": "${DS_TIMESCALEDB}" },
+      "fieldConfig": {
+        "defaults": { "unit": "short" },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "rawSql": "SELECT count(*) AS \"Tag Sayısı\" FROM tags",
+          "format": "table",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": ["lastNotNull"]
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Son Veri Tazeliği",
+      "description": "tag_readings tablosundaki en son timestamp değeri — veri aktarımının güncelliği.",
+      "gridPos": { "x": 6, "y": 0, "w": 8, "h": 5 },
+      "datasource": { "type": "postgres", "uid": "${DS_TIMESCALEDB}" },
+      "fieldConfig": {
+        "defaults": { "unit": "dateTimeAsIso" },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "rawSql": "SELECT EXTRACT(EPOCH FROM max(timestamp)) * 1000 AS \"Son Okuma (ms)\" FROM tag_readings",
+          "format": "table",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": ["lastNotNull"]
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Son 24s İyi Kalite Okuma Sayısı",
+      "description": "Son 24 saatte quality=192 (GOOD) satır sayısı.",
+      "gridPos": { "x": 14, "y": 0, "w": 10, "h": 5 },
+      "datasource": { "type": "postgres", "uid": "${DS_TIMESCALEDB}" },
+      "fieldConfig": {
+        "defaults": { "unit": "short" },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "rawSql": "SELECT count(*) AS \"İyi Kalite Okumalar\" FROM tag_readings WHERE quality = 192 AND timestamp >= now() - INTERVAL '24 hours'",
+          "format": "table",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": ["lastNotNull"]
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Saatlik Okuma Hacmi (tag_readings_1h CAGG)",
+      "description": "tag_readings_1h CAGG'inden saatlik okuma hacmi. Her saatin toplam satır sayısı.",
+      "gridPos": { "x": 0, "y": 5, "w": 24, "h": 9 },
+      "datasource": { "type": "postgres", "uid": "${DS_TIMESCALEDB}" },
+      "fieldConfig": {
+        "defaults": { "unit": "short" },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "rawSql": "SELECT\n  bucket AS time,\n  count AS \"Okuma Sayısı\"\nFROM tag_readings_1h\nWHERE bucket >= $__timeFrom()::timestamptz\n  AND bucket < $__timeTo()::timestamptz\nORDER BY bucket",
+          "format": "time_series",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "tooltip": { "mode": "single" },
+        "legend": { "displayMode": "list", "placement": "bottom" }
+      }
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "5 Dakikalık Trend — İlk 5 Tag (tag_readings_5m CAGG)",
+      "description": "tag_readings_5m CAGG'inden ilk 5 tag için ortalama değer trendi.",
+      "gridPos": { "x": 0, "y": 14, "w": 24, "h": 9 },
+      "datasource": { "type": "postgres", "uid": "${DS_TIMESCALEDB}" },
+      "fieldConfig": {
+        "defaults": { "unit": "short" },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "rawSql": "SELECT\n  r.bucket AS time,\n  t.name AS metric,\n  r.avg_value AS value\nFROM tag_readings_5m r\nINNER JOIN tags t ON t.id = r.tag_id\nWHERE r.bucket >= $__timeFrom()::timestamptz\n  AND r.bucket < $__timeTo()::timestamptz\n  AND r.tag_id IN (SELECT id FROM tags ORDER BY id LIMIT 5)\nORDER BY r.bucket, t.name",
+          "format": "time_series",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "tooltip": { "mode": "multi" },
+        "legend": { "displayMode": "list", "placement": "bottom" }
+      }
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "BAD Kalite Oranı — Saatlik (tag_readings_1h CAGG)",
+      "description": "Saatlik BAD kalite okuma oranı: bad_count / count yüzdesi (tag_readings_1h).",
+      "gridPos": { "x": 0, "y": 23, "w": 24, "h": 8 },
+      "datasource": { "type": "postgres", "uid": "${DS_TIMESCALEDB}" },
+      "fieldConfig": {
+        "defaults": { "unit": "percentunit" },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "rawSql": "SELECT\n  bucket AS time,\n  CASE WHEN count > 0 THEN bad_count::float / count ELSE 0 END AS \"BAD Oran\"\nFROM tag_readings_1h\nWHERE bucket >= $__timeFrom()::timestamptz\n  AND bucket < $__timeTo()::timestamptz\nORDER BY bucket",
+          "format": "time_series",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "tooltip": { "mode": "single" },
+        "legend": { "displayMode": "list", "placement": "bottom" }
+      }
+    }
+  ],
+  "__inputs": [
+    {
+      "name": "DS_TIMESCALEDB",
+      "label": "TimescaleDB",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "postgres",
+      "pluginName": "PostgreSQL"
+    }
+  ],
+  "__requires": [
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "9.0.0"
+    },
+    {
+      "type": "datasource",
+      "id": "postgres",
+      "name": "PostgreSQL",
+      "version": "1.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "timeseries",
+      "name": "Time series",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "stat",
+      "name": "Stat",
+      "version": ""
+    }
+  ]
+}

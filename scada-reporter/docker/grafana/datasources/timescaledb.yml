@@ -8,7 +8,7 @@ datasources:
     database: scada_reporter
     user: scada
     secureJsonData:
-      password: scada123
+      password: ${POSTGRES_PASSWORD:-scada123}
     jsonData:
       sslmode: disable
       postgresVersion: 1600
