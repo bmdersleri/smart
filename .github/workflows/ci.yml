@@ -36,7 +36,7 @@ jobs:
         run: uv run --no-sync mypy app/
 
       - name: Tests — pytest
-        run: uv run --no-sync pytest tests/ -v --tb=short
+        run: uv run --no-sync pytest tests/ -v --tb=short --cov=app --cov-report=term-missing
 
       - name: Security — bandit
         run: uv run --no-sync bandit -r app/ -ll
@@ -94,6 +94,58 @@ jobs:
 
       - name: Tests — vitest
         run: pnpm test
+
+  contract-freshness:
+    name: Contract freshness (openapi.json + generated types)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # ── Backend venv (to run dump_openapi.py) ────────────────────────────────
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install backend dependencies
+        working-directory: scada-reporter/backend
+        run: |
+          uv venv .venv
+          uv pip install --python .venv/bin/python -r requirements-dev.lock
+
+      # ── Frontend deps (to run pnpm openapi-ts) ───────────────────────────────
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+          cache-dependency-path: scada-reporter/frontend/pnpm-lock.yaml
+
+      - name: Install frontend dependencies
+        working-directory: scada-reporter/frontend
+        run: pnpm install --frozen-lockfile
+
+      # ── Regenerate and check for drift ───────────────────────────────────────
+      - name: Dump OpenAPI schema
+        # Use the venv's python explicitly. `uv run` resolves VIRTUAL_ENV
+        # (which setup-uv points at the repo-root .venv, not this job's
+        # backend .venv), so sentry_sdk etc. weren't importable. Same fix as
+        # the mcp job.
+        working-directory: scada-reporter/backend
+        run: .venv/bin/python ../../scripts/dump_openapi.py
+
+      - name: Generate TypeScript client
+        working-directory: scada-reporter/frontend
+        run: pnpm openapi-ts
+
+      - name: Assert committed schema and generated types are up to date
+        run: |
+          git diff --exit-code -- \
+            scada-reporter/frontend/openapi.json \
+            scada-reporter/frontend/src/api/generated
 
   mcp:
     name: MCP scada (install · import · test)

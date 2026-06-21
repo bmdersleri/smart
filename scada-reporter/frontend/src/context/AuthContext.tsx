@@ -1,10 +1,10 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, useEffect } from 'react'
 import type { ReactNode } from 'react'
-import { getMe, login as apiLogin } from '../api/client'
+import { type UserRole, getMe, login as apiLogin } from '../api/client'
 import i18n from '../i18n'
 
-interface User { id: number; username: string; role: string; full_name: string; language: string; permissions: string[] }
+interface User { id: number; username: string; role: UserRole; full_name: string; language: string; permissions: string[] }
 
 interface AuthCtx {
   user: User | null

@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "postgresql+asyncpg://scada:scada123@localhost:5432/scada_reporter"
     SECRET_KEY: str = DEFAULT_SECRET
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 480
+    STREAM_TOKEN_TTL_SECONDS: int = 60
 
     # Virgülle ayrılmış izinli origin listesi (prod'da gerçek alan adlarıyla doldur)
     CORS_ORIGINS: str = "http://localhost:5173,http://localhost:3000"
@@ -46,6 +47,11 @@ class Settings(BaseSettings):
     REDIS_URL: str = "redis://localhost:6379/0"
 
     SENTRY_DSN: str = ""
+
+    # ── Login rate limiting (brute-force koruması) ──
+    LOGIN_RATE_LIMIT_ENABLED: bool = True
+    LOGIN_RATE_LIMIT_MAX: int = 10  # pencere içinde max başarısız deneme
+    LOGIN_RATE_LIMIT_WINDOW_SECONDS: int = 60  # pencere uzunluğu (saniye)
 
     FACILITY_NAME: str = "Su/Atıksu Tesisi"
     REPORT_ARCHIVE_KEEP_DAYS: int = 365

@@ -1,0 +1,5 @@
+# Generated API contract artifacts must use LF on all platforms so the
+# CI contract-freshness check (regenerates on Linux) doesn't drift against
+# files generated/committed on Windows.
+scada-reporter/frontend/openapi.json text eol=lf
+scada-reporter/frontend/src/api/generated/** text eol=lf

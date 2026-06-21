@@ -2,6 +2,17 @@
 
 from __future__ import annotations
 
+from typing import Literal
+
+# ---------------------------------------------------------------------------
+# Role type — single source of truth for valid role names
+# ---------------------------------------------------------------------------
+Role = Literal["admin", "operator", "viewer"]
+VALID_ROLES: tuple[str, ...] = ("admin", "operator", "viewer")
+
+# ---------------------------------------------------------------------------
+# Permission catalogue
+# ---------------------------------------------------------------------------
 PERM_TAG_CREATE = "tag:create"
 PERM_PLC_MANAGE = "plc:manage"
 PERM_REPORT_CREATE = "report_template:create"

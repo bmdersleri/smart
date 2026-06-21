@@ -57,7 +57,7 @@ async def stream(
     limit: int | None = Query(default=None, ge=1),
     db: AsyncSession = Depends(get_db),
 ):
-    await authenticate_token(token, db)
+    await authenticate_token(token, db, sse_allowed=True)
     interval = settings.OPCUA_SERVER_UPDATE_INTERVAL or 2
     return StreamingResponse(
         latest_event_stream(tag_ids, interval, max_events=limit),
@@ -95,7 +95,7 @@ async def logs_stream(
     limit: int | None = Query(default=None, ge=1),
     db: AsyncSession = Depends(get_db),
 ):
-    await authenticate_token(token, db)
+    await authenticate_token(token, db, sse_allowed=True)
     min_level = logging.getLevelName(level.upper())
     if not isinstance(min_level, int):
         min_level = logging.INFO

@@ -1,5 +1,21 @@
 import axios from 'axios'
 
+// ── Generated types (from openapi.json → src/api/generated/types.gen.ts) ──────
+// Hand-written interfaces that map cleanly onto generated types are replaced
+// with re-exports below. Types that diverge in shape (nullability, extra fields,
+// or semantic differences) are kept as-is to avoid cascading tsc errors.
+export type {
+  AnnotationResponse as Annotation,
+  GroupResponse as Group,
+  ArchiveEntryResponse as ArchiveEntry,
+  PaginatedArchiveResponse as PaginatedArchive,
+  TemplateResponse as ReportTemplate,
+  ScheduledResponse as ScheduledReport,
+} from './generated/types.gen'
+
+// Role union — mirrors backend Literal["admin", "operator", "viewer"]
+export type UserRole = 'admin' | 'operator' | 'viewer'
+
 export const api = axios.create({ baseURL: '/api' })
 
 api.interceptors.request.use((config) => {
@@ -23,25 +39,33 @@ api.interceptors.response.use(
 export const login = (username: string, password: string) =>
   api.post<{ access_token: string }>('/auth/token', new URLSearchParams({ username, password }))
 
-export const getMe = () => api.get<{ id: number; username: string; role: string; full_name: string; language: string; permissions: string[] }>('/auth/me')
+export const getMe = () => api.get<{ id: number; username: string; role: UserRole; full_name: string; language: string; permissions: string[] }>('/auth/me')
+
+/**
+ * SSE bağlantıları için kısa ömürlü stream token al.
+ * Normal Authorization başlığı ile çağrılır (axios interceptor otomatik ekler).
+ * Dönen token yalnızca SSE URL query param'ında kullanılır — localStorage'a yazılmaz.
+ */
+export const getStreamToken = () =>
+  api.post<{ stream_token: string; expires_in: number }>('/auth/stream-token')
 
 export const updateMe = (language: string) =>
-  api.patch<{ id: number; username: string; role: string; full_name: string; language: string; permissions: string[] }>(
+  api.patch<{ id: number; username: string; role: UserRole; full_name: string; language: string; permissions: string[] }>(
     '/auth/me',
     { language },
   )
 
 export interface ManagedUser {
   id: number; username: string; email: string; full_name: string
-  role: string; is_active: boolean
+  role: UserRole; is_active: boolean
   permission_overrides: Record<string, boolean>; permissions: string[]
 }
 export interface UserCreatePayload {
   username: string; email: string; password: string
-  full_name?: string; role?: string; permission_overrides?: Record<string, boolean>
+  full_name?: string; role?: UserRole; permission_overrides?: Record<string, boolean>
 }
 export interface UserPatchPayload {
-  email?: string; full_name?: string; role?: string
+  email?: string; full_name?: string; role?: UserRole
   is_active?: boolean; permission_overrides?: Record<string, boolean>
 }
 export const listUsers = () => api.get<ManagedUser[]>('/users/')
@@ -85,7 +109,7 @@ export const exportTags = (format: 'csv' | 'xlsx') =>
   api.get(`/tags/export?format=${format}`, { responseType: 'blob' })
 
 // Tag grupları (hiyerarşi)
-export interface Group { id: number; name: string; parent_id: number | null; sort_order: number }
+// Group is re-exported from generated (GroupResponse). GroupNode is custom (tree structure).
 export interface GroupNode {
   id: number | null; name: string; parent_id?: number | null; sort_order?: number
   tag_ids: number[]; children: GroupNode[]
@@ -103,9 +127,7 @@ export const assignTagsToGroup = (id: number, tag_ids: number[]) =>
 export const unassignTags = (tag_ids: number[]) => api.post('/groups/unassign', { tag_ids })
 
 // Trend annotations (paylaşımlı notlar)
-export interface Annotation {
-  id: number; tag_id: number | null; username: string; ts: string; text: string; created_at: string
-}
+// Annotation is re-exported from generated (AnnotationResponse).
 export const getAnnotations = (params: { tag_ids?: number[]; start?: string; end?: string }) => {
   const q = new URLSearchParams()
   params.tag_ids?.forEach((id) => q.append('tag_ids', String(id)))
@@ -236,15 +258,7 @@ export const getReportHistory = () => api.get<ReportHistoryEntry[]>('/reports/hi
 export const downloadHistoryReport = (id: number) => api.get(`/reports/history/${id}/download`, { responseType: 'blob' })
 
 // Advanced Reports
-export interface ReportTemplate {
-  id: number; name: string; description: string; tag_ids: number[]
-  time_range_type: string; custom_start: string | null; custom_end: string | null
-  interval: string; output_format: string
-  include_std_dev: boolean; include_percentiles: boolean; percentile_levels: number[]
-  include_trend_line: boolean; anomaly_enabled: boolean; anomaly_zscore_threshold: number
-  show_summary_stats: boolean; show_trend_charts: boolean; show_anomaly_table: boolean; show_raw_data: boolean
-  created_at: string; updated_at: string
-}
+// ReportTemplate is re-exported from generated (TemplateResponse).
 export interface TemplateCreate {
   name: string; description?: string; tag_ids: number[]
   time_range_type?: string; custom_start?: string | null; custom_end?: string | null
@@ -253,25 +267,14 @@ export interface TemplateCreate {
   include_trend_line?: boolean; anomaly_enabled?: boolean; anomaly_zscore_threshold?: number
   show_summary_stats?: boolean; show_trend_charts?: boolean; show_anomaly_table?: boolean; show_raw_data?: boolean
 }
-export interface ScheduledReport {
-  id: number; template_id: number; name: string; schedule_type: string
-  cron_hour: number | null; cron_minute: number | null; cron_day_of_week: string | null; cron_day_of_month: number | null
-  interval_hours: number | null; apscheduler_job_id: string | null
-  is_active: boolean; last_run_at: string | null; last_run_status: string | null
-  last_run_error: string | null; next_run_at: string | null; created_at: string
-}
+// ScheduledReport is re-exported from generated (ScheduledResponse).
 export interface ScheduledCreate {
   template_id: number; name: string; schedule_type: string
   cron_hour?: number | null; cron_minute?: number | null; cron_day_of_week?: string | null
   cron_day_of_month?: number | null; interval_hours?: number | null
 }
-export interface ArchiveEntry {
-  id: number; template_id: number | null; scheduled_report_id: number | null
-  status: string; trigger: string; created_at: string; started_at: string | null; completed_at: string | null
-  error_message: string | null; tag_ids: number[]; start: string; end: string
-  interval: string; output_format: string; file_path: string | null; file_size_bytes: number | null
-}
-export interface PaginatedArchive { items: ArchiveEntry[]; total: number; page: number; page_size: number; total_pages: number }
+// ArchiveEntry is re-exported from generated (ArchiveEntryResponse).
+// PaginatedArchive is re-exported from generated (PaginatedArchiveResponse).
 
 export const listTemplates = () => api.get<ReportTemplate[]>('/advanced-reports/templates')
 export const createTemplate = (d: TemplateCreate) => api.post<ReportTemplate>('/advanced-reports/templates', d)

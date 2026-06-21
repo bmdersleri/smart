@@ -170,8 +170,15 @@ docker-up:
 docker-down:
     cd scada-reporter/docker && docker compose down
 
-# OpenAPI'den TypeScript client üret
-gen-client:
+# OpenAPI şemasını backend'den yaz (canlı server gerekmez — app import edilir)
+# Çıktı: scada-reporter/frontend/openapi.json (commit'lenir)
+dump-openapi:
+    cd {{be}} && .venv/Scripts/python ../../scripts/dump_openapi.py
+
+# OpenAPI'den TypeScript client üret (iki adım: önce şema yaz, sonra generate)
+# 1) dump-openapi → frontend/openapi.json güncelle
+# 2) pnpm openapi-ts → src/api/generated/* üret
+gen-client: dump-openapi
     cd {{fe}} && pnpm openapi-ts
 
 # ── Agent CLI ─────────────────────────────────────────────────────────────────
