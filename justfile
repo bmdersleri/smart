@@ -126,8 +126,12 @@ format:
 typecheck:
     cd {{be}} && .venv/Scripts/mypy app/
 
-# Backend kontrolleri (lint + format + type + test)
-backend-check: lint format-check typecheck test
+# Backend güvenlik taraması (yalnız bandit — safety ağ/hesap ister, check dışı)
+backend-security:
+    cd {{be}} && .venv/Scripts/bandit.exe -r app/ -ll
+
+# Backend kontrolleri (lint + format + type + test + security)
+backend-check: lint format-check typecheck test backend-security
 
 # Frontend kontrolleri (TypeScript + lint + test)
 frontend-check:
