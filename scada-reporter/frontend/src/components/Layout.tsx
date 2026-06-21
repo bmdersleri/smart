@@ -50,6 +50,7 @@ export default function Layout() {
               <p className="text-gray-500 text-xs">{t('app_subtitle')}</p>
             </div>
           </div>
+          <PlcAlertBadge />
         </div>
 
         <nav className="flex-1 p-3 space-y-1">
