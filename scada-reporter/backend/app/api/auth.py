@@ -33,6 +33,11 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
 
 
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+
 class UserUpdate(BaseModel):
     language: Literal["en", "tr", "ru", "de", "ar"] | None = None
     current_password: str | None = None
@@ -77,14 +82,31 @@ def require_perm(perm: str):
     return _check
 
 
+def _issue_token(user: User) -> TokenResponse:
+    """Shared token-issuance helper — prevents drift between /token and /login."""
+    return TokenResponse(
+        access_token=create_access_token({"sub": user.username, "role": user.role})
+    )
+
+
 @router.post("/token", response_model=TokenResponse)
 async def login(form: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(User).where(User.username == form.username))
     user = result.scalar_one_or_none()
     if not user or not verify_password(form.password, user.hashed_password):
         raise HTTPException(status_code=400, detail="Kullanici adi veya sifre yanlis")
-    token = create_access_token({"sub": user.username, "role": user.role})
-    return TokenResponse(access_token=token)
+    return _issue_token(user)
+
+
+@router.post("/login", response_model=TokenResponse)
+async def login_json(data: LoginRequest, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(User).where(User.username == data.username))
+    user = result.scalar_one_or_none()
+    if not user or not verify_password(data.password, user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Kullanici adi veya sifre yanlis"
+        )
+    return _issue_token(user)
 
 
 @router.post("/register", status_code=201)
