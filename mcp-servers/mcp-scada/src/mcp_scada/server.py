@@ -104,6 +104,212 @@ async def resolve_tag(query: str) -> str:
     return await call_capability("resolve_tag", {"query": query})
 
 
+# ---------------------------------------------------------------------------
+# Write / destructive tool functions
+# ---------------------------------------------------------------------------
+
+
+def _allowed_tiers() -> set[str]:
+    tiers = {"read"}
+    if os.environ.get("SCADA_MCP_ALLOW_WRITES") == "1":
+        tiers.add("write")
+        if os.environ.get("SCADA_MCP_ALLOW_DESTRUCTIVE") == "1":
+            tiers.add("destructive")
+    return tiers
+
+
+async def update_tag(
+    tag_id: int,
+    unit: str | None = None,
+    device: str | None = None,
+    channel: str | None = None,
+    description: str | None = None,
+    min_alarm: float | None = None,
+    max_alarm: float | None = None,
+) -> str:
+    return await call_capability(
+        "update_tag",
+        {
+            "tag_id": tag_id,
+            "unit": unit,
+            "device": device,
+            "channel": channel,
+            "description": description,
+            "min_alarm": min_alarm,
+            "max_alarm": max_alarm,
+        },
+    )
+
+
+async def delete_tag(tag_id: int) -> str:
+    return await call_capability("delete_tag", {"tag_id": tag_id})
+
+
+async def watchlist_add(tag_id: int) -> str:
+    return await call_capability("watchlist_add", {"tag_id": tag_id})
+
+
+async def watchlist_remove(tag_id: int) -> str:
+    return await call_capability("watchlist_remove", {"tag_id": tag_id})
+
+
+async def annotation_add(ts: str, text: str, tag_id: int | None = None) -> str:
+    return await call_capability(
+        "annotation_add", {"ts": ts, "text": text, "tag_id": tag_id}
+    )
+
+
+async def annotation_delete(annotation_id: int) -> str:
+    return await call_capability("annotation_delete", {"annotation_id": annotation_id})
+
+
+async def template_create(payload: dict) -> str:
+    return await call_capability("template_create", {"payload": payload})
+
+
+async def template_update(template_id: int, payload: dict) -> str:
+    return await call_capability(
+        "template_update", {"template_id": template_id, "payload": payload}
+    )
+
+
+async def template_run(
+    template_id: int, start: str | None = None, end: str | None = None
+) -> str:
+    return await call_capability(
+        "template_run", {"template_id": template_id, "start": start, "end": end}
+    )
+
+
+async def template_delete(template_id: int) -> str:
+    return await call_capability("template_delete", {"template_id": template_id})
+
+
+async def scheduled_create(payload: dict) -> str:
+    return await call_capability("scheduled_create", {"payload": payload})
+
+
+async def scheduled_update(scheduled_id: int, payload: dict) -> str:
+    return await call_capability(
+        "scheduled_update", {"scheduled_id": scheduled_id, "payload": payload}
+    )
+
+
+async def scheduled_toggle(scheduled_id: int) -> str:
+    return await call_capability("scheduled_toggle", {"scheduled_id": scheduled_id})
+
+
+async def scheduled_delete(scheduled_id: int) -> str:
+    return await call_capability("scheduled_delete", {"scheduled_id": scheduled_id})
+
+
+async def archive_delete(archive_id: int) -> str:
+    return await call_capability("archive_delete", {"archive_id": archive_id})
+
+
+async def group_create(
+    name: str, parent_id: int | None = None, sort_order: int = 0
+) -> str:
+    return await call_capability(
+        "group_create", {"name": name, "parent_id": parent_id, "sort_order": sort_order}
+    )
+
+
+async def group_update(
+    group_id: int,
+    name: str | None = None,
+    parent_id: int | None = None,
+    sort_order: int | None = None,
+) -> str:
+    return await call_capability(
+        "group_update",
+        {
+            "group_id": group_id,
+            "name": name,
+            "parent_id": parent_id,
+            "sort_order": sort_order,
+        },
+    )
+
+
+async def group_assign(group_id: int, tag_ids: list[int]) -> str:
+    return await call_capability(
+        "group_assign", {"group_id": group_id, "tag_ids": tag_ids}
+    )
+
+
+async def group_unassign(tag_ids: list[int]) -> str:
+    return await call_capability("group_unassign", {"tag_ids": tag_ids})
+
+
+async def group_delete(group_id: int) -> str:
+    return await call_capability("group_delete", {"group_id": group_id})
+
+
+async def plc_create(name: str, ip: str = "", rack: int = 0, slot: int = 1) -> str:
+    return await call_capability(
+        "plc_create", {"name": name, "ip": ip, "rack": rack, "slot": slot}
+    )
+
+
+async def plc_update(name: str, ip: str, rack: int = 0, slot: int = 1) -> str:
+    return await call_capability(
+        "plc_update", {"name": name, "ip": ip, "rack": rack, "slot": slot}
+    )
+
+
+async def plc_delete(name: str) -> str:
+    return await call_capability("plc_delete", {"name": name})
+
+
+async def user_create(
+    username: str,
+    email: str,
+    password: str,
+    full_name: str = "",
+    role: str = "operator",
+) -> str:
+    return await call_capability(
+        "user_create",
+        {
+            "username": username,
+            "email": email,
+            "password": password,
+            "full_name": full_name,
+            "role": role,
+        },
+    )
+
+
+async def user_update(
+    user_id: int,
+    email: str | None = None,
+    full_name: str | None = None,
+    role: str | None = None,
+    is_active: bool | None = None,
+) -> str:
+    return await call_capability(
+        "user_update",
+        {
+            "user_id": user_id,
+            "email": email,
+            "full_name": full_name,
+            "role": role,
+            "is_active": is_active,
+        },
+    )
+
+
+async def user_set_password(user_id: int, password: str) -> str:
+    return await call_capability(
+        "user_set_password", {"user_id": user_id, "password": password}
+    )
+
+
+async def user_delete(user_id: int) -> str:
+    return await call_capability("user_delete", {"user_id": user_id})
+
+
 # Register each tool with its capability name and description from the catalog.
 _TOOL_REGISTRY = [
     (query_current_values, "query_current_values"),
@@ -116,10 +322,44 @@ _TOOL_REGISTRY = [
     (predict_trend, "predict_trend"),
     (get_system_health, "get_system_health"),
     (resolve_tag, "resolve_tag"),
+    (update_tag, "update_tag"),
+    (delete_tag, "delete_tag"),
+    (watchlist_add, "watchlist_add"),
+    (watchlist_remove, "watchlist_remove"),
+    (annotation_add, "annotation_add"),
+    (annotation_delete, "annotation_delete"),
+    (template_create, "template_create"),
+    (template_update, "template_update"),
+    (template_run, "template_run"),
+    (template_delete, "template_delete"),
+    (scheduled_create, "scheduled_create"),
+    (scheduled_update, "scheduled_update"),
+    (scheduled_toggle, "scheduled_toggle"),
+    (scheduled_delete, "scheduled_delete"),
+    (archive_delete, "archive_delete"),
+    (group_create, "group_create"),
+    (group_update, "group_update"),
+    (group_assign, "group_assign"),
+    (group_unassign, "group_unassign"),
+    (group_delete, "group_delete"),
+    (plc_create, "plc_create"),
+    (plc_update, "plc_update"),
+    (plc_delete, "plc_delete"),
+    (user_create, "user_create"),
+    (user_update, "user_update"),
+    (user_set_password, "user_set_password"),
+    (user_delete, "user_delete"),
 ]
 
-for _fn, _cap_name in _TOOL_REGISTRY:
-    mcp.add_tool(_fn, name=_cap_name, description=CATALOG[_cap_name].description)
+
+def _register() -> None:
+    allowed = _allowed_tiers()
+    for fn, cap_name in _TOOL_REGISTRY:
+        if CATALOG[cap_name].tier in allowed:
+            mcp.add_tool(fn, name=cap_name, description=CATALOG[cap_name].description)
+
+
+_register()
 
 
 def _register_prompts() -> None:

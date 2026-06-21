@@ -16,7 +16,7 @@ class Capability:
     description: str
     input_schema: dict
     handler: Handler
-    read_only: bool = True
+    tier: str = "read"  # "read" | "write" | "destructive"
 
 
 def _obj(props: dict, required: list[str] | None = None) -> dict:
@@ -135,6 +135,304 @@ CAPABILITIES: list[Capability] = [
         "Kısmi ada göre tag ara (fuzzy). Agent'ın tam tag adını bulması için.",
         _obj({"query": {"type": "string"}}, ["query"]),
         lambda c, a: c.resolve_tag(a["query"]),
+    ),
+    Capability(
+        "update_tag",
+        "Bir tag'in alanlarını güncelle (unit/device/channel/alarm).",
+        _obj(
+            {
+                "tag_id": {"type": "integer"},
+                "unit": {"type": "string"},
+                "device": {"type": "string"},
+                "channel": {"type": "string"},
+                "description": {"type": "string"},
+                "min_alarm": {"type": "number"},
+                "max_alarm": {"type": "number"},
+            },
+            ["tag_id"],
+        ),
+        lambda c, a: c.update_tag(
+            a["tag_id"],
+            a.get("unit"),
+            a.get("device"),
+            a.get("channel"),
+            a.get("description"),
+            a.get("min_alarm"),
+            a.get("max_alarm"),
+        ),
+        tier="write",
+    ),
+    Capability(
+        "delete_tag",
+        "Bir tag'i kalıcı olarak sil.",
+        _obj({"tag_id": {"type": "integer"}}, ["tag_id"]),
+        lambda c, a: c.delete_tag(a["tag_id"]),
+        tier="destructive",
+    ),
+    Capability(
+        "watchlist_add",
+        "Bir tag'i izleme listesine ekle.",
+        _obj({"tag_id": {"type": "integer"}}, ["tag_id"]),
+        lambda c, a: c.watchlist_add(a["tag_id"]),
+        tier="write",
+    ),
+    Capability(
+        "watchlist_remove",
+        "Bir tag'i izleme listesinden çıkar.",
+        _obj({"tag_id": {"type": "integer"}}, ["tag_id"]),
+        lambda c, a: c.watchlist_remove(a["tag_id"]),
+        tier="write",
+    ),
+    Capability(
+        "annotation_add",
+        "Bir zaman damgasına (opsiyonel tag'e) not ekle.",
+        _obj(
+            {"ts": {"type": "string"}, "text": {"type": "string"}, "tag_id": {"type": "integer"}},
+            ["ts", "text"],
+        ),
+        lambda c, a: c.annotation_add(a["ts"], a["text"], a.get("tag_id")),
+        tier="write",
+    ),
+    Capability(
+        "annotation_delete",
+        "Bir annotation'ı sil.",
+        _obj({"annotation_id": {"type": "integer"}}, ["annotation_id"]),
+        lambda c, a: c.annotation_delete(a["annotation_id"]),
+        tier="write",
+    ),
+    Capability(
+        "template_create",
+        "Rapor şablonu oluştur (name + tag_ids zorunlu).",
+        _obj({"payload": {"type": "object"}}, ["payload"]),
+        lambda c, a: c.template_create(a["payload"]),
+        tier="write",
+    ),
+    Capability(
+        "template_update",
+        "Rapor şablonunu güncelle.",
+        _obj(
+            {"template_id": {"type": "integer"}, "payload": {"type": "object"}},
+            ["template_id", "payload"],
+        ),
+        lambda c, a: c.template_update(a["template_id"], a["payload"]),
+        tier="write",
+    ),
+    Capability(
+        "template_run",
+        "Rapor şablonunu çalıştır (opsiyonel start/end).",
+        _obj(
+            {
+                "template_id": {"type": "integer"},
+                "start": {"type": "string"},
+                "end": {"type": "string"},
+            },
+            ["template_id"],
+        ),
+        lambda c, a: c.template_run(a["template_id"], a.get("start"), a.get("end")),
+        tier="write",
+    ),
+    Capability(
+        "template_delete",
+        "Rapor şablonunu sil.",
+        _obj({"template_id": {"type": "integer"}}, ["template_id"]),
+        lambda c, a: c.template_delete(a["template_id"]),
+        tier="destructive",
+    ),
+    Capability(
+        "scheduled_create",
+        "Zamanlanmış rapor oluştur.",
+        _obj({"payload": {"type": "object"}}, ["payload"]),
+        lambda c, a: c.scheduled_create(a["payload"]),
+        tier="write",
+    ),
+    Capability(
+        "scheduled_update",
+        "Zamanlanmış raporu güncelle.",
+        _obj(
+            {"scheduled_id": {"type": "integer"}, "payload": {"type": "object"}},
+            ["scheduled_id", "payload"],
+        ),
+        lambda c, a: c.scheduled_update(a["scheduled_id"], a["payload"]),
+        tier="write",
+    ),
+    Capability(
+        "scheduled_toggle",
+        "Zamanlanmış raporu etkinleştir/devre dışı bırak.",
+        _obj({"scheduled_id": {"type": "integer"}}, ["scheduled_id"]),
+        lambda c, a: c.scheduled_toggle(a["scheduled_id"]),
+        tier="write",
+    ),
+    Capability(
+        "scheduled_delete",
+        "Zamanlanmış raporu sil.",
+        _obj({"scheduled_id": {"type": "integer"}}, ["scheduled_id"]),
+        lambda c, a: c.scheduled_delete(a["scheduled_id"]),
+        tier="destructive",
+    ),
+    Capability(
+        "archive_delete",
+        "Bir arşiv kaydını sil.",
+        _obj({"archive_id": {"type": "integer"}}, ["archive_id"]),
+        lambda c, a: c.archive_delete(a["archive_id"]),
+        tier="destructive",
+    ),
+    Capability(
+        "group_create",
+        "Tag grubu oluştur.",
+        _obj(
+            {
+                "name": {"type": "string"},
+                "parent_id": {"type": "integer"},
+                "sort_order": {"type": "integer"},
+            },
+            ["name"],
+        ),
+        lambda c, a: c.group_create(a["name"], a.get("parent_id"), a.get("sort_order", 0)),
+        tier="write",
+    ),
+    Capability(
+        "group_update",
+        "Tag grubunu güncelle.",
+        _obj(
+            {
+                "group_id": {"type": "integer"},
+                "name": {"type": "string"},
+                "parent_id": {"type": "integer"},
+                "sort_order": {"type": "integer"},
+            },
+            ["group_id"],
+        ),
+        lambda c, a: c.group_update(
+            a["group_id"], a.get("name"), a.get("parent_id"), a.get("sort_order")
+        ),
+        tier="write",
+    ),
+    Capability(
+        "group_assign",
+        "Tag'leri bir gruba ata.",
+        _obj(
+            {
+                "group_id": {"type": "integer"},
+                "tag_ids": {"type": "array", "items": {"type": "integer"}},
+            },
+            ["group_id", "tag_ids"],
+        ),
+        lambda c, a: c.group_assign(a["group_id"], a["tag_ids"]),
+        tier="write",
+    ),
+    Capability(
+        "group_unassign",
+        "Tag'lerin grup atamasını kaldır.",
+        _obj({"tag_ids": {"type": "array", "items": {"type": "integer"}}}, ["tag_ids"]),
+        lambda c, a: c.group_unassign(a["tag_ids"]),
+        tier="write",
+    ),
+    Capability(
+        "group_delete",
+        "Tag grubunu sil.",
+        _obj({"group_id": {"type": "integer"}}, ["group_id"]),
+        lambda c, a: c.group_delete(a["group_id"]),
+        tier="destructive",
+    ),
+    Capability(
+        "plc_create",
+        "PLC bağlantı yapılandırması oluştur.",
+        _obj(
+            {
+                "name": {"type": "string"},
+                "ip": {"type": "string"},
+                "rack": {"type": "integer"},
+                "slot": {"type": "integer"},
+            },
+            ["name"],
+        ),
+        lambda c, a: c.plc_create(a["name"], a.get("ip", ""), a.get("rack", 0), a.get("slot", 1)),
+        tier="write",
+    ),
+    Capability(
+        "plc_update",
+        "PLC bağlantı yapılandırmasını güncelle.",
+        _obj(
+            {
+                "name": {"type": "string"},
+                "ip": {"type": "string"},
+                "rack": {"type": "integer"},
+                "slot": {"type": "integer"},
+            },
+            ["name", "ip"],
+        ),
+        lambda c, a: c.plc_update(a["name"], a["ip"], a.get("rack", 0), a.get("slot", 1)),
+        tier="write",
+    ),
+    Capability(
+        "plc_delete",
+        "PLC yapılandırmasını sil.",
+        _obj({"name": {"type": "string"}}, ["name"]),
+        lambda c, a: c.plc_delete(a["name"]),
+        tier="destructive",
+    ),
+    Capability(
+        "user_create",
+        "Kullanıcı oluştur (admin).",
+        _obj(
+            {
+                "username": {"type": "string"},
+                "email": {"type": "string"},
+                "password": {"type": "string"},
+                "full_name": {"type": "string"},
+                "role": {"type": "string"},
+            },
+            ["username", "email", "password"],
+        ),
+        lambda c, a: c.user_create(
+            a["username"],
+            a["email"],
+            a["password"],
+            a.get("full_name", ""),
+            a.get("role", "operator"),
+            a.get("permission_overrides"),
+        ),
+        tier="destructive",
+    ),
+    Capability(
+        "user_update",
+        "Kullanıcıyı güncelle (admin).",
+        _obj(
+            {
+                "user_id": {"type": "integer"},
+                "email": {"type": "string"},
+                "full_name": {"type": "string"},
+                "role": {"type": "string"},
+                "is_active": {"type": "boolean"},
+            },
+            ["user_id"],
+        ),
+        lambda c, a: c.user_update(
+            a["user_id"],
+            a.get("email"),
+            a.get("full_name"),
+            a.get("role"),
+            a.get("is_active"),
+            a.get("permission_overrides"),
+        ),
+        tier="destructive",
+    ),
+    Capability(
+        "user_set_password",
+        "Kullanıcı parolasını değiştir (admin).",
+        _obj(
+            {"user_id": {"type": "integer"}, "password": {"type": "string"}},
+            ["user_id", "password"],
+        ),
+        lambda c, a: c.user_set_password(a["user_id"], a["password"]),
+        tier="destructive",
+    ),
+    Capability(
+        "user_delete",
+        "Kullanıcıyı sil (admin).",
+        _obj({"user_id": {"type": "integer"}}, ["user_id"]),
+        lambda c, a: c.user_delete(a["user_id"]),
+        tier="destructive",
     ),
 ]
 

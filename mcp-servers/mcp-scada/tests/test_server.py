@@ -8,7 +8,8 @@ from scada_core.catalog import CATALOG
 async def test_all_catalog_tools_registered():
     tools = await srv.mcp.list_tools()
     names = {t.name for t in tools}
-    assert names == set(CATALOG)
+    read_names = {n for n, c in CATALOG.items() if c.tier == "read"}
+    assert names == read_names
 
 
 @pytest.mark.asyncio

@@ -17,6 +17,13 @@ from scada_reporter_cli.commands.query import query_cmd
 from scada_reporter_cli.commands.explore import explore_cmd
 from scada_reporter_cli.commands.shell import shell
 from scada_reporter_cli.commands.agent import agent_cmd
+from scada_reporter_cli.commands.watchlist import watchlist_cmd
+from scada_reporter_cli.commands.annotations import annotations_cmd
+from scada_reporter_cli.commands.templates import templates_cmd
+from scada_reporter_cli.commands.scheduled import scheduled_cmd
+from scada_reporter_cli.commands.groups import groups_cmd
+from scada_reporter_cli.commands.plc import plc_cmd
+from scada_reporter_cli.commands.users import users_cmd
 
 
 @click.group(invoke_without_command=True)
@@ -48,6 +55,13 @@ cli.add_command(query_cmd)
 cli.add_command(explore_cmd)
 cli.add_command(shell)
 cli.add_command(agent_cmd)
+cli.add_command(watchlist_cmd)
+cli.add_command(annotations_cmd)
+cli.add_command(templates_cmd)
+cli.add_command(scheduled_cmd)
+cli.add_command(groups_cmd)
+cli.add_command(plc_cmd)
+cli.add_command(users_cmd)
 
 
 def repl(ctx: click.Context) -> None:
