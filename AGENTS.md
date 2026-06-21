@@ -15,6 +15,8 @@ Detailed guide: `scada-reporter/AGENTS.md`
 
 ## Setup (30 seconds)
 
+**Requires Python 3.12+ (single supported baseline).**
+
 ```bash
 cd scada-reporter
 uv pip install -e agent-harness

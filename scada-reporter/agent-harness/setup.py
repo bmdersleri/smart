@@ -14,7 +14,7 @@ setup(
         "scada_reporter_cli.commands",
         "scada_reporter_cli.utils",
     ],
-    python_requires=">=3.11",
+    python_requires=">=3.12",
     install_requires=[
         "click>=8.1",
         "httpx>=0.27",
