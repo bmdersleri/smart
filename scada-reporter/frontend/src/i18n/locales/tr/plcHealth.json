@@ -17,6 +17,7 @@
   "col_last_success": "Son Başarılı Okuma",
   "col_fail": "Ardışık Hata",
   "col_reconnects": "Reconnect/dk",
+  "col_last_error": "Son Hata",
   "alerts": "{{count}} sorun",
   "open_problems": "{{count}} açık sorun",
   "all_healthy_short": "Sağlıklı"

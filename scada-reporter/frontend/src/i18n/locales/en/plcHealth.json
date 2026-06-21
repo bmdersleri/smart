@@ -17,6 +17,7 @@
   "col_last_success": "Last Successful Read",
   "col_fail": "Consecutive Failures",
   "col_reconnects": "Reconnects/min",
+  "col_last_error": "Last Error",
   "alerts": "{{count}} issues",
   "open_problems": "{{count}} open issues",
   "all_healthy_short": "Healthy"

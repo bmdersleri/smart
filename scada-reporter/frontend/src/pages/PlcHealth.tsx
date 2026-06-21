@@ -95,6 +95,7 @@ export default function PlcHealth() {
                 <th className="px-4 py-2 text-start">{t('col_last_success')}</th>
                 <th className="px-4 py-2 text-start">{t('col_fail')}</th>
                 <th className="px-4 py-2 text-start">{t('col_reconnects')}</th>
+                <th className="px-4 py-2 text-start">{t('col_last_error')}</th>
               </tr>
             </thead>
             <tbody>
@@ -109,6 +110,7 @@ export default function PlcHealth() {
                   <td className="px-4 py-2 text-gray-400">{h.last_success_at ? new Date(h.last_success_at).toLocaleString() : '—'}</td>
                   <td className="px-4 py-2 text-gray-400">{h.consecutive_fail}</td>
                   <td className="px-4 py-2 text-gray-400">{h.reconnects_last_min}</td>
+                  <td className="px-4 py-2 text-red-400/80 max-w-xs truncate" title={h.last_error ?? ''}>{h.last_error || '—'}</td>
                 </tr>
               ))}
             </tbody>

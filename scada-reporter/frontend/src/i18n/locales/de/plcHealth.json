@@ -17,6 +17,7 @@
   "col_last_success": "Letzter erfolgreicher Lesevorgang",
   "col_fail": "Aufeinanderfolgende Fehler",
   "col_reconnects": "Verbindungswiederherstellungen/min",
+  "col_last_error": "Letzter Fehler",
   "alerts": "{{count}} Probleme",
   "open_problems": "{{count}} offene Probleme",
   "all_healthy_short": "In Ordnung"

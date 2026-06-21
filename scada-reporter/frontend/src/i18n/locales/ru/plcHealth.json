@@ -17,6 +17,7 @@
   "col_last_success": "Последнее успешное чтение",
   "col_fail": "Последовательные сбои",
   "col_reconnects": "Переподключений/мин",
+  "col_last_error": "Последняя ошибка",
   "alerts": "{{count}} проблем",
   "open_problems": "{{count}} открытых проблем",
   "all_healthy_short": "В норме"
