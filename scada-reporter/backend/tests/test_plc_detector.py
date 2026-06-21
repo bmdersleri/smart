@@ -84,3 +84,21 @@ def test_no_duplicate_open_for_same_kind():
     r2 = evaluate(s, _obs(connected=False), CFG, now=3.0)  # still down
     assert r2.opened == []  # no second incident
     assert "disconnected" in r2.state.open
+
+
+def test_hysteresis_reset_on_reactivation():
+    s = _fresh()
+    # open the incident (two disconnected cycles)
+    s = evaluate(s, _obs(connected=False), CFG, now=1.0).state
+    s = evaluate(s, _obs(connected=False), CFG, now=2.0).state  # opened
+    # one clean cycle -> clean_cycles = 1
+    s = evaluate(s, _obs(connected=True), CFG, now=3.0).state
+    # condition reactivates (needs two disconnects to reach streak=2)
+    s = evaluate(s, _obs(connected=False), CFG, now=4.0).state
+    s = evaluate(
+        s, _obs(connected=False), CFG, now=5.0
+    ).state  # streak=2 -> reactivated, clean_cycles reset to 0
+    # now needs two full clean cycles again, not one
+    s = evaluate(s, _obs(connected=True), CFG, now=6.0).state  # clean_cycles = 1
+    r = evaluate(s, _obs(connected=True), CFG, now=7.0)  # clean_cycles = 2 -> resolved
+    assert r.resolved == ["disconnected"]
