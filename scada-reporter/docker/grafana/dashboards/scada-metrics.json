@@ -24,7 +24,7 @@
       "title": "Tick Süresi — p50 / p95 / p99",
       "description": "Poller tek tick süresi histogram quantile'leri (scada_tick_duration_seconds).",
       "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": { "unit": "s" },
         "overrides": []
@@ -57,7 +57,7 @@
       "title": "PLC Okuma Gecikmesi — p95 (PLC başına)",
       "description": "PLC başına okuma süresi p95 (scada_plc_read_seconds label: plc).",
       "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": { "unit": "s" },
         "overrides": []
@@ -80,7 +80,7 @@
       "title": "DB'ye Yazılan Satır Oranı",
       "description": "5 dakikalık pencerede yazılan satır hızı (scada_rows_written_total).",
       "gridPos": { "x": 0, "y": 8, "w": 8, "h": 7 },
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": { "unit": "short" },
         "overrides": []
@@ -103,7 +103,7 @@
       "title": "BAD Kalite Oranı",
       "description": "5 dakikalık pencerede BAD-kalite okuma hızı (scada_bad_quality_total).",
       "gridPos": { "x": 8, "y": 8, "w": 8, "h": 7 },
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": { "unit": "short" },
         "overrides": []
@@ -126,7 +126,7 @@
       "title": "HTTP İstek Oranı (status başına)",
       "description": "HTTP istek oranı status kodu başına (scada_http_requests_total[method, status]).",
       "gridPos": { "x": 16, "y": 8, "w": 8, "h": 7 },
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": { "unit": "reqps" },
         "overrides": []
@@ -149,7 +149,7 @@
       "title": "HTTP Gecikme p95 (method başına)",
       "description": "HTTP istek süresi p95 method başına (scada_http_request_seconds).",
       "gridPos": { "x": 0, "y": 15, "w": 12, "h": 8 },
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": { "unit": "s" },
         "overrides": []
@@ -172,7 +172,7 @@
       "title": "DB Bağlantı Havuzu",
       "description": "DB pool boyutu ve kullanımdaki bağlantı sayısı (scada_db_pool_size, scada_db_pool_checked_out).",
       "gridPos": { "x": 12, "y": 15, "w": 12, "h": 8 },
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": { "unit": "short" },
         "overrides": []
@@ -193,36 +193,6 @@
         "tooltip": { "mode": "multi" },
         "legend": { "displayMode": "list", "placement": "bottom" }
       }
-    }
-  ],
-  "__inputs": [
-    {
-      "name": "DS_PROMETHEUS",
-      "label": "Prometheus",
-      "description": "",
-      "type": "datasource",
-      "pluginId": "prometheus",
-      "pluginName": "Prometheus"
-    }
-  ],
-  "__requires": [
-    {
-      "type": "grafana",
-      "id": "grafana",
-      "name": "Grafana",
-      "version": "9.0.0"
-    },
-    {
-      "type": "datasource",
-      "id": "prometheus",
-      "name": "Prometheus",
-      "version": "1.0.0"
-    },
-    {
-      "type": "panel",
-      "id": "timeseries",
-      "name": "Time series",
-      "version": ""
     }
   ]
 }

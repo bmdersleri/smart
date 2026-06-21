@@ -24,7 +24,7 @@
       "title": "Toplam Tag Sayısı",
       "description": "Sistemde kayıtlı toplam tag adedi (tags tablosu).",
       "gridPos": { "x": 0, "y": 0, "w": 6, "h": 5 },
-      "datasource": { "type": "postgres", "uid": "${DS_TIMESCALEDB}" },
+      "datasource": { "type": "postgres", "uid": "timescaledb" },
       "fieldConfig": {
         "defaults": { "unit": "short" },
         "overrides": []
@@ -53,7 +53,7 @@
       "title": "Son Veri Tazeliği",
       "description": "tag_readings tablosundaki en son timestamp değeri — veri aktarımının güncelliği.",
       "gridPos": { "x": 6, "y": 0, "w": 8, "h": 5 },
-      "datasource": { "type": "postgres", "uid": "${DS_TIMESCALEDB}" },
+      "datasource": { "type": "postgres", "uid": "timescaledb" },
       "fieldConfig": {
         "defaults": { "unit": "dateTimeAsIso" },
         "overrides": []
@@ -82,7 +82,7 @@
       "title": "Son 24s İyi Kalite Okuma Sayısı",
       "description": "Son 24 saatte quality=192 (GOOD) satır sayısı.",
       "gridPos": { "x": 14, "y": 0, "w": 10, "h": 5 },
-      "datasource": { "type": "postgres", "uid": "${DS_TIMESCALEDB}" },
+      "datasource": { "type": "postgres", "uid": "timescaledb" },
       "fieldConfig": {
         "defaults": { "unit": "short" },
         "overrides": []
@@ -111,14 +111,14 @@
       "title": "Saatlik Okuma Hacmi (tag_readings_1h CAGG)",
       "description": "tag_readings_1h CAGG'inden saatlik okuma hacmi. Her saatin toplam satır sayısı.",
       "gridPos": { "x": 0, "y": 5, "w": 24, "h": 9 },
-      "datasource": { "type": "postgres", "uid": "${DS_TIMESCALEDB}" },
+      "datasource": { "type": "postgres", "uid": "timescaledb" },
       "fieldConfig": {
         "defaults": { "unit": "short" },
         "overrides": []
       },
       "targets": [
         {
-          "rawSql": "SELECT\n  bucket AS time,\n  n AS \"Okuma Sayısı\"\nFROM tag_readings_1h\nWHERE bucket >= $__timeFrom()::timestamptz\n  AND bucket < $__timeTo()::timestamptz\nORDER BY bucket",
+          "rawSql": "SELECT\n  bucket AS time,\n  SUM(n) AS \"Okuma Sayısı\"\nFROM tag_readings_1h\nWHERE bucket >= $__timeFrom()::timestamptz\n  AND bucket < $__timeTo()::timestamptz\nGROUP BY bucket\nORDER BY bucket",
           "format": "time_series",
           "refId": "A"
         }
@@ -134,7 +134,7 @@
       "title": "5 Dakikalık Trend — İlk 5 Tag (tag_readings_5m CAGG)",
       "description": "tag_readings_5m CAGG'inden ilk 5 tag için ortalama değer trendi.",
       "gridPos": { "x": 0, "y": 14, "w": 24, "h": 9 },
-      "datasource": { "type": "postgres", "uid": "${DS_TIMESCALEDB}" },
+      "datasource": { "type": "postgres", "uid": "timescaledb" },
       "fieldConfig": {
         "defaults": { "unit": "short" },
         "overrides": []
@@ -155,9 +155,9 @@
       "id": 6,
       "type": "timeseries",
       "title": "BAD Kalite Oranı — Saatlik (tag_readings_1h CAGG)",
-      "description": "Saatlik BAD kalite okuma oranı: bad_count / count yüzdesi (tag_readings_1h).",
+      "description": "BAD-quality ratio computed from raw tag_readings where quality <> 192. Aggregated per hour via time_bucket.",
       "gridPos": { "x": 0, "y": 23, "w": 24, "h": 8 },
-      "datasource": { "type": "postgres", "uid": "${DS_TIMESCALEDB}" },
+      "datasource": { "type": "postgres", "uid": "timescaledb" },
       "fieldConfig": {
         "defaults": { "unit": "percentunit" },
         "overrides": []
@@ -173,42 +173,6 @@
         "tooltip": { "mode": "single" },
         "legend": { "displayMode": "list", "placement": "bottom" }
       }
-    }
-  ],
-  "__inputs": [
-    {
-      "name": "DS_TIMESCALEDB",
-      "label": "TimescaleDB",
-      "description": "",
-      "type": "datasource",
-      "pluginId": "postgres",
-      "pluginName": "PostgreSQL"
-    }
-  ],
-  "__requires": [
-    {
-      "type": "grafana",
-      "id": "grafana",
-      "name": "Grafana",
-      "version": "9.0.0"
-    },
-    {
-      "type": "datasource",
-      "id": "postgres",
-      "name": "PostgreSQL",
-      "version": "1.0.0"
-    },
-    {
-      "type": "panel",
-      "id": "timeseries",
-      "name": "Time series",
-      "version": ""
-    },
-    {
-      "type": "panel",
-      "id": "stat",
-      "name": "Stat",
-      "version": ""
     }
   ]
 }

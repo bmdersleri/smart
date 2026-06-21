@@ -175,7 +175,7 @@ All groups support `--json` for machine-readable output and `--help` for usage.
 | `plc` | PLC connection configuration |
 | `users` | User management (admin only) |
 
-`health` is a top-level command (not a group): `scada health`.
+`health` is a top-level command (not a group): `scada health`. Use `--json-output` (not `--json`) for machine-readable output: `scada health --json-output`.
 
 ---
 

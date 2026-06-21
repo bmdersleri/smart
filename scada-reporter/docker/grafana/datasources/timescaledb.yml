@@ -7,6 +7,7 @@ datasources:
     url: db:5432
     database: scada_reporter
     user: scada
+    uid: timescaledb
     secureJsonData:
       password: ${POSTGRES_PASSWORD:-scada123}
     jsonData:
