@@ -83,3 +83,16 @@ async def test_ack_incident(client: AsyncClient, db_session: AsyncSession):
     )
     assert r.status_code == 200
     assert r.json()["acknowledged"] is True
+    await db_session.refresh(inc)
+    assert inc.acknowledged_by == "a_admin"
+    assert inc.acknowledged_at is not None
+
+
+@pytest.mark.asyncio
+async def test_ack_incident_404(client: AsyncClient, db_session: AsyncSession):
+    tok = await _admin_token(client, db_session, "ack404_admin")
+    r = await client.post(
+        "/api/plc/incidents/99999/ack",
+        headers={"Authorization": f"Bearer {tok}"},
+    )
+    assert r.status_code == 404
