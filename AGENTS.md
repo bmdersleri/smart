@@ -47,8 +47,9 @@ mcp-servers/
 
 ### 1. Start the Backend
 
+From the **repo root**:
+
 ```bash
-cd scada-reporter
 just run-backend          # hot-reload, http://localhost:8001
 ```
 
@@ -149,6 +150,32 @@ scada query run "SELECT name, value, unit FROM tags LIMIT 5" --json
 # Python REPL with data preloaded
 scada shell
 ```
+
+---
+
+## CLI Command Groups
+
+All groups support `--json` for machine-readable output and `--help` for usage.
+
+| Group | Purpose |
+|-------|---------|
+| `auth` | Authenticate: login, logout, show current user |
+| `tags` | PLC tag management: list, create, update, readings |
+| `dashboard` | Live values, system overview, trend data |
+| `reports` | Generate Excel/PDF reports for a time range |
+| `query` | Run read-only SQL against the SCADA database |
+| `explore` | Database schema discovery and summary statistics |
+| `shell` | Interactive Python REPL with data pre-loaded |
+| `agent` | AI agent workflow helpers: monitor, analyze |
+| `watchlist` | Manage tag watchlists for monitoring |
+| `annotations` | Annotate time-series events on tags |
+| `templates` | Report template management |
+| `scheduled` | Schedule and manage recurring reports |
+| `groups` | Tag group management |
+| `plc` | PLC connection configuration |
+| `users` | User management (admin only) |
+
+`health` is a top-level command (not a group): `scada health`.
 
 ---
 
