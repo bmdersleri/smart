@@ -71,6 +71,9 @@ async def lifespan(app: FastAPI):
             logger.error("Yapılandırma hatası: %s", e)
         raise RuntimeError(f"Production yapılandırma hatası: {'; '.join(errors)}")
 
+    for w in settings.config_warnings():
+        logger.warning("Yapılandırma uyarısı: %s", w)
+
     # Rapor dosyaları için dizin oluştur
     os.makedirs("reports", exist_ok=True)
 

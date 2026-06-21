@@ -60,9 +60,48 @@ class Settings(BaseSettings):
     def config_errors(self) -> list[str]:
         """Prod'da tehlikeli/eksik ayarları döndür (boşsa sağlıklı)."""
         errs: list[str] = []
-        if self.is_production and self.SECRET_KEY == DEFAULT_SECRET:
+        if not self.is_production:
+            return errs
+
+        # SECRET_KEY kontrolü (mevcut)
+        if self.SECRET_KEY == DEFAULT_SECRET:
             errs.append("SECRET_KEY varsayılan değerde — production'da değiştirin.")
+
+        # DATABASE_URL kontrolü: demo parola veya yerel bağlantı
+        if (
+            "scada123" in self.DATABASE_URL
+            or "@localhost" in self.DATABASE_URL
+            or "@127.0.0.1" in self.DATABASE_URL
+        ):
+            errs.append(
+                "DATABASE_URL yerel/demo değerde — production'da gerçek sunucu ve"
+                " güçlü parola kullanın."
+            )
+
+        # CORS kontrolü: boş, wildcard veya tümü localhost/127.0.0.1
+        origins = self.cors_origins
+        cors_unsafe = (
+            len(origins) == 0
+            or any(o == "*" for o in origins)
+            or (len(origins) > 0 and all("localhost" in o or "127.0.0.1" in o for o in origins))
+        )
+        if cors_unsafe:
+            errs.append(
+                "CORS_ORIGINS güvensiz (boş, wildcard veya tümü localhost) —"
+                " production'da gerçek alan adı girin."
+            )
+
         return errs
+
+    def config_warnings(self) -> list[str]:
+        """Prod'da önerilen ama zorunlu olmayan ayarları döndür (boşsa sağlıklı)."""
+        warnings: list[str] = []
+        if self.is_production and self.RUN_COLLECTOR:
+            warnings.append(
+                "RUN_COLLECTOR=True — bu bir API process'iyse collector'ı ayırın"
+                " (RUN_COLLECTOR=False)."
+            )
+        return warnings
 
 
 settings = Settings()
