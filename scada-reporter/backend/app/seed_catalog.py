@@ -4,7 +4,10 @@ Kullanım:
     python -m app.seed_catalog            # archive tag'lerini ekle (mevcutları atla)
     python -m app.seed_catalog --reset    # önce tüm tag'leri sil, sonra ekle
 
-xlsx dosyaları repo kökündeki `xlsx/` klasöründen okunur.
+xlsx dosyaları repo kökündeki `xlsx/` klasöründen okunur:
+    - full_export.xlsx: Tam WinCC kataloğu
+    - archive_export.xlsx: Arşiv tag'leri tanımları
+    - gunluk_rapor.xlsx: Günlük raporlar (isteğe bağlı)
 """
 
 from __future__ import annotations
