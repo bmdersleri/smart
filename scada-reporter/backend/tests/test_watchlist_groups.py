@@ -88,3 +88,30 @@ async def test_ungrouped_lists_watchlist_tags_not_in_groups(
     body = lst.json()
     ungrouped_ids = [item["tag_id"] for item in body["ungrouped"]]
     assert tag.id in ungrouped_ids
+
+
+@pytest.mark.asyncio
+async def test_rename_and_delete_group(client: AsyncClient, db_session: AsyncSession):
+    h = await _auth(client, db_session, "gu5")
+    gid = (
+        await client.post("/api/dashboard/watchlist-groups/", json={"name": "A"}, headers=h)
+    ).json()["id"]
+    r = await client.patch(f"/api/dashboard/watchlist-groups/{gid}", json={"name": "B"}, headers=h)
+    assert r.status_code == 200 and r.json()["name"] == "B"
+    d = await client.delete(f"/api/dashboard/watchlist-groups/{gid}", headers=h)
+    assert d.status_code == 204
+    lst = await client.get("/api/dashboard/watchlist-groups/", headers=h)
+    assert all(g["id"] != gid for g in lst.json()["groups"])
+
+
+@pytest.mark.asyncio
+async def test_other_users_group_is_404(client: AsyncClient, db_session: AsyncSession):
+    h1 = await _auth(client, db_session, "owner")
+    gid = (
+        await client.post("/api/dashboard/watchlist-groups/", json={"name": "Mine"}, headers=h1)
+    ).json()["id"]
+    h2 = await _auth(client, db_session, "intruder")
+    r = await client.patch(
+        f"/api/dashboard/watchlist-groups/{gid}", json={"name": "Hacked"}, headers=h2
+    )
+    assert r.status_code == 404

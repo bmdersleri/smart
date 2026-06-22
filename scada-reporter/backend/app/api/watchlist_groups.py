@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, field_validator
+from sqlalchemy import delete as sa_delete
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -100,3 +101,32 @@ async def create_group(
         raise HTTPException(status_code=409, detail="Bu isimde grup zaten var") from None
     await db.refresh(g)
     return {"id": g.id, "name": g.name, "sort_order": g.sort_order, "tag_count": 0, "tags": []}
+
+
+@router.patch("/{group_id}")
+async def rename_group(
+    group_id: int,
+    body: GroupIn,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    g = await _owned_group(db, group_id, user.id)
+    g.name = body.name.strip()
+    try:
+        await db.commit()
+    except IntegrityError:
+        await db.rollback()
+        raise HTTPException(status_code=409, detail="Bu isimde grup zaten var") from None
+    return {"id": g.id, "name": g.name}
+
+
+@router.delete("/{group_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_group(
+    group_id: int, db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)
+):
+    g = await _owned_group(db, group_id, user.id)
+    await db.execute(
+        sa_delete(WatchlistGroupMember).where(WatchlistGroupMember.group_id == group_id)
+    )
+    await db.delete(g)
+    await db.commit()
