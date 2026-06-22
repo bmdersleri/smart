@@ -137,6 +137,23 @@ async def test_health_new_fields(client: AsyncClient):
     assert isinstance(data["scheduler_running"], bool)
 
 
+@pytest.mark.asyncio
+async def test_health_uptime_fields(client: AsyncClient):
+    """/health returns uptime_seconds (float >= 0) and started_at (ISO 8601)."""
+    from datetime import datetime
+
+    resp = await client.get("/health")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "uptime_seconds" in data
+    assert "started_at" in data
+    assert isinstance(data["uptime_seconds"], (int, float))
+    assert data["uptime_seconds"] >= 0.0
+    # started_at must parse as a tz-aware datetime
+    parsed = datetime.fromisoformat(data["started_at"])
+    assert parsed.tzinfo is not None
+
+
 # ── Unit: alembic_head_matches tolerance ─────────────────────────────────────
 
 

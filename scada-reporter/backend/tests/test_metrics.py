@@ -52,6 +52,28 @@ async def test_metrics_endpoint_serves_prometheus(client: AsyncClient):
     assert resp.headers["content-type"].startswith("text/plain")
 
 
+def test_uptime_seconds_nonnegative_and_monotonic():
+    u1 = metrics.uptime_seconds()
+    u2 = metrics.uptime_seconds()
+    assert isinstance(u1, float)
+    assert u1 >= 0.0
+    assert u2 >= u1
+
+
+def test_process_started_at_is_tz_aware_past():
+    from datetime import UTC, datetime
+
+    started = metrics.process_started_at()
+    assert started.tzinfo is not None
+    assert started <= datetime.now(UTC)
+
+
+def test_process_start_time_gauge_in_render():
+    out = metrics.render().decode()
+    assert "scada_process_start_time_seconds" in out
+    assert _sample("scada_process_start_time_seconds") > 0.0
+
+
 def test_summary_has_keys_and_reflects_counters():
     before = metrics.summary()["rows_written_total"]
     metrics.add_rows_written(5)
