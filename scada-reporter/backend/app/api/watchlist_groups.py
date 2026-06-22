@@ -130,3 +130,46 @@ async def delete_group(
     )
     await db.delete(g)
     await db.commit()
+
+
+@router.post("/{group_id}/tags/{tag_id}", status_code=status.HTTP_201_CREATED)
+async def add_member(
+    group_id: int,
+    tag_id: int,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    await _owned_group(db, group_id, user.id)
+    on_wl = await db.scalar(
+        select(Watchlist).where(Watchlist.user_id == user.id, Watchlist.tag_id == tag_id)
+    )
+    if on_wl is None:
+        raise HTTPException(status_code=400, detail="Tag watchlist'te değil")
+    exists = await db.scalar(
+        select(WatchlistGroupMember).where(
+            WatchlistGroupMember.group_id == group_id, WatchlistGroupMember.tag_id == tag_id
+        )
+    )
+    if exists:
+        return {"status": "already_exists"}
+    db.add(WatchlistGroupMember(group_id=group_id, tag_id=tag_id))
+    await db.commit()
+    return {"status": "added"}
+
+
+@router.delete("/{group_id}/tags/{tag_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def remove_member(
+    group_id: int,
+    tag_id: int,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    await _owned_group(db, group_id, user.id)
+    row = await db.scalar(
+        select(WatchlistGroupMember).where(
+            WatchlistGroupMember.group_id == group_id, WatchlistGroupMember.tag_id == tag_id
+        )
+    )
+    if row:
+        await db.delete(row)
+        await db.commit()

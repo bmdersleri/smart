@@ -115,3 +115,43 @@ async def test_other_users_group_is_404(client: AsyncClient, db_session: AsyncSe
         f"/api/dashboard/watchlist-groups/{gid}", json={"name": "Hacked"}, headers=h2
     )
     assert r.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_add_and_remove_member(client: AsyncClient, db_session: AsyncSession):
+    h = await _auth(client, db_session, "gm")
+    # create a tag + put on watchlist (membership precondition)
+    db_session.add(Tag(node_id="N1,REAL0", name="T1"))
+    await db_session.commit()
+    tag = (await db_session.execute(select(Tag).where(Tag.name == "T1"))).scalar_one()
+    # find the user id from token-created user
+    uid = (await db_session.execute(select(User).where(User.username == "gm"))).scalar_one().id
+    db_session.add(Watchlist(user_id=uid, tag_id=tag.id))
+    await db_session.commit()
+    gid = (
+        await client.post("/api/dashboard/watchlist-groups/", json={"name": "G"}, headers=h)
+    ).json()["id"]
+
+    r = await client.post(f"/api/dashboard/watchlist-groups/{gid}/tags/{tag.id}", headers=h)
+    assert r.status_code == 201 and r.json()["status"] == "added"
+    again = await client.post(f"/api/dashboard/watchlist-groups/{gid}/tags/{tag.id}", headers=h)
+    assert again.json()["status"] == "already_exists"
+
+    body = (await client.get("/api/dashboard/watchlist-groups/", headers=h)).json()
+    assert any(g["id"] == gid and g["tag_count"] == 1 for g in body["groups"])
+
+    d = await client.delete(f"/api/dashboard/watchlist-groups/{gid}/tags/{tag.id}", headers=h)
+    assert d.status_code == 204
+
+
+@pytest.mark.asyncio
+async def test_add_member_not_on_watchlist_400(client: AsyncClient, db_session: AsyncSession):
+    h = await _auth(client, db_session, "gm2")
+    db_session.add(Tag(node_id="N2,REAL0", name="T2"))
+    await db_session.commit()
+    tag = (await db_session.execute(select(Tag).where(Tag.name == "T2"))).scalar_one()
+    gid = (
+        await client.post("/api/dashboard/watchlist-groups/", json={"name": "G2"}, headers=h)
+    ).json()["id"]
+    r = await client.post(f"/api/dashboard/watchlist-groups/{gid}/tags/{tag.id}", headers=h)
+    assert r.status_code == 400
