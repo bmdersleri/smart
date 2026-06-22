@@ -62,6 +62,11 @@ pg17/
 .playwright-mcp/
 .claude/backups/
 scada-reporter/backend/certs/*.pem
+# Commercial license signing artifacts — NEVER commit private keys or tokens
+*.pem
+*.jwt
+license_private.pem
+license_public.pem
 scada-reporter/frontend/.vite/
 .env.example
 !scada-reporter/docker/.env.example
