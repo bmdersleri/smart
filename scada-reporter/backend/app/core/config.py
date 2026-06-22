@@ -80,6 +80,10 @@ class Settings(BaseSettings):
     ALERT_EMAIL_TO: str = ""  # virgülle ayrılmış alıcılar
     ALERT_WEBHOOK_URL: str = ""
 
+    GRAFANA_URL: str = "http://localhost:3000"
+    GRAFANA_USER: str = "admin"
+    GRAFANA_PASSWORD: str = "admin123"
+
     @property
     def is_production(self) -> bool:
         return self.ENVIRONMENT.lower() == "production"
