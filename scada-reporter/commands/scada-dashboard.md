@@ -5,9 +5,9 @@ Sistem genel durumu, canlı değerler ve trend verisi.
 ## Kullanım
 
 ```bash
-scada dashboard overview [--json]
-scada dashboard current-values [--alarm-only] [--watch N] [--json]
-scada dashboard trend <tag_id> [tag_id ...] [--hours N] [--json]
+scada dashboard overview [--json-output]
+scada dashboard current-values [--alarm-only] [--watch N] [--json-output]
+scada dashboard trend <tag_id> [tag_id ...] [--hours N] [--json-output]
 ```
 
 ## `scada dashboard current-values`
@@ -32,7 +32,7 @@ scada dashboard current-values --watch 5
 scada dashboard current-values --alarm-only --watch 10
 
 # Agent usage: get overflow tags as JSON
-scada dashboard current-values --json | jq '[.[] | select(.alarm_state == "overflow")]'
+scada dashboard current-values --json-output | jq '[.[] | select(.alarm_state == "overflow")]'
 ```
 
 ## Agent Kullanımı
@@ -41,12 +41,12 @@ Canlı veriyi analiz etmek için:
 
 ```bash
 # Sistem durumu
-scada dashboard overview --json
+scada dashboard overview --json-output
 
 # Tüm tag'lerin anlık değerleri
-vals=$(scada dashboard current-values --json)
+vals=$(scada dashboard current-values --json-output)
 echo "$vals" | jq '.[] | select(.quality_ok == false) | {name, value}'
 
 # Trend analizi — son 48 saat
-scada dashboard trend 1 2 3 --hours 48 --json | jq '.[] | {name, count: (.data | length)}'
+scada dashboard trend 1 2 3 --hours 48 --json-output | jq '.[] | {name, count: (.data | length)}'
 ```

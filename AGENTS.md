@@ -15,7 +15,7 @@ MCP server — without needing to parse HTML or scrape a UI.
 
 ### Agent-Native Principles
 
-1. **JSON output** — every CLI command produces machine-readable output with `--json`
+1. **JSON output** — use each command's `--json-output` option for machine-readable output; `reports generate --format json` returns JSON report data
 2. **REPL mode** — `scada` with no subcommand opens an interactive REPL
 3. **Stateful session** — JWT token is stored in `~/.config/scada-reporter/config.json`
 4. **Discoverability** — `scada tags list`, `scada dashboard overview`, `scada explore schema`
@@ -106,7 +106,7 @@ automatically. Alternatively, set `SCADA_TOKEN=<jwt>` in the environment.
 #### Cursor / Copilot / Windsurf
 
 ```bash
-scada <command> --json          # all output is machine-readable JSON
+scada <command> --json-output   # command-local machine-readable JSON where supported
 ```
 
 ---
@@ -127,25 +127,25 @@ scada <command> --json          # all output is machine-readable JSON
 scada health
 
 # Discover tags
-scada tags list --json
+scada tags list --json-output
 
 # Live values
-scada dashboard current-values --json
+scada dashboard current-values --json-output
 
 # System overview
-scada dashboard overview --json
+scada dashboard overview --json-output
 
 # Database schema
-scada explore schema --json
+scada explore schema --json-output
 
 # Last 5 readings for tag ID 1
-scada tags readings 1 --limit 5 --json
+scada tags readings 1 --limit 5 --json-output
 
 # 24-hour trend for tags 1 and 2
-scada dashboard trend 1 2 --hours 24 --json
+scada dashboard trend 1 2 --hours 24 --json-output
 
 # Read-only SQL
-scada query run "SELECT name, value, unit FROM tags LIMIT 5" --json
+scada query run "SELECT name, value, unit FROM tags LIMIT 5" --json-output
 
 # Python REPL with data preloaded
 scada shell
@@ -155,7 +155,7 @@ scada shell
 
 ## CLI Command Groups
 
-All groups support `--json` for machine-readable output and `--help` for usage.
+Most read-oriented commands support `--json-output` for machine-readable output and all groups support `--help` for usage. Prefer `--json-output` in scripts; the root `--json` flag is not consistently consumed by subcommands.
 
 | Group | Purpose |
 |-------|---------|
@@ -175,7 +175,7 @@ All groups support `--json` for machine-readable output and `--help` for usage.
 | `plc` | PLC connection configuration |
 | `users` | User management (admin only) |
 
-`health` is a top-level command (not a group): `scada health`. Use `--json-output` (not `--json`) for machine-readable output: `scada health --json-output`.
+`health` is a top-level command (not a group): `scada health`. Use `--json-output` for machine-readable output: `scada health --json-output`.
 
 ---
 
@@ -186,20 +186,20 @@ All groups support `--json` for machine-readable output and `--help` for usage.
 ```bash
 scada health                          # 1. Check API connectivity
 scada auth login <user>               # 2. Authenticate
-scada tags list --json                # 3. Discover available tags
-scada dashboard overview --json       # 4. Learn system state
+scada tags list --json-output          # 3. Discover available tags
+scada dashboard overview --json-output # 4. Learn system state
 ```
 
 ### Current State Query
 
 ```bash
-scada dashboard current-values --json | jq '.[] | {device, name, value, unit}'
+scada dashboard current-values --json-output | jq '.[] | {device, name, value, unit}'
 ```
 
 ### Trend Analysis
 
 ```bash
-scada dashboard trend 1 2 --hours 24 --json \
+scada dashboard trend 1 2 --hours 24 --json-output \
   | jq '.[] | {name, avg: (.data | map(.v) | add / length)}'
 ```
 
@@ -218,14 +218,14 @@ scada reports generate \
 ```bash
 scada auth login operator             # 1. Log in
 scada health                          # 2. Connectivity check
-scada tags list --json                # 3. See all tags
+scada tags list --json-output          # 3. See all tags
 scada dashboard current-values        # 4. Live values as table
 scada tags readings 1 --limit 5       # 5. Last 5 readings for tag 1
 ```
 
 ### Error Handling
 
-- `--json` always returns machine-readable output
+- `--json-output` returns machine-readable output on supported commands
 - Errors are returned as `{"error": true, "detail": "..."}`
 - Session can be passed via `SCADA_TOKEN` env var (useful in CI/scripts)
 

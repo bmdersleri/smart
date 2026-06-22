@@ -8,16 +8,16 @@ EKONT SMART REPORT API'sine kimlik doğrulama. JWT token alır ve `~/.config/sca
 scada auth login <kullanici_adi>
 ```
 
-Sifre prompt ile girilir. `--json` flag'i token'ı makine-okunabilir formatta döndürür.
+Sifre prompt ile girilir. `--json-output` flag'i token'ı makine-okunabilir formatta döndürür.
 
 ## Agent Kullanımı
 
 ```bash
 # Giriş yap
-scada auth login operator --json
+scada auth login operator --json-output
 
 # Mevcut kullanıcı bilgisi
-scada auth me --json
+scada auth me --json-output
 ```
 
 ## Ortam Değişkeni

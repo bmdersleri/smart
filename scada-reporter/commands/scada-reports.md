@@ -11,7 +11,7 @@ scada reports generate \
   --end 2024-01-02T00:00:00 \
   --interval hourly \
   --format json \
-  [--json]
+  [--json-output]
 ```
 
 ## Agent Kullanımı
@@ -20,7 +20,7 @@ Veriyi analiz edip raporlamak için:
 
 ```bash
 # JSON rapor
-report=$(scada reports generate --tag-ids 1,2 --start 2024-01-01T00:00:00 --end 2024-01-02T00:00:00 --format json --json)
+report=$(scada reports generate --tag-ids 1,2 --start 2024-01-01T00:00:00 --end 2024-01-02T00:00:00 --format json --json-output)
 echo "$report" | jq '.data'
 ```
 
@@ -34,7 +34,7 @@ scada reports list-history
 #  3  2026-06-15 22:07           6  hourly  excel
 #  2  2026-06-14 18:30           5  hourly  json
 
-scada reports list-history --json
+scada reports list-history --json-output
 ```
 
 ## `scada reports download-history`

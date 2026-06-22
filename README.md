@@ -19,13 +19,17 @@ Collects data directly from Siemens S7-1500 PLCs, stores it in a time-series dat
 
 | Page | Description |
 |------|-------------|
-| **Dashboard** | 3 tabs: Overview (counters), Watchlist (per user), All Tags (search/filter/pagination) |
+| **Dashboard** | 3 tabs: Overview (counters), Watchlist (per user + Grafana sync), All Tags (search/filter/pagination) |
 | **Trend Chart** | Multi-tag, multi-Y-axis; zoom/pan (Brush + mouse wheel); yellow dashed-line cursor; hover data table; PNG and Excel export; preset save/load |
 | **Reports** | Tag/time selection, hourly/daily aggregation, Excel+JSON output; filter presets |
 | **Advanced Reports** | Report templates + scheduler + archive (template-based, recurring, download) |
+| **Excel Templates** | Upload/inspect Excel templates and generate filled workbooks |
 | **Tags** | Tag listing, unit and description editing, active/inactive management |
 | **PLC Config** | Add/remove PLCs, manage IP/rack/slot/connection status |
+| **PLC Health** | Per-PLC health, incident summary, acknowledgement workflow |
+| **Metrics / Grafana** | Prometheus metrics view and embedded Grafana dashboards |
 | **Settings** | User preferences (e.g. trend chart height, 300–2000 px) |
+| **Users** | Admin-only user management |
 
 ### Backend API (`/api/*`)
 
@@ -34,11 +38,18 @@ Collects data directly from Siemens S7-1500 PLCs, stores it in a time-series dat
 | Auth | `/api/auth` | Login (OAuth2 form-data), token |
 | Tags | `/api/tags` | Tag CRUD, reading history |
 | Dashboard | `/api/dashboard` | Overview, current values, trend query |
+| Realtime | `/api/dashboard/stream`, `/api/dashboard/logs/stream` | SSE latest-value and log streams |
 | Reports | `/api/reports` | Report generation and history |
 | Advanced Reports | `/api/advanced-reports` | Template CRUD, scheduler, archive, download |
+| Excel Templates | `/api/excel-templates` | Template inspection and workbook generation |
 | PLC | `/api/plc` | PLC configuration CRUD |
+| PLC Health | `/api/plc/health`, `/api/plc/incidents/*` | PLC health state and incident tracking |
+| Groups / Annotations | `/api/groups`, `/api/annotations` | Tag grouping and time-series annotations |
+| Users / Audit | `/api/users`, `/api/audit` | Admin user management and audit trail |
+| AI | `/api/ai` | AI-assisted query, anomaly, prediction, report, and resolve helpers |
 | Query | `/api/query` | Read-only SQL query (SELECT / WITH / EXPLAIN) |
 | Explore | `/api/explore` | Schema and tag catalog discovery |
+| Health | `/live`, `/ready`, `/health`, `/metrics` | Liveness, readiness, system health, Prometheus metrics |
 
 ### Security
 - JWT-based authentication (OAuth2 Password Flow — **form-data**, not JSON)
@@ -62,10 +73,10 @@ Collects data directly from Siemens S7-1500 PLCs, stores it in a time-series dat
 | Frontend | React 19, Vite, Tailwind CSS v4, TanStack Query |
 | Charts | Recharts |
 | Internationalization | i18next — 5 locales (en/tr/ru/de/ar), Arabic drives RTL |
-| Testing | pytest (async, parallel via xdist, randomized via pytest-randomly); Vitest + Testing Library + Playwright (frontend) |
+| Testing | pytest (async, parallel via xdist); Vitest + Testing Library + Playwright (frontend) |
 | Package managers | uv (backend), pnpm (frontend) |
 | Task runner | just |
-| Containers | Docker Compose (prod) |
+| Containers | Docker Compose for local infrastructure |
 
 ---
 
@@ -83,7 +94,12 @@ scada-reporter/
 │   │   │   ├── advanced_reports.py  # Template / scheduler / archive
 │   │   │   ├── plc.py          # PLC configuration CRUD
 │   │   │   ├── query.py        # Read-only SQL
-│   │   │   └── explore.py      # Schema / catalog discovery
+│   │   │   ├── explore.py      # Schema / catalog discovery
+│   │   │   ├── groups.py       # Tag groups
+│   │   │   ├── annotations.py  # Time-series annotations
+│   │   │   ├── users.py        # Admin user management
+│   │   │   ├── audit.py        # Audit log
+│   │   │   └── ai.py           # AI helper endpoints
 │   │   ├── collector/
 │   │   │   ├── s7_collector.py # Snap7 S7-1500 connection
 │   │   │   ├── opcua_server.py # Built-in OPC UA server
@@ -101,9 +117,9 @@ scada-reporter/
 │   │   │   ├── report_template.py   # Advanced report template
 │   │   │   ├── scheduled_report.py  # Scheduled report
 │   │   │   └── report_archive.py    # Archived reports
-│   │   ├── reports/            # Excel / PDF generators
+│   │   ├── services/           # Reports, templates, scheduler, stats, AI helpers
 │   │   └── main.py             # FastAPI application entry point
-│   ├── tests/                  # pytest async tests (247+, parallel + randomized)
+│   ├── tests/                  # pytest async tests
 │   ├── alembic/                # DB migration files
 │   ├── seed_users.py           # Default user creation
 │   ├── pyproject.toml          # pytest / ruff / mypy config
@@ -111,7 +127,8 @@ scada-reporter/
 ├── frontend/                   # React + Vite (:5173)
 │   ├── src/
 │   │   ├── pages/              # Dashboard, Trend, Reports, AdvancedReports,
-│   │   │                       # Tags, PlcConfig, Settings, Login
+│   │   │                       # Tags, PlcConfig, PlcHealth, Metrics, Grafana,
+│   │   │                       # ExcelTemplates, Users, Settings, Login
 │   │   ├── context/            # AuthContext, SettingsContext (localStorage)
 │   │   ├── components/         # Layout (sidebar nav)
 │   │   └── api/                # Generated OpenAPI TypeScript client
@@ -121,7 +138,7 @@ scada-reporter/
 ├── commands/                   # Claude Code slash commands
 ├── guides/                     # Agent methodology guides
 └── AGENTS.md                   # Agent usage guide
-docker/                         # TimescaleDB + Redis + Grafana
+docker/                         # TimescaleDB + Redis + Prometheus; Grafana optional profile
 ```
 
 ---
@@ -130,7 +147,7 @@ docker/                         # TimescaleDB + Redis + Grafana
 
 ### Requirements
 - **Python 3.14+ (single supported baseline)** — managed with uv
-- Node.js 18+, pnpm
+- Node.js 24+, pnpm
 - just (task runner)
 - Siemens S7-1500 PLC (or simulation mode)
 
@@ -166,39 +183,48 @@ just seed-users       # Default users (admin + operator)
 just seed-catalog     # Load tag catalog from WinCC xlsx
 
 # Test & Quality
-just test             # pytest (247+ tests, parallel via xdist, randomized order)
+just test             # pytest backend tests
 just test-cov         # Coverage report
 just lint             # ruff
 just typecheck        # mypy
-just check            # All checks (CI)
+just backend-check    # Backend lint + format check + typecheck + tests
+just frontend-check   # Frontend typecheck + lint + tests
+just cli-check        # Agent CLI tests
+just mcp-check        # MCP server tests
+just check            # Backend + frontend + CLI + MCP checks
 
 # Tools
-just gen-client       # OpenAPI → TypeScript client (while backend running)
+just dump-openapi     # Write frontend/openapi.json from backend app import
+just gen-client       # dump-openapi + OpenAPI → TypeScript client
 just test-plc         # PLC connection test
-just docker-up        # Start PostgreSQL + Redis (prod)
+just docker-up        # Start local infra: TimescaleDB + Redis + Prometheus + Portainer
+just run-collector    # Start collector process separately (prod topology)
 ```
 
 ### Environment Variables (`.env`)
 
 ```env
-# Dev (SQLite — no Docker needed)
-DATABASE_URL=sqlite+aiosqlite:///./scada_reporter.db
+# Dev/local infra default (PostgreSQL via just docker-up)
+DATABASE_URL=postgresql+asyncpg://scada:scada123@localhost:5432/scada_reporter
 
-# Prod (PostgreSQL)
-# DATABASE_URL=postgresql+asyncpg://scada:scada123@localhost:5432/scada_reporter
+# Optional SQLite development mode
+# DATABASE_URL=sqlite+aiosqlite:///./scada_reporter.db
 
 SECRET_KEY=change-this-in-production-32-chars-minimum
 ACCESS_TOKEN_EXPIRE_MINUTES=480
 
-# S7 PLC (skipped in simulation mode)
-S7_HOST=192.168.1.1
+# API/collector topology
+RUN_COLLECTOR=True
+
+# S7 PLC (simulation mode is used when PLC is unreachable)
+S7_HOST=192.168.112.50
 S7_RACK=0
 S7_SLOT=1
 ```
 
 Copy and edit the `.env.example` file:
 ```bash
-copy scada-reporter/backend/.env.example scada-reporter/backend/.env
+copy .env.example scada-reporter/backend/.env
 ```
 
 ---
@@ -211,9 +237,9 @@ Coding agents (Claude Code etc.) can use the REST API through the `scada` CLI.
 just install-agent        # Install
 
 scada auth login admin    # Login
-scada tags list --json    # Tag list
+scada tags list --json-output    # Tag list
 scada dashboard overview  # Overview
-scada query run "SELECT name, value FROM tags LIMIT 5" --json
+scada query run "SELECT name, value FROM tags LIMIT 5" --json-output
 scada explore schema      # DB schema
 scada shell               # Python REPL (data loaded)
 ```

@@ -4,7 +4,8 @@ EKONT SMART REPORT — process-based (non-container) production deployment.
 
 > **Scope**: This guide covers running the API, collector, and frontend as native OS
 > processes. Docker is used only for local dev infrastructure (TimescaleDB + Redis +
-> Grafana). Dockerfiles and a production compose file are intentionally out of scope;
+> Prometheus + Portainer; Grafana is optional via profile). Dockerfiles and a
+> production compose file are intentionally out of scope;
 > see [DOCKER.md](../DOCKER.md) for the dev-infra setup.
 
 ---
@@ -366,7 +367,7 @@ See [docs/backup-recovery.md](backup-recovery.md) for full backup/restore proced
 
 | Document | Purpose |
 |----------|---------|
-| [DOCKER.md](../DOCKER.md) | Local dev infrastructure (TimescaleDB + Redis + Grafana) |
+| [DOCKER.md](../DOCKER.md) | Local dev infrastructure (TimescaleDB + Redis + Prometheus + Portainer; optional Grafana profile) |
 | [docs/backup-recovery.md](backup-recovery.md) | Database backup, WAL archiving, and restore |
 | `scada-reporter/backend/.env.production.example` | Full env var reference with comments |
 | `scada-reporter/backend/app/core/config.py` | All config fields and `config_errors()` validation |

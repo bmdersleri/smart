@@ -8,23 +8,38 @@ This project uses Docker **only for local infrastructure** (database, cache, obs
 
 ## Local Infrastructure Usage
 
-The compose file at `scada-reporter/docker/docker-compose.yml` starts four services:
+The compose file at `scada-reporter/docker/docker-compose.yml` starts the local infrastructure services. Grafana is normally run as a Windows service and is therefore behind an optional Docker Compose profile.
 
 | Service | Image | Port | Purpose |
 |---------|-------|------|---------|
 | `db` | timescale/timescaledb:latest-pg16 | 5432 | TimescaleDB (PostgreSQL with time-series extensions) |
 | `redis` | redis:7-alpine | 6379 | Cache / session store |
-| `grafana` | grafana/grafana:latest | 3000 | Dashboards and time-series visualisation |
+| `prometheus` | prom/prometheus:latest | 9090 | Prometheus scrape storage for backend metrics |
 | `portainer` | portainer/portainer-ce:latest | 9000 | Docker management UI |
+
+Optional profile:
+
+| Service | Image | Port | Purpose |
+|---------|-------|------|---------|
+| `grafana` | grafana/grafana:latest | 3000 | Legacy Docker-based Grafana; do not use while the Windows service is bound to port 3000 |
 
 ### Start / stop
 
 ```bash
-just docker-up     # docker compose up -d (detached)
+just docker-up     # docker compose up -d (detached; default profile)
 just docker-down   # docker compose down
 ```
 
 > **Dev-only note:** The compose file is intentionally scoped to LOCAL/DEV infrastructure. It does NOT contain app, collector, or frontend services — those run as native OS processes (see [docs/deployment.md](docs/deployment.md)).
+
+To start the optional Docker Grafana instead of the supported Windows service:
+
+```bash
+cd scada-reporter/docker
+docker compose --profile docker-grafana up -d
+```
+
+For the Windows service setup, see [docs/grafana-windows-service.md](docs/grafana-windows-service.md).
 
 ---
 
@@ -103,10 +118,11 @@ The compose file ships with **dev-only defaults** (`scada123` / `admin`). These 
 - **Backup and restore** — see **[docs/backup-recovery.md](docs/backup-recovery.md)**
   for TimescaleDB backup procedures, WAL archiving, and restore runbook.
 
-### In progress in Phase 4
+### Completed after Phase 4
 
-- **Grafana provisioning** — datasource and dashboard JSON files for production
-  (Task 3).
+- **Prometheus + Grafana provisioning** — Prometheus scrape configuration,
+  Grafana datasource provisioning, and dashboard provisioning live under
+  `scada-reporter/docker/prometheus/` and `scada-reporter/docker/grafana/`.
 
 ### Out of scope (explicit decision)
 
