@@ -18,6 +18,7 @@ SAFE_PROD_KWARGS = dict(
     DATABASE_URL="postgresql+asyncpg://u:strongpass@db.example:5432/scada",
     CORS_ORIGINS="https://app.example.com",
     RUN_COLLECTOR=False,
+    GRAFANA_PASSWORD="strong-grafana-pass",
 )
 
 
@@ -189,6 +190,19 @@ def test_warnings_dev_run_collector_true_is_empty():
 def test_warnings_dev_run_collector_false_is_empty():
     s = make_dev(RUN_COLLECTOR=False)
     assert s.config_warnings() == []
+
+
+def test_warnings_prod_weak_grafana_password_gives_warning():
+    """Prod'da default/zayıf GRAFANA_PASSWORD bir UYARI üretir (hata değil — opsiyonel)."""
+    s = make_prod(GRAFANA_PASSWORD="admin123")
+    assert any("GRAFANA_PASSWORD" in w for w in s.config_warnings())
+    assert all("GRAFANA_PASSWORD" not in e for e in s.config_errors())
+
+
+def test_warnings_dev_weak_grafana_password_is_empty():
+    """Development'ta zayıf GRAFANA_PASSWORD uyarı üretmez."""
+    s = make_dev(GRAFANA_PASSWORD="admin123")
+    assert all("GRAFANA" not in w for w in s.config_warnings())
 
 
 # ---------------------------------------------------------------------------

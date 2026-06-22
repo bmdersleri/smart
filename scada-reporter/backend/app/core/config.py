@@ -128,13 +128,6 @@ class Settings(BaseSettings):
                 " production'da gerçek alan adı girin."
             )
 
-        # Grafana zayıf/demo parola kontrolü
-        if self.GRAFANA_PASSWORD in ("admin", "admin123"):
-            errs.append(
-                "GRAFANA_PASSWORD zayıf/demo değerde — production'da güçlü parola"
-                " kullanın (yalnızca env üzerinden)."
-            )
-
         return errs
 
     def config_warnings(self) -> list[str]:
@@ -149,6 +142,12 @@ class Settings(BaseSettings):
             warnings.append(
                 "ALERT_EMAIL_ENABLED=True ama SMTP_HOST/ALERT_EMAIL_TO eksik —"
                 " e-posta uyarıları gönderilemez."
+            )
+        # Grafana zayıf/demo parola — opsiyonel entegrasyon, hard-stop değil (uyarı).
+        if self.is_production and self.GRAFANA_PASSWORD in ("admin", "admin123"):
+            warnings.append(
+                "GRAFANA_PASSWORD zayıf/demo değerde — Grafana senkronu kullanıyorsanız"
+                " production'da güçlü parola verin (yalnızca env üzerinden)."
             )
         return warnings
 
