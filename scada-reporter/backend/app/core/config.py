@@ -82,6 +82,8 @@ class Settings(BaseSettings):
 
     GRAFANA_URL: str = "http://localhost:3000"
     GRAFANA_USER: str = "admin"
+    # Dev default = yerel Grafana (admin123). Production'da .env ile override et;
+    # config_warnings() admin/admin123'ü zaten zayıf-parola olarak uyarır.
     GRAFANA_PASSWORD: str = "admin123"
 
     @property
@@ -124,6 +126,13 @@ class Settings(BaseSettings):
             errs.append(
                 "CORS_ORIGINS güvensiz (boş, wildcard veya tümü localhost) —"
                 " production'da gerçek alan adı girin."
+            )
+
+        # Grafana zayıf/demo parola kontrolü
+        if self.GRAFANA_PASSWORD in ("admin", "admin123"):
+            errs.append(
+                "GRAFANA_PASSWORD zayıf/demo değerde — production'da güçlü parola"
+                " kullanın (yalnızca env üzerinden)."
             )
 
         return errs
