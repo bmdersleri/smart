@@ -1,15 +1,17 @@
+from datetime import UTC, datetime, timedelta
+
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, field_validator
 from sqlalchemy import delete as sa_delete
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.auth import get_current_user
 from app.core.config import settings
 from app.core.database import get_db
-from app.models.tag import Tag
+from app.models.tag import Tag, TagReading
 from app.models.user import User
 from app.models.watchlist import Watchlist
 from app.models.watchlist_group import WatchlistGroup, WatchlistGroupMember
@@ -186,12 +188,37 @@ async def sync_grafana(db: AsyncSession = Depends(get_db), user: User = Depends(
         )
     ).all()
     pairs = [(gid, name) for gid, name in groups]
+
+    # Otomatik Y-eksen ayrımı için her grubun tag'lerinin son 6 saatteki tepe
+    # büyüklüğü (|değer|). DB-portable (datetime eşiği Python'da, func.abs/max ile).
+    since = datetime.now(UTC).replace(tzinfo=None) - timedelta(hours=6)
+    mag_rows = (
+        await db.execute(
+            select(
+                WatchlistGroupMember.group_id,
+                Tag.name,
+                func.max(func.abs(TagReading.value)),
+            )
+            .join(Tag, Tag.id == WatchlistGroupMember.tag_id)
+            .join(TagReading, TagReading.tag_id == WatchlistGroupMember.tag_id)
+            .where(
+                WatchlistGroupMember.group_id.in_([gid for gid, _ in pairs]),
+                TagReading.timestamp >= since,
+            )
+            .group_by(WatchlistGroupMember.group_id, Tag.name)
+        )
+    ).all()
+    magnitudes: dict[int, dict[str, float]] = {}
+    for gid, tag_name, mag in mag_rows:
+        if mag is not None:
+            magnitudes.setdefault(gid, {})[tag_name] = float(mag)
+
     auth = (settings.GRAFANA_USER, settings.GRAFANA_PASSWORD)
     try:
         async with httpx.AsyncClient(
             base_url=settings.GRAFANA_URL, auth=auth, timeout=10.0
         ) as http:
-            result = await sync_groups(pairs, http=http)
+            result = await sync_groups(pairs, http=http, magnitudes=magnitudes)
     except httpx.HTTPError as e:
         raise HTTPException(status_code=502, detail=f"Grafana erişilemedi: {e}") from None
     if result["written"] == 0 and result["errors"]:
