@@ -1,0 +1,20 @@
+{
+  "title": "لوحات Grafana",
+  "subtitle": "مخططات التشغيل والقياس المضمنة من لوحات Grafana المجهزة.",
+  "open_grafana": "افتح في Grafana",
+  "open_panel": "افتح اللوحة",
+  "operational_title": "نظرة تشغيلية عامة",
+  "operational_description": "مخططات TimescaleDB لحجم القراءات واتجاهات الوسوم ونسبة الجودة السيئة.",
+  "metrics_title": "مقاييس Prometheus",
+  "metrics_description": "مقاييس backend و PLC و HTTP وقاعدة البيانات من Prometheus.",
+  "panel_hourly_volume": "حجم القراءات بالساعة",
+  "panel_tag_trend": "اتجاه الوسوم كل 5 دقائق",
+  "panel_bad_quality": "نسبة جودة BAD بالساعة",
+  "panel_tick_duration": "مدة tick p50 / p95 / p99",
+  "panel_plc_latency": "زمن قراءة PLC p95",
+  "panel_rows_rate": "معدل الكتابة في قاعدة البيانات",
+  "panel_bad_rate": "معدل جودة BAD",
+  "panel_http_rate": "معدل طلبات HTTP",
+  "panel_http_latency": "زمن HTTP p95",
+  "panel_db_pool": "مجمع اتصالات قاعدة البيانات"
+}

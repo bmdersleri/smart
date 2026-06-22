@@ -1,0 +1,13 @@
+{
+  "title": "Группы",
+  "new_group": "Новая группа",
+  "group_name": "Название группы",
+  "rename": "Переименовать",
+  "delete": "Удалить",
+  "ungrouped": "Без группы",
+  "add_to_group": "Добавить в группу",
+  "sync_grafana": "Синхронизировать с Grafana",
+  "synced": "Записано {{written}}, удалено {{deleted}}",
+  "sync_failed": "Ошибка синхронизации Grafana",
+  "open_dashboard": "Открыть дашборд Grafana"
+}

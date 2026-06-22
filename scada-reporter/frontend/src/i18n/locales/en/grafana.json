@@ -1,0 +1,20 @@
+{
+  "title": "Grafana Dashboards",
+  "subtitle": "Embedded operational and telemetry charts from the provisioned Grafana dashboards.",
+  "open_grafana": "Open in Grafana",
+  "open_panel": "Open panel",
+  "operational_title": "Operational Overview",
+  "operational_description": "TimescaleDB charts for reading volume, tag trends, and bad-quality ratio.",
+  "metrics_title": "Prometheus Metrics",
+  "metrics_description": "Backend, PLC, HTTP, and database health metrics from Prometheus.",
+  "panel_hourly_volume": "Hourly Reading Volume",
+  "panel_tag_trend": "5-Minute Tag Trend",
+  "panel_bad_quality": "Hourly BAD Quality Ratio",
+  "panel_tick_duration": "Tick Duration p50 / p95 / p99",
+  "panel_plc_latency": "PLC Read Latency p95",
+  "panel_rows_rate": "Database Write Rate",
+  "panel_bad_rate": "BAD Quality Rate",
+  "panel_http_rate": "HTTP Request Rate",
+  "panel_http_latency": "HTTP Latency p95",
+  "panel_db_pool": "Database Connection Pool"
+}

@@ -1,0 +1,20 @@
+{
+  "title": "Grafana-Dashboards",
+  "subtitle": "Eingebettete Betriebs- und Telemetriediagramme aus den provisionierten Grafana-Dashboards.",
+  "open_grafana": "In Grafana öffnen",
+  "open_panel": "Panel öffnen",
+  "operational_title": "Betriebsübersicht",
+  "operational_description": "TimescaleDB-Diagramme für Lesevolumen, Tag-Trends und BAD-Qualitätsrate.",
+  "metrics_title": "Prometheus-Metriken",
+  "metrics_description": "Backend-, PLC-, HTTP- und Datenbankmetriken aus Prometheus.",
+  "panel_hourly_volume": "Stündliches Lesevolumen",
+  "panel_tag_trend": "5-Minuten-Tag-Trend",
+  "panel_bad_quality": "Stündliche BAD-Qualitätsrate",
+  "panel_tick_duration": "Tick-Dauer p50 / p95 / p99",
+  "panel_plc_latency": "PLC-Leselatenz p95",
+  "panel_rows_rate": "Datenbank-Schreibrate",
+  "panel_bad_rate": "BAD-Qualitätsrate",
+  "panel_http_rate": "HTTP-Anfragerate",
+  "panel_http_latency": "HTTP-Latenz p95",
+  "panel_db_pool": "Datenbank-Verbindungspool"
+}

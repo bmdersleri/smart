@@ -1,0 +1,20 @@
+{
+  "title": "Grafana Dashboardları",
+  "subtitle": "Provision edilmiş Grafana dashboardlarından operasyon ve telemetri grafikleri.",
+  "open_grafana": "Grafana'da aç",
+  "open_panel": "Paneli aç",
+  "operational_title": "Operasyonel Genel Bakış",
+  "operational_description": "Okuma hacmi, tag trendleri ve kötü kalite oranı için TimescaleDB grafikleri.",
+  "metrics_title": "Prometheus Metrikleri",
+  "metrics_description": "Prometheus üzerinden backend, PLC, HTTP ve veritabanı sağlık metrikleri.",
+  "panel_hourly_volume": "Saatlik Okuma Hacmi",
+  "panel_tag_trend": "5 Dakikalık Tag Trendi",
+  "panel_bad_quality": "Saatlik BAD Kalite Oranı",
+  "panel_tick_duration": "Tick Süresi p50 / p95 / p99",
+  "panel_plc_latency": "PLC Okuma Gecikmesi p95",
+  "panel_rows_rate": "Veritabanı Yazma Hızı",
+  "panel_bad_rate": "BAD Kalite Hızı",
+  "panel_http_rate": "HTTP İstek Hızı",
+  "panel_http_latency": "HTTP Gecikmesi p95",
+  "panel_db_pool": "Veritabanı Bağlantı Havuzu"
+}

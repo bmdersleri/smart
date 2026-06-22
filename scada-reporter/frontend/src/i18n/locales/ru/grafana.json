@@ -1,0 +1,20 @@
+{
+  "title": "Дашборды Grafana",
+  "subtitle": "Встроенные операционные и телеметрические графики из подготовленных дашбордов Grafana.",
+  "open_grafana": "Открыть в Grafana",
+  "open_panel": "Открыть панель",
+  "operational_title": "Операционный обзор",
+  "operational_description": "Графики TimescaleDB для объема чтений, трендов тегов и доли плохого качества.",
+  "metrics_title": "Метрики Prometheus",
+  "metrics_description": "Метрики backend, PLC, HTTP и базы данных из Prometheus.",
+  "panel_hourly_volume": "Почасовой объем чтений",
+  "panel_tag_trend": "5-минутный тренд тегов",
+  "panel_bad_quality": "Почасовая доля BAD качества",
+  "panel_tick_duration": "Длительность tick p50 / p95 / p99",
+  "panel_plc_latency": "Задержка чтения PLC p95",
+  "panel_rows_rate": "Скорость записи в БД",
+  "panel_bad_rate": "Скорость BAD качества",
+  "panel_http_rate": "Частота HTTP-запросов",
+  "panel_http_latency": "Задержка HTTP p95",
+  "panel_db_pool": "Пул подключений БД"
+}

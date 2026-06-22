@@ -1,0 +1,13 @@
+{
+  "title": "المجموعات",
+  "new_group": "مجموعة جديدة",
+  "group_name": "اسم المجموعة",
+  "rename": "إعادة تسمية",
+  "delete": "حذف",
+  "ungrouped": "غير مجمّع",
+  "add_to_group": "أضف إلى المجموعة",
+  "sync_grafana": "مزامنة مع Grafana",
+  "synced": "تمت كتابة {{written}}، وحذف {{deleted}}",
+  "sync_failed": "فشلت مزامنة Grafana",
+  "open_dashboard": "افتح لوحة Grafana"
+}

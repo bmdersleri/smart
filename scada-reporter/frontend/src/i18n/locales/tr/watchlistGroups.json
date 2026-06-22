@@ -1,0 +1,13 @@
+{
+  "title": "Gruplar",
+  "new_group": "Yeni grup",
+  "group_name": "Grup adı",
+  "rename": "Yeniden adlandır",
+  "delete": "Sil",
+  "ungrouped": "Gruplanmamış",
+  "add_to_group": "Gruba ekle",
+  "sync_grafana": "Grafana'ya senkronla",
+  "synced": "{{written}} dashboard yazıldı, {{deleted}} silindi",
+  "sync_failed": "Grafana senkron başarısız",
+  "open_dashboard": "Grafana dashboard'unu aç"
+}

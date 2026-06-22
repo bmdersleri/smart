@@ -1,0 +1,13 @@
+{
+  "title": "Gruppen",
+  "new_group": "Neue Gruppe",
+  "group_name": "Gruppenname",
+  "rename": "Umbenennen",
+  "delete": "Löschen",
+  "ungrouped": "Ohne Gruppe",
+  "add_to_group": "Zur Gruppe hinzufügen",
+  "sync_grafana": "Mit Grafana synchronisieren",
+  "synced": "{{written}} Dashboards geschrieben, {{deleted}} gelöscht",
+  "sync_failed": "Grafana-Synchronisierung fehlgeschlagen",
+  "open_dashboard": "Grafana-Dashboard öffnen"
+}
