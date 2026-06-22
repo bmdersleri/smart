@@ -8,6 +8,9 @@ HTTP istek sayacı ve gecikme histogramı Starlette middleware tarafından doldu
 (bkz. app/main.py). DB pool gauge'ları render() çağrısında güncellenir.
 """
 
+import time
+from datetime import UTC, datetime
+
 from prometheus_client import (
     CONTENT_TYPE_LATEST,
     REGISTRY,
@@ -16,6 +19,9 @@ from prometheus_client import (
     Histogram,
     generate_latest,
 )
+
+# Process start (wall-clock epoch), recorded once at import.
+_PROCESS_START = time.time()
 
 tick_duration = Histogram(
     "scada_tick_duration_seconds",
@@ -57,7 +63,24 @@ db_pool_checked_out = Gauge(
     "Şu an kullanımda olan DB bağlantısı",
 )
 
+# ── Process uptime ────────────────────────────────────────────────────────
+process_start_time_seconds = Gauge(
+    "scada_process_start_time_seconds",
+    "Backend process başlangıç zamanı (Unix epoch saniye)",
+)
+process_start_time_seconds.set(_PROCESS_START)
+
 CONTENT_TYPE = CONTENT_TYPE_LATEST
+
+
+def uptime_seconds() -> float:
+    """Process başlangıcından bu yana geçen saniye."""
+    return time.time() - _PROCESS_START
+
+
+def process_started_at() -> datetime:
+    """Process başlangıç zamanı (tz-aware UTC)."""
+    return datetime.fromtimestamp(_PROCESS_START, UTC)
 
 
 def observe_tick(duration_s: float) -> None:

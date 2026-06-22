@@ -215,4 +215,6 @@ async def health():
         "plcs": plc_status,
         "collector_running": settings.RUN_COLLECTOR,
         "scheduler_running": sched is not None and getattr(sched, "running", False),
+        "uptime_seconds": metrics.uptime_seconds(),
+        "started_at": metrics.process_started_at().isoformat(),
     }
