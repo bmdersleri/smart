@@ -1,0 +1,18 @@
+EKONT SMART REPORT
+Copyright (c) 2026 EKONT SMART REPORT. All rights reserved.
+
+This product includes proprietary EKONT SMART REPORT source code and
+configuration assets. Unauthorized copying, modification, redistribution,
+sublicensing, hosting, or commercial use is prohibited unless expressly
+allowed by a separate written commercial agreement.
+
+This product also depends on third-party open source software. Those
+components remain governed by their own license terms. A direct dependency
+license inventory is maintained in:
+
+    docs/dependency-license-report.md
+
+Important compliance note:
+The backend currently uses asyncua, which reports "GNU Lesser General Public
+License v3 or later" in installed package metadata. Review distribution and
+notice obligations before shipping an on-premise or bundled binary product.

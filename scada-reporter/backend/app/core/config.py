@@ -48,6 +48,15 @@ class Settings(BaseSettings):
 
     SENTRY_DSN: str = ""
 
+    # Commercial license verification. Disabled by default so development and
+    # tests remain frictionless; enable in production/on-prem deployments.
+    SCADA_LICENSE_REQUIRED: bool = False
+    SCADA_LICENSE_FILE: str = ""
+    SCADA_LICENSE_TOKEN: str = ""
+    SCADA_LICENSE_PUBLIC_KEY: str = ""
+    SCADA_LICENSE_ALGORITHMS: str = "RS256,ES256"
+    SCADA_LICENSE_PRODUCT: str = "ekont-smart-report"
+
     # ── Login rate limiting (brute-force koruması) ──
     LOGIN_RATE_LIMIT_ENABLED: bool = True
     LOGIN_RATE_LIMIT_MAX: int = 10  # pencere içinde max başarısız deneme
@@ -93,6 +102,10 @@ class Settings(BaseSettings):
     @property
     def cors_origins(self) -> list[str]:
         return [o.strip() for o in self.CORS_ORIGINS.split(",") if o.strip()]
+
+    @property
+    def scada_license_algorithms(self) -> list[str]:
+        return [a.strip() for a in self.SCADA_LICENSE_ALGORITHMS.split(",") if a.strip()]
 
     def config_errors(self) -> list[str]:
         """Prod'da tehlikeli/eksik ayarları döndür (boşsa sağlıklı)."""
