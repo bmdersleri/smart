@@ -50,5 +50,8 @@
   "add_to_watchlist": "Watchlist'e ekle",
   "prev": "← Önceki",
   "next": "Sonraki →",
-  "page_of": "Sayfa {{page}} / {{total}}"
+  "page_of": "Sayfa {{page}} / {{total}}",
+  "stat_uptime": "Sunucu Çalışma Süresi",
+  "stat_uptime_sub": "başlangıçtan beri",
+  "uptime_since": "{{value}} itibarıyla"
 }

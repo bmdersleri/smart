@@ -50,5 +50,8 @@
   "add_to_watchlist": "Zur Beobachtungsliste hinzufügen",
   "prev": "← Zurück",
   "next": "Weiter →",
-  "page_of": "Seite {{page}} / {{total}}"
+  "page_of": "Seite {{page}} / {{total}}",
+  "stat_uptime": "Backend-Laufzeit",
+  "stat_uptime_sub": "seit Start",
+  "uptime_since": "seit {{value}}"
 }

@@ -3,8 +3,8 @@ import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { format } from 'date-fns'
 import { enUS, tr, ru, de } from 'date-fns/locale'
-import { getDashboardDevices, getOverview, listPlcs, getDeadbandSavings } from '../../api/client'
-import { parseUtc } from '../../utils/time'
+import { getDashboardDevices, getOverview, listPlcs, getDeadbandSavings, getHealth } from '../../api/client'
+import { parseUtc, formatUptime } from '../../utils/time'
 import type { PlcEntry } from '../../api/client'
 
 // date-fns locale follows the active language (month/day names)
@@ -284,6 +284,12 @@ export default function OverviewTab({ active }: { active: boolean }) {
     refetchInterval: 30000,
     enabled: active,
   })
+  const { data: health } = useQuery({
+    queryKey: ['health'],
+    queryFn: () => getHealth().then((r) => r.data),
+    refetchInterval: 30000,
+    enabled: active,
+  })
 
   // Flash + increment counter when last_reading changes
   useEffect(() => {
@@ -360,6 +366,14 @@ export default function OverviewTab({ active }: { active: boolean }) {
           value={savings?.savings_pct != null ? fmtPercent(savings.savings_pct, i18n.language) : '—'}
           sub={savings ? t('saved_rows_per_day', { value: fmtCompact(savings.saved_rows_per_day, i18n.language) }) : t('stat_deadband_sub_24h')}
           accent="text-emerald-400"
+        />
+        <StatCard
+          label={t('stat_uptime')}
+          value={health?.uptime_seconds != null ? formatUptime(health.uptime_seconds, i18n.language) : '—'}
+          sub={health?.started_at
+            ? t('uptime_since', { value: format(parseUtc(health.started_at), 'dd MMM HH:mm', { locale: DATE_LOCALES[i18n.language] ?? enUS }) })
+            : t('stat_uptime_sub')}
+          accent="text-cyan-400"
         />
       </div>
 

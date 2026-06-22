@@ -167,6 +167,17 @@ export const getOverview = () => api.get<{
   readings_1h: number
   quality_rate: number | null
 }>('/dashboard/overview')
+export interface HealthStatus {
+  status: string
+  plc_connected: number
+  plc_total: number
+  collector_running: boolean
+  scheduler_running: boolean
+  uptime_seconds: number
+  started_at: string
+}
+// /health is mounted at the app root (no /api prefix), so override baseURL.
+export const getHealth = () => api.get<HealthStatus>('/health', { baseURL: '' })
 export interface MetricsSummary {
   rows_written_total: number
   bad_quality_total: number

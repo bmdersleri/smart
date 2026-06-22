@@ -50,5 +50,8 @@
   "add_to_watchlist": "Добавить в список наблюдения",
   "prev": "← Назад",
   "next": "Вперёд →",
-  "page_of": "Страница {{page}} / {{total}}"
+  "page_of": "Страница {{page}} / {{total}}",
+  "stat_uptime": "Время работы",
+  "stat_uptime_sub": "с момента запуска",
+  "uptime_since": "с {{value}}"
 }

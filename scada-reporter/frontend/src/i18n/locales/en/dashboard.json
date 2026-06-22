@@ -50,5 +50,8 @@
   "add_to_watchlist": "Add to watchlist",
   "prev": "← Previous",
   "next": "Next →",
-  "page_of": "Page {{page}} / {{total}}"
+  "page_of": "Page {{page}} / {{total}}",
+  "stat_uptime": "Backend Uptime",
+  "stat_uptime_sub": "since start",
+  "uptime_since": "since {{value}}"
 }

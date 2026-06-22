@@ -50,5 +50,8 @@
   "add_to_watchlist": "إضافة إلى قائمة المراقبة",
   "prev": "← السابق",
   "next": "التالي →",
-  "page_of": "الصفحة {{page}} / {{total}}"
+  "page_of": "الصفحة {{page}} / {{total}}",
+  "stat_uptime": "مدة تشغيل الخادم",
+  "stat_uptime_sub": "منذ البدء",
+  "uptime_since": "منذ {{value}}"
 }
