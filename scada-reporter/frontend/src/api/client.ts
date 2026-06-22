@@ -204,6 +204,22 @@ export const getDashboardDevices = () => api.get<string[]>('/dashboard/devices')
 export const getWatchlist = () => api.get<WatchlistItem[]>('/dashboard/watchlist')
 export const addWatchlist = (tag_id: number) => api.post(`/dashboard/watchlist/${tag_id}`)
 export const removeWatchlist = (tag_id: number) => api.delete(`/dashboard/watchlist/${tag_id}`)
+export interface WatchlistGroupTag { tag_id: number; name: string }
+export interface WatchlistGroup {
+  id: number; name: string; sort_order: number; tag_count: number; tags: WatchlistGroupTag[]
+}
+export interface WatchlistGroupsResponse { groups: WatchlistGroup[]; ungrouped: WatchlistGroupTag[] }
+
+const WG = '/dashboard/watchlist-groups'
+export const listWatchlistGroups = () => api.get<WatchlistGroupsResponse>(`${WG}/`)
+export const createWatchlistGroup = (name: string) => api.post<WatchlistGroup>(`${WG}/`, { name })
+export const renameWatchlistGroup = (id: number, name: string) =>
+  api.patch<{ id: number; name: string }>(`${WG}/${id}`, { name })
+export const deleteWatchlistGroup = (id: number) => api.delete(`${WG}/${id}`)
+export const addTagToGroup = (id: number, tagId: number) => api.post(`${WG}/${id}/tags/${tagId}`)
+export const removeTagFromGroup = (id: number, tagId: number) => api.delete(`${WG}/${id}/tags/${tagId}`)
+export const syncGrafana = () =>
+  api.post<{ written: number; deleted: number; errors: string[] }>(`${WG}/sync-grafana`)
 export const getDashboardTags = (p: DashboardTagsParams) =>
   api.get<DashboardTagsResponse>('/dashboard/tags', { params: p })
 // PLC Yönetimi
