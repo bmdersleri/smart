@@ -8,7 +8,23 @@ from app.core.config import settings
 logger = logging.getLogger(__name__)
 
 
+def _is_timescale(conn: AsyncConnection) -> bool:
+    """True only on PostgreSQL/TimescaleDB.
+
+    SQLite (dev/test) cannot run any of the Timescale-only DDL below, so the
+    init functions short-circuit instead of attempting it and logging
+    syntax-error noise on every boot.
+    """
+    return conn.engine.dialect.name == "postgresql"
+
+
 async def init_timescaledb(conn: AsyncConnection):
+    if not _is_timescale(conn):
+        logger.info(
+            "TimescaleDB atlandı (dialect=%s) — ham tablolar yeterli",
+            conn.engine.dialect.name,
+        )
+        return
     try:
         await conn.execute(text("CREATE EXTENSION IF NOT EXISTS timescaledb"))
         logger.info("TimescaleDB extension ready")
@@ -74,6 +90,8 @@ async def init_continuous_aggregates(conn: AsyncConnection) -> None:
     AUTOCOMMIT bağlantısı bekler (CAGG DDL açık transaction içinde çalışmaz).
     Timescale yoksa (ör. SQLite dev) sessizce atlanır.
     """
+    if not _is_timescale(conn):
+        return
     for view, bucket, start_off, end_off, sched in CAGGS:
         try:
             await conn.execute(
@@ -116,6 +134,8 @@ async def init_daily_rollup(conn: AsyncConnection) -> None:
     (sadece last/delta değil) bu view'dan okunamaz. Modern Timescale (>=2.7)
     first/last'ı destekler; hata loglanır ve atlanır.
     """
+    if not _is_timescale(conn):
+        return
     off = int(settings.REPORT_TZ_OFFSET_HOURS)
     try:
         await conn.execute(
