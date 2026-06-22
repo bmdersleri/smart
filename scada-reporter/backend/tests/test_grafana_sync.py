@@ -16,6 +16,11 @@ def test_build_group_dashboard_shape():
     assert d["panels"][0]["fieldConfig"]["overrides"] == []  # ayrım yoksa temiz
 
 
+def test_build_group_dashboard_rejects_non_integer_group_id():
+    with pytest.raises(ValueError):
+        build_group_dashboard("7 OR 1=1", "Pompalar")  # type: ignore[arg-type]
+
+
 def test_split_high_axis_separates_large_scale_tags():
     # küçükler ~2-8, biri ~2000 -> büyük olan sağ eksene
     mags = {"seviye": 5.0, "debi": 8.0, "basinc": 2.0, "toplam_hacim": 2000.0}

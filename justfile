@@ -132,14 +132,12 @@ format:
 typecheck:
     cd {{be}} && .venv/Scripts/mypy app/
 
-# Backend güvenlik taraması (yalnız bandit). NOT: `check`'e DAHİL DEĞİL — bandit
-# şu an app/'te pre-existing 5 Medium B608 (SQL string-concat) yüzünden exit 1
-# veriyor (CI'nin bandit adımı da aynı durumda). Bulgular giderilince check'e bağla.
+# Backend güvenlik taraması (Bandit)
 backend-security:
     cd {{be}} && .venv/Scripts/bandit.exe -r app/ -ll
 
-# Backend kontrolleri (lint + format + type + test)
-backend-check: lint format-check typecheck test
+# Backend kontrolleri (lint + format + type + test + security)
+backend-check: lint format-check typecheck test backend-security
 
 # Frontend kontrolleri (TypeScript + lint + test)
 frontend-check:
@@ -153,8 +151,8 @@ cli-check:
 mcp-check:
     cd mcp-servers/mcp-scada && ../../scada-reporter/backend/.venv/Scripts/python -m pytest tests/ -v
 
-# Tüm kontroller (CI benzeri) — backend + frontend + CLI + MCP
-check: backend-check frontend-check cli-check mcp-check
+# Tüm kontroller (CI benzeri) — backend + frontend + CLI + MCP + OpenAPI contract
+check: backend-check frontend-check cli-check mcp-check contract-check
 
 # ── Araçlar ──────────────────────────────────────────────────────────────────
 
@@ -180,6 +178,10 @@ dump-openapi:
 # 2) pnpm openapi-ts → src/api/generated/* üret
 gen-client: dump-openapi
     cd {{fe}} && pnpm openapi-ts
+
+# OpenAPI/generated client drift kontrolü (CI contract-freshness ile aynı fikir)
+contract-check: gen-client
+    git diff --exit-code -- scada-reporter/frontend/openapi.json scada-reporter/frontend/src/api/generated
 
 # ── Agent CLI ─────────────────────────────────────────────────────────────────
 

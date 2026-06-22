@@ -51,12 +51,13 @@ def _axis_overrides(right_axis_tags: list[str]) -> list[dict]:
 
 
 def _query(group_id: int) -> str:
+    safe_group_id = int(group_id)
     return (
         "SELECT CAST(strftime('%s', tr.timestamp) AS INTEGER) AS time, "
         "t.name AS metric, tr.value AS value "
         "FROM tag_readings tr JOIN tags t ON t.id = tr.tag_id "
         "WHERE tr.tag_id IN "
-        f"(SELECT tag_id FROM watchlist_group_members WHERE group_id = {group_id}) "
+        f"(SELECT tag_id FROM watchlist_group_members WHERE group_id = {safe_group_id}) "  # nosec B608
         "AND tr.timestamp >= datetime('now','-6 hours') ORDER BY time"
     )
 
