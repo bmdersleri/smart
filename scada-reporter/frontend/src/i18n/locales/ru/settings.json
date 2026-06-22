@@ -9,5 +9,22 @@
   "language_hint": "Язык интерфейса",
   "trend_chart": "График тренда",
   "chart_height": "Высота графика",
-  "selected": "Выбрано"
+  "selected": "Выбрано",
+  "license": "Лицензия",
+  "license_mode": "Режим",
+  "license_customer": "Клиент",
+  "license_features": "Функции",
+  "license_max_tags": "Лимит тегов",
+  "license_expires": "Истекает",
+  "license_perpetual": "Бессрочно",
+  "license_unlimited": "Без лимита",
+  "license_upload_hint": "Загрузите файл license.jwt от EKONT для активации.",
+  "license_apply": "Загрузить лицензию",
+  "license_remove": "Удалить",
+  "license_applied": "Лицензия применена.",
+  "license_apply_failed": "Недействительный файл лицензии.",
+  "mode_licensed": "Лицензировано",
+  "mode_demo": "Демо",
+  "mode_unlicensed": "Полная",
+  "demo_banner": "Демо-режим — только чтение, премиум-функции отключены. Загрузите лицензию для разблокировки."
 }

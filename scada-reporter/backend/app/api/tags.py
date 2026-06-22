@@ -9,9 +9,10 @@ from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.auth import get_current_user, require_perm, require_role
-from app.api.license_guard import assert_tag_quota, require_feature
+from app.api.license_guard import assert_tag_quota, require_feature, require_writable
 from app.collector.s7_collector import read_tag_now
 from app.core.database import get_db
+from app.core.license import demo_visible_tag_limit
 from app.import_catalog import build_full_catalog
 from app.models.tag import Tag, TagReading
 
@@ -86,6 +87,7 @@ async def import_tags(
     file: UploadFile,
     db: AsyncSession = Depends(get_db),
     _=Depends(require_role("admin", "operator")),
+    __=Depends(require_writable),
 ):
     """WinCC full_export.xlsx yükle: Connection->IP çözülür, mutlak adres + tip ile
     tag'ler eklenir. Uzun-süre (archive) katalogu için `just seed-catalog` kullanın.
@@ -201,6 +203,7 @@ async def import_tags_csv(
     file: UploadFile,
     db: AsyncSession = Depends(get_db),
     _=Depends(require_role("admin", "operator")),
+    __=Depends(require_writable),
 ):
     """Genel CSV import. En az `name` kolonu gerekir; node_id verilmezse türetilir.
     Mevcut node_id atlanır. Kolonlar export ile aynıdır (eksikler varsayılan alır).
@@ -257,7 +260,11 @@ async def import_tags_csv(
 
 @router.get("/", response_model=list[TagResponse])
 async def list_tags(db: AsyncSession = Depends(get_db), _=Depends(get_current_user)):
-    result = await db.execute(select(Tag).order_by(Tag.device, Tag.name))
+    query = select(Tag).order_by(Tag.device, Tag.name)
+    cap = demo_visible_tag_limit()
+    if cap is not None:
+        query = query.limit(cap)
+    result = await db.execute(query)
     return result.scalars().all()
 
 
@@ -266,6 +273,7 @@ async def create_tag(
     data: TagCreate,
     db: AsyncSession = Depends(get_db),
     _=Depends(require_perm("tag:create")),
+    __=Depends(require_writable),
 ):
     await assert_tag_quota(db, adding=1)
     payload = data.model_dump()
@@ -298,6 +306,7 @@ async def delete_tag(
     tag_id: int,
     db: AsyncSession = Depends(get_db),
     _=Depends(require_role("admin")),
+    __=Depends(require_writable),
 ):
     result = await db.execute(select(Tag).where(Tag.id == tag_id))
     tag = result.scalar_one_or_none()
@@ -313,6 +322,7 @@ async def update_tag(
     data: TagUpdate,
     db: AsyncSession = Depends(get_db),
     _=Depends(require_role("admin", "operator")),
+    __=Depends(require_writable),
 ):
     result = await db.execute(select(Tag).where(Tag.id == tag_id))
     tag = result.scalar_one_or_none()

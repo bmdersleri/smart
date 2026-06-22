@@ -430,6 +430,20 @@
         "title": "Body_login_api_auth_token_post",
         "type": "object"
       },
+      "Body_upload_license_api_license_post": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_upload_license_api_license_post",
+        "type": "object"
+      },
       "ColumnIn": {
         "properties": {
           "agg": {
@@ -540,6 +554,19 @@
           "name"
         ],
         "title": "GroupCreate",
+        "type": "object"
+      },
+      "GroupIn": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "GroupIn",
         "type": "object"
       },
       "GroupResponse": {
@@ -4382,6 +4409,290 @@
         ]
       }
     },
+    "/api/dashboard/watchlist-groups/": {
+      "get": {
+        "operationId": "list_groups_api_dashboard_watchlist_groups__get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "List Groups",
+        "tags": [
+          "watchlist-groups"
+        ]
+      },
+      "post": {
+        "operationId": "create_group_api_dashboard_watchlist_groups__post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GroupIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Create Group",
+        "tags": [
+          "watchlist-groups"
+        ]
+      }
+    },
+    "/api/dashboard/watchlist-groups/sync-grafana": {
+      "post": {
+        "operationId": "sync_grafana_api_dashboard_watchlist_groups_sync_grafana_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Sync Grafana",
+        "tags": [
+          "watchlist-groups"
+        ]
+      }
+    },
+    "/api/dashboard/watchlist-groups/{group_id}": {
+      "delete": {
+        "operationId": "delete_group_api_dashboard_watchlist_groups__group_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "group_id",
+            "required": true,
+            "schema": {
+              "title": "Group Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Delete Group",
+        "tags": [
+          "watchlist-groups"
+        ]
+      },
+      "patch": {
+        "operationId": "rename_group_api_dashboard_watchlist_groups__group_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "group_id",
+            "required": true,
+            "schema": {
+              "title": "Group Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GroupIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Rename Group",
+        "tags": [
+          "watchlist-groups"
+        ]
+      }
+    },
+    "/api/dashboard/watchlist-groups/{group_id}/tags/{tag_id}": {
+      "delete": {
+        "operationId": "remove_member_api_dashboard_watchlist_groups__group_id__tags__tag_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "group_id",
+            "required": true,
+            "schema": {
+              "title": "Group Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "tag_id",
+            "required": true,
+            "schema": {
+              "title": "Tag Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Remove Member",
+        "tags": [
+          "watchlist-groups"
+        ]
+      },
+      "post": {
+        "operationId": "add_member_api_dashboard_watchlist_groups__group_id__tags__tag_id__post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "group_id",
+            "required": true,
+            "schema": {
+              "title": "Group Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "tag_id",
+            "required": true,
+            "schema": {
+              "title": "Tag Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Add Member",
+        "tags": [
+          "watchlist-groups"
+        ]
+      }
+    },
     "/api/dashboard/watchlist/{tag_id}": {
       "delete": {
         "operationId": "remove_watchlist_api_dashboard_watchlist__tag_id__delete",
@@ -5047,6 +5358,109 @@
         "summary": "Assign Tags",
         "tags": [
           "groups"
+        ]
+      }
+    },
+    "/api/license": {
+      "delete": {
+        "description": "Remove the active license and fall back to DEMO mode.",
+        "operationId": "revert_license_api_license_delete",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Revert License Api License Delete",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Revert License",
+        "tags": [
+          "license"
+        ]
+      },
+      "get": {
+        "description": "Current license mode + claims — for the dashboard badge and Settings.",
+        "operationId": "license_status_api_license_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response License Status Api License Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "License Status",
+        "tags": [
+          "license"
+        ]
+      },
+      "post": {
+        "description": "Verify an uploaded license against the configured public key and activate it.",
+        "operationId": "upload_license_api_license_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_license_api_license_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Upload License Api License Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Upload License",
+        "tags": [
+          "license"
         ]
       }
     },

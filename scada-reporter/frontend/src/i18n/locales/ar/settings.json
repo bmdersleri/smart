@@ -9,5 +9,22 @@
   "language_hint": "لغة الواجهة",
   "trend_chart": "مخطط الاتجاه",
   "chart_height": "ارتفاع المخطط",
-  "selected": "محدد"
+  "selected": "محدد",
+  "license": "الترخيص",
+  "license_mode": "الوضع",
+  "license_customer": "العميل",
+  "license_features": "الميزات",
+  "license_max_tags": "حد الوسوم",
+  "license_expires": "ينتهي في",
+  "license_perpetual": "دائم",
+  "license_unlimited": "غير محدود",
+  "license_upload_hint": "ارفع ملف license.jwt المقدّم من EKONT للتفعيل.",
+  "license_apply": "رفع الترخيص",
+  "license_remove": "إزالة",
+  "license_applied": "تم تطبيق الترخيص.",
+  "license_apply_failed": "ملف ترخيص غير صالح.",
+  "mode_licensed": "مُرخّص",
+  "mode_demo": "تجريبي",
+  "mode_unlicensed": "كامل",
+  "demo_banner": "الوضع التجريبي — للقراءة فقط، الميزات المتميزة معطّلة. ارفع ترخيصًا للتفعيل."
 }

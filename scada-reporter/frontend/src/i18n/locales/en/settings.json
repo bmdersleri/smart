@@ -9,5 +9,22 @@
   "language_hint": "Interface language",
   "trend_chart": "Trend Chart",
   "chart_height": "Chart Height",
-  "selected": "Selected"
+  "selected": "Selected",
+  "license": "License",
+  "license_mode": "Mode",
+  "license_customer": "Customer",
+  "license_features": "Features",
+  "license_max_tags": "Tag limit",
+  "license_expires": "Expires",
+  "license_perpetual": "Perpetual",
+  "license_unlimited": "Unlimited",
+  "license_upload_hint": "Upload a license.jwt file provided by EKONT to activate.",
+  "license_apply": "Upload license",
+  "license_remove": "Remove",
+  "license_applied": "License applied.",
+  "license_apply_failed": "Invalid license file.",
+  "mode_licensed": "Licensed",
+  "mode_demo": "Demo",
+  "mode_unlicensed": "Full",
+  "demo_banner": "Demo mode — read-only, premium features disabled. Upload a license to unlock."
 }

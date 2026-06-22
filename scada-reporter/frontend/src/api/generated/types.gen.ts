@@ -245,6 +245,16 @@ export type BodyLoginApiAuthTokenPost = {
 };
 
 /**
+ * Body_upload_license_api_license_post
+ */
+export type BodyUploadLicenseApiLicensePost = {
+    /**
+     * File
+     */
+    file: Blob | File;
+};
+
+/**
  * ColumnIn
  */
 export type ColumnIn = {
@@ -316,6 +326,16 @@ export type GroupCreate = {
      * Sort Order
      */
     sort_order?: number;
+};
+
+/**
+ * GroupIn
+ */
+export type GroupIn = {
+    /**
+     * Name
+     */
+    name: string;
 };
 
 /**
@@ -2481,6 +2501,181 @@ export type GetWatchlistApiDashboardWatchlistGetResponses = {
     200: unknown;
 };
 
+export type ListGroupsApiDashboardWatchlistGroupsGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/dashboard/watchlist-groups/';
+};
+
+export type ListGroupsApiDashboardWatchlistGroupsGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type CreateGroupApiDashboardWatchlistGroupsPostData = {
+    body: GroupIn;
+    path?: never;
+    query?: never;
+    url: '/api/dashboard/watchlist-groups/';
+};
+
+export type CreateGroupApiDashboardWatchlistGroupsPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CreateGroupApiDashboardWatchlistGroupsPostError = CreateGroupApiDashboardWatchlistGroupsPostErrors[keyof CreateGroupApiDashboardWatchlistGroupsPostErrors];
+
+export type CreateGroupApiDashboardWatchlistGroupsPostResponses = {
+    /**
+     * Successful Response
+     */
+    201: unknown;
+};
+
+export type SyncGrafanaApiDashboardWatchlistGroupsSyncGrafanaPostData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/dashboard/watchlist-groups/sync-grafana';
+};
+
+export type SyncGrafanaApiDashboardWatchlistGroupsSyncGrafanaPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type DeleteGroupApiDashboardWatchlistGroupsGroupIdDeleteData = {
+    body?: never;
+    path: {
+        /**
+         * Group Id
+         */
+        group_id: number;
+    };
+    query?: never;
+    url: '/api/dashboard/watchlist-groups/{group_id}';
+};
+
+export type DeleteGroupApiDashboardWatchlistGroupsGroupIdDeleteErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DeleteGroupApiDashboardWatchlistGroupsGroupIdDeleteError = DeleteGroupApiDashboardWatchlistGroupsGroupIdDeleteErrors[keyof DeleteGroupApiDashboardWatchlistGroupsGroupIdDeleteErrors];
+
+export type DeleteGroupApiDashboardWatchlistGroupsGroupIdDeleteResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type DeleteGroupApiDashboardWatchlistGroupsGroupIdDeleteResponse = DeleteGroupApiDashboardWatchlistGroupsGroupIdDeleteResponses[keyof DeleteGroupApiDashboardWatchlistGroupsGroupIdDeleteResponses];
+
+export type RenameGroupApiDashboardWatchlistGroupsGroupIdPatchData = {
+    body: GroupIn;
+    path: {
+        /**
+         * Group Id
+         */
+        group_id: number;
+    };
+    query?: never;
+    url: '/api/dashboard/watchlist-groups/{group_id}';
+};
+
+export type RenameGroupApiDashboardWatchlistGroupsGroupIdPatchErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type RenameGroupApiDashboardWatchlistGroupsGroupIdPatchError = RenameGroupApiDashboardWatchlistGroupsGroupIdPatchErrors[keyof RenameGroupApiDashboardWatchlistGroupsGroupIdPatchErrors];
+
+export type RenameGroupApiDashboardWatchlistGroupsGroupIdPatchResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type RemoveMemberApiDashboardWatchlistGroupsGroupIdTagsTagIdDeleteData = {
+    body?: never;
+    path: {
+        /**
+         * Group Id
+         */
+        group_id: number;
+        /**
+         * Tag Id
+         */
+        tag_id: number;
+    };
+    query?: never;
+    url: '/api/dashboard/watchlist-groups/{group_id}/tags/{tag_id}';
+};
+
+export type RemoveMemberApiDashboardWatchlistGroupsGroupIdTagsTagIdDeleteErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type RemoveMemberApiDashboardWatchlistGroupsGroupIdTagsTagIdDeleteError = RemoveMemberApiDashboardWatchlistGroupsGroupIdTagsTagIdDeleteErrors[keyof RemoveMemberApiDashboardWatchlistGroupsGroupIdTagsTagIdDeleteErrors];
+
+export type RemoveMemberApiDashboardWatchlistGroupsGroupIdTagsTagIdDeleteResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type RemoveMemberApiDashboardWatchlistGroupsGroupIdTagsTagIdDeleteResponse = RemoveMemberApiDashboardWatchlistGroupsGroupIdTagsTagIdDeleteResponses[keyof RemoveMemberApiDashboardWatchlistGroupsGroupIdTagsTagIdDeleteResponses];
+
+export type AddMemberApiDashboardWatchlistGroupsGroupIdTagsTagIdPostData = {
+    body?: never;
+    path: {
+        /**
+         * Group Id
+         */
+        group_id: number;
+        /**
+         * Tag Id
+         */
+        tag_id: number;
+    };
+    query?: never;
+    url: '/api/dashboard/watchlist-groups/{group_id}/tags/{tag_id}';
+};
+
+export type AddMemberApiDashboardWatchlistGroupsGroupIdTagsTagIdPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type AddMemberApiDashboardWatchlistGroupsGroupIdTagsTagIdPostError = AddMemberApiDashboardWatchlistGroupsGroupIdTagsTagIdPostErrors[keyof AddMemberApiDashboardWatchlistGroupsGroupIdTagsTagIdPostErrors];
+
+export type AddMemberApiDashboardWatchlistGroupsGroupIdTagsTagIdPostResponses = {
+    /**
+     * Successful Response
+     */
+    201: unknown;
+};
+
 export type RemoveWatchlistApiDashboardWatchlistTagIdDeleteData = {
     body?: never;
     path: {
@@ -2881,6 +3076,75 @@ export type AssignTagsApiGroupsGroupIdAssignPostResponses = {
      */
     200: unknown;
 };
+
+export type RevertLicenseApiLicenseDeleteData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/license';
+};
+
+export type RevertLicenseApiLicenseDeleteResponses = {
+    /**
+     * Response Revert License Api License Delete
+     *
+     * Successful Response
+     */
+    200: {
+        [key: string]: unknown;
+    };
+};
+
+export type RevertLicenseApiLicenseDeleteResponse = RevertLicenseApiLicenseDeleteResponses[keyof RevertLicenseApiLicenseDeleteResponses];
+
+export type LicenseStatusApiLicenseGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/license';
+};
+
+export type LicenseStatusApiLicenseGetResponses = {
+    /**
+     * Response License Status Api License Get
+     *
+     * Successful Response
+     */
+    200: {
+        [key: string]: unknown;
+    };
+};
+
+export type LicenseStatusApiLicenseGetResponse = LicenseStatusApiLicenseGetResponses[keyof LicenseStatusApiLicenseGetResponses];
+
+export type UploadLicenseApiLicensePostData = {
+    body: BodyUploadLicenseApiLicensePost;
+    path?: never;
+    query?: never;
+    url: '/api/license';
+};
+
+export type UploadLicenseApiLicensePostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UploadLicenseApiLicensePostError = UploadLicenseApiLicensePostErrors[keyof UploadLicenseApiLicensePostErrors];
+
+export type UploadLicenseApiLicensePostResponses = {
+    /**
+     * Response Upload License Api License Post
+     *
+     * Successful Response
+     */
+    200: {
+        [key: string]: unknown;
+    };
+};
+
+export type UploadLicenseApiLicensePostResponse = UploadLicenseApiLicensePostResponses[keyof UploadLicenseApiLicensePostResponses];
 
 export type ListPlcsApiPlcGetData = {
     body?: never;

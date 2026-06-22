@@ -56,6 +56,9 @@ class Settings(BaseSettings):
     SCADA_LICENSE_PUBLIC_KEY: str = ""
     SCADA_LICENSE_ALGORITHMS: str = "RS256,ES256"
     SCADA_LICENSE_PRODUCT: str = "ekont-smart-report"
+    # When a public key is configured but no valid license is present, the app
+    # runs in DEMO mode (read-only, gated features off) instead of failing.
+    SCADA_LICENSE_DEMO_MAX_TAGS: int = 25
 
     # ── Login rate limiting (brute-force koruması) ──
     LOGIN_RATE_LIMIT_ENABLED: bool = True

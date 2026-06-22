@@ -9,5 +9,22 @@
   "language_hint": "Oberflächensprache",
   "trend_chart": "Trend-Diagramm",
   "chart_height": "Diagrammhöhe",
-  "selected": "Ausgewählt"
+  "selected": "Ausgewählt",
+  "license": "Lizenz",
+  "license_mode": "Modus",
+  "license_customer": "Kunde",
+  "license_features": "Funktionen",
+  "license_max_tags": "Tag-Limit",
+  "license_expires": "Läuft ab",
+  "license_perpetual": "Unbefristet",
+  "license_unlimited": "Unbegrenzt",
+  "license_upload_hint": "Laden Sie die von EKONT bereitgestellte license.jwt-Datei hoch, um zu aktivieren.",
+  "license_apply": "Lizenz hochladen",
+  "license_remove": "Entfernen",
+  "license_applied": "Lizenz angewendet.",
+  "license_apply_failed": "Ungültige Lizenzdatei.",
+  "mode_licensed": "Lizenziert",
+  "mode_demo": "Demo",
+  "mode_unlicensed": "Voll",
+  "demo_banner": "Demo-Modus — schreibgeschützt, Premium-Funktionen deaktiviert. Lizenz hochladen zum Freischalten."
 }

@@ -9,5 +9,22 @@
   "language_hint": "Arayüz dili",
   "trend_chart": "Trend Grafik",
   "chart_height": "Grafik Yüksekliği",
-  "selected": "Seçili"
+  "selected": "Seçili",
+  "license": "Lisans",
+  "license_mode": "Mod",
+  "license_customer": "Müşteri",
+  "license_features": "Özellikler",
+  "license_max_tags": "Tag limiti",
+  "license_expires": "Son geçerlilik",
+  "license_perpetual": "Süresiz",
+  "license_unlimited": "Sınırsız",
+  "license_upload_hint": "Etkinleştirmek için EKONT'un verdiği license.jwt dosyasını yükleyin.",
+  "license_apply": "Lisans yükle",
+  "license_remove": "Kaldır",
+  "license_applied": "Lisans uygulandı.",
+  "license_apply_failed": "Geçersiz lisans dosyası.",
+  "mode_licensed": "Lisanslı",
+  "mode_demo": "Demo",
+  "mode_unlicensed": "Tam",
+  "demo_banner": "Demo modu — salt-okuma, premium özellikler kapalı. Açmak için lisans yükleyin."
 }

@@ -30,13 +30,16 @@ from app.api import (
 from app.api import (
     health as health_router,  # liveness/readiness — mounted without /api prefix
 )
+from app.api import (
+    license as license_api,
+)
 from app.collector.opcua_server import opcua_server
 from app.collector.poller import poll_loop
 from app.collector.s7_collector import plc_manager
 from app.core import metrics
 from app.core.config import settings
 from app.core.database import Base, engine
-from app.core.license import set_active_license, verify_required_license
+from app.core.license import initialize_license_state
 from app.core.log_buffer import log_buffer
 from app.core.timescaledb import (
     init_continuous_aggregates,
@@ -94,14 +97,15 @@ async def lifespan(app: FastAPI):
     for w in settings.config_warnings():
         logger.warning("Yapılandırma uyarısı: %s", w)
 
-    license_info = verify_required_license(settings)
-    set_active_license(license_info)
-    if license_info:
+    license_state = initialize_license_state(settings)
+    if license_state.info:
         logger.info(
             "Commercial license verified: customer=%s license_id=%s",
-            license_info.customer or "-",
-            license_info.license_id or "-",
+            license_state.info.customer or "-",
+            license_state.info.license_id or "-",
         )
+    else:
+        logger.info("License mode: %s", license_state.mode.value)
 
     # Rapor dosyaları için dizin oluştur
     os.makedirs("reports", exist_ok=True)
@@ -210,6 +214,7 @@ app.include_router(users.router, prefix="/api")
 app.include_router(audit.router, prefix="/api")
 app.include_router(ai.router, prefix="/api")
 app.include_router(watchlist_groups.router, prefix="/api")
+app.include_router(license_api.router, prefix="/api")
 
 
 @app.get("/metrics")

@@ -3,6 +3,7 @@ import { NavLink, Outlet } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext'
 import LanguageSelector from './LanguageSelector'
+import LicenseBadge from './LicenseBadge'
 import PlcAlertBadge from './PlcAlertBadge'
 
 const nav = [
@@ -90,6 +91,7 @@ export default function Layout() {
         </nav>
 
         <div className="p-3 border-t border-gray-800">
+          <LicenseBadge />
           <div className="flex items-center gap-2 px-2 py-1.5 mb-1">
             <div className="w-7 h-7 bg-gray-700 rounded-full flex items-center justify-center text-xs text-gray-300 font-medium">
               {user?.username?.[0]?.toUpperCase()}

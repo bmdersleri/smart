@@ -322,3 +322,24 @@ export const getArchive = (params: { page?: number; page_size?: number; template
   api.get<PaginatedArchive>('/advanced-reports/archive', { params })
 export const getArchiveEntry = (id: number) => api.get<ArchiveEntry>(`/advanced-reports/archive/${id}`)
 export const downloadArchiveReport = (id: number) => api.get(`/advanced-reports/archive/${id}/download`, { responseType: 'blob' })
+
+// ── License ───────────────────────────────────────────────────────────────────
+export type LicenseMode = 'unlicensed' | 'licensed' | 'demo'
+export interface LicenseStatus {
+  mode: LicenseMode
+  licensed: boolean
+  customer: string | null
+  license_id: string | null
+  product: string | null
+  features: string[]
+  max_tags: number | null
+  expires_at: number | null
+  demo_max_tags: number | null
+}
+export const getLicenseStatus = () => api.get<LicenseStatus>('/license')
+export const uploadLicense = (file: File) => {
+  const fd = new FormData()
+  fd.append('file', file)
+  return api.post<LicenseStatus & { persisted: boolean }>('/license', fd)
+}
+export const revertLicense = () => api.delete<LicenseStatus>('/license')

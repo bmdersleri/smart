@@ -177,6 +177,33 @@ full version, no quota, all gates open. Use this for evaluation/PoC.
 
 ---
 
+## 5a. Runtime modes, demo, and in-app upload
+
+When `SCADA_LICENSE_REQUIRED=false` (the default), the backend never refuses to
+start — it resolves one of three modes:
+
+| Condition | Mode | Behavior |
+|-----------|------|----------|
+| No public key configured (dev) | **full** | Unrestricted. |
+| Public key + valid license | **licensed** | Features/quota per claims. |
+| Public key + no/invalid license | **demo** | Read-only; `advanced_reports`, `grafana`, `realtime`, `export` disabled; tag list capped at `SCADA_LICENSE_DEMO_MAX_TAGS` (default 25). |
+
+`SCADA_LICENSE_REQUIRED=true` keeps the strict fail-closed path for locked-down
+deployments (no valid license → backend won't start).
+
+**In-app upload (no restart).** Admins can activate or replace a license from
+**Settings → License**: choose the `license.jwt` file → it is verified against
+the configured public key, saved to `SCADA_LICENSE_FILE`, and activated live
+(hot-reload). The dashboard badge and Settings card reflect the new mode
+immediately. The public key is never uploaded — only the signed token. Endpoints:
+
+- `GET /api/license` — current mode + claims (badge/Settings).
+- `POST /api/license` (admin) — upload + verify + activate.
+- `DELETE /api/license` (admin) — drop the license and fall back to demo.
+
+For in-app upload to persist across restarts, `SCADA_LICENSE_FILE` must point to a
+path the service account can write.
+
 ## 6. Renewal and plan changes
 
 Licenses are static tokens; to change limits, features, or expiry, **issue a new

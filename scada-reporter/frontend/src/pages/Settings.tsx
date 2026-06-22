@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { useSettings } from '../context/SettingsContext'
 import LanguageSelector from '../components/LanguageSelector'
+import LicenseCard from '../components/LicenseCard'
 
 const MIN_H = 300
 const MAX_H = 2000
@@ -43,6 +44,8 @@ export default function Settings() {
           <LanguageSelector />
         </div>
       </div>
+
+      <LicenseCard />
 
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 space-y-6">
         <h2 className="text-sm font-medium text-gray-400 uppercase tracking-wider">{t('trend_chart')}</h2>
