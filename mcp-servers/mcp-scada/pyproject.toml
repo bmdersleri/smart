@@ -2,7 +2,7 @@
 name = "mcp-server-scada"
 version = "0.1.0"
 description = "MCP server exposing Ekont Smart Scada Reporter tools for AI agents"
-requires-python = ">=3.12"
+requires-python = ">=3.14"
 dependencies = [
     "mcp>=1.0.0",
     "httpx>=0.27.0",

@@ -1,113 +1,28 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, type MouseEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSettings } from '../context/SettingsContext'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   getTags, getTrendAgg, getTrendRange, generateReport,
-  getGroupTree, getAnnotations, createAnnotation, deleteAnnotation,
+  getAnnotations, createAnnotation, deleteAnnotation,
 } from '../api/client'
-import type { GroupNode, Tag } from '../api/client'
 import { useSortable } from '../hooks/useSortable'
 import SortHeader from '../components/SortHeader'
-import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Brush, ResponsiveContainer,
-  ReferenceLine,
-} from 'recharts'
 import { format } from 'date-fns'
 import { toPng } from 'html-to-image'
 import { parseUtc } from '../utils/time'
-
-const COLORS = ['#f87171', '#34d399', '#facc15', '#60a5fa', '#a78bfa', '#fb923c', '#f472b6', '#38bdf8']
-const HOURS = [
-  { v: 1, key: 'hours_1' },
-  { v: 6, key: 'hours_6' },
-  { v: 24, key: 'hours_24' },
-  { v: 168, key: 'hours_168' },
-]
-const PRESET_KEY = 'trend_presets'
-
-interface Preset { name: string; tag_ids: number[]; hours: number }
-
-function loadPresets(): Preset[] {
-  try { return JSON.parse(localStorage.getItem(PRESET_KEY) ?? '[]') } catch { return [] }
-}
-
-function Toast({ message, onClose }: { message: string; onClose: () => void }) {
-  return (
-    <div className="fixed bottom-4 right-4 bg-gray-800 border border-gray-600 text-gray-200 text-sm px-4 py-3 rounded-xl shadow-xl z-50 flex items-center gap-3">
-      <span>{message}</span>
-      <button onClick={onClose} className="text-gray-400 hover:text-white">✕</button>
-    </div>
-  )
-}
-
-function TreeNode({
-  node, tagMap, selected, onToggle, depth,
-}: {
-  node: GroupNode; tagMap: Map<number, Tag>; selected: number[]
-  onToggle: (id: number) => void; depth: number
-}) {
-  const [open, setOpen] = useState(depth < 1)
-  const leafTags = node.tag_ids.map((id) => tagMap.get(id)).filter(Boolean) as Tag[]
-  const hasContent = leafTags.length > 0 || node.children.length > 0
-  return (
-    <div>
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center gap-1 px-1 py-1 text-xs text-gray-300 hover:text-white"
-        style={{ paddingInlineStart: depth * 10 + 4 }}
-      >
-        <span className="text-gray-500 w-3">{hasContent ? (open ? '▾' : '▸') : '·'}</span>
-        <span className="truncate font-medium">{node.name}</span>
-        <span className="text-gray-600 ml-auto">{node.tag_ids.length || ''}</span>
-      </button>
-      {open && (
-        <div>
-          {node.children.map((c, i) => (
-            <TreeNode key={c.id ?? `${node.name}-${i}`} node={c} tagMap={tagMap} selected={selected} onToggle={onToggle} depth={depth + 1} />
-          ))}
-          {leafTags.map((t) => {
-            const sel = selected.includes(t.id)
-            const idx = selected.indexOf(t.id)
-            const color = sel ? COLORS[idx % COLORS.length] : '#6b7280'
-            return (
-              <button
-                key={t.id}
-                onClick={() => onToggle(t.id)}
-                className={`w-full text-start py-1 rounded-lg text-sm flex items-center gap-2 ${sel ? 'bg-gray-800/60 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
-                style={{ paddingInlineStart: (depth + 1) * 10 + 8 }}
-              >
-                <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
-                <span className="truncate">{t.name}</span>
-              </button>
-            )
-          })}
-        </div>
-      )}
-    </div>
-  )
-}
-
-function GroupTree({
-  mode, tags, selected, onToggle,
-}: {
-  mode: 'auto' | 'manual'; tags: Tag[]; selected: number[]; onToggle: (id: number) => void
-}) {
-  const { t } = useTranslation('trend')
-  const { data: tree = [] } = useQuery({
-    queryKey: ['groupTree', mode],
-    queryFn: () => getGroupTree(mode).then((r) => r.data),
-  })
-  const tagMap = new Map(tags.map((tg) => [tg.id, tg]))
-  if (tree.length === 0) return <p className="text-gray-500 text-xs px-1">{t('no_group')}</p>
-  return (
-    <div className="space-y-0.5">
-      {tree.map((n, i) => (
-        <TreeNode key={n.id ?? `root-${i}`} node={n} tagMap={tagMap} selected={selected} onToggle={onToggle} depth={0} />
-      ))}
-    </div>
-  )
-}
+import {
+  COLORS,
+  HOURS,
+  type ActivePayloadRow,
+  type ChartDataPoint,
+  type Preset,
+  type TrendSeries,
+} from './trend/constants'
+import { loadPresets, storePresets } from './trend/presets'
+import { Toast } from './trend/Toast'
+import { TrendChart } from './trend/TrendChart'
+import { TrendTagSelector } from './trend/TrendTagSelector'
 
 export default function Trend() {
   const { t } = useTranslation(['trend', 'common'])
@@ -131,8 +46,8 @@ export default function Trend() {
   const [panelOpen, setPanelOpen] = useState(true)
   const chartContainerRef = useRef<HTMLDivElement>(null)
   const brushIndicesRef = useRef<[number, number] | null>(null)
-  const chartDataRef = useRef<typeof chartData>([])
-  const [activePayload, setActivePayload] = useState<Array<{ name: string; value: number; color: string; unit: string }>>([])
+  const chartDataRef = useRef<ChartDataPoint[]>([])
+  const [activePayload, setActivePayload] = useState<ActivePayloadRow[]>([])
   const { sorted: payloadRows, sort: pSort, toggle: pToggle } = useSortable(activePayload)
   const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number } | null>(null)
 
@@ -140,7 +55,7 @@ export default function Trend() {
     queryKey: ['tags'],
     queryFn: () => getTags().then((r) => r.data),
   })
-  const { data: series = [], isLoading } = useQuery({
+  const { data: series = [], isLoading } = useQuery<TrendSeries[]>({
     queryKey: ['trend', selected, hours],
     queryFn: () =>
       selected.length ? getTrendAgg(selected, hours).then((r) => r.data) : Promise.resolve([]),
@@ -149,7 +64,7 @@ export default function Trend() {
   })
 
   // F10: previous equal-length window (period comparison). Overlaid by shifting the time axis by +hours.
-  const { data: prevSeries = [] } = useQuery({
+  const { data: prevSeries = [] } = useQuery<TrendSeries[]>({
     queryKey: ['trendPrev', selected, hours],
     queryFn: () => {
       const now = Date.now()
@@ -195,7 +110,7 @@ export default function Trend() {
       { name, tag_ids: selected, hours },
       ...presets.filter((p) => p.name !== name),
     ]
-    localStorage.setItem(PRESET_KEY, JSON.stringify(updated))
+    storePresets(updated)
     setPresets(updated)
     setSavingName(null)
     setToast(t('toast_preset_saved', { name }))
@@ -209,11 +124,11 @@ export default function Trend() {
 
   const deletePreset = (name: string) => {
     const updated = presets.filter((p) => p.name !== name)
-    localStorage.setItem(PRESET_KEY, JSON.stringify(updated))
+    storePresets(updated)
     setPresets(updated)
   }
 
-  const timeline: Record<string, Record<string, number | string>> = {}
+  const timeline: Record<string, ChartDataPoint> = {}
   series.forEach((s) => {
     s.data.forEach(({ t: ts, v }) => {
       const key = format(parseUtc(ts), 'dd.MM HH:mm')
@@ -350,7 +265,7 @@ export default function Trend() {
     setActivePayload([])
   }
 
-  const handleContextMenu = (e: React.MouseEvent) => {
+  const handleContextMenu = (e: MouseEvent) => {
     e.preventDefault()
     setCtxMenu({ x: e.clientX, y: e.clientY })
   }
@@ -470,257 +385,45 @@ export default function Trend() {
       </div>
 
       <div className="flex gap-4" style={{ height: trendChartHeight }}>
-        {/* Tag selector */}
-        <div className={`bg-gray-900 border border-gray-800 rounded-xl flex-shrink-0 space-y-2 overflow-y-auto transition-all duration-200 ${panelOpen ? 'w-52 p-3' : 'w-0 p-0'}`}>
-          <input
-            value={tagSearch}
-            onChange={(e) => setTagSearch(e.target.value)}
-            placeholder={t('search_placeholder')}
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-2 py-1.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-blue-500"
-          />
+        <TrendTagSelector
+          panelOpen={panelOpen}
+          tagSearch={tagSearch}
+          setTagSearch={setTagSearch}
+          selectorMode={selectorMode}
+          setSelectorMode={setSelectorMode}
+          selected={selected}
+          setSelected={setSelected}
+          tags={tags}
+          filteredTags={filteredTags}
+          presets={presets}
+          savingName={savingName}
+          setSavingName={setSavingName}
+          savePreset={savePreset}
+          loadPreset={loadPreset}
+          deletePreset={deletePreset}
+          toggleTag={toggle}
+        />
 
-          {/* F4: view mode — flat list / automatic (PLC→device) / manual hierarchy */}
-          <div className="flex gap-1 bg-gray-800 rounded-lg p-0.5">
-            {([['flat', t('mode_flat')], ['auto', t('mode_auto')], ['manual', t('mode_manual')]] as const).map(([m, l]) => (
-              <button
-                key={m}
-                onClick={() => setSelectorMode(m)}
-                className={`flex-1 px-1 py-1 text-[11px] rounded-md transition-colors ${selectorMode === m ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'}`}
-              >
-                {l}
-              </button>
-            ))}
-          </div>
-
-          {/* Save / clear actions */}
-          {selected.length > 0 && savingName === null && (
-            <div className="flex gap-1.5">
-              <button
-                onClick={() => setSavingName('')}
-                className="flex-1 px-2 py-1 text-xs bg-blue-700/40 hover:bg-blue-700/60 text-blue-300 rounded-lg transition-colors"
-              >
-                {t('common:save')}
-              </button>
-              <button
-                onClick={() => setSelected([])}
-                className="flex-1 px-2 py-1 text-xs bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-red-400 rounded-lg transition-colors"
-              >
-                {t('clear_all')}
-              </button>
-            </div>
-          )}
-
-          {/* Save name input */}
-          {savingName !== null && (
-            <div className="space-y-1">
-              <input
-                autoFocus
-                value={savingName}
-                onChange={(e) => setSavingName(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') savePreset(); if (e.key === 'Escape') setSavingName(null) }}
-                placeholder={t('preset_name_placeholder')}
-                className="w-full bg-gray-800 border border-blue-600 rounded-lg px-2 py-1.5 text-xs text-white placeholder-gray-600 focus:outline-none"
-              />
-              <div className="flex gap-1">
-                <button
-                  onClick={savePreset}
-                  disabled={!savingName.trim()}
-                  className="flex-1 px-2 py-1 text-xs bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white rounded-lg transition-colors"
-                >
-                  {t('common:save')}
-                </button>
-                <button
-                  onClick={() => setSavingName(null)}
-                  className="px-2 py-1 text-xs bg-gray-800 hover:bg-gray-700 text-gray-400 rounded-lg transition-colors"
-                >
-                  {t('common:cancel')}
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Saved presets */}
-          {presets.length > 0 && (
-            <div className="space-y-1">
-              <p className="text-xs text-gray-500 uppercase tracking-wide px-1">{t('saved_presets')}</p>
-              {presets.map((p) => {
-                const hk = HOURS.find((h) => h.v === p.hours)?.key
-                return (
-                <div key={p.name} className="flex items-center gap-1 group">
-                  <button
-                    onClick={() => loadPreset(p)}
-                    className="flex-1 text-start px-2 py-1 rounded-lg text-xs text-gray-300 hover:bg-gray-800 hover:text-white transition-colors truncate"
-                    title={`${p.tag_ids.length} tag · ${hk ? t(hk) : p.hours + 'h'}`}
-                  >
-                    {p.name}
-                  </button>
-                  <button
-                    onClick={() => deletePreset(p.name)}
-                    className="opacity-0 group-hover:opacity-100 text-gray-600 hover:text-red-400 text-xs transition-all px-1"
-                    title={t('common:delete')}
-                  >
-                    ✕
-                  </button>
-                </div>
-                )
-              })}
-              <div className="border-t border-gray-800 pt-1" />
-            </div>
-          )}
-
-          <p className="text-xs text-gray-500 uppercase tracking-wide px-1">{t('select_tags')}</p>
-          {selectorMode === 'flat' ? (
-            <div className="space-y-1">
-              {filteredTags.length === 0 && (
-                <p className="text-gray-500 text-xs px-1">{t('no_match')}</p>
-              )}
-              {filteredTags.map((t) => {
-                const selIdx = selected.indexOf(t.id)
-                const color = selIdx >= 0 ? COLORS[selIdx % COLORS.length] : '#6b7280'
-                return (
-                  <button
-                    key={t.id}
-                    onClick={() => toggle(t.id)}
-                    className={`w-full text-start px-2 py-1.5 rounded-lg text-sm transition-colors flex items-center gap-2 ${
-                      selIdx >= 0
-                        ? 'bg-gray-800/60 text-white'
-                        : 'text-gray-400 hover:bg-gray-800 hover:text-white'
-                    }`}
-                  >
-                    <span
-                      className="w-2 h-2 rounded-full flex-shrink-0 transition-colors"
-                      style={{ backgroundColor: color }}
-                    />
-                    <span className="truncate">{t.name}</span>
-                  </button>
-                )
-              })}
-            </div>
-          ) : (
-            <GroupTree mode={selectorMode} tags={tags} selected={selected} onToggle={toggle} />
-          )}
-        </div>
-
-        {/* Chart */}
-        <div
-          ref={chartContainerRef}
-          className="flex-1 bg-gray-900 border border-gray-800 rounded-xl p-4 flex flex-col"
-          style={{ userSelect: 'none' }}
-          onContextMenu={handleContextMenu}
-        >
-          {selected.length === 0 ? (
-            <div className="flex-1 flex items-center justify-center text-gray-500 text-sm">
-              {t('select_from_panel')}
-            </div>
-          ) : isLoading ? (
-            <div className="flex-1 flex items-center justify-center text-gray-500 text-sm">
-              {t('common:loading')}
-            </div>
-          ) : chartData.length === 0 ? (
-            <div className="flex-1 flex items-center justify-center text-gray-500 text-sm">
-              {t('no_data_range')}
-            </div>
-          ) : (
-            <div className="flex-1 min-h-0">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart
-                data={chartData}
-                margin={{ top: 4, right: 16, left: axisLeftMargin, bottom: 4 }}
-                onMouseMove={handleMouseMove}
-                onMouseLeave={handleMouseLeave}
-                onClick={handleChartClick}
-                style={{ cursor: annotateMode ? 'crosshair' : undefined }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
-                <XAxis dataKey="t" tick={{ fontSize: 11, fill: '#6b7280' }} interval="preserveStartEnd" />
-                {series.map((s, i) => {
-                  const color = COLORS[i % COLORS.length]
-                  return (
-                    <YAxis
-                      key={s.tag_id}
-                      yAxisId={`y_${s.tag_id}`}
-                      orientation="left"
-                      width={50}
-                      tick={{ fontSize: 10, fill: color }}
-                      tickLine={{ stroke: color }}
-                      axisLine={{ stroke: color }}
-                      label={{
-                        value: s.unit,
-                        angle: -90,
-                        position: 'insideLeft',
-                        fill: color,
-                        fontSize: 10,
-                        dx: -8,
-                      }}
-                    />
-                  )
-                })}
-                <Tooltip
-                  cursor={{ stroke: '#f59e0b', strokeWidth: 1, strokeDasharray: '4 2' }}
-                  contentStyle={{ display: 'none' }}
-                />
-                <Legend wrapperStyle={{ fontSize: 12, color: '#9ca3af' }} />
-                <Brush
-                  dataKey="t"
-                  height={24}
-                  startIndex={brushIndices ? brushIndices[0] : 0}
-                  endIndex={brushIndices ? brushIndices[1] : Math.max(0, chartData.length - 1)}
-                  onChange={(range) => {
-                    if (
-                      range &&
-                      typeof range.startIndex === 'number' &&
-                      typeof range.endIndex === 'number'
-                    ) {
-                      setBrushIndices([range.startIndex, range.endIndex])
-                    }
-                  }}
-                  stroke={brushStroke}
-                  fill={brushFill}
-                  travellerWidth={8}
-                />
-                {series.map((s, i) => (
-                  <Line
-                    key={s.tag_id}
-                    type="monotone"
-                    dataKey={s.name}
-                    stroke={COLORS[i % COLORS.length]}
-                    strokeWidth={2}
-                    dot={false}
-                    connectNulls
-                    yAxisId={`y_${s.tag_id}`}
-                  />
-                ))}
-                {/* F10: previous period (dashed) */}
-                {compareMode && series.map((s, i) => (
-                  <Line
-                    key={`prev_${s.tag_id}`}
-                    type="monotone"
-                    dataKey={`${s.name} ${t('previous_suffix')}`}
-                    stroke={COLORS[i % COLORS.length]}
-                    strokeWidth={1.5}
-                    strokeDasharray="5 4"
-                    strokeOpacity={0.6}
-                    dot={false}
-                    connectNulls
-                    yAxisId={`y_${s.tag_id}`}
-                  />
-                ))}
-                {/* F9: annotation vertical lines */}
-                {series.length > 0 && annotationLines.map((a) => (
-                  <ReferenceLine
-                    key={a.id}
-                    x={a.key}
-                    yAxisId={`y_${series[0].tag_id}`}
-                    stroke="#fbbf24"
-                    strokeDasharray="2 2"
-                    label={{ value: '📌', position: 'top', fontSize: 12 }}
-                  />
-                ))}
-              </LineChart>
-            </ResponsiveContainer>
-            </div>
-          )}
-        </div>
+        <TrendChart
+          chartContainerRef={chartContainerRef}
+          selectedCount={selected.length}
+          isLoading={isLoading}
+          chartData={chartData}
+          series={series}
+          compareMode={compareMode}
+          annotateMode={annotateMode}
+          axisLeftMargin={axisLeftMargin}
+          gridStroke={gridStroke}
+          brushStroke={brushStroke}
+          brushFill={brushFill}
+          brushIndices={brushIndices}
+          setBrushIndices={setBrushIndices}
+          annotationLines={annotationLines}
+          handleMouseMove={handleMouseMove}
+          handleMouseLeave={handleMouseLeave}
+          handleChartClick={handleChartClick}
+          handleContextMenu={handleContextMenu}
+        />
       </div>
 
       {activePayload.length > 0 && (

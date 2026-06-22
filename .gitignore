@@ -57,6 +57,7 @@ scada-reporter/backend/reports/
 docker/data/
 
 # Local dev artifacts
+artifacts/
 pg17/
 .playwright-mcp/
 .claude/backups/
@@ -68,6 +69,9 @@ xlsx/
 .claude/worktrees/
 .commit_msg.txt
 cld.bat
+cdx.bat
+acilis_hatasi.txt
+grafana-*.png
 ~$*.docx
 ~$*.xlsx
 docs/~$*
