@@ -44,7 +44,14 @@ export function useLogStream(
         const resp = await getStreamToken()
         streamToken = resp.data.stream_token
       } catch {
-        // 401 veya ağ hatası — bağlanma (axios interceptor zaten 401'i işler)
+        // Stream token alınamadı (backend down/bayat ya da 401). 401 ise axios
+        // interceptor login'e yönlendirir (unmount → cancelled döngüyü durdurur);
+        // aksi halde kısa gecikmeyle yeniden dene ki backend dönünce otomatik bağlansın.
+        if (!cancelled) {
+          setTimeout(() => {
+            if (!cancelled) connect()
+          }, 2000)
+        }
         return
       }
 
