@@ -9,6 +9,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.auth import get_current_user
+from app.api.license_guard import require_feature
 from app.core.config import settings
 from app.core.database import get_db
 from app.models.tag import Tag, TagReading
@@ -181,7 +182,11 @@ async def remove_member(
 
 
 @router.post("/sync-grafana")
-async def sync_grafana(db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)):
+async def sync_grafana(
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+    _=Depends(require_feature("grafana")),
+):
     groups = (
         await db.execute(
             select(WatchlistGroup.id, WatchlistGroup.name).where(WatchlistGroup.user_id == user.id)

@@ -9,6 +9,7 @@ from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.auth import get_current_user, require_perm, require_role
+from app.api.license_guard import assert_tag_quota, require_feature
 from app.collector.s7_collector import read_tag_now
 from app.core.database import get_db
 from app.import_catalog import build_full_catalog
@@ -106,16 +107,20 @@ async def import_tags(
     existing = await db.execute(select(Tag.node_id))
     existing_ids = {r[0] for r in existing.all()}
 
-    imported = 0
+    new_tags = []
     skipped = result.skipped
     for t in result.tags:
         if t["node_id"] in existing_ids:
             skipped += 1
             continue
-        db.add(Tag(**t))
+        new_tags.append(t)
         existing_ids.add(t["node_id"])
-        imported += 1
 
+    await assert_tag_quota(db, adding=len(new_tags))
+
+    for t in new_tags:
+        db.add(Tag(**t))
+    imported = len(new_tags)
     if imported:
         await db.commit()
 
@@ -151,6 +156,7 @@ async def export_tags(
     format: str = Query("csv", pattern="^(csv|xlsx)$"),
     db: AsyncSession = Depends(get_db),
     _=Depends(get_current_user),
+    __=Depends(require_feature("export")),
 ):
     """Tüm tag'leri CSV veya XLSX olarak indir. Aynı kolon düzeni import_csv ile uyumlu."""
     result = await db.execute(select(Tag).order_by(Tag.plc_name, Tag.name))
@@ -209,7 +215,7 @@ async def import_tags_csv(
     existing = await db.execute(select(Tag.node_id))
     existing_ids = {r[0] for r in existing.all()}
 
-    imported, skipped, errors = 0, 0, []
+    new_payloads, skipped, errors = [], 0, []
     for i, raw in enumerate(reader, start=2):
         name = (raw.get("name") or "").strip()
         if not name:
@@ -236,10 +242,14 @@ async def import_tags_csv(
             skipped += 1
             continue
         payload["node_id"] = node_id
-        db.add(Tag(**payload))
+        new_payloads.append(payload)
         existing_ids.add(node_id)
-        imported += 1
 
+    await assert_tag_quota(db, adding=len(new_payloads))
+
+    for payload in new_payloads:
+        db.add(Tag(**payload))
+    imported = len(new_payloads)
     if imported:
         await db.commit()
     return {"imported": imported, "skipped": skipped, "total": imported + skipped, "errors": errors}
@@ -257,6 +267,7 @@ async def create_tag(
     db: AsyncSession = Depends(get_db),
     _=Depends(require_perm("tag:create")),
 ):
+    await assert_tag_quota(db, adding=1)
     payload = data.model_dump()
     # node_id verilmemişse türet (benzersizlik için)
     if not payload.get("node_id"):

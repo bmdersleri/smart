@@ -36,7 +36,7 @@ from app.collector.s7_collector import plc_manager
 from app.core import metrics
 from app.core.config import settings
 from app.core.database import Base, engine
-from app.core.license import verify_required_license
+from app.core.license import set_active_license, verify_required_license
 from app.core.log_buffer import log_buffer
 from app.core.timescaledb import (
     init_continuous_aggregates,
@@ -95,6 +95,7 @@ async def lifespan(app: FastAPI):
         logger.warning("Yapılandırma uyarısı: %s", w)
 
     license_info = verify_required_license(settings)
+    set_active_license(license_info)
     if license_info:
         logger.info(
             "Commercial license verified: customer=%s license_id=%s",

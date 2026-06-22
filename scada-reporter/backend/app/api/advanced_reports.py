@@ -12,6 +12,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.auth import get_current_user, require_perm, require_role
+from app.api.license_guard import require_feature
 from app.core.database import get_db
 from app.models.report_archive import ReportArchive
 from app.models.report_template import ReportTemplate
@@ -20,7 +21,11 @@ from app.models.user import User
 from app.services.report_generator import generate_report_from_template, resolve_time_range
 from app.services.scheduler import get_scheduler, register_job, remove_job
 
-router = APIRouter(prefix="/advanced-reports", tags=["advanced-reports"])
+router = APIRouter(
+    prefix="/advanced-reports",
+    tags=["advanced-reports"],
+    dependencies=[Depends(require_feature("advanced_reports"))],
+)
 
 # ---------------------------------------------------------------------------
 # Pydantic schemas
@@ -74,7 +79,7 @@ class TemplateResponse(BaseModel):
     model_config = {"from_attributes": True}
 
     @classmethod
-    def from_orm(cls, obj: ReportTemplate) -> "TemplateResponse":
+    def from_orm(cls, obj: ReportTemplate) -> TemplateResponse:
         data = {c.name: getattr(obj, c.name) for c in obj.__table__.columns}
         data["tag_ids"] = json.loads(obj.tag_ids)
         data["percentile_levels"] = json.loads(obj.percentile_levels)
@@ -134,7 +139,7 @@ class ArchiveEntryResponse(BaseModel):
     model_config = {"from_attributes": True}
 
     @classmethod
-    def from_orm(cls, obj: ReportArchive) -> "ArchiveEntryResponse":
+    def from_orm(cls, obj: ReportArchive) -> ArchiveEntryResponse:
         data = {c.name: getattr(obj, c.name) for c in obj.__table__.columns}
         data["tag_ids"] = json.loads(obj.tag_ids)
         data.pop("result_json", None)

@@ -16,6 +16,7 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.auth import authenticate_token
+from app.api.license_guard import require_feature
 from app.collector.cache import CachedReading, latest_cache
 from app.core.config import settings
 from app.core.database import get_db
@@ -37,7 +38,7 @@ async def latest_event_stream(
     interval: float = 2.0,
     *,
     max_events: int | None = None,
-) -> AsyncGenerator[str, None]:
+) -> AsyncGenerator[str]:
     """Belirtilen tag'lerin (boşsa tümünün) son değerlerini SSE frame'i olarak akıt."""
     sent = 0
     while max_events is None or sent < max_events:
@@ -56,6 +57,7 @@ async def stream(
     tag_ids: list[int] = Query(default=[]),
     limit: int | None = Query(default=None, ge=1),
     db: AsyncSession = Depends(get_db),
+    _=Depends(require_feature("realtime")),
 ):
     await authenticate_token(token, db, sse_allowed=True)
     interval = settings.OPCUA_SERVER_UPDATE_INTERVAL or 2
@@ -72,7 +74,7 @@ async def log_event_stream(
     interval: float = 1.0,
     *,
     max_events: int | None = None,
-) -> AsyncGenerator[str, None]:
+) -> AsyncGenerator[str]:
     """Halka tampondaki yeni log kayıtlarını SSE frame'i (JSON dizisi) olarak akıt."""
     last = after
     sent = 0
@@ -94,6 +96,7 @@ async def logs_stream(
     level: str = Query(default="INFO"),
     limit: int | None = Query(default=None, ge=1),
     db: AsyncSession = Depends(get_db),
+    _=Depends(require_feature("realtime")),
 ):
     await authenticate_token(token, db, sse_allowed=True)
     min_level = logging.getLevelName(level.upper())
