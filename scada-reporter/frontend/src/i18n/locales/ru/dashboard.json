@@ -33,6 +33,7 @@
   "col_value": "Значение",
   "col_time": "Время",
   "col_quality": "Качество",
+  "col_groups": "Группы",
   "col_pin": "Закрепить",
   "unpin": "Открепить",
   "filter_all_devices": "Все устройства",

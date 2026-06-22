@@ -33,6 +33,7 @@
   "col_value": "Wert",
   "col_time": "Zeit",
   "col_quality": "Qualität",
+  "col_groups": "Gruppen",
   "col_pin": "Anheften",
   "unpin": "Lösen",
   "filter_all_devices": "Alle Geräte",

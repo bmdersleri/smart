@@ -33,6 +33,7 @@
   "col_value": "Value",
   "col_time": "Time",
   "col_quality": "Quality",
+  "col_groups": "Groups",
   "col_pin": "Pin",
   "unpin": "Unpin",
   "filter_all_devices": "All Devices",

@@ -33,6 +33,7 @@
   "col_value": "Değer",
   "col_time": "Saat",
   "col_quality": "Kalite",
+  "col_groups": "Gruplar",
   "col_pin": "Pin",
   "unpin": "Pin'i kaldır",
   "filter_all_devices": "Tüm Cihazlar",

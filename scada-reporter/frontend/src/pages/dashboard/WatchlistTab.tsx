@@ -1,13 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { format } from 'date-fns'
-import { getWatchlist, removeWatchlist } from '../../api/client'
+import { getWatchlist, removeWatchlist, listWatchlistGroups, addTagToGroup, removeTagFromGroup } from '../../api/client'
 import { parseUtc } from '../../utils/time'
 import type { WatchlistItem } from '../../api/client'
 import { useLatestStream } from '../../hooks/useLatestStream'
 import { useSortable } from '../../hooks/useSortable'
 import SortHeader from '../../components/SortHeader'
 import WatchlistGroups from './WatchlistGroups'
+import { tagInGroup } from '../../utils/watchlistGroups'
 
 function QualityDot({ ok }: { ok: boolean }) {
   return <span className={`inline-block w-2 h-2 rounded-full ${ok ? 'bg-green-400' : 'bg-red-400'}`} />
@@ -61,6 +62,17 @@ export default function WatchlistTab({ active }: { active: boolean }) {
   })
   const { sorted: rows, sort, toggle } = useSortable(merged)
 
+  const { data: wg } = useQuery({
+    queryKey: ['watchlist-groups'],
+    queryFn: () => listWatchlistGroups().then((r) => r.data),
+  })
+
+  const toggleGroup = useMutation({
+    mutationFn: ({ gid, tagId, on }: { gid: number; tagId: number; on: boolean }) =>
+      on ? removeTagFromGroup(gid, tagId) : addTagToGroup(gid, tagId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['watchlist-groups'] }),
+  })
+
   const unpin = useMutation({
     mutationFn: (tag_id: number) => removeWatchlist(tag_id),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['watchlist'] }),
@@ -86,6 +98,7 @@ export default function WatchlistTab({ active }: { active: boolean }) {
             <SortHeader label={t('col_value')} sortKey="value" sort={sort} onToggle={toggle} align="right" />
             <SortHeader label={t('col_time')} sortKey="timestamp" sort={sort} onToggle={toggle} align="right" />
             <SortHeader label={t('col_quality')} sortKey="quality_ok" sort={sort} onToggle={toggle} align="center" />
+            <th className="px-4 py-2 text-start">{t('col_groups')}</th>
             <th className="px-4 py-2 text-center">{t('col_pin')}</th>
           </tr>
         </thead>
@@ -101,6 +114,22 @@ export default function WatchlistTab({ active }: { active: boolean }) {
                 <FlipCell value={formatTs(item.timestamp)} className="text-gray-400" />
               </td>
               <td className="px-4 py-3 text-center"><QualityDot ok={item.quality_ok} /></td>
+              <td className="px-4 py-3">
+                <div className="flex gap-1 flex-wrap">
+                  {(wg?.groups ?? []).map((g) => {
+                    const on = tagInGroup(g, item.tag_id)
+                    return (
+                      <button
+                        key={g.id}
+                        onClick={() => toggleGroup.mutate({ gid: g.id, tagId: item.tag_id, on })}
+                        className={`text-[10px] px-1.5 py-0.5 rounded-full border ${on ? 'bg-cyan-900/50 border-cyan-600 text-cyan-300' : 'border-gray-700 text-gray-500'}`}
+                      >
+                        {g.name}
+                      </button>
+                    )
+                  })}
+                </div>
+              </td>
               <td className="px-4 py-3 text-center">
                 <button
                   onClick={() => unpin.mutate(item.tag_id)}
