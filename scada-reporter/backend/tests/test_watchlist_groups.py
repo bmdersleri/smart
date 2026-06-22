@@ -4,7 +4,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import hash_password
+from app.models.tag import Tag
 from app.models.user import User
+from app.models.watchlist import Watchlist
 from app.models.watchlist_group import WatchlistGroup, WatchlistGroupMember
 
 
@@ -39,7 +41,13 @@ async def test_create_and_list_group(client: AsyncClient, db_session: AsyncSessi
     h = await _auth(client, db_session)
     r = await client.post("/api/dashboard/watchlist-groups/", json={"name": "Pompalar"}, headers=h)
     assert r.status_code == 201
-    gid = r.json()["id"]
+    body_post = r.json()
+    assert "id" in body_post
+    assert body_post["name"] == "Pompalar"
+    assert body_post["sort_order"] is not None
+    assert body_post["tag_count"] == 0
+    assert body_post["tags"] == []
+    gid = body_post["id"]
     lst = await client.get("/api/dashboard/watchlist-groups/", headers=h)
     assert lst.status_code == 200
     body = lst.json()
@@ -55,3 +63,28 @@ async def test_create_duplicate_name_conflicts(client: AsyncClient, db_session: 
     await client.post("/api/dashboard/watchlist-groups/", json={"name": "X"}, headers=h)
     r = await client.post("/api/dashboard/watchlist-groups/", json={"name": "X"}, headers=h)
     assert r.status_code == 409
+
+
+@pytest.mark.asyncio
+async def test_create_group_blank_name_422(client: AsyncClient, db_session: AsyncSession):
+    h = await _auth(client, db_session, "gu3")
+    r = await client.post("/api/dashboard/watchlist-groups/", json={"name": "   "}, headers=h)
+    assert r.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_ungrouped_lists_watchlist_tags_not_in_groups(
+    client: AsyncClient, db_session: AsyncSession
+):
+    h = await _auth(client, db_session, "gu4")
+    user = (await db_session.execute(select(User).where(User.username == "gu4"))).scalar_one()
+    tag = Tag(name="TestTag", node_id="ns=2;s=TestTag", data_type="INT", unit="", description="")
+    db_session.add(tag)
+    await db_session.flush()
+    db_session.add(Watchlist(user_id=user.id, tag_id=tag.id))
+    await db_session.commit()
+    lst = await client.get("/api/dashboard/watchlist-groups/", headers=h)
+    assert lst.status_code == 200
+    body = lst.json()
+    ungrouped_ids = [item["tag_id"] for item in body["ungrouped"]]
+    assert tag.id in ungrouped_ids

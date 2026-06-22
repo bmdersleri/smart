@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,6 +16,14 @@ router = APIRouter(prefix="/dashboard/watchlist-groups", tags=["watchlist-groups
 
 class GroupIn(BaseModel):
     name: str
+
+    @field_validator("name")
+    @classmethod
+    def _strip_nonempty(cls, v: str) -> str:
+        v = v.strip()
+        if not v:
+            raise ValueError("name boş olamaz")
+        return v
 
 
 async def _owned_group(db: AsyncSession, group_id: int, user_id: int) -> WatchlistGroup:
@@ -83,7 +91,7 @@ async def list_groups(db: AsyncSession = Depends(get_db), user: User = Depends(g
 async def create_group(
     body: GroupIn, db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)
 ):
-    g = WatchlistGroup(user_id=user.id, name=body.name.strip())
+    g = WatchlistGroup(user_id=user.id, name=body.name)
     db.add(g)
     try:
         await db.commit()
