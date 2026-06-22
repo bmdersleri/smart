@@ -68,18 +68,15 @@ export default function WatchlistTab({ active }: { active: boolean }) {
 
   if (isLoading) return <div className="text-center py-16 text-gray-500">{t('common:loading')}</div>
 
-  if (items.length === 0) {
-    return (
+  return (
+    <>
+    <WatchlistGroups />
+    {items.length === 0 ? (
       <div className="text-center py-16 bg-gray-900 rounded-xl border border-gray-800">
         <p className="text-gray-400">{t('watchlist_empty')}</p>
         <p className="text-gray-500 text-sm mt-1">{t('watchlist_empty_hint')}</p>
       </div>
-    )
-  }
-
-  return (
-    <>
-    <WatchlistGroups />
+    ) : (
     <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
       <table className="w-full">
         <thead>
@@ -118,6 +115,7 @@ export default function WatchlistTab({ active }: { active: boolean }) {
         </tbody>
       </table>
     </div>
+    )}
     </>
   )
 }
