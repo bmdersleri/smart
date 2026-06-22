@@ -4,5 +4,8 @@
   "password": "Şifre",
   "submit": "Giriş Yap",
   "submitting": "Giriş yapılıyor...",
-  "error": "Kullanıcı adı veya şifre hatalı"
+  "error": "Kullanıcı adı veya şifre hatalı",
+  "backend_online": "Sunucu bağlı",
+  "backend_offline": "Sunucuya ulaşılamıyor",
+  "backend_checking": "Sunucu kontrol ediliyor…"
 }

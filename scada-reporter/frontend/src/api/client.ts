@@ -178,6 +178,8 @@ export interface HealthStatus {
 }
 // /health is mounted at the app root (no /api prefix), so override baseURL.
 export const getHealth = () => api.get<HealthStatus>('/health', { baseURL: '' })
+// /live — cheap liveness probe (no auth, no DB); used by the login backend badge.
+export const getLive = () => api.get<{ status: string }>('/live', { baseURL: '' })
 export interface MetricsSummary {
   rows_written_total: number
   bad_quality_total: number

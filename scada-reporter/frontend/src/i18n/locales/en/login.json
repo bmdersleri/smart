@@ -4,5 +4,8 @@
   "password": "Password",
   "submit": "Log In",
   "submitting": "Logging in...",
-  "error": "Invalid username or password"
+  "error": "Invalid username or password",
+  "backend_online": "Backend online",
+  "backend_offline": "Backend unreachable",
+  "backend_checking": "Checking backend…"
 }

@@ -2,7 +2,16 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '../context/AuthContext'
+import { getLive } from '../api/client'
+import { backendStatus } from '../utils/backendStatus'
+
+const STATUS_STYLE: Record<string, { dot: string; text: string }> = {
+  online: { dot: 'bg-green-400', text: 'text-green-400' },
+  offline: { dot: 'bg-red-500', text: 'text-red-400' },
+  checking: { dot: 'bg-gray-500', text: 'text-gray-500' },
+}
 
 export default function Login() {
   const { t } = useTranslation('login')
@@ -12,6 +21,14 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  const probe = useQuery({
+    queryKey: ['backend-live'],
+    queryFn: () => getLive().then((r) => r.data),
+    refetchInterval: 5000,
+    retry: false,
+  })
+  const status = backendStatus({ isLoading: probe.isLoading, isError: probe.isError })
 
   const submit = async (e: FormEvent) => {
     e.preventDefault()
@@ -38,6 +55,10 @@ export default function Login() {
           </div>
           <h1 className="text-2xl font-bold text-white">EKONT SMART REPORT</h1>
           <p className="text-gray-400 text-sm mt-1">{t('subtitle')}</p>
+          <div className="inline-flex items-center gap-1.5 mt-3 text-xs">
+            <span className={`w-2 h-2 rounded-full ${STATUS_STYLE[status].dot} ${status === 'online' ? 'animate-pulse' : ''}`} />
+            <span className={STATUS_STYLE[status].text}>{t(`backend_${status}`)}</span>
+          </div>
         </div>
 
         <form onSubmit={submit} className="bg-gray-900 rounded-2xl p-6 space-y-4 border border-gray-800">
