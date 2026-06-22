@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Commercial licensing** — signed-JWT license system (asymmetric RS256/ES256):
+  vendor signs with a private key, the backend verifies with the env-provisioned
+  public key at startup.
+  - **Runtime modes**: `licensed` (features/quota per claims), `demo` (read-only,
+    premium features off, tag visibility capped at `SCADA_LICENSE_DEMO_MAX_TAGS`),
+    and `full` (no public key configured — dev). `SCADA_LICENSE_REQUIRED=true`
+    keeps strict fail-closed startup.
+  - **Enforcement**: `max_tags` quota on tag create/import; feature gates on
+    `advanced_reports`, `grafana` sync, realtime SSE, and tag `export`.
+  - **In-app management**: `GET/POST/DELETE /api/license` — admins upload/replace/
+    remove a license from **Settings → License** with hot-reload (no restart);
+    dashboard sidebar **license badge** shows the active mode.
+  - **Generator + docs**: `scripts/generate_license.py` (`just license`) for key
+    generation and license issuing; `docs/license-deployment.md` deployment guide.
+
 ---
 
 ## [1.0.0] - 2026-06-21

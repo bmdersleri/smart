@@ -80,6 +80,7 @@ docker/        # TimescaleDB + Redis + Grafana
 - **Generate TS API client:** `just gen-client` *(while backend running)*
 - **PLC connection test:** `just test-plc`
 - **Start/stop Docker:** `just docker-up` / `just docker-down`
+- **License (vendor):** `just license "keygen --type rsa"` / `just license "issue ..."` *(generate keys / issue licenses — `scripts/generate_license.py`)*
 - **Project tree:** `just tree`
 
 ## Database
@@ -137,3 +138,4 @@ docker/        # TimescaleDB + Redis + Grafana
 - **Test DB isolation**: tests share one in-memory SQLite engine (StaticPool); an autouse fixture in `tests/conftest.py` clears every table before each test (FK-safe order), so tests are order-independent. Do **not** rely on data written by another test. Savepoint-rollback isolation does **not** work here — pysqlite never emits a real outer `BEGIN`, so app commits hit the DB and an outer rollback is a no-op.
 - **codegraph** (semantic code intelligence): the repo is indexed (`.codegraph/`, gitignored). Prefer `codegraph explore "<question/symbols>"` and `codegraph node <symbol|file>` over grep/find when locating or understanding code — they return the blast radius (callers + covering tests) plus verbatim source in one call. The `codegraph_explore`/`codegraph_node` MCP tools load after a Claude Code restart; the shell commands always work.
 - **Windows env**: `python3` does not exist — use `python`. Tools/hooks that assume `python3` fall back to a `~/bin/python3.exe` shim.
+- **Licensing**: `app/core/license.py` resolves a runtime mode at startup (`initialize_license_state`) — `licensed` / `demo` (read-only, gated, tag-capped) / `full` (no `SCADA_LICENSE_PUBLIC_KEY` ⇒ dev/tests unaffected). Enforcement lives in `app/api/license_guard.py` (feature gates + `max_tags` quota + demo read-only). Admins hot-reload a license via `POST /api/license` (Settings → License). Vendor signs with `scripts/generate_license.py`; deploy guide `docs/license-deployment.md`. Disabled by default; `SCADA_LICENSE_REQUIRED=true` is strict fail-closed.

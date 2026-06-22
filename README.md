@@ -28,7 +28,7 @@ Collects data directly from Siemens S7-1500 PLCs, stores it in a time-series dat
 | **PLC Config** | Add/remove PLCs, manage IP/rack/slot/connection status |
 | **PLC Health** | Per-PLC health, incident summary, acknowledgement workflow |
 | **Metrics / Grafana** | Prometheus metrics view and embedded Grafana dashboards |
-| **Settings** | User preferences (e.g. trend chart height, 300–2000 px) |
+| **Settings** | User preferences (theme, language, trend chart height); License status + admin license upload |
 | **Users** | Admin-only user management |
 
 ### Backend API (`/api/*`)
@@ -49,12 +49,20 @@ Collects data directly from Siemens S7-1500 PLCs, stores it in a time-series dat
 | AI | `/api/ai` | AI-assisted query, anomaly, prediction, report, and resolve helpers |
 | Query | `/api/query` | Read-only SQL query (SELECT / WITH / EXPLAIN) |
 | Explore | `/api/explore` | Schema and tag catalog discovery |
+| License | `/api/license` | License status (GET); admin upload/replace (POST) and revert-to-demo (DELETE) |
 | Health | `/live`, `/ready`, `/health`, `/metrics` | Liveness, readiness, system health, Prometheus metrics |
 
 ### Security
 - JWT-based authentication (OAuth2 Password Flow — **form-data**, not JSON)
 - Role-based authorization: `operator` and `admin`
 - Default users: `admin / admin123`, `operator / operator123`
+
+### Licensing (optional, commercial)
+- Signed-JWT license (RS256/ES256): the vendor signs with a private key; the backend verifies with the env-provisioned public key.
+- **Runtime modes**: `licensed` (features/quota per claims) · `demo` (read-only, premium features off, tag list capped) · `full` (no public key configured — development default).
+- **Feature gates**: `advanced_reports`, `grafana` sync, realtime SSE, tag `export`; plus a `max_tags` quota.
+- **In-app activation**: admins upload/replace/remove a license from **Settings → License** with hot-reload (no restart); a sidebar badge shows the active mode.
+- Generate keys and issue licenses with `just license`; deployment details in `docs/license-deployment.md`. Disabled by default — dev and tests are unaffected.
 
 ---
 
@@ -199,6 +207,7 @@ just gen-client       # dump-openapi + OpenAPI → TypeScript client
 just test-plc         # PLC connection test
 just docker-up        # Start local infra: TimescaleDB + Redis + Prometheus + Portainer
 just run-collector    # Start collector process separately (prod topology)
+just license "keygen --type rsa"    # License: generate signing keypair / issue licenses
 ```
 
 ### Environment Variables (`.env`)
@@ -254,3 +263,4 @@ Detailed guide: `scada-reporter/AGENTS.md`
 - **Simulation mode**: the backend runs fine when no PLC is present or reachable
 - **WeasyPrint PDF**: requires the GTK3 runtime on Windows
 - **pre-commit hooks**: ruff + mypy + format checks run on every commit
+- **Licensing**: disabled by default. With a public key configured but no valid license, the backend runs in **demo mode** (read-only). Upload a license from Settings → License, or set `SCADA_LICENSE_*` env vars (see `.env.production.example` and `docs/license-deployment.md`)
