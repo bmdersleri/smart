@@ -2,11 +2,12 @@
 # YEREL / GELİŞTİRME ALTYAPISI — ÜRETİM DAĞITIM ŞABLONU DEĞİLDİR
 # =============================================================================
 # Bu compose dosyası YALNIZCA yerel geliştirme ortamı için tasarlanmıştır.
-# Başlatılan servisler: TimescaleDB (PostgreSQL), Redis, Grafana, Portainer.
+# Varsayılan servisler: TimescaleDB (PostgreSQL), Redis, Prometheus, Portainer.
+# Grafana Windows servis olarak desteklenir; Docker Grafana opsiyonel profildedir.
 # Uygulama (API / collector / frontend) servisleri ve Dockerfile'lar Faz 4'e
 # ertelenmiştir — bu dosyaya EKLEMEYIN.
 #
-# Üretim ortamında DB ve Grafana parolalarını .env dosyasıyla mutlaka
+# Üretim ortamında DB ve opsiyonel Docker Grafana parolalarını .env dosyasıyla mutlaka
 # override edin. Bkz. docker/.env.example ve DOCKER.md.
 # =============================================================================
 
@@ -52,12 +53,17 @@ services:
 
   grafana:
     image: grafana/grafana:latest
+    profiles: ["docker-grafana"]
     restart: unless-stopped
     ports:
       - "3000:3000"
     environment:
       GF_SECURITY_ADMIN_USER: ${GF_SECURITY_ADMIN_USER:-admin}
       GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD:-admin}
+      GF_SECURITY_ALLOW_EMBEDDING: ${GF_SECURITY_ALLOW_EMBEDDING:-true}
+      # Anonim erişim varsayılan KAPALI — bilinçli açmak için env ile true yapın.
+      GF_AUTH_ANONYMOUS_ENABLED: ${GF_AUTH_ANONYMOUS_ENABLED:-false}
+      GF_AUTH_ANONYMOUS_ORG_ROLE: ${GF_AUTH_ANONYMOUS_ORG_ROLE:-Viewer}
       GF_INSTALL_PLUGINS: grafana-piechart-panel
       # TimescaleDB datasource şifre interpolasyonu için (grafana/datasources/timescaledb.yml)
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-scada123}
