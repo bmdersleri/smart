@@ -197,22 +197,50 @@ async def test_sse_scoped_token_rejected_on_normal_api_endpoint(
 
 
 @pytest.mark.asyncio
-async def test_expired_stream_token_rejected_on_sse_endpoint():
-    """Süresi dolmuş stream-token SSE endpoint'inde 401 döndürmelidir.
-
-    Not: decode_token süresi dolmuş tokenı None döndürür (jose JWTError),
-    bu nedenle gerçek bir expired token oluşturup test etmek yerine
-    authenticate_token'ın None payload için 401 döndürdüğünü doğrularız.
-    """
-    # Çok kısa TTL ile token oluştur (bu zaman birimi geçmiş gibi)
+async def test_expired_stream_token_rejected_on_sse_endpoint(full_client):
+    """Süresi dolmuş stream-token SSE endpoint'inde (HTTP yolu) 401 döndürmelidir."""
     from datetime import timedelta
 
-    from app.core.security import decode_token
-
+    # Negatif TTL → zaten süresi dolmuş bir sse-scoped token
     expired_token = create_access_token(
         {"sub": "nobody", "scope": "sse"},
-        expires_delta=timedelta(seconds=-1),  # negatif → zaten süresi dolmuş
+        expires_delta=timedelta(seconds=-1),
     )
-    # decode_token süresi dolmuş tokeni None döndürür
-    payload = decode_token(expired_token)
-    assert payload is None, "Süresi dolmuş token None döndürmeli"
+    r = await full_client.get(
+        "/api/dashboard/stream",
+        params={"token": expired_token, "tag_ids": [61001], "limit": 1},
+    )
+    assert r.status_code == 401, f"Süresi dolmuş token reddedilmeli, got {r.status_code}: {r.text}"
+
+
+@pytest.mark.asyncio
+async def test_unknown_scope_token_rejected_on_api_and_sse(db_session, full_client, user_and_token):
+    """Bilinmeyen scope'lu (scope='bogus') token hem normal API hem SSE endpoint'inde → 401.
+
+    authenticate_token yalnız scope=None (normal) veya scope='sse' kabul eder; başka
+    her scope reddedilir. Geçerli kullanıcı + doğru ver kullanılır ki 401'in TEK nedeni
+    scope olsun (kullanıcı-bulunamadı/ver-uyumsuz değil).
+    """
+    user, _ = user_and_token
+    bogus_token = create_access_token(
+        {"sub": user.username, "role": user.role, "ver": user.token_version, "scope": "bogus"},
+    )
+
+    # Normal API endpoint (sse_allowed=False) → 401
+    r_api = await full_client.get(
+        "/api/auth/me",
+        headers={"Authorization": f"Bearer {bogus_token}"},
+    )
+    assert r_api.status_code == 401, (
+        f"Bilinmeyen scope API'de reddedilmeli, got {r_api.status_code}"
+    )
+
+    # SSE endpoint (sse_allowed=True ama yalnız 'sse' kabul eder) → 401
+    latest_cache.update(61003, 1.0, 192, datetime.now(UTC))
+    r_sse = await full_client.get(
+        "/api/dashboard/stream",
+        params={"token": bogus_token, "tag_ids": [61003], "limit": 1},
+    )
+    assert r_sse.status_code == 401, (
+        f"Bilinmeyen scope SSE'de reddedilmeli, got {r_sse.status_code}"
+    )
