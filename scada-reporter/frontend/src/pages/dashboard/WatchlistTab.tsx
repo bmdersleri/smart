@@ -7,6 +7,7 @@ import type { WatchlistItem } from '../../api/client'
 import { useLatestStream } from '../../hooks/useLatestStream'
 import { useSortable } from '../../hooks/useSortable'
 import SortHeader from '../../components/SortHeader'
+import WatchlistGroups from './WatchlistGroups'
 
 function QualityDot({ ok }: { ok: boolean }) {
   return <span className={`inline-block w-2 h-2 rounded-full ${ok ? 'bg-green-400' : 'bg-red-400'}`} />
@@ -77,6 +78,8 @@ export default function WatchlistTab({ active }: { active: boolean }) {
   }
 
   return (
+    <>
+    <WatchlistGroups />
     <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
       <table className="w-full">
         <thead>
@@ -115,5 +118,6 @@ export default function WatchlistTab({ active }: { active: boolean }) {
         </tbody>
       </table>
     </div>
+    </>
   )
 }
