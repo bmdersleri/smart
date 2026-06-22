@@ -155,3 +155,26 @@ async def test_add_member_not_on_watchlist_400(client: AsyncClient, db_session: 
     ).json()["id"]
     r = await client.post(f"/api/dashboard/watchlist-groups/{gid}/tags/{tag.id}", headers=h)
     assert r.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_remove_watchlist_clears_group_membership(
+    client: AsyncClient, db_session: AsyncSession
+):
+    h = await _auth(client, db_session, "gw")
+    db_session.add(Tag(node_id="N3,REAL0", name="T3"))
+    await db_session.commit()
+    tag = (await db_session.execute(select(Tag).where(Tag.name == "T3"))).scalar_one()
+    uid = (await db_session.execute(select(User).where(User.username == "gw"))).scalar_one().id
+    db_session.add(Watchlist(user_id=uid, tag_id=tag.id))
+    await db_session.commit()
+    gid = (
+        await client.post("/api/dashboard/watchlist-groups/", json={"name": "G"}, headers=h)
+    ).json()["id"]
+    await client.post(f"/api/dashboard/watchlist-groups/{gid}/tags/{tag.id}", headers=h)
+
+    # remove from watchlist
+    await client.delete(f"/api/dashboard/watchlist/{tag.id}", headers=h)
+
+    body = (await client.get("/api/dashboard/watchlist-groups/", headers=h)).json()
+    assert all(t["tag_id"] != tag.id for g in body["groups"] for t in g["tags"])

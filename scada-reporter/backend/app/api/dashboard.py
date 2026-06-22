@@ -13,6 +13,7 @@ from app.core.timeutils import as_utc, utc_iso
 from app.models.tag import Tag, TagReading
 from app.models.user import User
 from app.models.watchlist import Watchlist
+from app.models.watchlist_group import WatchlistGroup, WatchlistGroupMember
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
@@ -269,7 +270,25 @@ async def remove_watchlist(
     row = result.scalar_one_or_none()
     if row:
         await db.delete(row)
-        await db.commit()
+    # also drop this tag from the user's watchlist groups
+    member_ids = (
+        (
+            await db.execute(
+                select(WatchlistGroupMember.id)
+                .join(WatchlistGroup, WatchlistGroup.id == WatchlistGroupMember.group_id)
+                .where(
+                    WatchlistGroup.user_id == current_user.id, WatchlistGroupMember.tag_id == tag_id
+                )
+            )
+        )
+        .scalars()
+        .all()
+    )
+    for mid in member_ids:
+        m = await db.get(WatchlistGroupMember, mid)
+        if m:
+            await db.delete(m)
+    await db.commit()
 
 
 # ---------------------------------------------------------------------------
