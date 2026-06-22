@@ -25,6 +25,7 @@ from app.api import (
     reports,
     tags,
     users,
+    watchlist_groups,
 )
 from app.api import (
     health as health_router,  # liveness/readiness — mounted without /api prefix
@@ -198,6 +199,7 @@ app.include_router(annotations.router, prefix="/api")
 app.include_router(users.router, prefix="/api")
 app.include_router(audit.router, prefix="/api")
 app.include_router(ai.router, prefix="/api")
+app.include_router(watchlist_groups.router, prefix="/api")
 
 
 @app.get("/metrics")
