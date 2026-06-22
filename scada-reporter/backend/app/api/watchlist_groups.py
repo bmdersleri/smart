@@ -1,3 +1,4 @@
+import httpx
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, field_validator
 from sqlalchemy import delete as sa_delete
@@ -6,11 +7,13 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.auth import get_current_user
+from app.core.config import settings
 from app.core.database import get_db
 from app.models.tag import Tag
 from app.models.user import User
 from app.models.watchlist import Watchlist
 from app.models.watchlist_group import WatchlistGroup, WatchlistGroupMember
+from app.services.grafana_sync import sync_groups
 
 router = APIRouter(prefix="/dashboard/watchlist-groups", tags=["watchlist-groups"])
 
@@ -173,3 +176,24 @@ async def remove_member(
     if row:
         await db.delete(row)
         await db.commit()
+
+
+@router.post("/sync-grafana")
+async def sync_grafana(db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)):
+    groups = (
+        await db.execute(
+            select(WatchlistGroup.id, WatchlistGroup.name).where(WatchlistGroup.user_id == user.id)
+        )
+    ).all()
+    pairs = [(gid, name) for gid, name in groups]
+    auth = (settings.GRAFANA_USER, settings.GRAFANA_PASSWORD)
+    try:
+        async with httpx.AsyncClient(
+            base_url=settings.GRAFANA_URL, auth=auth, timeout=10.0
+        ) as http:
+            result = await sync_groups(pairs, http=http)
+    except httpx.HTTPError as e:
+        raise HTTPException(status_code=502, detail=f"Grafana erişilemedi: {e}") from None
+    if result["written"] == 0 and result["errors"]:
+        raise HTTPException(status_code=502, detail={"message": "Grafana senkron hatası", **result})
+    return result

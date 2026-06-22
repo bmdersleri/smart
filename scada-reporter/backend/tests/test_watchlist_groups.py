@@ -178,3 +178,28 @@ async def test_remove_watchlist_clears_group_membership(
 
     body = (await client.get("/api/dashboard/watchlist-groups/", headers=h)).json()
     assert all(t["tag_id"] != tag.id for g in body["groups"] for t in g["tags"])
+
+
+@pytest.mark.asyncio
+async def test_sync_grafana_endpoint(client: AsyncClient, db_session: AsyncSession, monkeypatch):
+    import httpx
+
+    from app.api import watchlist_groups as wg
+
+    h = await _auth(client, db_session, "gs")
+    await client.post("/api/dashboard/watchlist-groups/", json={"name": "G1"}, headers=h)
+
+    def handler(request):
+        if request.url.path == "/api/search":
+            return httpx.Response(200, json=[])
+        return httpx.Response(200, json={"status": "success"})
+
+    _real_async_client = httpx.AsyncClient  # capture before patch to avoid recursion
+
+    def fake_client(*args, **kwargs):
+        return _real_async_client(transport=httpx.MockTransport(handler), base_url="http://gf")
+
+    monkeypatch.setattr(wg.httpx, "AsyncClient", fake_client)
+    r = await client.post("/api/dashboard/watchlist-groups/sync-grafana", headers=h)
+    assert r.status_code == 200
+    assert r.json()["written"] == 1
