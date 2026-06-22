@@ -100,4 +100,33 @@ describe('useLogStream', () => {
     await flushAsync()
     expect(FakeEventSource.last).toBeNull()
   })
+
+  it('retries connecting after a stream-token fetch failure', async () => {
+    vi.useFakeTimers()
+    try {
+      const { getStreamToken } = await import('../api/client')
+      const mocked = vi.mocked(getStreamToken)
+      // First attempt fails (backend down/stale); the default mock resolves after.
+      mocked.mockRejectedValueOnce(new Error('backend down'))
+
+      const { result } = renderHook(() => useLogStream('INFO'))
+
+      // First connect() rejects → no EventSource opened yet.
+      await act(async () => {
+        await Promise.resolve()
+      })
+      expect(FakeEventSource.last).toBeNull()
+
+      // After the 2s backoff the hook retries; getStreamToken now resolves → connects.
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(2000)
+      })
+      expect(FakeEventSource.last).not.toBeNull()
+
+      act(() => FakeEventSource.last!.push([line(1, 'recovered')]))
+      expect(result.current.lines.map((l) => l.msg)).toEqual(['recovered'])
+    } finally {
+      vi.useRealTimers()
+    }
+  })
 })
