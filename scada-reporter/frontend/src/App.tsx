@@ -14,6 +14,7 @@ import ExcelTemplates from './pages/ExcelTemplates'
 import PlcConfig from './pages/PlcConfig'
 import PlcHealth from './pages/PlcHealth'
 import Metrics from './pages/Metrics'
+import Grafana from './pages/Grafana'
 import Settings from './pages/Settings'
 import Users from './pages/Users'
 import './index.css'
@@ -52,6 +53,7 @@ export default function App() {
               <Route path="plc" element={<PlcConfig />} />
               <Route path="plc-health" element={<PlcHealth />} />
               <Route path="metrics" element={<Metrics />} />
+              <Route path="grafana" element={<Grafana />} />
               <Route path="settings" element={<Settings />} />
               <Route path="users" element={<AdminRoute><Users /></AdminRoute>} />
             </Route>
