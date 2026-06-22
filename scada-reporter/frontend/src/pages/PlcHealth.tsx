@@ -6,6 +6,11 @@ import {
   getPlcHealth, getPlcIncidents, getIncidentSummary, ackIncident,
   type PlcIncidentRow,
 } from '../api/client'
+import { parseUtc } from '../utils/time'
+
+// Backend datetimes are UTC; render in the viewer's local zone (fixes the
+// "3 hours behind" display when the string has no offset).
+const localTime = (s: string) => parseUtc(s).toLocaleString()
 
 function sevClass(sev: string) {
   return sev === 'critical' ? 'bg-red-900/30 text-red-300' : 'bg-yellow-900/30 text-yellow-300'
@@ -71,7 +76,7 @@ export default function PlcHealth() {
                   <span className="font-medium">{i.plc_name || i.plc_ip}</span>
                   <span className="mx-2 opacity-60">·</span>
                   <span>{i.message}</span>
-                  <span className="ms-2 text-xs opacity-60">{new Date(i.opened_at).toLocaleString()}</span>
+                  <span className="ms-2 text-xs opacity-60">{localTime(i.opened_at)}</span>
                 </div>
                 {can('plc:manage') && !i.acknowledged_by && (
                   <button onClick={() => ack.mutate(i.id)} className="text-xs px-2 py-1 rounded bg-gray-800 hover:bg-gray-700 text-gray-200">
@@ -101,13 +106,16 @@ export default function PlcHealth() {
             <tbody>
               {health.map((h) => (
                 <tr key={`${h.plc_ip}-${h.rack}-${h.slot}`} className="border-t border-gray-800">
-                  <td className="px-4 py-2 text-gray-200">{h.plc_name || h.plc_ip}</td>
+                  <td className="px-4 py-2 text-gray-200">
+                    <div className="font-medium">{h.plc_name || h.plc_ip}</div>
+                    {h.plc_name && <div className="text-xs text-gray-500 font-mono">{h.plc_ip}</div>}
+                  </td>
                   <td className="px-4 py-2">
                     <span className={h.connected ? 'text-green-400' : 'text-red-400'}>
                       {h.connected ? t('connected') : t('disconnected')}
                     </span>
                   </td>
-                  <td className="px-4 py-2 text-gray-400">{h.last_success_at ? new Date(h.last_success_at).toLocaleString() : '—'}</td>
+                  <td className="px-4 py-2 text-gray-400">{h.last_success_at ? localTime(h.last_success_at) : '—'}</td>
                   <td className="px-4 py-2 text-gray-400">{h.consecutive_fail}</td>
                   <td className="px-4 py-2 text-gray-400">{h.reconnects_last_min}</td>
                   <td className="px-4 py-2 text-red-400/80 max-w-xs truncate" title={h.last_error ?? ''}>{h.last_error || '—'}</td>
@@ -123,8 +131,8 @@ export default function PlcHealth() {
         <div className="text-xs text-gray-500 space-y-1">
           {history.map((i: PlcIncidentRow) => (
             <div key={i.id}>
-              {new Date(i.opened_at).toLocaleString()} — {i.plc_name || i.plc_ip}: {i.message}
-              {i.resolved_at && ` (${t('resolved')}: ${new Date(i.resolved_at).toLocaleString()})`}
+              {localTime(i.opened_at)} — {i.plc_name || i.plc_ip}: {i.message}
+              {i.resolved_at && ` (${t('resolved')}: ${localTime(i.resolved_at)})`}
             </div>
           ))}
         </div>

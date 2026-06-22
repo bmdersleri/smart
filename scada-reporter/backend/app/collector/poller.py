@@ -57,6 +57,7 @@ async def read_plc_group(
     key: tuple[str, int, int],
     items: list[tuple[int, ReadSpec]],
     timeout: float,
+    name: str = "",
 ) -> list[tuple[int, float | None, int]]:
     """Bir PLC grubunu zaman aşımı sınırıyla oku. Hata/zaman aşımı -> hepsi BAD."""
     ip, rack, slot = key
@@ -80,7 +81,7 @@ async def read_plc_group(
     ]
     good = sum(1 for _, _, q in rows if q == GOOD)
     bad = len(rows) - good
-    health_tracker.record_read(key, "", good, bad, time.monotonic(), error=read_error)
+    health_tracker.record_read(key, name, good, bad, time.monotonic(), error=read_error)
     return rows
 
 
@@ -161,6 +162,7 @@ async def run_once(
     min_interval = settings.S7_POLL_INTERVAL
     deadband_by_tag: dict[int, float | None] = {}
     groups: dict[tuple[str, int, int], list[tuple[int, ReadSpec]]] = defaultdict(list)
+    group_name: dict[tuple[str, int, int], str] = {}
     for t in tags:
         if not t.s7_address or not t.plc_ip:
             continue
@@ -174,12 +176,15 @@ async def run_once(
             logger.warning("Tag %s adres hatasi: %s", t.id, e)
             continue
         deadband_by_tag[t.id] = t.deadband
-        groups[(t.plc_ip, t.plc_rack, t.plc_slot)].append((t.id, spec))
+        key = (t.plc_ip, t.plc_rack, t.plc_slot)
+        groups[key].append((t.id, spec))
+        if t.plc_name:
+            group_name[key] = t.plc_name
 
     rows: list[tuple[int, float | None, int]] = []
     if groups:
         batches = await asyncio.gather(
-            *(read_plc_group(k, v, timeout) for k, v in groups.items()),
+            *(read_plc_group(k, v, timeout, name=group_name.get(k, "")) for k, v in groups.items()),
             return_exceptions=True,
         )
         for b in batches:

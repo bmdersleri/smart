@@ -27,6 +27,24 @@ async def test_read_plc_group_records_good_bad(monkeypatch):
 
 
 @pytest.mark.asyncio
+async def test_read_plc_group_records_plc_name(monkeypatch):
+    tracker = PlcHealthTracker()
+    monkeypatch.setattr(poller, "health_tracker", tracker)
+
+    async def fake_batch(ip, rack, slot, specs):
+        return [(1.0, GOOD)]
+
+    monkeypatch.setattr(poller.plc_manager, "read_plc_batch", fake_batch)
+
+    key = ("10.0.0.9", 0, 1)
+    items = [(1, object())]
+    await poller.read_plc_group(key, items, timeout=5.0, name="PUMP-STATION-1")
+
+    obs = tracker.snapshot(now=1.0, flap_window=120.0)
+    assert obs[0].name == "PUMP-STATION-1"
+
+
+@pytest.mark.asyncio
 async def test_read_plc_group_records_error_on_failure(monkeypatch):
     tracker = PlcHealthTracker()
     monkeypatch.setattr(poller, "health_tracker", tracker)
