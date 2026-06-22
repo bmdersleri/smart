@@ -49,6 +49,48 @@ def _read_license_token(path: str) -> str:
     return raw
 
 
+def build_license_token(
+    *,
+    private_key: str,
+    algorithm: str,
+    customer: str,
+    product: str = "ekont-smart-report",
+    license_id: str = "",
+    features: Any = (),
+    max_tags: int | None = None,
+    expires_at: int | None = None,
+) -> str:
+    """Sign a commercial license JWT (vendor side; inverse of verify_license_token).
+
+    ``private_key`` is the PEM private key matching the public key shipped to the
+    customer. ``expires_at`` is a Unix timestamp (seconds); omit for a perpetual
+    license. The resulting token is verified by :func:`verify_license_token`.
+    """
+    if algorithm.lower() == "none":
+        raise LicenseError("Unsigned license tokens are not allowed.")
+    if not private_key.strip():
+        raise LicenseError("License private key is missing.")
+    if not customer.strip():
+        raise LicenseError("License customer is required.")
+
+    feature_list = [str(f) for f in features]
+    if max_tags is not None and (not isinstance(max_tags, int) or max_tags < 0):
+        raise LicenseError("max_tags must be a non-negative integer.")
+
+    payload: dict[str, Any] = {
+        "product": product,
+        "customer": customer,
+        "license_id": license_id,
+        "features": feature_list,
+    }
+    if max_tags is not None:
+        payload["max_tags"] = max_tags
+    if expires_at is not None:
+        payload["exp"] = expires_at
+
+    return jwt.encode(payload, _normalize_key(private_key), algorithm=algorithm)
+
+
 def _payload_to_info(payload: dict[str, Any], expected_product: str) -> LicenseInfo:
     product = str(payload.get("product") or "")
     if product != expected_product:
