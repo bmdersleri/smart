@@ -31,6 +31,8 @@ class ReportTemplate(Base):
     show_trend_charts: Mapped[bool] = mapped_column(Boolean, default=True)
     show_anomaly_table: Mapped[bool] = mapped_column(Boolean, default=True)
     show_raw_data: Mapped[bool] = mapped_column(Boolean, default=False)
+    grafana_panels: Mapped[str] = mapped_column(Text, default="[]")
+    # JSON: [{"dashboard_uid": "scada-watchlist", "panel_id": 1, "title": "Debi"}]
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(UTC))
     updated_at: Mapped[datetime] = mapped_column(
         DateTime,
