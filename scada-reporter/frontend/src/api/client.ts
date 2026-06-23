@@ -4,7 +4,10 @@ import axios from 'axios'
 // Hand-written interfaces that map cleanly onto generated types are replaced
 // with re-exports below. Types that diverge in shape (nullability, extra fields,
 // or semantic differences) are kept as-is to avoid cascading tsc errors.
-export type {
+// Import for local use within this module AND re-export for consumers.
+// (`export type {...} from` alone only re-exports — it does not bring the
+// names into this module's scope, so internal uses fail with "Cannot find name".)
+import type {
   AnnotationResponse as Annotation,
   GroupResponse as Group,
   ArchiveEntryResponse as ArchiveEntry,
@@ -12,6 +15,15 @@ export type {
   TemplateResponse as ReportTemplate,
   ScheduledResponse as ScheduledReport,
 } from './generated/types.gen'
+
+export type {
+  Annotation,
+  Group,
+  ArchiveEntry,
+  PaginatedArchive,
+  ReportTemplate,
+  ScheduledReport,
+}
 
 // Role union — mirrors backend Literal["admin", "operator", "viewer"]
 export type UserRole = 'admin' | 'operator' | 'viewer'

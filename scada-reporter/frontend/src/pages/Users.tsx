@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   listUsers, createUser, patchUser, resetUserPassword, deleteUser,
-  type ManagedUser, type UserCreatePayload,
+  type ManagedUser, type UserCreatePayload, type UserRole,
 } from '../api/client'
 
 const PERM_KEYS = [
@@ -59,7 +59,7 @@ export default function Users() {
         <input className="bg-gray-800 px-2 py-1 rounded" placeholder={t('email')} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
         <input className="bg-gray-800 px-2 py-1 rounded" placeholder={t('full_name')} value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} />
         <input className="bg-gray-800 px-2 py-1 rounded" type="password" placeholder={t('password')} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
-        <select className="bg-gray-800 px-2 py-1 rounded" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
+        <select className="bg-gray-800 px-2 py-1 rounded" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value as UserRole })}>
           {ROLES.map((r) => <option key={r} value={r}>{t(`role_${r}`)}</option>)}
         </select>
         <div className="text-sm text-gray-400">{t('overrides')}</div>
@@ -100,7 +100,7 @@ export default function Users() {
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center" onClick={() => setEditing(null)}>
           <div className="bg-gray-900 border border-gray-800 rounded-lg p-4 grid gap-2 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
             <h2 className="font-medium">{editing.username}</h2>
-            <select className="bg-gray-800 px-2 py-1 rounded" value={editing.role} onChange={(e) => setEditing({ ...editing, role: e.target.value })}>
+            <select className="bg-gray-800 px-2 py-1 rounded" value={editing.role} onChange={(e) => setEditing({ ...editing, role: e.target.value as UserRole })}>
               {ROLES.map((r) => <option key={r} value={r}>{t(`role_${r}`)}</option>)}
             </select>
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={editing.is_active} onChange={(e) => setEditing({ ...editing, is_active: e.target.checked })} />{t('active')}</label>
