@@ -329,6 +329,24 @@ export type DashboardGenerateIn = {
 };
 
 /**
+ * GrafanaPanelRef
+ */
+export type GrafanaPanelRef = {
+    /**
+     * Dashboard Uid
+     */
+    dashboard_uid: string;
+    /**
+     * Panel Id
+     */
+    panel_id: number;
+    /**
+     * Title
+     */
+    title: string;
+};
+
+/**
  * GroupCreate
  */
 export type GroupCreate = {
@@ -911,6 +929,10 @@ export type TemplateCreate = {
      */
     description?: string;
     /**
+     * Grafana Panels
+     */
+    grafana_panels?: Array<GrafanaPanelRef>;
+    /**
      * Include Percentiles
      */
     include_percentiles?: boolean;
@@ -1076,6 +1098,10 @@ export type TemplateResponse = {
      * Description
      */
     description: string;
+    /**
+     * Grafana Panels
+     */
+    grafana_panels: Array<GrafanaPanelRef>;
     /**
      * Id
      */
@@ -2913,6 +2939,26 @@ export type GetSummaryApiExploreSummaryGetResponses = {
     200: unknown;
 };
 
+export type ListDashboardsApiGrafanaDashboardsGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/grafana/dashboards';
+};
+
+export type ListDashboardsApiGrafanaDashboardsGetResponses = {
+    /**
+     * Response List Dashboards Api Grafana Dashboards Get
+     *
+     * Successful Response
+     */
+    200: Array<{
+        [key: string]: unknown;
+    }>;
+};
+
+export type ListDashboardsApiGrafanaDashboardsGetResponse = ListDashboardsApiGrafanaDashboardsGetResponses[keyof ListDashboardsApiGrafanaDashboardsGetResponses];
+
 export type GenerateDashboardApiGrafanaDashboardsGeneratePostData = {
     body: DashboardGenerateIn;
     path?: never;
@@ -2935,6 +2981,40 @@ export type GenerateDashboardApiGrafanaDashboardsGeneratePostResponses = {
      */
     200: unknown;
 };
+
+export type ListPanelsApiGrafanaDashboardsUidPanelsGetData = {
+    body?: never;
+    path: {
+        /**
+         * Uid
+         */
+        uid: string;
+    };
+    query?: never;
+    url: '/api/grafana/dashboards/{uid}/panels';
+};
+
+export type ListPanelsApiGrafanaDashboardsUidPanelsGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ListPanelsApiGrafanaDashboardsUidPanelsGetError = ListPanelsApiGrafanaDashboardsUidPanelsGetErrors[keyof ListPanelsApiGrafanaDashboardsUidPanelsGetErrors];
+
+export type ListPanelsApiGrafanaDashboardsUidPanelsGetResponses = {
+    /**
+     * Response List Panels Api Grafana Dashboards  Uid  Panels Get
+     *
+     * Successful Response
+     */
+    200: Array<{
+        [key: string]: unknown;
+    }>;
+};
+
+export type ListPanelsApiGrafanaDashboardsUidPanelsGetResponse = ListPanelsApiGrafanaDashboardsUidPanelsGetResponses[keyof ListPanelsApiGrafanaDashboardsUidPanelsGetResponses];
 
 export type GrafanaTemplatesApiGrafanaTemplatesGetData = {
     body?: never;

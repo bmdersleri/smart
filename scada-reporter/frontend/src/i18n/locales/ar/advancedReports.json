@@ -102,5 +102,10 @@
   "col_trigger": "المشغّل",
   "col_period": "الفترة",
   "col_size": "الحجم",
-  "col_download": "تنزيل"
+  "col_download": "تنزيل",
+  "grafana_panels": "لوحات Grafana",
+  "grafana_add_panel": "إضافة لوحة",
+  "grafana_select_dashboard": "اختر لوحة التحكم",
+  "grafana_select_panel": "اختر اللوحة",
+  "grafana_remove": "إزالة"
 }

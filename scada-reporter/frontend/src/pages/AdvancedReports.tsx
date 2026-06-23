@@ -9,9 +9,9 @@ import {
   listTemplates, createTemplate, updateTemplate, deleteTemplate, runTemplate,
   listScheduled, createScheduled, toggleScheduled, deleteScheduled,
   getArchive, downloadArchiveReport,
-  getTags,
+  getTags, listGrafanaDashboards, listGrafanaPanels,
 } from '../api/client'
-import type { ReportTemplate, TemplateCreate, ScheduledReport, ArchiveEntry } from '../api/client'
+import type { ReportTemplate, TemplateCreate, ScheduledReport, ArchiveEntry, GrafanaPanelRef } from '../api/client'
 import { useSortable } from '../hooks/useSortable'
 import SortHeader from '../components/SortHeader'
 
@@ -85,14 +85,48 @@ function TemplateEditorModal({
       ? { ...initial }
       : { ...DEFAULT_FORM }
   )
+  const [grafanaPanels, setGrafanaPanels] = useState<GrafanaPanelRef[]>(
+    initial?.grafana_panels ?? []
+  )
+  const [selectedDashUid, setSelectedDashUid] = useState('')
+  const [selectedPanelId, setSelectedPanelId] = useState<number | ''>('')
 
   const { data: tags = [] } = useQuery({ queryKey: ['tags'], queryFn: () => getTags().then(r => r.data) })
   const devices = [...new Set(tags.map(t => t.device).filter(Boolean))]
 
+  const { data: dashboards = [] } = useQuery({
+    queryKey: ['grafana-dashboards'],
+    queryFn: () => listGrafanaDashboards().then(r => r.data),
+    retry: false,
+  })
+  const { data: panels = [] } = useQuery({
+    queryKey: ['grafana-panels', selectedDashUid],
+    queryFn: () => listGrafanaPanels(selectedDashUid).then(r => r.data),
+    enabled: !!selectedDashUid,
+    retry: false,
+  })
+
+  const addGrafanaPanel = () => {
+    if (!selectedDashUid || selectedPanelId === '') return
+    const panel = panels.find(p => p.id === selectedPanelId)
+    const dash = dashboards.find(d => d.uid === selectedDashUid)
+    if (!panel || !dash) return
+    const entry: GrafanaPanelRef = { dashboard_uid: selectedDashUid, panel_id: selectedPanelId as number, title: `${dash.title} / ${panel.title}` }
+    if (!grafanaPanels.some(p => p.dashboard_uid === entry.dashboard_uid && p.panel_id === entry.panel_id)) {
+      setGrafanaPanels(prev => [...prev, entry])
+    }
+  }
+
+  const removeGrafanaPanel = (idx: number) =>
+    setGrafanaPanels(prev => prev.filter((_, i) => i !== idx))
+
   const mut = useMutation({
-    mutationFn: () => initial
-      ? updateTemplate(initial.id, form).then(r => r.data)
-      : createTemplate(form).then(r => r.data),
+    mutationFn: () => {
+      const payload: TemplateCreate = { ...form, grafana_panels: grafanaPanels }
+      return initial
+        ? updateTemplate(initial.id, payload).then(r => r.data)
+        : createTemplate(payload).then(r => r.data)
+    },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['adv-templates'] }); onClose() },
   })
 
@@ -264,6 +298,54 @@ function TemplateEditorModal({
                     </label>
                   ))}
                 </div>
+              </div>
+
+              {/* Grafana Panels */}
+              <div>
+                <label className="text-xs text-gray-400 mb-2 block">{t('grafana_panels')}</label>
+                <div className="flex flex-wrap gap-2 mb-2">
+                  <select
+                    className="flex-1 min-w-0 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
+                    value={selectedDashUid}
+                    onChange={e => { setSelectedDashUid(e.target.value); setSelectedPanelId('') }}
+                  >
+                    <option value="">{t('grafana_select_dashboard')}</option>
+                    {dashboards.map(d => <option key={d.uid} value={d.uid}>{d.title}</option>)}
+                  </select>
+                  <select
+                    className="flex-1 min-w-0 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
+                    value={selectedPanelId}
+                    onChange={e => setSelectedPanelId(e.target.value ? Number(e.target.value) : '')}
+                    disabled={!selectedDashUid}
+                  >
+                    <option value="">{t('grafana_select_panel')}</option>
+                    {panels.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={addGrafanaPanel}
+                    disabled={!selectedDashUid || selectedPanelId === ''}
+                    className="px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white text-sm font-medium transition-colors whitespace-nowrap"
+                  >
+                    {t('grafana_add_panel')}
+                  </button>
+                </div>
+                {grafanaPanels.length > 0 && (
+                  <ul className="space-y-1">
+                    {grafanaPanels.map((p, i) => (
+                      <li key={i} className="flex items-center justify-between bg-gray-800/60 rounded-lg px-3 py-1.5 text-sm text-gray-300">
+                        <span className="truncate">{p.title}</span>
+                        <button
+                          type="button"
+                          onClick={() => removeGrafanaPanel(i)}
+                          className="ml-2 text-xs text-red-500 hover:text-red-400 shrink-0"
+                        >
+                          {t('grafana_remove')}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
             </div>
           )}

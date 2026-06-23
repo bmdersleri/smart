@@ -102,5 +102,10 @@
   "col_trigger": "Auslöser",
   "col_period": "Zeitraum",
   "col_size": "Größe",
-  "col_download": "Herunterladen"
+  "col_download": "Herunterladen",
+  "grafana_panels": "Grafana-Panels",
+  "grafana_add_panel": "Panel hinzufügen",
+  "grafana_select_dashboard": "Dashboard auswählen",
+  "grafana_select_panel": "Panel auswählen",
+  "grafana_remove": "Entfernen"
 }

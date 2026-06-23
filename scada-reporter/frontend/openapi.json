@@ -554,6 +554,29 @@
         "title": "DashboardGenerateIn",
         "type": "object"
       },
+      "GrafanaPanelRef": {
+        "properties": {
+          "dashboard_uid": {
+            "title": "Dashboard Uid",
+            "type": "string"
+          },
+          "panel_id": {
+            "title": "Panel Id",
+            "type": "integer"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "dashboard_uid",
+          "panel_id",
+          "title"
+        ],
+        "title": "GrafanaPanelRef",
+        "type": "object"
+      },
       "GroupCreate": {
         "properties": {
           "name": {
@@ -1584,6 +1607,14 @@
             "title": "Description",
             "type": "string"
           },
+          "grafana_panels": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/GrafanaPanelRef"
+            },
+            "title": "Grafana Panels",
+            "type": "array"
+          },
           "include_percentiles": {
             "default": true,
             "title": "Include Percentiles",
@@ -1823,6 +1854,13 @@
             "title": "Description",
             "type": "string"
           },
+          "grafana_panels": {
+            "items": {
+              "$ref": "#/components/schemas/GrafanaPanelRef"
+            },
+            "title": "Grafana Panels",
+            "type": "array"
+          },
           "id": {
             "title": "Id",
             "type": "integer"
@@ -1911,6 +1949,7 @@
           "show_trend_charts",
           "show_anomaly_table",
           "show_raw_data",
+          "grafana_panels",
           "created_at",
           "updated_at"
         ],
@@ -5074,6 +5113,37 @@
         ]
       }
     },
+    "/api/grafana/dashboards": {
+      "get": {
+        "operationId": "list_dashboards_api_grafana_dashboards_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "title": "Response List Dashboards Api Grafana Dashboards Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "List Dashboards",
+        "tags": [
+          "grafana"
+        ]
+      }
+    },
     "/api/grafana/dashboards/generate": {
       "post": {
         "operationId": "generate_dashboard_api_grafana_dashboards_generate_post",
@@ -5113,6 +5183,58 @@
           }
         ],
         "summary": "Generate Dashboard",
+        "tags": [
+          "grafana"
+        ]
+      }
+    },
+    "/api/grafana/dashboards/{uid}/panels": {
+      "get": {
+        "operationId": "list_panels_api_grafana_dashboards__uid__panels_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "uid",
+            "required": true,
+            "schema": {
+              "title": "Uid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "title": "Response List Panels Api Grafana Dashboards  Uid  Panels Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "List Panels",
         "tags": [
           "grafana"
         ]

@@ -245,6 +245,14 @@ export const listGrafanaTemplates = () =>
   api.get<{ templates: GrafanaTemplate[] }>('/grafana/templates')
 export const generateGrafanaDashboard = (data: GrafanaDashboardGeneratePayload) =>
   api.post<GrafanaDashboardGenerated>('/grafana/dashboards/generate', data)
+
+export interface GrafanaPanelRef { dashboard_uid: string; panel_id: number; title: string }
+export interface GrafanaDashboardOpt { uid: string; title: string }
+export interface GrafanaPanelOpt { id: number; title: string }
+export const listGrafanaDashboards = () =>
+  api.get<GrafanaDashboardOpt[]>('/grafana/dashboards')
+export const listGrafanaPanels = (uid: string) =>
+  api.get<GrafanaPanelOpt[]>(`/grafana/dashboards/${encodeURIComponent(uid)}/panels`)
 // PLC Yönetimi
 export interface PlcEntry {
   name: string; ip: string; rack: number; slot: number
@@ -318,6 +326,7 @@ export interface TemplateCreate {
   include_std_dev?: boolean; include_percentiles?: boolean; percentile_levels?: number[]
   include_trend_line?: boolean; anomaly_enabled?: boolean; anomaly_zscore_threshold?: number
   show_summary_stats?: boolean; show_trend_charts?: boolean; show_anomaly_table?: boolean; show_raw_data?: boolean
+  grafana_panels?: GrafanaPanelRef[]
 }
 // ScheduledReport is re-exported from generated (ScheduledResponse).
 export interface ScheduledCreate {

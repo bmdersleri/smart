@@ -102,5 +102,10 @@
   "col_trigger": "Tetikleyen",
   "col_period": "Dönem",
   "col_size": "Boyut",
-  "col_download": "İndir"
+  "col_download": "İndir",
+  "grafana_panels": "Grafana Panelleri",
+  "grafana_add_panel": "Panel Ekle",
+  "grafana_select_dashboard": "Dashboard seç",
+  "grafana_select_panel": "Panel seç",
+  "grafana_remove": "Kaldır"
 }

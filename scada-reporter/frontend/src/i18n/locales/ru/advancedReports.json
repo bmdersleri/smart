@@ -102,5 +102,10 @@
   "col_trigger": "Триггер",
   "col_period": "Период",
   "col_size": "Размер",
-  "col_download": "Скачать"
+  "col_download": "Скачать",
+  "grafana_panels": "Панели Grafana",
+  "grafana_add_panel": "Добавить панель",
+  "grafana_select_dashboard": "Выберите дашборд",
+  "grafana_select_panel": "Выберите панель",
+  "grafana_remove": "Удалить"
 }

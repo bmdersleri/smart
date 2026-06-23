@@ -102,5 +102,10 @@
   "col_trigger": "Trigger",
   "col_period": "Period",
   "col_size": "Size",
-  "col_download": "Download"
+  "col_download": "Download",
+  "grafana_panels": "Grafana Panels",
+  "grafana_add_panel": "Add Panel",
+  "grafana_select_dashboard": "Select dashboard",
+  "grafana_select_panel": "Select panel",
+  "grafana_remove": "Remove"
 }
