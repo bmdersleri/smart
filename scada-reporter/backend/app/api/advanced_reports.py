@@ -32,6 +32,12 @@ router = APIRouter(
 # ---------------------------------------------------------------------------
 
 
+class GrafanaPanelRef(BaseModel):
+    dashboard_uid: str
+    panel_id: int
+    title: str
+
+
 class TemplateCreate(BaseModel):
     name: str
     description: str = ""
@@ -51,6 +57,7 @@ class TemplateCreate(BaseModel):
     show_trend_charts: bool = True
     show_anomaly_table: bool = True
     show_raw_data: bool = False
+    grafana_panels: list[GrafanaPanelRef] = []
 
 
 class TemplateResponse(BaseModel):
@@ -73,6 +80,7 @@ class TemplateResponse(BaseModel):
     show_trend_charts: bool
     show_anomaly_table: bool
     show_raw_data: bool
+    grafana_panels: list[GrafanaPanelRef]
     created_at: datetime
     updated_at: datetime
 
@@ -83,6 +91,7 @@ class TemplateResponse(BaseModel):
         data = {c.name: getattr(obj, c.name) for c in obj.__table__.columns}
         data["tag_ids"] = json.loads(obj.tag_ids)
         data["percentile_levels"] = json.loads(obj.percentile_levels)
+        data["grafana_panels"] = json.loads(obj.grafana_panels)
         return cls(**data)
 
 
@@ -198,6 +207,7 @@ async def create_template(
         show_trend_charts=body.show_trend_charts,
         show_anomaly_table=body.show_anomaly_table,
         show_raw_data=body.show_raw_data,
+        grafana_panels=json.dumps([p.model_dump() for p in body.grafana_panels]),
         created_by=user.id,
     )
     db.add(tmpl)
@@ -246,6 +256,7 @@ async def update_template(
     tmpl.show_trend_charts = body.show_trend_charts
     tmpl.show_anomaly_table = body.show_anomaly_table
     tmpl.show_raw_data = body.show_raw_data
+    tmpl.grafana_panels = json.dumps([p.model_dump() for p in body.grafana_panels])
     tmpl.updated_at = datetime.now(UTC)
     await db.commit()
     await db.refresh(tmpl)
