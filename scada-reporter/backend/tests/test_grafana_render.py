@@ -56,3 +56,26 @@ async def test_render_panel_swallows_transport_error():
     async with httpx.AsyncClient(transport=transport, base_url="http://gf") as http:
         out = await render_panel(dashboard_uid="x", panel_id=1, from_ms=0, to_ms=1, http=http)
     assert out == b""
+
+
+@pytest.mark.asyncio
+async def test_render_panel_blocks_malicious_uid_without_making_request():
+    """A malicious dashboard_uid (path traversal / special chars) must return b"" immediately
+    and NEVER issue an HTTP request — asserted by the handler flag staying False."""
+    request_was_made = {"flag": False}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        request_was_made["flag"] = True
+        return httpx.Response(200, content=b"\x89PNG")
+
+    transport = httpx.MockTransport(handler)
+    async with httpx.AsyncClient(transport=transport, base_url="http://gf") as http:
+        for bad_uid in ["../evil", "../../etc/passwd", "uid/slash", "uid?q=x", "", "a" * 65]:
+            request_was_made["flag"] = False
+            out = await render_panel(
+                dashboard_uid=bad_uid, panel_id=1, from_ms=0, to_ms=1, http=http
+            )
+            assert out == b"", f"Expected b'' for uid={bad_uid!r}, got {out!r}"
+            assert not request_was_made["flag"], (
+                f"HTTP request was issued for malicious uid={bad_uid!r} — should have been blocked"
+            )

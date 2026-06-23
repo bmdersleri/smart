@@ -2,12 +2,13 @@ import asyncio
 import contextlib
 import json
 import os
+import re
 from datetime import UTC, datetime
 from math import ceil
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from fastapi.responses import FileResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -31,11 +32,31 @@ router = APIRouter(
 # Pydantic schemas
 # ---------------------------------------------------------------------------
 
+# Strict allowlist for Grafana dashboard UIDs (alphanumeric, dash, underscore; max 64 chars).
+_DASHBOARD_UID_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
+
 
 class GrafanaPanelRef(BaseModel):
     dashboard_uid: str
     panel_id: int
     title: str
+
+    @field_validator("dashboard_uid")
+    @classmethod
+    def _validate_dashboard_uid(cls, v: str) -> str:
+        if not _DASHBOARD_UID_RE.match(v):
+            raise ValueError(
+                "dashboard_uid must match ^[A-Za-z0-9_-]{1,64}$ "
+                "(alphanumeric, dash, underscore; 1–64 chars)"
+            )
+        return v
+
+    @field_validator("panel_id")
+    @classmethod
+    def _validate_panel_id(cls, v: int) -> int:
+        if v < 0:
+            raise ValueError("panel_id must be a non-negative integer")
+        return v
 
 
 class TemplateCreate(BaseModel):

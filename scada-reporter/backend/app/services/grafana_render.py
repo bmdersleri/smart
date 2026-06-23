@@ -1,8 +1,13 @@
 from __future__ import annotations
 
+import re
+
 import httpx
 
 from app.core.config import settings
+
+# Strict allowlist for Grafana dashboard UIDs (alphanumeric, dash, underscore; max 64 chars).
+_DASHBOARD_UID_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
 
 
 def render_auth() -> tuple[str, str] | None:
@@ -31,6 +36,9 @@ async def render_panel(
     tz: str = "UTC",
 ) -> bytes:
     """Grafana /render/d-solo'dan panel PNG'si çek. Hata olursa b"" döner (raporu düşürmez)."""
+    # Defense-in-depth: reject any stored uid that bypassed schema validation.
+    if not _DASHBOARD_UID_RE.match(dashboard_uid):
+        return b""
     params: dict[str, str | int] = {
         "panelId": panel_id,
         "from": from_ms,
