@@ -107,5 +107,10 @@
   "grafana_add_panel": "Add Panel",
   "grafana_select_dashboard": "Select dashboard",
   "grafana_select_panel": "Select panel",
-  "grafana_remove": "Remove"
+  "grafana_remove": "Remove",
+  "gen_dashboard": "Grafana Dashboard",
+  "gen_dashboard_loading": "Generating...",
+  "gen_dashboard_open": "Open in Grafana",
+  "gen_dashboard_no_tags": "Template needs at least one tag",
+  "gen_dashboard_error": "Dashboard generation failed"
 }

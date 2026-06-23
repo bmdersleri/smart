@@ -107,5 +107,10 @@
   "grafana_add_panel": "إضافة لوحة",
   "grafana_select_dashboard": "اختر لوحة التحكم",
   "grafana_select_panel": "اختر اللوحة",
-  "grafana_remove": "إزالة"
+  "grafana_remove": "إزالة",
+  "gen_dashboard": "لوحة Grafana",
+  "gen_dashboard_loading": "جارٍ الإنشاء...",
+  "gen_dashboard_open": "فتح في Grafana",
+  "gen_dashboard_no_tags": "يجب أن يحتوي القالب على علامة واحدة على الأقل",
+  "gen_dashboard_error": "فشل إنشاء لوحة التحكم"
 }

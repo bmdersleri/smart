@@ -5144,6 +5144,55 @@
         ]
       }
     },
+    "/api/grafana/dashboards/from-report-template/{template_id}": {
+      "post": {
+        "operationId": "generate_from_report_template_api_grafana_dashboards_from_report_template__template_id__post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "template_id",
+            "required": true,
+            "schema": {
+              "title": "Template Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Generate From Report Template Api Grafana Dashboards From Report Template  Template Id  Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Generate From Report Template",
+        "tags": [
+          "grafana"
+        ]
+      }
+    },
     "/api/grafana/dashboards/generate": {
       "post": {
         "operationId": "generate_dashboard_api_grafana_dashboards_generate_post",

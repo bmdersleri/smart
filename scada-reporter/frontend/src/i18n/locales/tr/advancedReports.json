@@ -107,5 +107,10 @@
   "grafana_add_panel": "Panel Ekle",
   "grafana_select_dashboard": "Dashboard seç",
   "grafana_select_panel": "Panel seç",
-  "grafana_remove": "Kaldır"
+  "grafana_remove": "Kaldır",
+  "gen_dashboard": "Grafana Dashboard",
+  "gen_dashboard_loading": "Oluşturuluyor...",
+  "gen_dashboard_open": "Grafana'da Aç",
+  "gen_dashboard_no_tags": "Tag'li şablon gerekir",
+  "gen_dashboard_error": "Dashboard oluşturulamadı"
 }

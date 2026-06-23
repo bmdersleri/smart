@@ -107,5 +107,10 @@
   "grafana_add_panel": "Добавить панель",
   "grafana_select_dashboard": "Выберите дашборд",
   "grafana_select_panel": "Выберите панель",
-  "grafana_remove": "Удалить"
+  "grafana_remove": "Удалить",
+  "gen_dashboard": "Дашборд Grafana",
+  "gen_dashboard_loading": "Генерация...",
+  "gen_dashboard_open": "Открыть в Grafana",
+  "gen_dashboard_no_tags": "Шаблон должен содержать хотя бы один тег",
+  "gen_dashboard_error": "Не удалось создать дашборд"
 }

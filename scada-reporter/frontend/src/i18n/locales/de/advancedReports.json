@@ -107,5 +107,10 @@
   "grafana_add_panel": "Panel hinzufügen",
   "grafana_select_dashboard": "Dashboard auswählen",
   "grafana_select_panel": "Panel auswählen",
-  "grafana_remove": "Entfernen"
+  "grafana_remove": "Entfernen",
+  "gen_dashboard": "Grafana Dashboard",
+  "gen_dashboard_loading": "Wird generiert...",
+  "gen_dashboard_open": "In Grafana öffnen",
+  "gen_dashboard_no_tags": "Vorlage benötigt mindestens einen Tag",
+  "gen_dashboard_error": "Dashboard-Generierung fehlgeschlagen"
 }

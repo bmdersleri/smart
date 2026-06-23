@@ -2959,6 +2959,40 @@ export type ListDashboardsApiGrafanaDashboardsGetResponses = {
 
 export type ListDashboardsApiGrafanaDashboardsGetResponse = ListDashboardsApiGrafanaDashboardsGetResponses[keyof ListDashboardsApiGrafanaDashboardsGetResponses];
 
+export type GenerateFromReportTemplateApiGrafanaDashboardsFromReportTemplateTemplateIdPostData = {
+    body?: never;
+    path: {
+        /**
+         * Template Id
+         */
+        template_id: number;
+    };
+    query?: never;
+    url: '/api/grafana/dashboards/from-report-template/{template_id}';
+};
+
+export type GenerateFromReportTemplateApiGrafanaDashboardsFromReportTemplateTemplateIdPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GenerateFromReportTemplateApiGrafanaDashboardsFromReportTemplateTemplateIdPostError = GenerateFromReportTemplateApiGrafanaDashboardsFromReportTemplateTemplateIdPostErrors[keyof GenerateFromReportTemplateApiGrafanaDashboardsFromReportTemplateTemplateIdPostErrors];
+
+export type GenerateFromReportTemplateApiGrafanaDashboardsFromReportTemplateTemplateIdPostResponses = {
+    /**
+     * Response Generate From Report Template Api Grafana Dashboards From Report Template  Template Id  Post
+     *
+     * Successful Response
+     */
+    200: {
+        [key: string]: unknown;
+    };
+};
+
+export type GenerateFromReportTemplateApiGrafanaDashboardsFromReportTemplateTemplateIdPostResponse = GenerateFromReportTemplateApiGrafanaDashboardsFromReportTemplateTemplateIdPostResponses[keyof GenerateFromReportTemplateApiGrafanaDashboardsFromReportTemplateTemplateIdPostResponses];
+
 export type GenerateDashboardApiGrafanaDashboardsGeneratePostData = {
     body: DashboardGenerateIn;
     path?: never;

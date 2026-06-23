@@ -10,6 +10,7 @@ import {
   listScheduled, createScheduled, toggleScheduled, deleteScheduled,
   getArchive, downloadArchiveReport,
   getTags, listGrafanaDashboards, listGrafanaPanels,
+  generateDashboardFromTemplate,
 } from '../api/client'
 import type { ReportTemplate, TemplateCreate, ScheduledReport, ArchiveEntry, GrafanaPanelRef } from '../api/client'
 import { useSortable } from '../hooks/useSortable'
@@ -528,12 +529,15 @@ function ScheduleCreateModal({ templates, onClose }: { templates: ReportTemplate
 // Tab 1 — Templates
 // ---------------------------------------------------------------------------
 
+const GRAFANA_URL = import.meta.env.VITE_GRAFANA_URL ?? 'http://localhost:3000'
+
 function TemplatesTab({ onRunDone }: { onRunDone: () => void }) {
   const { t, i18n } = useTranslation(['advancedReports', 'common'])
   const { can } = useAuth()
   const qc = useQueryClient()
   const [showCreate, setShowCreate] = useState(false)
   const [editing, setEditing] = useState<ReportTemplate | null>(null)
+  const [dashResult, setDashResult] = useState<Record<number, { url: string } | { error: string }>>({})
 
   const { data: templates = [], isLoading } = useQuery({
     queryKey: ['adv-templates'],
@@ -551,6 +555,18 @@ function TemplatesTab({ onRunDone }: { onRunDone: () => void }) {
   const runMut = useMutation({
     mutationFn: (id: number) => runTemplate(id).then(r => r.data),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['adv-archive'] }); onRunDone() },
+  })
+
+  const dashMut = useMutation({
+    mutationFn: (id: number) => generateDashboardFromTemplate(id).then(r => ({ id, data: r.data })),
+    onSuccess: ({ id, data }) => {
+      setDashResult(prev => ({ ...prev, [id]: { url: data.url } }))
+    },
+    onError: (err: unknown, id: number) => {
+      const status = (err as { response?: { status?: number } }).response?.status
+      const msg = status === 422 ? t('gen_dashboard_no_tags') : t('gen_dashboard_error')
+      setDashResult(prev => ({ ...prev, [id]: { error: msg } }))
+    },
   })
 
   if (isLoading) return <p className="text-gray-500 text-sm p-4">{t('common:loading')}</p>
@@ -579,28 +595,47 @@ function TemplatesTab({ onRunDone }: { onRunDone: () => void }) {
                 </tr>
               </thead>
               <tbody>
-                {sortedTemplates.map(tpl => (
-                  <tr key={tpl.id} className="border-b border-gray-800/50 hover:bg-gray-800/30">
-                    <td className="py-3 text-white font-medium">{tpl.name}</td>
-                    <td className="py-3 text-gray-300 uppercase">{tpl.output_format}</td>
-                    <td className="py-3 text-gray-400 capitalize">{tpl.interval}</td>
-                    <td className="py-3 text-gray-400">{tpl.tag_ids.length}</td>
-                    <td className="py-3 text-gray-500">{fmtDate(tpl.created_at, i18n.language)}</td>
-                    <td className="py-3 text-end">
-                      <div className="flex gap-2 justify-end">
-                        <button onClick={() => runMut.mutate(tpl.id)} disabled={runMut.isPending}
-                          className="text-xs text-blue-400 hover:text-blue-300 disabled:opacity-50">{t('run')}</button>
-                        {can('report_template:edit') && (
-                          <button onClick={() => setEditing(tpl)} className="text-xs text-gray-400 hover:text-white">{t('common:edit')}</button>
-                        )}
-                        {can('report_template:delete') && (
-                          <button onClick={() => { if (confirm(t('confirm_delete_template'))) delMut.mutate(tpl.id) }}
-                            className="text-xs text-red-500 hover:text-red-400">{t('common:delete')}</button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                {sortedTemplates.map(tpl => {
+                  const dr = dashResult[tpl.id]
+                  return (
+                    <tr key={tpl.id} className="border-b border-gray-800/50 hover:bg-gray-800/30">
+                      <td className="py-3 text-white font-medium">{tpl.name}</td>
+                      <td className="py-3 text-gray-300 uppercase">{tpl.output_format}</td>
+                      <td className="py-3 text-gray-400 capitalize">{tpl.interval}</td>
+                      <td className="py-3 text-gray-400">{tpl.tag_ids.length}</td>
+                      <td className="py-3 text-gray-500">{fmtDate(tpl.created_at, i18n.language)}</td>
+                      <td className="py-3 text-end">
+                        <div className="flex gap-2 justify-end flex-wrap">
+                          <button onClick={() => runMut.mutate(tpl.id)} disabled={runMut.isPending}
+                            className="text-xs text-blue-400 hover:text-blue-300 disabled:opacity-50">{t('run')}</button>
+                          <button
+                            onClick={() => { setDashResult(prev => { const n = { ...prev }; delete n[tpl.id]; return n }); dashMut.mutate(tpl.id) }}
+                            disabled={dashMut.isPending && dashMut.variables === tpl.id}
+                            className="text-xs text-purple-400 hover:text-purple-300 disabled:opacity-50"
+                          >
+                            {dashMut.isPending && dashMut.variables === tpl.id ? t('gen_dashboard_loading') : t('gen_dashboard')}
+                          </button>
+                          {dr && 'url' in dr && (
+                            <a href={`${GRAFANA_URL}${dr.url}`} target="_blank" rel="noreferrer"
+                              className="text-xs text-green-400 hover:text-green-300 underline">
+                              {t('gen_dashboard_open')}
+                            </a>
+                          )}
+                          {dr && 'error' in dr && (
+                            <span className="text-xs text-red-400">{dr.error}</span>
+                          )}
+                          {can('report_template:edit') && (
+                            <button onClick={() => setEditing(tpl)} className="text-xs text-gray-400 hover:text-white">{t('common:edit')}</button>
+                          )}
+                          {can('report_template:delete') && (
+                            <button onClick={() => { if (confirm(t('confirm_delete_template'))) delMut.mutate(tpl.id) }}
+                              className="text-xs text-red-500 hover:text-red-400">{t('common:delete')}</button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>
