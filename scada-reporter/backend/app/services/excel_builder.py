@@ -31,6 +31,7 @@ def build_advanced_excel(
     template,
     summary_chart_png: bytes,
     lang: str = "en",
+    grafana_charts: list[dict] | None = None,
 ) -> bytes:
     L = get_labels(lang)  # noqa: N806 — short alias for the label dict, used pervasively below
     wb = Workbook()
@@ -202,6 +203,21 @@ def build_advanced_excel(
                 c.number_format = FLOAT_FMT
                 ws_raw.cell(row=row_idx, column=4, value=qual)
                 row_idx += 1
+
+    # --- Grafana panels sheet ---
+    gf = [g for g in (grafana_charts or [])]
+    if gf:
+        ws_gf = wb.create_sheet(title="Grafana")
+        row = 1
+        for gc in gf:
+            ws_gf.cell(row=row, column=1, value=gc["title"]).font = HEADER_FONT
+            row += 1
+            if gc.get("png"):
+                _embed_image(ws_gf, gc["png"], f"A{row}")
+                row += 15  # reserve rows for image
+            else:
+                ws_gf.cell(row=row, column=1, value=gc.get("error") or "render edilemedi")
+                row += 2
 
     buf = BytesIO()
     wb.save(buf)
