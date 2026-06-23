@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import re
+
 import httpx
 from fastapi import APIRouter, Depends, HTTPException
 
@@ -13,6 +15,9 @@ router = APIRouter(prefix="/grafana", tags=["grafana"])
 
 # Test injection override — None in production (real network).
 _transport: httpx.MockTransport | None = None
+
+# Strict allowlist for Grafana dashboard UIDs (alphanumeric, dash, underscore; max 64 chars).
+_UID_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
 
 
 def _client() -> httpx.AsyncClient:
@@ -46,6 +51,8 @@ async def list_panels(
     _user: User = Depends(get_current_user),
     _=Depends(require_feature("grafana")),
 ) -> list[dict]:
+    if not _UID_RE.match(uid):
+        raise HTTPException(status_code=400, detail="invalid dashboard uid")
     try:
         async with _client() as http:
             r = await http.get(f"/api/dashboards/uid/{uid}")
@@ -55,7 +62,7 @@ async def list_panels(
         raise HTTPException(status_code=502, detail=f"Grafana erişilemedi: {e}") from None
     panels = body.get("dashboard", {}).get("panels", [])
     return [
-        {"id": p["id"], "title": p["title"]}
+        {"id": p.get("id"), "title": p.get("title")}
         for p in panels
-        if p.get("type") != "row" and p.get("title")
+        if p.get("type") != "row" and p.get("title") and p.get("id") is not None
     ]
