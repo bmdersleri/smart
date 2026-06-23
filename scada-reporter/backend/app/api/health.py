@@ -31,7 +31,7 @@ async def readiness():
     Returns 200 when all checks pass, 503 with per-check details otherwise.
     """
     db_result = await db_ok()
-    alembic_result = alembic_head_matches()
+    alembic_result = await alembic_head_matches()
     sched = get_scheduler()
     scheduler_result = sched is not None and getattr(sched, "running", False)
 

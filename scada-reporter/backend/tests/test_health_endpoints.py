@@ -38,7 +38,7 @@ async def test_ready_happy_path(client: AsyncClient):
     """All checks pass → 200 with all checks True."""
     with (
         patch("app.api.health.db_ok", new=AsyncMock(return_value=True)),
-        patch("app.api.health.alembic_head_matches", return_value=True),
+        patch("app.api.health.alembic_head_matches", new=AsyncMock(return_value=True)),
         patch("app.api.health.get_scheduler", return_value=_running_scheduler()),
     ):
         resp = await client.get("/ready")
@@ -55,7 +55,7 @@ async def test_ready_db_down(client: AsyncClient):
     """DB unreachable → 503 with db check False."""
     with (
         patch("app.api.health.db_ok", new=AsyncMock(return_value=False)),
-        patch("app.api.health.alembic_head_matches", return_value=True),
+        patch("app.api.health.alembic_head_matches", new=AsyncMock(return_value=True)),
         patch("app.api.health.get_scheduler", return_value=_running_scheduler()),
     ):
         resp = await client.get("/ready")
@@ -70,7 +70,7 @@ async def test_ready_alembic_mismatch(client: AsyncClient):
     """Alembic head differs from DB → 503 with alembic_head False."""
     with (
         patch("app.api.health.db_ok", new=AsyncMock(return_value=True)),
-        patch("app.api.health.alembic_head_matches", return_value=False),
+        patch("app.api.health.alembic_head_matches", new=AsyncMock(return_value=False)),
         patch("app.api.health.get_scheduler", return_value=_running_scheduler()),
     ):
         resp = await client.get("/ready")
@@ -85,7 +85,7 @@ async def test_ready_scheduler_not_running_none(client: AsyncClient):
     """get_scheduler() returns None → scheduler check False → 503."""
     with (
         patch("app.api.health.db_ok", new=AsyncMock(return_value=True)),
-        patch("app.api.health.alembic_head_matches", return_value=True),
+        patch("app.api.health.alembic_head_matches", new=AsyncMock(return_value=True)),
         patch("app.api.health.get_scheduler", return_value=None),
     ):
         resp = await client.get("/ready")
@@ -100,7 +100,7 @@ async def test_ready_scheduler_not_running_false(client: AsyncClient):
     stopped_sched = SimpleNamespace(running=False)
     with (
         patch("app.api.health.db_ok", new=AsyncMock(return_value=True)),
-        patch("app.api.health.alembic_head_matches", return_value=True),
+        patch("app.api.health.alembic_head_matches", new=AsyncMock(return_value=True)),
         patch("app.api.health.get_scheduler", return_value=stopped_sched),
     ):
         resp = await client.get("/ready")
@@ -157,11 +157,40 @@ async def test_health_uptime_fields(client: AsyncClient):
 # ── Unit: alembic_head_matches tolerance ─────────────────────────────────────
 
 
-def test_alembic_head_matches_no_version_table():
+@pytest.mark.asyncio
+async def test_alembic_head_matches_no_version_table(monkeypatch):
     """When no alembic_version table exists (create_all dev/test), return True."""
+    from sqlalchemy.ext.asyncio import create_async_engine
+    from sqlalchemy.pool import StaticPool
+
+    import app.core.database
+    from app.core.database import Base
     from app.core.db_health import alembic_head_matches
 
-    # The test DB uses StaticPool + create_all → no alembic_version table.
-    # alembic_head_matches must return True (tolerance rule).
-    result = alembic_head_matches()
-    assert result is True
+    engine = create_async_engine(
+        "sqlite+aiosqlite:///:memory:",
+        poolclass=StaticPool,
+        connect_args={"check_same_thread": False},
+    )
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
+    monkeypatch.setattr(app.core.database, "engine", engine)
+    try:
+        result = await alembic_head_matches()
+        assert result is True
+    finally:
+        await engine.dispose()
+
+
+@pytest.mark.asyncio
+async def test_alembic_head_matches_unexpected_error_returns_false():
+    """Unexpected Alembic probe errors fail closed instead of masking readiness issues."""
+    from unittest.mock import patch
+
+    from app.core.db_health import alembic_head_matches
+
+    with patch("alembic.script.ScriptDirectory.from_config", side_effect=RuntimeError("boom")):
+        result = await alembic_head_matches()
+
+    assert result is False

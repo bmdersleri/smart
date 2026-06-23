@@ -31,14 +31,14 @@ async def db_ok() -> bool:
         return False
 
 
-def alembic_head_matches() -> bool:
+async def alembic_head_matches() -> bool:
     """Return True if the DB's current Alembic revision matches the script head.
 
     Tolerance rules:
     - If the alembic_version table does not exist (dev/test using create_all),
       treat as OK (return True) — not a migration failure.
     - Only return False when alembic_version exists AND differs from script head.
-    - Any unexpected error → True (fail-open; don't block readiness on probe issues).
+    - Any unexpected error → False (fail closed; don't hide migration probe issues).
     """
     try:
         import alembic.config as alembic_config_mod
@@ -53,23 +53,24 @@ def alembic_head_matches() -> bool:
         script = ScriptDirectory.from_config(cfg)
         head_rev = script.get_current_head()
 
-        # Use a sync connection from the async engine's sync_engine.
         from app.core.database import engine  # local import
 
-        sync_eng = engine.sync_engine
-        with sync_eng.connect() as conn:
-            # Check whether alembic_version table exists.
-            from sqlalchemy import inspect as sa_inspect
+        async with engine.connect() as async_conn:
 
-            insp = sa_inspect(conn)
-            if "alembic_version" not in insp.get_table_names():
-                # Dev/test scenario: create_all was used, no migrations applied.
-                return True
+            def _check_revision(conn) -> bool:
+                # Check whether alembic_version table exists.
+                from sqlalchemy import inspect as sa_inspect
 
-            mig_ctx = MigrationContext.configure(conn)
-            current_rev = mig_ctx.get_current_revision()
+                insp = sa_inspect(conn)
+                if "alembic_version" not in insp.get_table_names():
+                    # Dev/test scenario: create_all was used, no migrations applied.
+                    return True
 
-        return current_rev == head_rev
+                mig_ctx = MigrationContext.configure(conn)
+                current_rev = mig_ctx.get_current_revision()
+                return current_rev == head_rev
+
+            return await async_conn.run_sync(_check_revision)
     except Exception:
-        logger.exception("alembic_head_matches probe failed — treating as OK")
-        return True
+        logger.exception("alembic_head_matches probe failed")
+        return False
