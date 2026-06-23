@@ -4,14 +4,17 @@ import os
 from dataclasses import asdict
 from datetime import UTC, datetime, timedelta
 
+import httpx
 import pandas as pd
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.models.report_archive import ReportArchive
 from app.models.tag import Tag, TagReading
 from app.services.chart_generator import generate_summary_bar_chart, generate_timeseries_chart
 from app.services.excel_builder import build_advanced_excel
+from app.services.grafana_render import render_auth, render_headers, render_panel
 from app.services.pdf_builder import build_pdf
 from app.services.stats_engine import compute_tag_stats, detect_anomalies
 
@@ -143,21 +146,60 @@ async def generate_report_from_template(
         units = per_tag_data[0]["tag"].unit or "" if per_tag_data else ""
         summary_chart = generate_summary_bar_chart(names, avgs, units) if per_tag_data else b""
 
+        # --- Grafana panels (render-on-generate, hata toleranslı) ---
+        grafana_charts: list[dict] = []
+        panel_refs = json.loads(getattr(template, "grafana_panels", None) or "[]")
+        if panel_refs:
+            from_ms = int(start.timestamp() * 1000)
+            to_ms = int(end.timestamp() * 1000)
+            async with httpx.AsyncClient(
+                base_url=settings.GRAFANA_URL,
+                auth=render_auth(),
+                headers=render_headers(),
+                timeout=settings.GRAFANA_RENDER_TIMEOUT,
+            ) as gf_http:
+                for ref in panel_refs:
+                    png = await render_panel(
+                        dashboard_uid=ref["dashboard_uid"],
+                        panel_id=ref["panel_id"],
+                        from_ms=from_ms,
+                        to_ms=to_ms,
+                        http=gf_http,
+                        width=settings.GRAFANA_RENDER_WIDTH,
+                        height=settings.GRAFANA_RENDER_HEIGHT,
+                    )
+                    grafana_charts.append(
+                        {
+                            "title": ref["title"],
+                            "png": png,
+                            "error": None if png else "Grafana paneli render edilemedi",
+                        }
+                    )
+
         # Build output
         os.makedirs("reports", exist_ok=True)
         uid = f"{archive_id}_{int(datetime.now(UTC).timestamp())}"
 
         if template.output_format == "excel":
             content = build_advanced_excel(
-                archive, per_tag_data, template, summary_chart, lang=lang
+                archive,
+                per_tag_data,
+                template,
+                summary_chart,
+                lang=lang,
+                grafana_charts=grafana_charts,
             )
             ext = "xlsx"
         elif template.output_format == "pdf":
-            from app.core.config import settings
-
             generated_at = datetime.now(UTC)
             content = build_pdf(
-                archive, per_tag_data, template, settings.FACILITY_NAME, generated_at, lang=lang
+                archive,
+                per_tag_data,
+                template,
+                settings.FACILITY_NAME,
+                generated_at,
+                lang=lang,
+                grafana_charts=grafana_charts,
             )
             ext = "pdf"
         else:
