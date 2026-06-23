@@ -1,4 +1,3 @@
-import asyncio
 import contextlib
 import json
 import os
@@ -339,7 +338,7 @@ async def run_template(
             with contextlib.suppress(Exception):
                 await generate_report_from_template(tmpl, start, end, bg_db, archive_id, lang=lang)
 
-    background_tasks.add_task(asyncio.ensure_future, _run())
+    background_tasks.add_task(_run)
 
     return ArchiveEntryResponse.from_orm(archive)
 
