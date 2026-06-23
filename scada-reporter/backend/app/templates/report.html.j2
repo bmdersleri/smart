@@ -230,5 +230,21 @@ tr:nth-child(even) td { background: #f9fafb; }
 </div>
 {% endif %}
 
+{% if grafana_charts %}
+<section class="grafana-panels">
+  <h2>{{ L.get('grafana_panels_heading', 'Grafana Panelleri') }}</h2>
+  {% for gc in grafana_charts %}
+    <div class="grafana-panel">
+      <h3>{{ gc.title }}</h3>
+      {% if gc.error %}
+        <p class="render-error">{{ gc.error }}</p>
+      {% else %}
+        <img src="data:image/png;base64,{{ gc.b64 }}" style="max-width:100%;" />
+      {% endif %}
+    </div>
+  {% endfor %}
+</section>
+{% endif %}
+
 </body>
 </html>
