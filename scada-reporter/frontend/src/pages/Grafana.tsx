@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useSettings } from '../context/SettingsContext'
 
 // iframe'ler dogrudan Grafana'ya gider (embedding acik). Dashboard LISTESI ise
 // same-origin /grafana-api proxy'sinden gelir (CORS yok) — bkz. vite.config.ts.
@@ -11,10 +12,10 @@ interface GrafanaDashboard {
   url: string // Grafana search API'sinin verdigi yol, orn. /d/<uid>/<slug>
 }
 
-function buildUrl(dash: GrafanaDashboard, kiosk: boolean) {
+function buildUrl(dash: GrafanaDashboard, kiosk: boolean, theme: 'dark' | 'light') {
   const url = new URL(dash.url, GRAFANA_URL)
   url.searchParams.set('orgId', '1')
-  url.searchParams.set('theme', 'dark')
+  url.searchParams.set('theme', theme)
   url.searchParams.set('refresh', '30s')
   if (kiosk) url.searchParams.set('kiosk', '')
   return url.toString()
@@ -22,6 +23,8 @@ function buildUrl(dash: GrafanaDashboard, kiosk: boolean) {
 
 export default function Grafana() {
   const { t } = useTranslation('grafana')
+  const { theme: appTheme } = useSettings()
+  const theme = appTheme === 'light' ? 'light' : 'dark'
   const [dashboards, setDashboards] = useState<GrafanaDashboard[]>([])
   const [activeUid, setActiveUid] = useState('')
   const [loading, setLoading] = useState(true)
@@ -29,8 +32,6 @@ export default function Grafana() {
 
   useEffect(() => {
     let cancelled = false
-    setLoading(true)
-    setError(null)
     fetch('/grafana-api/api/search?type=dash-db')
       .then((r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`)
@@ -69,7 +70,7 @@ export default function Grafana() {
         </div>
         {active && (
           <a
-            href={buildUrl(active, false)}
+            href={buildUrl(active, false, theme)}
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center justify-center rounded-lg border border-gray-700 px-3 py-2 text-sm text-gray-200 hover:bg-gray-800"
@@ -79,16 +80,14 @@ export default function Grafana() {
         )}
       </div>
 
-      {loading && (
-        <p className="text-sm text-gray-400">{t('loading', 'Dashboardlar yükleniyor…')}</p>
-      )}
+      {loading && <p className="text-sm text-gray-400">{t('loading')}</p>}
       {error && (
         <p className="text-sm text-red-400">
-          {t('load_error', 'Grafana dashboardları yüklenemedi')}: {error}
+          {t('load_error')}: {error}
         </p>
       )}
       {!loading && !error && dashboards.length === 0 && (
-        <p className="text-sm text-gray-400">{t('empty', 'Dashboard bulunamadı.')}</p>
+        <p className="text-sm text-gray-400">{t('empty')}</p>
       )}
 
       {dashboards.length > 0 && (
@@ -111,9 +110,9 @@ export default function Grafana() {
 
           {active && (
             <iframe
-              key={active.uid}
+              key={`${active.uid}-${theme}`}
               title={active.title}
-              src={buildUrl(active, true)}
+              src={buildUrl(active, true, theme)}
               className="w-full rounded-lg border border-gray-800 bg-gray-950"
               style={{ height: 'calc(100vh - 220px)', minHeight: '600px' }}
             />
