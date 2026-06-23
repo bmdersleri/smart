@@ -222,6 +222,29 @@ export const syncGrafana = () =>
   api.post<{ written: number; deleted: number; errors: string[] }>(`${WG}/sync-grafana`)
 export const getDashboardTags = (p: DashboardTagsParams) =>
   api.get<DashboardTagsResponse>('/dashboard/tags', { params: p })
+
+export interface GrafanaTemplate {
+  key: 'facility_overview' | 'water_quality'
+  name: string
+  description: string
+  requires_tags: boolean
+}
+export interface GrafanaDashboardGeneratePayload {
+  template: GrafanaTemplate['key']
+  title: string
+  tag_ids: number[]
+}
+export interface GrafanaDashboardGenerated {
+  uid: string
+  title: string
+  url: string
+  template: GrafanaTemplate['key']
+  status: string
+}
+export const listGrafanaTemplates = () =>
+  api.get<{ templates: GrafanaTemplate[] }>('/grafana/templates')
+export const generateGrafanaDashboard = (data: GrafanaDashboardGeneratePayload) =>
+  api.post<GrafanaDashboardGenerated>('/grafana/dashboards/generate', data)
 // PLC Yönetimi
 export interface PlcEntry {
   name: string; ip: string; rack: number; slot: number

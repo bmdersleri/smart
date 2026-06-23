@@ -19,5 +19,13 @@
   "panel_bad_rate": "Скорость BAD качества",
   "panel_http_rate": "Частота HTTP-запросов",
   "panel_http_latency": "Задержка HTTP p95",
-  "panel_db_pool": "Пул подключений БД"
+  "panel_db_pool": "Пул подключений БД",
+  "template_label": "Тип дашборда",
+  "template_loading": "Загрузка сведений о шаблоне...",
+  "dashboard_title_label": "Название дашборда",
+  "template_facility_default_title": "Обзор предприятия",
+  "template_water_default_title": "Качество воды",
+  "generate_dashboard": "Создать дашборд",
+  "generating": "Создание...",
+  "open_generated": "Открыть созданный дашборд"
 }

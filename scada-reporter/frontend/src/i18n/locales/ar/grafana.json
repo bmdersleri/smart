@@ -19,5 +19,13 @@
   "panel_bad_rate": "معدل جودة BAD",
   "panel_http_rate": "معدل طلبات HTTP",
   "panel_http_latency": "زمن HTTP p95",
-  "panel_db_pool": "مجمع اتصالات قاعدة البيانات"
+  "panel_db_pool": "مجمع اتصالات قاعدة البيانات",
+  "template_label": "نوع اللوحة",
+  "template_loading": "جارٍ تحميل تفاصيل القالب...",
+  "dashboard_title_label": "عنوان اللوحة",
+  "template_facility_default_title": "نظرة عامة على المنشأة",
+  "template_water_default_title": "جودة المياه",
+  "generate_dashboard": "إنشاء لوحة",
+  "generating": "جارٍ الإنشاء...",
+  "open_generated": "افتح اللوحة المنشأة"
 }

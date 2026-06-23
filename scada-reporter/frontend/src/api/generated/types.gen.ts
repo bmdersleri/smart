@@ -311,6 +311,24 @@ export type ColumnOut = {
 };
 
 /**
+ * DashboardGenerateIn
+ */
+export type DashboardGenerateIn = {
+    /**
+     * Tag Ids
+     */
+    tag_ids?: Array<number>;
+    /**
+     * Template
+     */
+    template: string;
+    /**
+     * Title
+     */
+    title: string;
+};
+
+/**
  * GroupCreate
  */
 export type GroupCreate = {
@@ -2889,6 +2907,43 @@ export type GetSummaryApiExploreSummaryGetData = {
 };
 
 export type GetSummaryApiExploreSummaryGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type GenerateDashboardApiGrafanaDashboardsGeneratePostData = {
+    body: DashboardGenerateIn;
+    path?: never;
+    query?: never;
+    url: '/api/grafana/dashboards/generate';
+};
+
+export type GenerateDashboardApiGrafanaDashboardsGeneratePostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GenerateDashboardApiGrafanaDashboardsGeneratePostError = GenerateDashboardApiGrafanaDashboardsGeneratePostErrors[keyof GenerateDashboardApiGrafanaDashboardsGeneratePostErrors];
+
+export type GenerateDashboardApiGrafanaDashboardsGeneratePostResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type GrafanaTemplatesApiGrafanaTemplatesGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/grafana/templates';
+};
+
+export type GrafanaTemplatesApiGrafanaTemplatesGetResponses = {
     /**
      * Successful Response
      */

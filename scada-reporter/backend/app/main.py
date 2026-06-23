@@ -18,6 +18,7 @@ from app.api import (
     dashboard,
     excel_templates,
     explore,
+    grafana_dashboards,
     groups,
     plc,
     query,
@@ -214,6 +215,7 @@ app.include_router(users.router, prefix="/api")
 app.include_router(audit.router, prefix="/api")
 app.include_router(ai.router, prefix="/api")
 app.include_router(watchlist_groups.router, prefix="/api")
+app.include_router(grafana_dashboards.router, prefix="/api")
 app.include_router(license_api.router, prefix="/api")
 
 

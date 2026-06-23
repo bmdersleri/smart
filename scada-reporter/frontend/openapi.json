@@ -527,6 +527,33 @@
         "title": "ColumnOut",
         "type": "object"
       },
+      "DashboardGenerateIn": {
+        "properties": {
+          "tag_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Tag Ids",
+            "type": "array"
+          },
+          "template": {
+            "title": "Template",
+            "type": "string"
+          },
+          "title": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "template",
+          "title"
+        ],
+        "title": "DashboardGenerateIn",
+        "type": "object"
+      },
       "GroupCreate": {
         "properties": {
           "name": {
@@ -5044,6 +5071,74 @@
         "summary": "Get Summary",
         "tags": [
           "explore"
+        ]
+      }
+    },
+    "/api/grafana/dashboards/generate": {
+      "post": {
+        "operationId": "generate_dashboard_api_grafana_dashboards_generate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DashboardGenerateIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Generate Dashboard",
+        "tags": [
+          "grafana"
+        ]
+      }
+    },
+    "/api/grafana/templates": {
+      "get": {
+        "operationId": "grafana_templates_api_grafana_templates_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Grafana Templates",
+        "tags": [
+          "grafana"
         ]
       }
     },

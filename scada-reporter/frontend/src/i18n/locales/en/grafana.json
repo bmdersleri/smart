@@ -19,5 +19,13 @@
   "panel_bad_rate": "BAD Quality Rate",
   "panel_http_rate": "HTTP Request Rate",
   "panel_http_latency": "HTTP Latency p95",
-  "panel_db_pool": "Database Connection Pool"
+  "panel_db_pool": "Database Connection Pool",
+  "template_label": "Dashboard type",
+  "template_loading": "Loading template details...",
+  "dashboard_title_label": "Dashboard title",
+  "template_facility_default_title": "Plant Overview",
+  "template_water_default_title": "Water Quality",
+  "generate_dashboard": "Create dashboard",
+  "generating": "Creating...",
+  "open_generated": "Open created dashboard"
 }

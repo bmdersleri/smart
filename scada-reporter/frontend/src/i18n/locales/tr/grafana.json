@@ -19,5 +19,13 @@
   "panel_bad_rate": "BAD Kalite Hızı",
   "panel_http_rate": "HTTP İstek Hızı",
   "panel_http_latency": "HTTP Gecikmesi p95",
-  "panel_db_pool": "Veritabanı Bağlantı Havuzu"
+  "panel_db_pool": "Veritabanı Bağlantı Havuzu",
+  "template_label": "Dashboard türü",
+  "template_loading": "Şablon ayrıntıları yükleniyor...",
+  "dashboard_title_label": "Dashboard başlığı",
+  "template_facility_default_title": "Tesis Genel Durum",
+  "template_water_default_title": "Su Kalitesi",
+  "generate_dashboard": "Dashboard oluştur",
+  "generating": "Oluşturuluyor...",
+  "open_generated": "Oluşturulan dashboard'u aç"
 }

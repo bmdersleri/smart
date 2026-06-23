@@ -19,5 +19,13 @@
   "panel_bad_rate": "BAD-Qualitätsrate",
   "panel_http_rate": "HTTP-Anfragerate",
   "panel_http_latency": "HTTP-Latenz p95",
-  "panel_db_pool": "Datenbank-Verbindungspool"
+  "panel_db_pool": "Datenbank-Verbindungspool",
+  "template_label": "Dashboard-Typ",
+  "template_loading": "Vorlagendetails werden geladen...",
+  "dashboard_title_label": "Dashboard-Titel",
+  "template_facility_default_title": "Anlagenübersicht",
+  "template_water_default_title": "Wasserqualität",
+  "generate_dashboard": "Dashboard erstellen",
+  "generating": "Wird erstellt...",
+  "open_generated": "Erstelltes Dashboard öffnen"
 }
