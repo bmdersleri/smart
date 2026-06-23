@@ -1,7 +1,10 @@
 {
-  "title": "Grafana Dashboardları",
-  "subtitle": "Provision edilmiş Grafana dashboardlarından operasyon ve telemetri grafikleri.",
-  "open_grafana": "Grafana'da aç",
+  "title": "İzleme & Analitik",
+  "subtitle": "Tesis için gömülü operasyon ve telemetri grafikleri.",
+  "loading": "Panolar yükleniyor...",
+  "load_error": "Panolar yüklenemedi",
+  "empty": "Pano bulunamadı.",
+  "open_grafana": "Yeni sekmede aç",
   "open_panel": "Paneli aç",
   "operational_title": "Operasyonel Genel Bakış",
   "operational_description": "Okuma hacmi, tag trendleri ve kötü kalite oranı için TimescaleDB grafikleri.",

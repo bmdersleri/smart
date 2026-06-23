@@ -1,7 +1,10 @@
 {
-  "title": "Grafana-Dashboards",
-  "subtitle": "Eingebettete Betriebs- und Telemetriediagramme aus den provisionierten Grafana-Dashboards.",
-  "open_grafana": "In Grafana öffnen",
+  "title": "Überwachung & Analyse",
+  "subtitle": "Eingebettete Betriebs- und Telemetriediagramme der Anlage.",
+  "loading": "Dashboards werden geladen...",
+  "load_error": "Dashboards konnten nicht geladen werden",
+  "empty": "Keine Dashboards gefunden.",
+  "open_grafana": "In neuem Tab öffnen",
   "open_panel": "Panel öffnen",
   "operational_title": "Betriebsübersicht",
   "operational_description": "TimescaleDB-Diagramme für Lesevolumen, Tag-Trends und BAD-Qualitätsrate.",

@@ -1,7 +1,10 @@
 {
-  "title": "Grafana Dashboards",
-  "subtitle": "Embedded operational and telemetry charts from the provisioned Grafana dashboards.",
-  "open_grafana": "Open in Grafana",
+  "title": "Monitoring & Analytics",
+  "subtitle": "Embedded operational and telemetry charts for the plant.",
+  "loading": "Loading dashboards...",
+  "load_error": "Dashboards could not be loaded",
+  "empty": "No dashboards found.",
+  "open_grafana": "Open in new tab",
   "open_panel": "Open panel",
   "operational_title": "Operational Overview",
   "operational_description": "TimescaleDB charts for reading volume, tag trends, and bad-quality ratio.",
