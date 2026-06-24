@@ -1,6 +1,6 @@
 // EKONT SMART REPORT — minimal service worker (uygulama kabuğu offline önbelleği).
 // API çağrıları ASLA önbelleklenmez (canlı veri); yalnız statik kabuk + navigasyon.
-const CACHE = 'scada-shell-v1'
+const CACHE = 'scada-shell-v2'
 const SHELL = ['/', '/index.html', '/icon.svg', '/manifest.webmanifest']
 
 self.addEventListener('install', (event) => {
@@ -19,8 +19,13 @@ self.addEventListener('fetch', (event) => {
   const { request } = event
   const url = new URL(request.url)
 
-  // API / health / metrics — daima ağ, önbellek yok
-  if (url.pathname.startsWith('/api') || url.pathname.startsWith('/health') || url.pathname.startsWith('/metrics')) {
+  // API / health / metrics / grafana proxy — daima ağ, önbellek yok (canlı veri)
+  if (
+    url.pathname.startsWith('/api') ||
+    url.pathname.startsWith('/grafana-api') ||
+    url.pathname.startsWith('/health') ||
+    url.pathname.startsWith('/metrics')
+  ) {
     return
   }
   if (request.method !== 'GET') return
