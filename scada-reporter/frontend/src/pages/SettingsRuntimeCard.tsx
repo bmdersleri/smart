@@ -99,6 +99,7 @@ export default function SettingsRuntimeCard() {
 
   async function toggleCollector() {
     if (!status) return
+    if (status.collector.running && !window.confirm(t('runtime_confirm_stop_collector'))) return
     setBusy('collector')
     setError(null)
     setMessage(null)
@@ -122,6 +123,7 @@ export default function SettingsRuntimeCard() {
 
   async function toggleScheduler() {
     if (!status) return
+    if (status.scheduler.running && !window.confirm(t('runtime_confirm_stop_scheduler'))) return
     setBusy('scheduler')
     setError(null)
     setMessage(null)

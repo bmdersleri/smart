@@ -1,10 +1,15 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends
+from typing import Literal
+
+from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.auth import require_role
 from app.api.license_guard import require_writable
+from app.core.audit import record_audit
+from app.core.database import get_db
 from app.models.user import User
 from app.services.runtime_control import (
     runtime_status,
@@ -15,6 +20,7 @@ from app.services.runtime_control import (
 )
 
 router = APIRouter(prefix="/runtime", tags=["runtime"])
+RuntimeTarget = Literal["collector", "scheduler"]
 
 
 class CollectorStatus(BaseModel):
@@ -43,6 +49,32 @@ class RuntimeStatus(BaseModel):
     scheduler: SchedulerStatus
 
 
+async def _record_runtime_audit(
+    db: AsyncSession,
+    request: Request,
+    actor: User,
+    *,
+    component: RuntimeTarget,
+    action: str,
+    before_running: bool,
+    after_running: bool,
+) -> None:
+    await record_audit(
+        db,
+        actor=actor,
+        action=f"runtime.{component}.{action}",
+        target_type="runtime_component",
+        target_id=component,
+        detail={
+            "component": component,
+            "action": action,
+            "before_running": before_running,
+            "after_running": after_running,
+        },
+        ip=request.client.host if request.client else None,
+    )
+
+
 @router.get("/status", response_model=RuntimeStatus)
 async def get_runtime_status(_: User = Depends(require_role("admin"))):
     return runtime_status()
@@ -50,35 +82,91 @@ async def get_runtime_status(_: User = Depends(require_role("admin"))):
 
 @router.post("/collector/start", response_model=RuntimeStatus)
 async def start_runtime_collector(
-    _: User = Depends(require_role("admin")),
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    actor: User = Depends(require_role("admin")),
     _w=Depends(require_writable),
 ):
+    before = runtime_status()
     await start_collector()
-    return runtime_status()
+    after = runtime_status()
+    await _record_runtime_audit(
+        db,
+        request,
+        actor,
+        component="collector",
+        action="start",
+        before_running=before["collector"]["running"],
+        after_running=after["collector"]["running"],
+    )
+    await db.commit()
+    return after
 
 
 @router.post("/collector/stop", response_model=RuntimeStatus)
 async def stop_runtime_collector(
-    _: User = Depends(require_role("admin")),
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    actor: User = Depends(require_role("admin")),
     _w=Depends(require_writable),
 ):
+    before = runtime_status()
     await stop_collector()
-    return runtime_status()
+    after = runtime_status()
+    await _record_runtime_audit(
+        db,
+        request,
+        actor,
+        component="collector",
+        action="stop",
+        before_running=before["collector"]["running"],
+        after_running=after["collector"]["running"],
+    )
+    await db.commit()
+    return after
 
 
 @router.post("/scheduler/start", response_model=RuntimeStatus)
 async def start_scheduler_runtime(
-    _: User = Depends(require_role("admin")),
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    actor: User = Depends(require_role("admin")),
     _w=Depends(require_writable),
 ):
+    before = runtime_status()
     await start_runtime_scheduler()
-    return runtime_status()
+    after = runtime_status()
+    await _record_runtime_audit(
+        db,
+        request,
+        actor,
+        component="scheduler",
+        action="start",
+        before_running=before["scheduler"]["running"],
+        after_running=after["scheduler"]["running"],
+    )
+    await db.commit()
+    return after
 
 
 @router.post("/scheduler/stop", response_model=RuntimeStatus)
 async def stop_scheduler_runtime(
-    _: User = Depends(require_role("admin")),
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    actor: User = Depends(require_role("admin")),
     _w=Depends(require_writable),
 ):
+    before = runtime_status()
     stop_runtime_scheduler()
-    return runtime_status()
+    after = runtime_status()
+    await _record_runtime_audit(
+        db,
+        request,
+        actor,
+        component="scheduler",
+        action="stop",
+        before_running=before["scheduler"]["running"],
+        after_running=after["scheduler"]["running"],
+    )
+    await db.commit()
+    return after

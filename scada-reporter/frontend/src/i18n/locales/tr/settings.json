@@ -42,6 +42,8 @@
   "runtime_collector_stopped": "Collector durduruldu.",
   "runtime_scheduler_started": "Scheduler başlatıldı.",
   "runtime_scheduler_stopped": "Scheduler durduruldu.",
+  "runtime_confirm_stop_collector": "Collector durdurulsun mu? Canlı veri toplama duraklar.",
+  "runtime_confirm_stop_scheduler": "Scheduler durdurulsun mu? Zamanlanmış raporlar duraklar.",
   "mode_licensed": "Lisanslı",
   "mode_demo": "Demo",
   "mode_unlicensed": "Tam",

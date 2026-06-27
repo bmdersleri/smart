@@ -42,6 +42,8 @@
   "runtime_collector_stopped": "Collector остановлен.",
   "runtime_scheduler_started": "Scheduler запущен.",
   "runtime_scheduler_stopped": "Scheduler остановлен.",
+  "runtime_confirm_stop_collector": "Остановить Collector? Сбор текущих данных будет приостановлен.",
+  "runtime_confirm_stop_scheduler": "Остановить Scheduler? Запланированные отчеты будут приостановлены.",
   "mode_licensed": "Лицензировано",
   "mode_demo": "Демо",
   "mode_unlicensed": "Полная",

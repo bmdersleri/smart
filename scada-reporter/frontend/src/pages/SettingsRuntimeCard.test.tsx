@@ -33,6 +33,7 @@ vi.mock('../api/client', () => ({
 describe('SettingsRuntimeCard', () => {
   afterEach(() => {
     vi.useRealTimers()
+    vi.restoreAllMocks()
   })
 
   beforeEach(() => {
@@ -44,6 +45,7 @@ describe('SettingsRuntimeCard', () => {
     getRuntimeStatus.mockResolvedValue({ data: status })
     startCollector.mockResolvedValue({ data: { ...status, collector: { ...status.collector, running: true } } })
     stopScheduler.mockResolvedValue({ data: { ...status, scheduler: { ...status.scheduler, running: false } } })
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
   })
 
   it('renders runtime status', async () => {
@@ -69,7 +71,19 @@ describe('SettingsRuntimeCard', () => {
     await screen.findByText('Scheduler')
     fireEvent.click(screen.getAllByText('Stop')[0])
 
+    expect(window.confirm).toHaveBeenCalledWith('Stop scheduler? Scheduled reports will pause.')
     await waitFor(() => expect(stopScheduler).toHaveBeenCalledTimes(1))
+  })
+
+  it('does not stop scheduler when confirmation is canceled', async () => {
+    vi.mocked(window.confirm).mockReturnValue(false)
+
+    render(<SettingsRuntimeCard />)
+    await screen.findByText('Scheduler')
+    fireEvent.click(screen.getAllByText('Stop')[0])
+
+    expect(window.confirm).toHaveBeenCalledWith('Stop scheduler? Scheduled reports will pause.')
+    expect(stopScheduler).not.toHaveBeenCalled()
   })
 
   it('auto-refreshes status while mounted', async () => {
