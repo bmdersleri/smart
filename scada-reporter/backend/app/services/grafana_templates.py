@@ -334,7 +334,7 @@ class LabParamSpec:
 
 def lab_dashboard_uid(point_id: int, parameter_ids: list[int]) -> str:
     ids = ",".join(str(i) for i in sorted({int(i) for i in parameter_ids}))
-    digest = hashlib.sha1(ids.encode("utf-8")).hexdigest()[:8]  # noqa: S324 (not security)
+    digest = hashlib.sha1(ids.encode("utf-8"), usedforsecurity=False).hexdigest()[:8]
     return f"sr-lab-{int(point_id)}-{digest}"
 
 
@@ -384,7 +384,9 @@ def build_lab_dashboard(
     )
     panels.append(_table_panel(len(params) + 1, "Son değerler", table_sql, x=0, y=y, w=24, h=10))
     uid = lab_dashboard_uid(point_id, [p.id for p in params])
-    return _base_dashboard(uid, f"Lab — {point_name}", ["lab"], panels)
+    dash = _base_dashboard(uid, f"Lab — {point_name}", ["lab"], panels)
+    dash["time"] = {"from": "now-30d", "to": "now"}
+    return dash
 
 
 def build_dashboard(template: str, uid: str, title: str, tag_ids: list[int] | None = None) -> dict:

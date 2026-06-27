@@ -71,3 +71,17 @@ def test_bad_code_raises():
 def test_empty_params_raises():
     with pytest.raises(ValueError):
         build_lab_dashboard(point_id=1, point_code="INLET", point_name="x", params=[])
+
+
+def test_lab_sql_code_allowlist():
+    from app.services.grafana_templates import _lab_sql_code
+
+    assert _lab_sql_code("a-b_1") == "'a-b_1'"
+    for bad in ["a'b", "a b", "a;b", ""]:
+        with pytest.raises(ValueError):
+            _lab_sql_code(bad)
+
+
+def test_lab_dashboard_time_window():
+    dash = build_lab_dashboard(point_id=5, point_code="INLET", point_name="Inlet", params=_params())
+    assert dash["time"] == {"from": "now-30d", "to": "now"}
