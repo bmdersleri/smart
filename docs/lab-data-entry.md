@@ -82,9 +82,30 @@ and panels as if they were a regular tag, enabling direct comparison on the same
 time-series panel. They are also selectable in **Advanced Reports** — statistics,
 PDF, Excel, and embedded Grafana panels all work with no additional code.
 
-Note: mirror writes happen only on the initial sample creation (`POST`). Editing
-a sample (`PATCH`) updates the `lab_measurements` rows but does not re-apply the
-mirror write.
+**Mirror limitations (best-effort convenience bridge):**
+
+- Mirror writes happen only on the initial sample creation (`POST`). Editing
+  a sample (`PATCH`) updates the `lab_measurements` rows but does **not**
+  re-apply the mirror write — the mirrored `tag_readings` value goes **stale**.
+- Deleting a sample (`DELETE`) removes the `lab_sample` and its
+  `lab_measurements` rows (cascade) but does **not** remove the mirrored
+  `tag_readings` row. That row becomes **orphaned** in `tag_readings`.
+
+The authoritative source of truth for lab data is always the `lab_*` tables
+and the `v_lab_timeseries` view. Mirroring is a best-effort convenience
+bridge for existing SCADA Grafana panels and Advanced Reports — do not rely on
+`tag_readings` as the primary store for lab values.
+
+**Flag staleness note:**
+
+A measurement's stored `flag` column (`"over_limit"` or `null`) is computed at
+write time from the parameter's `min_limit`/`max_limit` at the moment the
+sample is saved. Changing a parameter's limits later does **not** recompute
+existing flags — stored flags can become inaccurate after a limit change.
+
+However, the `v_lab_timeseries` view exposes `min_limit` and `max_limit`
+directly from the live `lab_parameters` row, so Grafana threshold lines
+**do** reflect updated limits even though the stored `flag` column does not.
 
 ---
 

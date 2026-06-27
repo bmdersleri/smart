@@ -84,3 +84,20 @@ async def test_sample_point_crud(client):
     assert created["approved"] is True
     resp = await client.delete(f"/api/lab/sample-points/{created['id']}")
     assert resp.status_code == 204
+
+
+@pytest.mark.asyncio
+async def test_admin_patches_sample_point(client):
+    _as("admin")
+    created = (
+        await client.post("/api/lab/sample-points", json={"code": "OUTLET", "name": "Outlet"})
+    ).json()
+    assert created["approved"] is True
+    resp = await client.patch(
+        f"/api/lab/sample-points/{created['id']}",
+        json={"name": "Outlet Updated", "approved": False},
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["name"] == "Outlet Updated"
+    assert body["approved"] is False

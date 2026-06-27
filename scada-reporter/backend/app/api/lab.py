@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, UploadFile
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy import and_, select
 from sqlalchemy import delete as sa_delete
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -318,7 +318,7 @@ async def create_sample(
 
 
 class BatchCreate(BaseModel):
-    rows: list[SampleCreate]
+    rows: list[SampleCreate] = Field(max_length=1000)
 
 
 @router.post("/samples/batch", status_code=201)
@@ -482,6 +482,8 @@ async def import_preview(
     _w=Depends(require_writable),
 ):
     content = await file.read()
+    if len(content) > 5_000_000:
+        raise HTTPException(status_code=400, detail="Dosya cok buyuk (max 5MB)")
     try:
         headers, rows = parse_table(content, file.filename or "")
     except ValueError as e:
@@ -502,7 +504,7 @@ class ImportCommit(BaseModel):
     time_column: str
     headers: list[str]
     mapping: dict[str, int]  # header -> parameter_id
-    rows: list[list[str]]
+    rows: list[list[str]] = Field(max_length=1000)
 
 
 @router.post("/import/commit")
@@ -527,6 +529,8 @@ async def import_commit(
             continue
         measurements = []
         for header, param_id in data.mapping.items():
+            if header == data.time_column:
+                continue
             idx = col_index.get(header)
             if idx is None or idx >= len(row) or row[idx] == "":
                 continue
