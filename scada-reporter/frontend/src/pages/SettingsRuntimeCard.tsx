@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import axios from 'axios'
 import {
   type RuntimeStatus,
   getRuntimeStatus,
@@ -11,6 +12,7 @@ import {
 
 type RuntimeTarget = 'collector' | 'scheduler'
 
+const REFRESH_MS = 10_000
 const cardCls = 'bg-gray-900 border border-gray-800 rounded-xl p-5 space-y-4 mb-4'
 const btnBase = 'px-3 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-50'
 
@@ -29,33 +31,69 @@ function statusDot(running: boolean) {
   return running ? 'bg-emerald-400' : 'bg-gray-600'
 }
 
+function responseDetail(data: unknown) {
+  if (!data) return null
+  if (typeof data === 'string') return data
+  if (typeof data === 'object') {
+    const record = data as Record<string, unknown>
+    const detail = record.detail ?? record.message ?? record.error
+    if (typeof detail === 'string') return detail
+    if (detail) return JSON.stringify(detail)
+  }
+  return null
+}
+
+function errorMessage(error: unknown, fallback: string) {
+  if (!axios.isAxiosError(error) || !error.response) return fallback
+  const status = error.response.status
+  const detail = responseDetail(error.response.data)
+  if (status && detail) return `${fallback} (${status}: ${detail})`
+  if (status) return `${fallback} (${status})`
+  if (detail) return `${fallback} (${detail})`
+  return fallback
+}
+
 export default function SettingsRuntimeCard() {
   const { t, i18n } = useTranslation('settings')
   const [status, setStatus] = useState<RuntimeStatus | null>(null)
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState<RuntimeTarget | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [message, setMessage] = useState<string | null>(null)
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
 
   async function refresh() {
     const res = await getRuntimeStatus()
     setStatus(res.data)
+    setLastUpdated(new Date())
+    setError(null)
   }
 
   useEffect(() => {
     let active = true
-    setLoading(true)
-    getRuntimeStatus()
-      .then((res) => {
-        if (active) setStatus(res.data)
-      })
-      .catch(() => {
-        if (active) setError(t('runtime_load_failed'))
-      })
-      .finally(() => {
-        if (active) setLoading(false)
-      })
+    async function load(initial = false) {
+      if (initial) setLoading(true)
+      try {
+        const res = await getRuntimeStatus()
+        if (!active) return
+        setStatus(res.data)
+        setLastUpdated(new Date())
+        setError(null)
+      } catch (err) {
+        if (active) setError(errorMessage(err, t('runtime_load_failed')))
+      } finally {
+        if (active && initial) setLoading(false)
+      }
+    }
+
+    void load(true)
+    const timer = window.setInterval(() => {
+      void load()
+    }, REFRESH_MS)
+
     return () => {
       active = false
+      window.clearInterval(timer)
     }
   }, [t])
 
@@ -63,12 +101,20 @@ export default function SettingsRuntimeCard() {
     if (!status) return
     setBusy('collector')
     setError(null)
+    setMessage(null)
     try {
+      const wasRunning = status.collector.running
       const res = status.collector.running ? await stopCollector() : await startCollector()
       setStatus(res.data)
-      await refresh()
-    } catch {
-      setError(t('runtime_action_failed'))
+      setLastUpdated(new Date())
+      setMessage(t(wasRunning ? 'runtime_collector_stopped' : 'runtime_collector_started'))
+      try {
+        await refresh()
+      } catch (err) {
+        setError(errorMessage(err, t('runtime_load_failed')))
+      }
+    } catch (err) {
+      setError(errorMessage(err, t('runtime_action_failed')))
     } finally {
       setBusy(null)
     }
@@ -78,12 +124,20 @@ export default function SettingsRuntimeCard() {
     if (!status) return
     setBusy('scheduler')
     setError(null)
+    setMessage(null)
     try {
+      const wasRunning = status.scheduler.running
       const res = status.scheduler.running ? await stopScheduler() : await startScheduler()
       setStatus(res.data)
-      await refresh()
-    } catch {
-      setError(t('runtime_action_failed'))
+      setLastUpdated(new Date())
+      setMessage(t(wasRunning ? 'runtime_scheduler_stopped' : 'runtime_scheduler_started'))
+      try {
+        await refresh()
+      } catch (err) {
+        setError(errorMessage(err, t('runtime_load_failed')))
+      }
+    } catch (err) {
+      setError(errorMessage(err, t('runtime_action_failed')))
     } finally {
       setBusy(null)
     }
@@ -92,6 +146,7 @@ export default function SettingsRuntimeCard() {
   const startedAt = status?.backend.started_at
     ? new Date(status.backend.started_at).toLocaleString(i18n.language)
     : '-'
+  const lastUpdatedAt = lastUpdated ? lastUpdated.toLocaleTimeString(i18n.language) : null
 
   return (
     <div className={cardCls}>
@@ -168,6 +223,13 @@ export default function SettingsRuntimeCard() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {(message || lastUpdatedAt) && (
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+          {message && <p className="text-emerald-300">{message}</p>}
+          {lastUpdatedAt && <p className="text-gray-500">{t('runtime_last_updated', { time: lastUpdatedAt })}</p>}
         </div>
       )}
 
