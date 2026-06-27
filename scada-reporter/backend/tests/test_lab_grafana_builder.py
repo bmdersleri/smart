@@ -32,16 +32,27 @@ def test_build_lab_dashboard_shape():
     types = [p["type"] for p in dash["panels"]]
     assert types.count("timeseries") == 2
     assert types.count("table") == 1
-    # every target uses the timescaledb postgres datasource and queries the view
+    # every panel targets the frser-sqlite datasource and queries the view
     for panel in dash["panels"]:
-        assert panel["datasource"] == {"type": "postgres", "uid": "timescaledb"}
-        sql = panel["targets"][0]["rawSql"]
+        assert panel["datasource"] == {"type": "frser-sqlite-datasource", "uid": "scadadb"}
+        target = panel["targets"][0]
+        assert "rawSql" not in target  # frser uses queryText, not postgres rawSql
+        sql = target["queryText"]
+        assert sql == target["rawQueryText"]
+        assert target["timeColumns"] == ["time"]
         assert "v_lab_timeseries" in sql
-    # the pH panel filters by its own codes
+    # the pH timeseries panel: epoch time + its own codes, no postgres macros
     ph = next(p for p in dash["panels"] if p["title"].startswith("pH"))
-    ph_sql = ph["targets"][0]["rawSql"]
+    ph_sql = ph["targets"][0]["queryText"]
+    assert ph["targets"][0]["queryType"] == "time series"
+    assert "CAST(strftime('%s', time) AS INTEGER) AS time" in ph_sql
     assert "point_code = 'INLET'" in ph_sql
     assert "param_code = 'PH'" in ph_sql
+    assert "$__timeFilter" not in ph_sql
+    # the table panel
+    table = next(p for p in dash["panels"] if p["type"] == "table")
+    assert table["targets"][0]["queryType"] == "table"
+    assert "param_code IN (" in table["targets"][0]["queryText"]
 
 
 def test_limits_become_threshold_lines():

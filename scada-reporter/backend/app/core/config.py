@@ -113,6 +113,7 @@ class Settings(BaseSettings):
     # config_warnings() admin/admin123'ü zaten zayıf-parola olarak uyarır.
     GRAFANA_PASSWORD: str = "admin123"
     GRAFANA_SA_TOKEN: str = ""  # render için service-account token; boşsa basic-auth fallback
+    GRAFANA_DATASOURCE_UID: str = "scadadb"  # frser-sqlite datasource uid for lab dashboards
     GRAFANA_RENDER_TIMEOUT: float = 30.0
     GRAFANA_RENDER_WIDTH: int = 1000
     GRAFANA_RENDER_HEIGHT: int = 500

@@ -5,6 +5,8 @@ import re
 from dataclasses import dataclass
 from typing import Literal
 
+from app.core.config import settings
+
 TemplateKey = Literal["facility_overview", "water_quality"]
 
 
@@ -338,19 +340,31 @@ def lab_dashboard_uid(point_id: int, parameter_ids: list[int]) -> str:
     return f"sr-lab-{int(point_id)}-{digest}"
 
 
+def _lab_datasource() -> dict:
+    return {"type": "frser-sqlite-datasource", "uid": settings.GRAFANA_DATASOURCE_UID}
+
+
+def _frser_target(sql: str, *, time_series: bool) -> dict:
+    return {
+        "refId": "A",
+        "datasource": _lab_datasource(),
+        "queryType": "time series" if time_series else "table",
+        "queryText": sql,
+        "rawQueryText": sql,
+        "timeColumns": ["time"],
+    }
+
+
 def _lab_timeseries_panel(panel_id: int, point_code: str, param: LabParamSpec, *, y: int) -> dict:
-    """A v_lab_timeseries time-series panel for one parameter, with min/max limit lines."""
-    raw_sql = (
-        f'SELECT time AS "time", param_code AS metric, value '
+    """A v_lab_timeseries (frser-sqlite) time-series panel for one parameter, with limit lines."""
+    sql = (
+        f"SELECT CAST(strftime('%s', time) AS INTEGER) AS time, param_name AS metric, value "
         f"FROM v_lab_timeseries "
         f"WHERE point_code = {_lab_sql_code(point_code)} "
         f"AND param_code = {_lab_sql_code(param.code)} "
-        f"AND $__timeFilter(time) ORDER BY time"
+        f"ORDER BY time"
     )
     title = f"{param.name}{f' ({param.unit})' if param.unit else ''}"
-    panel = _timeseries_panel(
-        panel_id, title, raw_sql, x=0, y=y, w=24, h=8, unit=param.unit or "short"
-    )
     steps: list[dict] = [{"color": "green", "value": None}]
     if param.min_limit is not None:
         steps.append({"color": "orange", "value": param.min_limit})
@@ -358,9 +372,38 @@ def _lab_timeseries_panel(panel_id: int, point_code: str, param: LabParamSpec, *
         steps.append({"color": "red", "value": param.max_limit})
     # Grafana wants steps sorted ascending; the base None step stays first.
     steps[1:] = sorted(steps[1:], key=lambda s: s["value"])
-    panel["fieldConfig"]["defaults"]["thresholds"] = {"mode": "absolute", "steps": steps}
-    panel["fieldConfig"]["defaults"]["custom"]["thresholdsStyle"] = {"mode": "line"}
-    return panel
+    return {
+        "id": panel_id,
+        "type": "timeseries",
+        "title": title,
+        "datasource": _lab_datasource(),
+        "gridPos": {"x": 0, "y": y, "w": 24, "h": 8},
+        "fieldConfig": {
+            "defaults": {
+                "unit": param.unit or "short",
+                "custom": {
+                    "drawStyle": "line",
+                    "lineWidth": 2,
+                    "showPoints": "always",
+                    "pointSize": 6,
+                    "spanNulls": True,
+                    "thresholdsStyle": {"mode": "line"},
+                },
+                "color": {"mode": "palette-classic"},
+                "thresholds": {"mode": "absolute", "steps": steps},
+            },
+            "overrides": [],
+        },
+        "options": {
+            "legend": {
+                "displayMode": "table",
+                "placement": "right",
+                "calcs": ["last", "min", "max"],
+            },
+            "tooltip": {"mode": "multi", "sort": "desc"},
+        },
+        "targets": [_frser_target(sql, time_series=True)],
+    }
 
 
 def build_lab_dashboard(
@@ -380,9 +423,20 @@ def build_lab_dashboard(
         f"FROM v_lab_timeseries "
         f"WHERE point_code = {_lab_sql_code(point_code)} "
         f"AND param_code IN ({codes_in}) "
-        f"AND $__timeFilter(time) ORDER BY time DESC LIMIT 200"
+        f"ORDER BY time DESC LIMIT 200"
     )
-    panels.append(_table_panel(len(params) + 1, "Son değerler", table_sql, x=0, y=y, w=24, h=10))
+    panels.append(
+        {
+            "id": len(params) + 1,
+            "type": "table",
+            "title": "Son değerler",
+            "datasource": _lab_datasource(),
+            "gridPos": {"x": 0, "y": y, "w": 24, "h": 10},
+            "fieldConfig": {"defaults": {}, "overrides": []},
+            "options": {"showHeader": True},
+            "targets": [_frser_target(table_sql, time_series=False)],
+        }
+    )
     uid = lab_dashboard_uid(point_id, [p.id for p in params])
     dash = _base_dashboard(uid, f"Lab — {point_name}", ["lab"], panels)
     dash["time"] = {"from": "now-30d", "to": "now"}
