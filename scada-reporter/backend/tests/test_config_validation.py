@@ -15,9 +15,11 @@ SAFE_PROD_KWARGS = dict(
     _env_file=None,
     ENVIRONMENT="production",
     SECRET_KEY="x" * 32,
+    ACCESS_TOKEN_EXPIRE_MINUTES=60,
     DATABASE_URL="postgresql+asyncpg://u:strongpass@db.example:5432/scada",
     CORS_ORIGINS="https://app.example.com",
     RUN_COLLECTOR=False,
+    RUN_SCHEDULER=False,
     GRAFANA_PASSWORD="strong-grafana-pass",
 )
 
@@ -34,9 +36,11 @@ def make_dev(**overrides) -> Settings:
         _env_file=None,
         ENVIRONMENT="development",
         SECRET_KEY=DEFAULT_SECRET,
+        ACCESS_TOKEN_EXPIRE_MINUTES=480,
         DATABASE_URL="postgresql+asyncpg://scada:scada123@localhost:5432/scada_reporter",
         CORS_ORIGINS="http://localhost:5173,http://localhost:3000",
         RUN_COLLECTOR=True,
+        RUN_SCHEDULER=True,
     )
     kwargs.update(overrides)
     return Settings(**kwargs)
@@ -192,6 +196,25 @@ def test_warnings_dev_run_collector_false_is_empty():
     assert s.config_warnings() == []
 
 
+def test_warnings_prod_run_scheduler_true_gives_warning():
+    s = make_prod(RUN_SCHEDULER=True)
+    warnings = s.config_warnings()
+    assert any("RUN_SCHEDULER" in w for w in warnings)
+    assert all("RUN_SCHEDULER" not in e for e in s.config_errors())
+
+
+def test_warnings_prod_long_access_token_ttl_gives_warning():
+    s = make_prod(ACCESS_TOKEN_EXPIRE_MINUTES=120)
+    warnings = s.config_warnings()
+    assert any("ACCESS_TOKEN_EXPIRE_MINUTES" in w for w in warnings)
+    assert all("ACCESS_TOKEN_EXPIRE_MINUTES" not in e for e in s.config_errors())
+
+
+def test_warnings_prod_short_access_token_ttl_is_empty():
+    s = make_prod(ACCESS_TOKEN_EXPIRE_MINUTES=60)
+    assert all("ACCESS_TOKEN_EXPIRE_MINUTES" not in w for w in s.config_warnings())
+
+
 def test_warnings_prod_weak_grafana_password_gives_warning():
     """Prod'da default/zayıf GRAFANA_PASSWORD bir UYARI üretir (hata değil — opsiyonel)."""
     s = make_prod(GRAFANA_PASSWORD="admin123")
@@ -203,6 +226,11 @@ def test_warnings_dev_weak_grafana_password_is_empty():
     """Development'ta zayıf GRAFANA_PASSWORD uyarı üretmez."""
     s = make_dev(GRAFANA_PASSWORD="admin123")
     assert all("GRAFANA" not in w for w in s.config_warnings())
+
+
+def test_warnings_dev_long_access_token_ttl_is_empty():
+    s = make_dev(ACCESS_TOKEN_EXPIRE_MINUTES=120)
+    assert all("ACCESS_TOKEN_EXPIRE_MINUTES" not in w for w in s.config_warnings())
 
 
 # ---------------------------------------------------------------------------

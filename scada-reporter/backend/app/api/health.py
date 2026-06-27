@@ -12,6 +12,7 @@ from __future__ import annotations
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
+from app.core.config import settings
 from app.core.db_health import alembic_head_matches, db_ok
 from app.services.scheduler import get_scheduler
 
@@ -32,8 +33,11 @@ async def readiness():
     """
     db_result = await db_ok()
     alembic_result = await alembic_head_matches()
-    sched = get_scheduler()
-    scheduler_result = sched is not None and getattr(sched, "running", False)
+    if settings.RUN_SCHEDULER:
+        sched = get_scheduler()
+        scheduler_result: bool | str = sched is not None and getattr(sched, "running", False)
+    else:
+        scheduler_result = "disabled"
 
     checks = {
         "db": db_result,
@@ -41,10 +45,15 @@ async def readiness():
         "scheduler": scheduler_result,
     }
 
-    all_ok = all(checks.values())
+    scheduler_ok = scheduler_result == "disabled" or scheduler_result is True
+    all_ok = db_result and alembic_result and scheduler_ok
     status_code = 200 if all_ok else 503
     body = {
         "status": "ready" if all_ok else "not_ready",
+        "role": {
+            "collector_enabled": settings.RUN_COLLECTOR,
+            "scheduler_enabled": settings.RUN_SCHEDULER,
+        },
         "checks": checks,
     }
     return JSONResponse(content=body, status_code=status_code)

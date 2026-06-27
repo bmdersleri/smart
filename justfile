@@ -31,6 +31,10 @@ restart-backend:
 run-collector:
     cd {{be}} && .venv/Scripts/python -m app.collector.runner
 
+# Bağımsız scheduler process'i; exactly one instance çalıştırın
+run-scheduler:
+    cd {{be}} && .venv/Scripts/python -m app.scheduler.runner
+
 # Frontend başlat (Vite dev server)
 run-frontend:
     cd {{fe}} && pnpm dev

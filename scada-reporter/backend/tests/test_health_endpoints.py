@@ -15,6 +15,8 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from httpx import AsyncClient
 
+import app.api.health as health_api
+
 # ── /live ─────────────────────────────────────────────────────────────────────
 
 
@@ -40,11 +42,13 @@ async def test_ready_happy_path(client: AsyncClient):
         patch("app.api.health.db_ok", new=AsyncMock(return_value=True)),
         patch("app.api.health.alembic_head_matches", new=AsyncMock(return_value=True)),
         patch("app.api.health.get_scheduler", return_value=_running_scheduler()),
+        patch.object(health_api.settings, "RUN_SCHEDULER", True),
     ):
         resp = await client.get("/ready")
     assert resp.status_code == 200
     data = resp.json()
     assert data["status"] == "ready"
+    assert data["role"]["scheduler_enabled"] is True
     assert data["checks"]["db"] is True
     assert data["checks"]["alembic_head"] is True
     assert data["checks"]["scheduler"] is True
@@ -57,6 +61,7 @@ async def test_ready_db_down(client: AsyncClient):
         patch("app.api.health.db_ok", new=AsyncMock(return_value=False)),
         patch("app.api.health.alembic_head_matches", new=AsyncMock(return_value=True)),
         patch("app.api.health.get_scheduler", return_value=_running_scheduler()),
+        patch.object(health_api.settings, "RUN_SCHEDULER", True),
     ):
         resp = await client.get("/ready")
     assert resp.status_code == 503
@@ -72,6 +77,7 @@ async def test_ready_alembic_mismatch(client: AsyncClient):
         patch("app.api.health.db_ok", new=AsyncMock(return_value=True)),
         patch("app.api.health.alembic_head_matches", new=AsyncMock(return_value=False)),
         patch("app.api.health.get_scheduler", return_value=_running_scheduler()),
+        patch.object(health_api.settings, "RUN_SCHEDULER", True),
     ):
         resp = await client.get("/ready")
     assert resp.status_code == 503
@@ -87,6 +93,7 @@ async def test_ready_scheduler_not_running_none(client: AsyncClient):
         patch("app.api.health.db_ok", new=AsyncMock(return_value=True)),
         patch("app.api.health.alembic_head_matches", new=AsyncMock(return_value=True)),
         patch("app.api.health.get_scheduler", return_value=None),
+        patch.object(health_api.settings, "RUN_SCHEDULER", True),
     ):
         resp = await client.get("/ready")
     assert resp.status_code == 503
@@ -102,11 +109,29 @@ async def test_ready_scheduler_not_running_false(client: AsyncClient):
         patch("app.api.health.db_ok", new=AsyncMock(return_value=True)),
         patch("app.api.health.alembic_head_matches", new=AsyncMock(return_value=True)),
         patch("app.api.health.get_scheduler", return_value=stopped_sched),
+        patch.object(health_api.settings, "RUN_SCHEDULER", True),
     ):
         resp = await client.get("/ready")
     assert resp.status_code == 503
     data = resp.json()
     assert data["checks"]["scheduler"] is False
+
+
+@pytest.mark.asyncio
+async def test_ready_scheduler_disabled_is_ignored(client: AsyncClient):
+    """RUN_SCHEDULER=False → scheduler check is marked disabled and does not fail readiness."""
+    with (
+        patch("app.api.health.db_ok", new=AsyncMock(return_value=True)),
+        patch("app.api.health.alembic_head_matches", new=AsyncMock(return_value=True)),
+        patch("app.api.health.get_scheduler") as get_scheduler_mock,
+        patch.object(health_api.settings, "RUN_SCHEDULER", False),
+    ):
+        resp = await client.get("/ready")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["role"]["scheduler_enabled"] is False
+    assert data["checks"]["scheduler"] == "disabled"
+    get_scheduler_mock.assert_not_called()
 
 
 # ── /health (regression + new fields) ────────────────────────────────────────
@@ -132,8 +157,10 @@ async def test_health_new_fields(client: AsyncClient):
     assert resp.status_code == 200
     data = resp.json()
     assert "collector_running" in data
+    assert "scheduler_enabled" in data
     assert "scheduler_running" in data
     assert isinstance(data["collector_running"], bool)
+    assert isinstance(data["scheduler_enabled"], bool)
     assert isinstance(data["scheduler_running"], bool)
 
 

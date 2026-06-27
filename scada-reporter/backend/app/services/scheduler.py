@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+from datetime import UTC, datetime, timedelta
+
 from apscheduler.executors.asyncio import AsyncIOExecutor
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 _scheduler: AsyncIOScheduler | None = None
+_RUNNING_RECENT_WINDOW = timedelta(minutes=5)
+_LAST_RUN_ERROR_LIMIT = 4096
 
 
 def get_scheduler() -> AsyncIOScheduler | None:
@@ -15,6 +19,25 @@ def _sync_db_url(async_url: str) -> str:
     return async_url.replace("postgresql+asyncpg://", "postgresql://").replace(
         "sqlite+aiosqlite:///", "sqlite:///"
     )
+
+
+def _normalize_utc(value: datetime) -> datetime:
+    if value.tzinfo is None:
+        return value.replace(tzinfo=UTC)
+    return value.astimezone(UTC)
+
+
+def _is_recently_running(scheduled_report, now: datetime) -> bool:
+    if scheduled_report.last_run_status != "running" or scheduled_report.last_run_at is None:
+        return False
+    age = now - _normalize_utc(scheduled_report.last_run_at)
+    return timedelta(0) <= age <= _RUNNING_RECENT_WINDOW
+
+
+def _bound_last_run_error(message: str | None) -> str | None:
+    if message is None or len(message) <= _LAST_RUN_ERROR_LIMIT:
+        return message
+    return message[:_LAST_RUN_ERROR_LIMIT]
 
 
 async def start_scheduler(db_url: str) -> None:
@@ -87,7 +110,6 @@ async def _sync_db_to_scheduler() -> None:
 
 async def _run_scheduled_report(scheduled_report_id: int) -> None:
     """APScheduler job function — owns its own DB session."""
-    from datetime import UTC, datetime
 
     from app.core.database import AsyncSessionLocal
     from app.models.report_archive import ReportArchive
@@ -103,8 +125,15 @@ async def _run_scheduled_report(scheduled_report_id: int) -> None:
         if template is None:
             return
 
+        now = datetime.now(UTC)
+        if _is_recently_running(sr, now):
+            job = _scheduler.get_job(f"sr_{sr.id}") if _scheduler else None
+            sr.next_run_at = job.next_run_time if job else None
+            await db.commit()
+            return
+
         sr.last_run_status = "running"
-        sr.last_run_at = datetime.now(UTC)
+        sr.last_run_at = now
         await db.commit()
 
         archive = ReportArchive(
@@ -132,7 +161,7 @@ async def _run_scheduled_report(scheduled_report_id: int) -> None:
             sr.last_run_error = None
         except Exception as exc:
             sr.last_run_status = "failed"
-            sr.last_run_error = str(exc)
+            sr.last_run_error = _bound_last_run_error(str(exc))
 
         job = _scheduler.get_job(f"sr_{sr.id}") if _scheduler else None
         sr.next_run_at = job.next_run_time if job else None

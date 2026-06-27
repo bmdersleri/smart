@@ -125,8 +125,11 @@ async def lifespan(app: FastAPI):
         await init_continuous_aggregates(conn)
         await init_daily_rollup(conn)
 
-    await start_scheduler(settings.DATABASE_URL)
-    logger.info("APScheduler baslatildi")
+    if settings.RUN_SCHEDULER:
+        await start_scheduler(settings.DATABASE_URL)
+        logger.info("APScheduler baslatildi")
+    else:
+        logger.info("RUN_SCHEDULER=False — APScheduler bu process'te baslatilmadi")
 
     # Collector (poller + OPC UA) yalnız RUN_COLLECTOR ise bu process'te çalışır.
     # API'yi collector'dan ayırmak için API worker'larında RUN_COLLECTOR=False
@@ -239,6 +242,7 @@ async def health():
         "plc_total": len(plc_status),
         "plcs": plc_status,
         "collector_running": settings.RUN_COLLECTOR,
+        "scheduler_enabled": settings.RUN_SCHEDULER,
         "scheduler_running": sched is not None and getattr(sched, "running", False),
         "uptime_seconds": metrics.uptime_seconds(),
         "started_at": metrics.process_started_at().isoformat(),

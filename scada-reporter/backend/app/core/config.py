@@ -19,9 +19,18 @@ class Settings(BaseSettings):
     DB_POOL_SIZE: int = 10
     DB_MAX_OVERFLOW: int = 20
 
+    # Agent SQL discovery guardrails
+    QUERY_MAX_ROWS: int = 5000
+    QUERY_MAX_SQL_CHARS: int = 10_000
+    QUERY_STATEMENT_TIMEOUT_MS: int = 5000
+
     # Collector (poller + OPC UA) bu process'te çalışsın mı? API'yi collector'dan
     # ayırmak için: API worker'larında False, ayrı collector process'inde True.
     RUN_COLLECTOR: bool = True
+
+    # APScheduler bu process'te çalışsın mı? API worker'larında False,
+    # scheduler process'inde True.
+    RUN_SCHEDULER: bool = True
 
     # Başlangıçta Base.metadata.create_all() çağrılsın mı? Dev'de True (varsayılan)
     # yeterli; production'da False yapın — şema Alembic migration'larıyla yönetilir.
@@ -59,6 +68,12 @@ class Settings(BaseSettings):
     # When a public key is configured but no valid license is present, the app
     # runs in DEMO mode (read-only, gated features off) instead of failing.
     SCADA_LICENSE_DEMO_MAX_TAGS: int = 25
+
+    # Upload guardrails
+    UPLOAD_MAX_XLSX_BYTES: int = 10 * 1024 * 1024
+    UPLOAD_MAX_CSV_BYTES: int = 2 * 1024 * 1024
+    UPLOAD_MAX_LICENSE_BYTES: int = 32 * 1024
+    UPLOAD_MAX_TEMPLATE_B64_BYTES: int = 16 * 1024 * 1024
 
     # ── Login rate limiting (brute-force koruması) ──
     LOGIN_RATE_LIMIT_ENABLED: bool = True
@@ -157,6 +172,16 @@ class Settings(BaseSettings):
             warnings.append(
                 "RUN_COLLECTOR=True — bu bir API process'iyse collector'ı ayırın"
                 " (RUN_COLLECTOR=False)."
+            )
+        if self.is_production and self.RUN_SCHEDULER:
+            warnings.append(
+                "RUN_SCHEDULER=True — bu bir API process'iyse scheduler'ı ayırın"
+                " (RUN_SCHEDULER=False)."
+            )
+        if self.is_production and self.ACCESS_TOKEN_EXPIRE_MINUTES > 60:
+            warnings.append(
+                "ACCESS_TOKEN_EXPIRE_MINUTES 60 dakikadan uzun — production'da"
+                " daha kısa bir bearer token TTL tercih edin."
             )
         if self.ALERT_EMAIL_ENABLED and not (self.SMTP_HOST and self.ALERT_EMAIL_TO):
             warnings.append(
