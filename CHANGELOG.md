@@ -11,6 +11,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Database statistics on Live Metrics** — `GET /api/dashboard/database` (any
+  authenticated user) returns DB size (dialect-aware: SQLite file + `-wal`/`-shm`
+  siblings, or PostgreSQL `pg_database_size`), total `tag_readings`, earliest
+  reading, last 24h/7d/30d counts (parameterized cutoffs), tag count, per-table
+  row counts (fixed allowlist), daily write rate, and estimated monthly disk
+  growth. The Live Metrics (`Canlı Metrikler`) page shows a "Veritabanı" section
+  with a **manual "Yenile" refresh button** — no auto-polling, so the `count(*)`
+  over millions of rows runs only on load + click. `formatBytes` + i18n in 5
+  languages (EN/TR/DE/RU/AR).
+
+- **Configurable lab-entry timezone** — lab sample timestamps are entered and
+  displayed in a configurable IANA timezone (default Istanbul), set from the
+  Settings page; stored as UTC, converted two-pass for correct DST-zone
+  wall-clock. Fixes the ~3-hour offset on entry.
+
 - **Lab Data Entry & Tracking** — manual entry of laboratory analysis results
   alongside automatic SCADA/PLC data.
   - **4 entry modes**: single-sample form, batch/table grid, Excel/CSV import
@@ -38,7 +53,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   point and parameters on the Monitoring & Analytics page → generates a Grafana dashboard with
   one time-series panel per parameter (min/max limit lines) plus a latest-values table, uid
   `sr-lab-{point_id}-{hash}`, overwrite-on-regenerate; queries the `v_lab_timeseries` view
-  (PostgreSQL/TimescaleDB datasource). uid allowlist `^[A-Za-z0-9_-]+$` prevents injection.
+  via the frser-sqlite datasource. uid allowlist `^[A-Za-z0-9_-]+$` prevents injection.
 
 - **Grafana dashboard delete** — `DELETE /api/grafana/dashboards/{uid}` (admin-only:
   `require_role("admin")` + `require_writable` + `require_feature("grafana")`): admin-only ✕
@@ -93,6 +108,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Grafana generators → frser-sqlite datasource**: the `facility_overview` and
+  `water_quality` dashboard generators (`app/services/grafana_templates.py`) now
+  emit frser-sqlite panels instead of PostgreSQL, matching the deployment Grafana
+  (no `timescaledb` datasource exists). PostgreSQL macros (`$__timeGroupAlias`,
+  `$__timeFilter`, `$__time`), `now() - INTERVAL`, `EXTRACT(EPOCH ...)`, and
+  `DISTINCT ON` are replaced with fixed windows (`datetime('now', '-24 hours')` /
+  `'-7 days'`), `strftime('%s', ...)` epoch columns, manual time buckets, and
+  `row_number() OVER (...)` latest-value subqueries. Shared panel helpers gained
+  opt-in `datasource`/`target` kwargs (PostgreSQL-preserving defaults), so the
+  report-template generator stays on PostgreSQL unchanged. `_lab_datasource`
+  renamed to `_frser_datasource`.
 - **Phase 1 — Baseline alignment**: test infrastructure (pytest-timeout, coverage threshold, seed/collector/bad-quality coverage); CI coverage gate wired in; vacuous tests removed.
 - **Phase 2 — Production safety**: CI extended (bandit security scan, contract-freshness, MCP smoke test); `just check` consolidates all checks.
 - **Phase 3 — Auth/contract/ops**: auth token versioning, rate limiting, SSE scoped tokens, RBAC Literals, audit log, liveness/readiness, OpenAPI contract CI.

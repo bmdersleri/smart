@@ -28,7 +28,8 @@ Collects data directly from Siemens S7-1500 PLCs, stores it in a time-series dat
 | **PLC Config** | Add/remove PLCs, manage IP/rack/slot/connection status |
 | **PLC Health** | Per-PLC health, incident summary, acknowledgement workflow |
 | **Lab Data Entry** | Manual entry of lab analysis results (single-sample, batch grid, Excel/CSV import, records); hybrid parameter + sample-point catalog; mirrors values into SCADA tag readings |
-| **Monitoring & Analytics** | Prometheus metrics view + embedded Grafana dashboards; generate a Grafana dashboard from a lab sample point (time-series panels + latest-values table); admin delete of managed dashboards |
+| **Live Metrics** | Poller throughput + deadband savings; **Database** section (size, total/earliest readings, last 24h/7d/30d counts, tag count, per-table rows, daily rate, est. growth) with a manual refresh button |
+| **Monitoring & Analytics** | Prometheus metrics view + embedded Grafana dashboards; generate a Grafana dashboard from a lab sample point or a project template (`facility_overview` / `water_quality`); admin delete of managed dashboards. Generators emit frser-sqlite panels |
 | **Settings** | User preferences (theme, language, trend chart height); License status + admin license upload; Lab Catalog (admin) |
 | **Users** | Admin-only user management |
 
@@ -38,7 +39,7 @@ Collects data directly from Siemens S7-1500 PLCs, stores it in a time-series dat
 |-------|--------|-------------|
 | Auth | `/api/auth` | Login (OAuth2 form-data), token |
 | Tags | `/api/tags` | Tag CRUD, reading history |
-| Dashboard | `/api/dashboard` | Overview, current values, trend query |
+| Dashboard | `/api/dashboard` | Overview, current values, trend query, database statistics (`/database`) |
 | Realtime | `/api/dashboard/stream`, `/api/dashboard/logs/stream` | SSE latest-value and log streams |
 | Reports | `/api/reports` | Report generation and history |
 | Advanced Reports | `/api/advanced-reports` | Template CRUD, scheduler, archive, download |
@@ -51,7 +52,7 @@ Collects data directly from Siemens S7-1500 PLCs, stores it in a time-series dat
 | Query | `/api/query` | Read-only SQL query (SELECT / WITH / EXPLAIN) |
 | Explore | `/api/explore` | Schema and tag catalog discovery |
 | Lab | `/api/lab` | Lab parameters, sample points, samples, batch entry, Excel/CSV import (16 endpoints) |
-| Grafana Dashboards | `/api/grafana/dashboards` | Generate dashboard from lab sample point (POST); delete by uid (DELETE — admin) |
+| Grafana Dashboards | `/api/grafana/dashboards` | Generate from lab sample point or project template (POST); delete by uid (DELETE — admin) |
 | License | `/api/license` | License status (GET); admin upload/replace (POST) and revert-to-demo (DELETE) |
 | Health | `/live`, `/ready`, `/health`, `/metrics` | Liveness, readiness, system health, Prometheus metrics |
 
