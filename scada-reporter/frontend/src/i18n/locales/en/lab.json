@@ -15,5 +15,16 @@
   "save": "Save",
   "saved": "Saved",
   "out_of_range": "Out of range",
-  "value": "Value"
+  "value": "Value",
+  "catalog_title": "Lab Catalog",
+  "catalog_parameters": "Parameters",
+  "catalog_points": "Sample Points",
+  "pending_approval": "Pending Approval",
+  "approve": "Approve",
+  "name": "Name",
+  "code": "Code",
+  "unit": "Unit",
+  "description": "Description",
+  "add": "Add",
+  "delete": "Delete"
 }

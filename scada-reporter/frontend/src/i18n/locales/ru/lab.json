@@ -15,5 +15,16 @@
   "save": "Сохранить",
   "saved": "Сохранено",
   "out_of_range": "Вне нормы",
-  "value": "Значение"
+  "value": "Значение",
+  "catalog_title": "Каталог лаборатории",
+  "catalog_parameters": "Параметры",
+  "catalog_points": "Точки отбора",
+  "pending_approval": "Ожидает одобрения",
+  "approve": "Одобрить",
+  "name": "Название",
+  "code": "Код",
+  "unit": "Единица",
+  "description": "Описание",
+  "add": "Добавить",
+  "delete": "Удалить"
 }

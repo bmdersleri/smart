@@ -371,7 +371,12 @@ export const getArchiveEntry = (id: number) => api.get<ArchiveEntry>(`/advanced-
 export const downloadArchiveReport = (id: number) => api.get(`/advanced-reports/archive/${id}/download`, { responseType: 'blob' })
 
 // ── Lab Data Entry ────────────────────────────────────────────────────────────
-export type { LabParameterOut, LabSamplePointOut, SampleCreate, SampleOut, MeasurementIn } from './generated/types.gen'
+export type {
+  LabParameterOut, LabParameterCreate, LabParameterUpdate,
+  LabSamplePointOut, LabSamplePointCreate, LabSamplePointUpdate,
+  SampleCreate, SampleOut, MeasurementIn,
+  BatchCreate, ImportCommit,
+} from './generated/types.gen'
 
 export const listLabParameters = (params?: { approved?: boolean; active?: boolean }) =>
   api.get<import('./generated/types.gen').LabParameterOut[]>('/lab/parameters', { params })
@@ -381,6 +386,52 @@ export const listLabSamplePoints = (params?: { approved?: boolean; active?: bool
 
 export const createSample = (data: import('./generated/types.gen').SampleCreate) =>
   api.post<import('./generated/types.gen').SampleOut>('/lab/samples', data)
+
+export const createSamplesBatch = (data: import('./generated/types.gen').BatchCreate) =>
+  api.post<import('./generated/types.gen').SampleOut[]>('/lab/samples/batch', data)
+
+export const listSamples = (params?: {
+  point_id?: number; parameter_id?: number
+  start?: string; end?: string
+  entered_by?: number; limit?: number; offset?: number
+}) => api.get<import('./generated/types.gen').SampleOut[]>('/lab/samples', { params })
+
+export const getSample = (id: number) =>
+  api.get<import('./generated/types.gen').SampleOut>(`/lab/samples/${id}`)
+
+export const updateSample = (id: number, data: Partial<import('./generated/types.gen').SampleCreate>) =>
+  api.patch<import('./generated/types.gen').SampleOut>(`/lab/samples/${id}`, data)
+
+export const deleteSample = (id: number) =>
+  api.delete(`/lab/samples/${id}`)
+
+export const importPreview = (file: File) => {
+  const fd = new FormData()
+  fd.append('file', file)
+  return api.post<{ headers: string[]; rows: string[][] }>(
+    '/lab/import/preview', fd, { headers: { 'Content-Type': 'multipart/form-data' } })
+}
+
+export const importCommit = (data: import('./generated/types.gen').ImportCommit) =>
+  api.post<{ inserted: number; errors: string[] }>('/lab/import/commit', data)
+
+export const createParameter = (data: import('./generated/types.gen').LabParameterCreate) =>
+  api.post<import('./generated/types.gen').LabParameterOut>('/lab/parameters', data)
+
+export const updateParameter = (id: number, data: import('./generated/types.gen').LabParameterUpdate) =>
+  api.patch<import('./generated/types.gen').LabParameterOut>(`/lab/parameters/${id}`, data)
+
+export const deleteParameter = (id: number) =>
+  api.delete(`/lab/parameters/${id}`)
+
+export const createSamplePoint = (data: import('./generated/types.gen').LabSamplePointCreate) =>
+  api.post<import('./generated/types.gen').LabSamplePointOut>('/lab/sample-points', data)
+
+export const updateSamplePoint = (id: number, data: import('./generated/types.gen').LabSamplePointUpdate) =>
+  api.patch<import('./generated/types.gen').LabSamplePointOut>(`/lab/sample-points/${id}`, data)
+
+export const deleteSamplePoint = (id: number) =>
+  api.delete(`/lab/sample-points/${id}`)
 
 // ── License ───────────────────────────────────────────────────────────────────
 export type LicenseMode = 'unlicensed' | 'licensed' | 'demo'

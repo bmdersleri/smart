@@ -1,7 +1,9 @@
 import { useTranslation } from 'react-i18next'
 import { useSettings } from '../context/SettingsContext'
+import { useAuth } from '../context/AuthContext'
 import LanguageSelector from '../components/LanguageSelector'
 import LicenseCard from '../components/LicenseCard'
+import LabCatalogCard from './lab/LabCatalogCard'
 
 const MIN_H = 300
 const MAX_H = 2000
@@ -10,6 +12,7 @@ const STEP = 50
 export default function Settings() {
   const { t } = useTranslation(['settings', 'common'])
   const { trendChartHeight, theme, set, reset } = useSettings()
+  const { user } = useAuth()
 
   return (
     <div className="p-6 max-w-xl">
@@ -46,6 +49,8 @@ export default function Settings() {
       </div>
 
       <LicenseCard />
+
+      {user?.role === 'admin' && <LabCatalogCard />}
 
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 space-y-6">
         <h2 className="text-sm font-medium text-gray-400 uppercase tracking-wider">{t('trend_chart')}</h2>

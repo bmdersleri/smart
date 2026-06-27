@@ -15,5 +15,16 @@
   "save": "حفظ",
   "saved": "تم الحفظ",
   "out_of_range": "خارج النطاق",
-  "value": "القيمة"
+  "value": "القيمة",
+  "catalog_title": "كتالوج المختبر",
+  "catalog_parameters": "المعلمات",
+  "catalog_points": "نقاط العينة",
+  "pending_approval": "في انتظار الموافقة",
+  "approve": "موافقة",
+  "name": "الاسم",
+  "code": "الرمز",
+  "unit": "الوحدة",
+  "description": "الوصف",
+  "add": "إضافة",
+  "delete": "حذف"
 }

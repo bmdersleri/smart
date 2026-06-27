@@ -15,5 +15,16 @@
   "save": "Speichern",
   "saved": "Gespeichert",
   "out_of_range": "Außerhalb des Bereichs",
-  "value": "Wert"
+  "value": "Wert",
+  "catalog_title": "Lab-Katalog",
+  "catalog_parameters": "Parameter",
+  "catalog_points": "Probenahmpunkte",
+  "pending_approval": "Ausstehende Genehmigung",
+  "approve": "Genehmigen",
+  "name": "Name",
+  "code": "Code",
+  "unit": "Einheit",
+  "description": "Beschreibung",
+  "add": "Hinzufügen",
+  "delete": "Löschen"
 }

@@ -15,5 +15,16 @@
   "save": "Kaydet",
   "saved": "Kaydedildi",
   "out_of_range": "Limit dışı",
-  "value": "Değer"
+  "value": "Değer",
+  "catalog_title": "Lab Kataloğu",
+  "catalog_parameters": "Parametreler",
+  "catalog_points": "Numune Noktaları",
+  "pending_approval": "Onay Bekliyor",
+  "approve": "Onayla",
+  "name": "Ad",
+  "code": "Kod",
+  "unit": "Birim",
+  "description": "Açıklama",
+  "add": "Ekle",
+  "delete": "Sil"
 }

@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import SingleSampleTab from './lab/SingleSampleTab'
+import BatchTab from './lab/BatchTab'
+import ImportTab from './lab/ImportTab'
+import RecordsTab from './lab/RecordsTab'
 
 type TabKey = 'single' | 'batch' | 'import' | 'records'
 
@@ -31,7 +34,9 @@ export default function LabEntry() {
         ))}
       </div>
       {tab === 'single' && <SingleSampleTab />}
-      {tab !== 'single' && <p className="text-sm text-gray-500">…</p>}
+      {tab === 'batch' && <BatchTab />}
+      {tab === 'import' && <ImportTab />}
+      {tab === 'records' && <RecordsTab />}
     </div>
   )
 }
