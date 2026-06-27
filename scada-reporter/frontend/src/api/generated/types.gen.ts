@@ -185,6 +185,24 @@ export type AuditOut = {
 };
 
 /**
+ * BackendStatus
+ */
+export type BackendStatus = {
+    /**
+     * Started At
+     */
+    started_at: string;
+    /**
+     * Status
+     */
+    status: string;
+    /**
+     * Uptime Seconds
+     */
+    uptime_seconds: number;
+};
+
+/**
  * BatchCreate
  */
 export type BatchCreate = {
@@ -272,6 +290,32 @@ export type BodyUploadLicenseApiLicensePost = {
      * File
      */
     file: Blob | File;
+};
+
+/**
+ * CollectorStatus
+ */
+export type CollectorStatus = {
+    /**
+     * Configured
+     */
+    configured: boolean;
+    /**
+     * Monitor Running
+     */
+    monitor_running: boolean;
+    /**
+     * Opcua Running
+     */
+    opcua_running: boolean;
+    /**
+     * Poller Running
+     */
+    poller_running: boolean;
+    /**
+     * Running
+     */
+    running: boolean;
 };
 
 /**
@@ -470,6 +514,20 @@ export type ImportCommit = {
      * Time Column
      */
     time_column: string;
+};
+
+/**
+ * LabDashboardGenerateIn
+ */
+export type LabDashboardGenerateIn = {
+    /**
+     * Parameter Ids
+     */
+    parameter_ids: Array<number>;
+    /**
+     * Sample Point Id
+     */
+    sample_point_id: number;
 };
 
 /**
@@ -855,6 +913,19 @@ export type RunRequest = {
 };
 
 /**
+ * RuntimeStatus
+ */
+export type RuntimeStatus = {
+    backend: BackendStatus;
+    collector: CollectorStatus;
+    /**
+     * Controls Enabled
+     */
+    controls_enabled: boolean;
+    scheduler: SchedulerStatus;
+};
+
+/**
  * SampleCreate
  */
 export type SampleCreate = {
@@ -1028,6 +1099,20 @@ export type ScheduledResponse = {
      * Template Id
      */
     template_id: number;
+};
+
+/**
+ * SchedulerStatus
+ */
+export type SchedulerStatus = {
+    /**
+     * Configured
+     */
+    configured: boolean;
+    /**
+     * Running
+     */
+    running: boolean;
 };
 
 /**
@@ -1510,6 +1595,16 @@ export type TemplateResponse = {
      * Updated At
      */
     updated_at: string;
+};
+
+/**
+ * TimezoneIn
+ */
+export type TimezoneIn = {
+    /**
+     * Timezone
+     */
+    timezone: string;
 };
 
 /**
@@ -2573,6 +2668,26 @@ export type LoginApiAuthTokenPostResponses = {
 
 export type LoginApiAuthTokenPostResponse = LoginApiAuthTokenPostResponses[keyof LoginApiAuthTokenPostResponses];
 
+export type DatabaseStatsApiDashboardDatabaseGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/dashboard/database';
+};
+
+export type DatabaseStatsApiDashboardDatabaseGetResponses = {
+    /**
+     * Response Database Stats Api Dashboard Database Get
+     *
+     * Successful Response
+     */
+    200: {
+        [key: string]: unknown;
+    };
+};
+
+export type DatabaseStatsApiDashboardDatabaseGetResponse = DatabaseStatsApiDashboardDatabaseGetResponses[keyof DatabaseStatsApiDashboardDatabaseGetResponses];
+
 export type DeadbandSavingsApiDashboardDeadbandSavingsGetData = {
     body?: never;
     path?: never;
@@ -3307,6 +3422,35 @@ export type ListDashboardsApiGrafanaDashboardsGetResponses = {
 
 export type ListDashboardsApiGrafanaDashboardsGetResponse = ListDashboardsApiGrafanaDashboardsGetResponses[keyof ListDashboardsApiGrafanaDashboardsGetResponses];
 
+export type GenerateFromLabApiGrafanaDashboardsFromLabPostData = {
+    body: LabDashboardGenerateIn;
+    path?: never;
+    query?: never;
+    url: '/api/grafana/dashboards/from-lab';
+};
+
+export type GenerateFromLabApiGrafanaDashboardsFromLabPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GenerateFromLabApiGrafanaDashboardsFromLabPostError = GenerateFromLabApiGrafanaDashboardsFromLabPostErrors[keyof GenerateFromLabApiGrafanaDashboardsFromLabPostErrors];
+
+export type GenerateFromLabApiGrafanaDashboardsFromLabPostResponses = {
+    /**
+     * Response Generate From Lab Api Grafana Dashboards From Lab Post
+     *
+     * Successful Response
+     */
+    200: {
+        [key: string]: unknown;
+    };
+};
+
+export type GenerateFromLabApiGrafanaDashboardsFromLabPostResponse = GenerateFromLabApiGrafanaDashboardsFromLabPostResponses[keyof GenerateFromLabApiGrafanaDashboardsFromLabPostResponses];
+
 export type GenerateFromReportTemplateApiGrafanaDashboardsFromReportTemplateTemplateIdPostData = {
     body?: never;
     path: {
@@ -3363,6 +3507,40 @@ export type GenerateDashboardApiGrafanaDashboardsGeneratePostResponses = {
      */
     200: unknown;
 };
+
+export type DeleteDashboardApiGrafanaDashboardsUidDeleteData = {
+    body?: never;
+    path: {
+        /**
+         * Uid
+         */
+        uid: string;
+    };
+    query?: never;
+    url: '/api/grafana/dashboards/{uid}';
+};
+
+export type DeleteDashboardApiGrafanaDashboardsUidDeleteErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DeleteDashboardApiGrafanaDashboardsUidDeleteError = DeleteDashboardApiGrafanaDashboardsUidDeleteErrors[keyof DeleteDashboardApiGrafanaDashboardsUidDeleteErrors];
+
+export type DeleteDashboardApiGrafanaDashboardsUidDeleteResponses = {
+    /**
+     * Response Delete Dashboard Api Grafana Dashboards  Uid  Delete
+     *
+     * Successful Response
+     */
+    200: {
+        [key: string]: unknown;
+    };
+};
+
+export type DeleteDashboardApiGrafanaDashboardsUidDeleteResponse = DeleteDashboardApiGrafanaDashboardsUidDeleteResponses[keyof DeleteDashboardApiGrafanaDashboardsUidDeleteResponses];
 
 export type ListPanelsApiGrafanaDashboardsUidPanelsGetData = {
     body?: never;
@@ -4419,6 +4597,135 @@ export type DownloadHistoryApiReportsHistoryHistoryIdDownloadGetResponses = {
      */
     200: unknown;
 };
+
+export type StartRuntimeCollectorApiRuntimeCollectorStartPostData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/runtime/collector/start';
+};
+
+export type StartRuntimeCollectorApiRuntimeCollectorStartPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: RuntimeStatus;
+};
+
+export type StartRuntimeCollectorApiRuntimeCollectorStartPostResponse = StartRuntimeCollectorApiRuntimeCollectorStartPostResponses[keyof StartRuntimeCollectorApiRuntimeCollectorStartPostResponses];
+
+export type StopRuntimeCollectorApiRuntimeCollectorStopPostData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/runtime/collector/stop';
+};
+
+export type StopRuntimeCollectorApiRuntimeCollectorStopPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: RuntimeStatus;
+};
+
+export type StopRuntimeCollectorApiRuntimeCollectorStopPostResponse = StopRuntimeCollectorApiRuntimeCollectorStopPostResponses[keyof StopRuntimeCollectorApiRuntimeCollectorStopPostResponses];
+
+export type StartSchedulerRuntimeApiRuntimeSchedulerStartPostData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/runtime/scheduler/start';
+};
+
+export type StartSchedulerRuntimeApiRuntimeSchedulerStartPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: RuntimeStatus;
+};
+
+export type StartSchedulerRuntimeApiRuntimeSchedulerStartPostResponse = StartSchedulerRuntimeApiRuntimeSchedulerStartPostResponses[keyof StartSchedulerRuntimeApiRuntimeSchedulerStartPostResponses];
+
+export type StopSchedulerRuntimeApiRuntimeSchedulerStopPostData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/runtime/scheduler/stop';
+};
+
+export type StopSchedulerRuntimeApiRuntimeSchedulerStopPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: RuntimeStatus;
+};
+
+export type StopSchedulerRuntimeApiRuntimeSchedulerStopPostResponse = StopSchedulerRuntimeApiRuntimeSchedulerStopPostResponses[keyof StopSchedulerRuntimeApiRuntimeSchedulerStopPostResponses];
+
+export type GetRuntimeStatusApiRuntimeStatusGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/runtime/status';
+};
+
+export type GetRuntimeStatusApiRuntimeStatusGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: RuntimeStatus;
+};
+
+export type GetRuntimeStatusApiRuntimeStatusGetResponse = GetRuntimeStatusApiRuntimeStatusGetResponses[keyof GetRuntimeStatusApiRuntimeStatusGetResponses];
+
+export type GetSettingsApiSettingsGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/settings';
+};
+
+export type GetSettingsApiSettingsGetResponses = {
+    /**
+     * Response Get Settings Api Settings Get
+     *
+     * Successful Response
+     */
+    200: {
+        [key: string]: unknown;
+    };
+};
+
+export type GetSettingsApiSettingsGetResponse = GetSettingsApiSettingsGetResponses[keyof GetSettingsApiSettingsGetResponses];
+
+export type PutTimezoneApiSettingsTimezonePutData = {
+    body: TimezoneIn;
+    path?: never;
+    query?: never;
+    url: '/api/settings/timezone';
+};
+
+export type PutTimezoneApiSettingsTimezonePutErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type PutTimezoneApiSettingsTimezonePutError = PutTimezoneApiSettingsTimezonePutErrors[keyof PutTimezoneApiSettingsTimezonePutErrors];
+
+export type PutTimezoneApiSettingsTimezonePutResponses = {
+    /**
+     * Response Put Timezone Api Settings Timezone Put
+     *
+     * Successful Response
+     */
+    200: {
+        [key: string]: unknown;
+    };
+};
+
+export type PutTimezoneApiSettingsTimezonePutResponse = PutTimezoneApiSettingsTimezonePutResponses[keyof PutTimezoneApiSettingsTimezonePutResponses];
 
 export type ListTagsApiTagsGetData = {
     body?: never;

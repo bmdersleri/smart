@@ -192,6 +192,33 @@ export interface HealthStatus {
 export const getHealth = () => api.get<HealthStatus>('/health', { baseURL: '' })
 // /live — cheap liveness probe (no auth, no DB); used by the login backend badge.
 export const getLive = () => api.get<{ status: string }>('/live', { baseURL: '' })
+
+export interface RuntimeStatus {
+  controls_enabled: boolean
+  backend: {
+    status: string
+    uptime_seconds: number
+    started_at: string
+  }
+  collector: {
+    configured: boolean
+    running: boolean
+    poller_running: boolean
+    opcua_running: boolean
+    monitor_running: boolean
+  }
+  scheduler: {
+    configured: boolean
+    running: boolean
+  }
+}
+
+export const getRuntimeStatus = () => api.get<RuntimeStatus>('/runtime/status')
+export const startCollector = () => api.post<RuntimeStatus>('/runtime/collector/start')
+export const stopCollector = () => api.post<RuntimeStatus>('/runtime/collector/stop')
+export const startScheduler = () => api.post<RuntimeStatus>('/runtime/scheduler/start')
+export const stopScheduler = () => api.post<RuntimeStatus>('/runtime/scheduler/stop')
+
 export interface MetricsSummary {
   rows_written_total: number
   bad_quality_total: number
@@ -212,6 +239,20 @@ export interface DeadbandSavings {
 }
 export const getDeadbandSavings = (hours = 24) =>
   api.get<DeadbandSavings>('/dashboard/deadband_savings', { params: { hours } })
+
+export interface DatabaseStats {
+  size_bytes: number
+  total_readings: number
+  earliest: string | null
+  last_day: number
+  last_week: number
+  last_month: number
+  tag_count: number
+  tables: { name: string; rows: number }[]
+  daily_rows: number
+  est_monthly_growth_bytes: number
+}
+export const getDatabaseStats = () => api.get<DatabaseStats>('/dashboard/database')
 export const getDashboardDevices = () => api.get<string[]>('/dashboard/devices')
 export const getWatchlist = () => api.get<WatchlistItem[]>('/dashboard/watchlist')
 export const addWatchlist = (tag_id: number) => api.post(`/dashboard/watchlist/${tag_id}`)

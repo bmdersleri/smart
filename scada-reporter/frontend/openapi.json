@@ -329,12 +329,36 @@
         "title": "AuditOut",
         "type": "object"
       },
+      "BackendStatus": {
+        "properties": {
+          "started_at": {
+            "title": "Started At",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "uptime_seconds": {
+            "title": "Uptime Seconds",
+            "type": "number"
+          }
+        },
+        "required": [
+          "status",
+          "uptime_seconds",
+          "started_at"
+        ],
+        "title": "BackendStatus",
+        "type": "object"
+      },
       "BatchCreate": {
         "properties": {
           "rows": {
             "items": {
               "$ref": "#/components/schemas/SampleCreate"
             },
+            "maxItems": 1000,
             "title": "Rows",
             "type": "array"
           }
@@ -472,6 +496,39 @@
           "file"
         ],
         "title": "Body_upload_license_api_license_post",
+        "type": "object"
+      },
+      "CollectorStatus": {
+        "properties": {
+          "configured": {
+            "title": "Configured",
+            "type": "boolean"
+          },
+          "monitor_running": {
+            "title": "Monitor Running",
+            "type": "boolean"
+          },
+          "opcua_running": {
+            "title": "Opcua Running",
+            "type": "boolean"
+          },
+          "poller_running": {
+            "title": "Poller Running",
+            "type": "boolean"
+          },
+          "running": {
+            "title": "Running",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "configured",
+          "running",
+          "poller_running",
+          "opcua_running",
+          "monitor_running"
+        ],
+        "title": "CollectorStatus",
         "type": "object"
       },
       "ColumnIn": {
@@ -759,6 +816,7 @@
               },
               "type": "array"
             },
+            "maxItems": 1000,
             "title": "Rows",
             "type": "array"
           },
@@ -779,6 +837,29 @@
           "rows"
         ],
         "title": "ImportCommit",
+        "type": "object"
+      },
+      "LabDashboardGenerateIn": {
+        "properties": {
+          "parameter_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "maxItems": 50,
+            "minItems": 1,
+            "title": "Parameter Ids",
+            "type": "array"
+          },
+          "sample_point_id": {
+            "title": "Sample Point Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "sample_point_id",
+          "parameter_ids"
+        ],
+        "title": "LabDashboardGenerateIn",
         "type": "object"
       },
       "LabParameterCreate": {
@@ -1427,6 +1508,31 @@
         "title": "RunRequest",
         "type": "object"
       },
+      "RuntimeStatus": {
+        "properties": {
+          "backend": {
+            "$ref": "#/components/schemas/BackendStatus"
+          },
+          "collector": {
+            "$ref": "#/components/schemas/CollectorStatus"
+          },
+          "controls_enabled": {
+            "title": "Controls Enabled",
+            "type": "boolean"
+          },
+          "scheduler": {
+            "$ref": "#/components/schemas/SchedulerStatus"
+          }
+        },
+        "required": [
+          "controls_enabled",
+          "backend",
+          "collector",
+          "scheduler"
+        ],
+        "title": "RuntimeStatus",
+        "type": "object"
+      },
       "SampleCreate": {
         "properties": {
           "batch_no": {
@@ -1759,6 +1865,24 @@
           "created_at"
         ],
         "title": "ScheduledResponse",
+        "type": "object"
+      },
+      "SchedulerStatus": {
+        "properties": {
+          "configured": {
+            "title": "Configured",
+            "type": "boolean"
+          },
+          "running": {
+            "title": "Running",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "configured",
+          "running"
+        ],
+        "title": "SchedulerStatus",
         "type": "object"
       },
       "StreamTokenResponse": {
@@ -2557,6 +2681,19 @@
           "updated_at"
         ],
         "title": "TemplateResponse",
+        "type": "object"
+      },
+      "TimezoneIn": {
+        "properties": {
+          "timezone": {
+            "title": "Timezone",
+            "type": "string"
+          }
+        },
+        "required": [
+          "timezone"
+        ],
+        "title": "TimezoneIn",
         "type": "object"
       },
       "TokenResponse": {
@@ -4421,6 +4558,34 @@
         ]
       }
     },
+    "/api/dashboard/database": {
+      "get": {
+        "operationId": "database_stats_api_dashboard_database_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Database Stats Api Dashboard Database Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Database Stats",
+        "tags": [
+          "dashboard"
+        ]
+      }
+    },
     "/api/dashboard/deadband_savings": {
       "get": {
         "description": "Deadband (report-by-exception) ile yapılan veri tasarrufunu dinamik hesapla.\n\nYalnız deadband > 0 olan aktif uzun-süre tag'leri sayılır; son `hours`\npenceresindeki gerçek satır sayısı, deadband olmasaydı beklenen satır\nsayısıyla karşılaştırılır.",
@@ -5747,6 +5912,54 @@
         ]
       }
     },
+    "/api/grafana/dashboards/from-lab": {
+      "post": {
+        "operationId": "generate_from_lab_api_grafana_dashboards_from_lab_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LabDashboardGenerateIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Generate From Lab Api Grafana Dashboards From Lab Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Generate From Lab",
+        "tags": [
+          "grafana"
+        ]
+      }
+    },
     "/api/grafana/dashboards/from-report-template/{template_id}": {
       "post": {
         "operationId": "generate_from_report_template_api_grafana_dashboards_from_report_template__template_id__post",
@@ -5835,6 +6048,55 @@
           }
         ],
         "summary": "Generate Dashboard",
+        "tags": [
+          "grafana"
+        ]
+      }
+    },
+    "/api/grafana/dashboards/{uid}": {
+      "delete": {
+        "operationId": "delete_dashboard_api_grafana_dashboards__uid__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "uid",
+            "required": true,
+            "schema": {
+              "title": "Uid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Delete Dashboard Api Grafana Dashboards  Uid  Delete",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Delete Dashboard",
         "tags": [
           "grafana"
         ]
@@ -7709,6 +7971,212 @@
         "summary": "Download History",
         "tags": [
           "reports"
+        ]
+      }
+    },
+    "/api/runtime/collector/start": {
+      "post": {
+        "operationId": "start_runtime_collector_api_runtime_collector_start_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RuntimeStatus"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Start Runtime Collector",
+        "tags": [
+          "runtime"
+        ]
+      }
+    },
+    "/api/runtime/collector/stop": {
+      "post": {
+        "operationId": "stop_runtime_collector_api_runtime_collector_stop_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RuntimeStatus"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Stop Runtime Collector",
+        "tags": [
+          "runtime"
+        ]
+      }
+    },
+    "/api/runtime/scheduler/start": {
+      "post": {
+        "operationId": "start_scheduler_runtime_api_runtime_scheduler_start_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RuntimeStatus"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Start Scheduler Runtime",
+        "tags": [
+          "runtime"
+        ]
+      }
+    },
+    "/api/runtime/scheduler/stop": {
+      "post": {
+        "operationId": "stop_scheduler_runtime_api_runtime_scheduler_stop_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RuntimeStatus"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Stop Scheduler Runtime",
+        "tags": [
+          "runtime"
+        ]
+      }
+    },
+    "/api/runtime/status": {
+      "get": {
+        "operationId": "get_runtime_status_api_runtime_status_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RuntimeStatus"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Get Runtime Status",
+        "tags": [
+          "runtime"
+        ]
+      }
+    },
+    "/api/settings": {
+      "get": {
+        "operationId": "get_settings_api_settings_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Settings Api Settings Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Get Settings",
+        "tags": [
+          "settings"
+        ]
+      }
+    },
+    "/api/settings/timezone": {
+      "put": {
+        "operationId": "put_timezone_api_settings_timezone_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TimezoneIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Put Timezone Api Settings Timezone Put",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Put Timezone",
+        "tags": [
+          "settings"
         ]
       }
     },

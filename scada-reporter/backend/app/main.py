@@ -1,4 +1,3 @@
-import asyncio
 import logging
 import os
 import time
@@ -27,6 +26,7 @@ from app.api import (
     query,
     realtime,
     reports,
+    runtime,
     tags,
     users,
     watchlist_groups,
@@ -37,8 +37,6 @@ from app.api import (
 from app.api import (
     license as license_api,
 )
-from app.collector.opcua_server import opcua_server
-from app.collector.poller import poll_loop
 from app.collector.s7_collector import plc_manager
 from app.core import metrics
 from app.core.config import settings
@@ -61,7 +59,13 @@ from app.models import report_archive, report_template, scheduled_report  # noqa
 from app.models import tag_group as _tag_group  # noqa: F401
 from app.models import watchlist_group as _watchlist_group  # noqa: F401
 from app.models.report_history import ReportHistory as _ReportHistory  # noqa: F401
-from app.services.scheduler import get_scheduler, start_scheduler
+from app.services.runtime_control import (
+    runtime_status,
+    start_collector,
+    start_runtime_scheduler,
+    stop_collector,
+    stop_runtime_scheduler,
+)
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 logger = logging.getLogger(__name__)
@@ -128,7 +132,7 @@ async def lifespan(app: FastAPI):
         await init_daily_rollup(conn)
 
     if settings.RUN_SCHEDULER:
-        await start_scheduler(settings.DATABASE_URL)
+        await start_runtime_scheduler()
         logger.info("APScheduler baslatildi")
     else:
         logger.info("RUN_SCHEDULER=False — APScheduler bu process'te baslatilmadi")
@@ -137,42 +141,15 @@ async def lifespan(app: FastAPI):
     # API'yi collector'dan ayırmak için API worker'larında RUN_COLLECTOR=False
     # kullanın (çoklu PLC okumasını çoğaltmamak için). Ayrı collector process:
     # python -m app.collector.runner
-    poll_task: asyncio.Task | None = None
-    opcua_task: asyncio.Task | None = None
-    monitor_task: asyncio.Task | None = None
     if settings.RUN_COLLECTOR:
-        poll_task = asyncio.create_task(poll_loop())
-        logger.info("S7 poller baslatildi (coklu PLC, lazy connect)")
-
-        async def _start_opcua() -> None:
-            try:
-                await opcua_server.start()
-                logger.info("OPC UA server baslatildi")
-            except Exception as e:
-                logger.warning("OPC UA server baslatilamadi: %s", e)
-
-        opcua_task = asyncio.create_task(_start_opcua())
-
-        from app.monitor.monitor import plc_monitor_loop
-
-        monitor_task = asyncio.create_task(plc_monitor_loop())
-        logger.info("PLC monitor baslatildi")
+        await start_collector()
     else:
         logger.info("RUN_COLLECTOR=False — collector bu process'te baslatilmadi")
 
     yield
 
-    sched = get_scheduler()
-    if sched:
-        sched.shutdown(wait=False)
-    if monitor_task:
-        monitor_task.cancel()
-    if opcua_task:
-        opcua_task.cancel()
-        await opcua_server.stop()
-    if poll_task:
-        poll_task.cancel()
-        await plc_manager.disconnect_all()
+    stop_runtime_scheduler()
+    await stop_collector()
 
 
 app = FastAPI(
@@ -228,6 +205,7 @@ app.include_router(grafana.router, prefix="/api")
 app.include_router(lab.router, prefix="/api")
 app.include_router(app_settings.router, prefix="/api")
 app.include_router(license_api.router, prefix="/api")
+app.include_router(runtime.router, prefix="/api")
 
 
 @app.get("/metrics")
@@ -238,15 +216,15 @@ async def prometheus_metrics():
 @app.get("/health")
 async def health():
     plc_status = plc_manager.status()
-    sched = get_scheduler()
+    rt_status = runtime_status()
     return {
         "status": "ok",
         "plc_connected": sum(1 for v in plc_status.values() if v),
         "plc_total": len(plc_status),
         "plcs": plc_status,
-        "collector_running": settings.RUN_COLLECTOR,
+        "collector_running": rt_status["collector"]["running"],
         "scheduler_enabled": settings.RUN_SCHEDULER,
-        "scheduler_running": sched is not None and getattr(sched, "running", False),
+        "scheduler_running": rt_status["scheduler"]["running"],
         "uptime_seconds": metrics.uptime_seconds(),
         "started_at": metrics.process_started_at().isoformat(),
     }

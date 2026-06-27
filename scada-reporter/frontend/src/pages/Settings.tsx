@@ -5,6 +5,7 @@ import LanguageSelector from '../components/LanguageSelector'
 import LicenseCard from '../components/LicenseCard'
 import LabCatalogCard from './lab/LabCatalogCard'
 import SettingsTimezoneCard from './SettingsTimezoneCard'
+import SettingsRuntimeCard from './SettingsRuntimeCard'
 
 const MIN_H = 300
 const MAX_H = 2000
@@ -51,6 +52,7 @@ export default function Settings() {
 
       <LicenseCard />
 
+      {user?.role === 'admin' && <SettingsRuntimeCard />}
       {user?.role === 'admin' && <LabCatalogCard />}
       {user?.role === 'admin' && <SettingsTimezoneCard />}
 

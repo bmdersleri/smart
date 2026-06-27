@@ -33,7 +33,14 @@ class _FakeEngine:
 @pytest.mark.asyncio
 async def test_lifespan_skips_scheduler_when_disabled(monkeypatch):
     start_scheduler = AsyncMock()
-    monkeypatch.setattr(main_mod, "start_scheduler", start_scheduler)
+
+    def stop_scheduler():
+        return None
+
+    stop_collector = AsyncMock()
+    monkeypatch.setattr(main_mod, "start_runtime_scheduler", start_scheduler)
+    monkeypatch.setattr(main_mod, "stop_runtime_scheduler", stop_scheduler)
+    monkeypatch.setattr(main_mod, "stop_collector", stop_collector)
     monkeypatch.setattr(main_mod, "init_database_schema", AsyncMock())
     monkeypatch.setattr(main_mod, "init_continuous_aggregates", AsyncMock())
     monkeypatch.setattr(main_mod, "init_daily_rollup", AsyncMock())
@@ -51,12 +58,20 @@ async def test_lifespan_skips_scheduler_when_disabled(monkeypatch):
         pass
 
     start_scheduler.assert_not_awaited()
+    stop_collector.assert_awaited_once()
 
 
 @pytest.mark.asyncio
 async def test_lifespan_starts_scheduler_when_enabled(monkeypatch):
     start_scheduler = AsyncMock()
-    monkeypatch.setattr(main_mod, "start_scheduler", start_scheduler)
+
+    def stop_scheduler():
+        return None
+
+    stop_collector = AsyncMock()
+    monkeypatch.setattr(main_mod, "start_runtime_scheduler", start_scheduler)
+    monkeypatch.setattr(main_mod, "stop_runtime_scheduler", stop_scheduler)
+    monkeypatch.setattr(main_mod, "stop_collector", stop_collector)
     monkeypatch.setattr(main_mod, "init_database_schema", AsyncMock())
     monkeypatch.setattr(main_mod, "init_continuous_aggregates", AsyncMock())
     monkeypatch.setattr(main_mod, "init_daily_rollup", AsyncMock())
@@ -73,4 +88,5 @@ async def test_lifespan_starts_scheduler_when_enabled(monkeypatch):
     async with main_mod.lifespan(main_mod.app):
         pass
 
-    start_scheduler.assert_awaited_once_with(main_mod.settings.DATABASE_URL)
+    start_scheduler.assert_awaited_once_with()
+    stop_collector.assert_awaited_once()

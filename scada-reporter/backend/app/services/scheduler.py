@@ -15,6 +15,13 @@ def get_scheduler() -> AsyncIOScheduler | None:
     return _scheduler
 
 
+def stop_scheduler() -> None:
+    global _scheduler
+    if _scheduler is not None:
+        _scheduler.shutdown(wait=False)
+        _scheduler = None
+
+
 def _sync_db_url(async_url: str) -> str:
     return async_url.replace("postgresql+asyncpg://", "postgresql://").replace(
         "sqlite+aiosqlite:///", "sqlite:///"
