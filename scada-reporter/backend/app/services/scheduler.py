@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import os
 from datetime import UTC, datetime, timedelta
 
@@ -8,6 +9,7 @@ from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from sqlalchemy import select
 
+_logger = logging.getLogger(__name__)
 _scheduler: AsyncIOScheduler | None = None
 _RUNNING_RECENT_WINDOW = timedelta(minutes=5)
 _LAST_RUN_ERROR_LIMIT = 4096
@@ -72,18 +74,25 @@ async def start_scheduler(db_url: str) -> None:
     from app.core.config import settings
 
     if settings.RUN_BACKUP_SCHEDULER:
-        m, h, dom, mon, dow = settings.BACKUP_SCHEDULE_CRON.split()
-        _scheduler.add_job(
-            scheduled_backup_job,
-            "cron",
-            id="db_backup",
-            minute=m,
-            hour=h,
-            day=dom,
-            month=mon,
-            day_of_week=dow,
-            replace_existing=True,
-        )
+        try:
+            m, h, dom, mon, dow = settings.BACKUP_SCHEDULE_CRON.split()
+            _scheduler.add_job(
+                scheduled_backup_job,
+                "cron",
+                id="db_backup",
+                minute=m,
+                hour=h,
+                day=dom,
+                month=mon,
+                day_of_week=dow,
+                replace_existing=True,
+            )
+        except ValueError:
+            _logger.warning(
+                "BACKUP_SCHEDULE_CRON %r is malformed (expected 5 fields); "
+                "scheduled backup job was NOT registered.",
+                settings.BACKUP_SCHEDULE_CRON,
+            )
 
 
 async def scheduled_backup_job() -> None:

@@ -178,6 +178,72 @@ async def test_restore_requires_admin(client: AsyncClient, db_session: AsyncSess
 
 
 @pytest.mark.asyncio
+async def test_backup_filenames_unique(
+    client: AsyncClient, db_session: AsyncSession, tmp_path, monkeypatch
+):
+    """I3: two backups created in the same second must produce different filenames."""
+    live = tmp_path / "live.db"
+    monkeypatch.setattr(settings, "DATABASE_URL", _seed_live_db(live))
+    monkeypatch.setattr(settings, "BACKUP_DIR", str(tmp_path / "bk"))
+
+    await _make_user(db_session, "bk_uniq_admin", "admin")
+    tok = await _login(client, "bk_uniq_admin")
+
+    r1 = await client.post("/api/backup", headers=_auth(tok))
+    assert r1.status_code == 200, r1.text
+    r2 = await client.post("/api/backup", headers=_auth(tok))
+    assert r2.status_code == 200, r2.text
+
+    assert r1.json()["filename"] != r2.json()["filename"], (
+        "Two backup filenames must differ (id suffix missing?)"
+    )
+
+
+@pytest.mark.asyncio
+async def test_restore_failure_surfaces_safety_snapshot(
+    client: AsyncClient, db_session: AsyncSession, tmp_path, monkeypatch
+):
+    """C1/I1/I2: on restore RuntimeError, response is 500 with safety snapshot id in detail."""
+    import app.api.backup as backup_mod
+
+    live = tmp_path / "live.db"
+    monkeypatch.setattr(settings, "DATABASE_URL", _seed_live_db(live))
+    monkeypatch.setattr(settings, "BACKUP_DIR", str(tmp_path / "bk"))
+
+    await _make_user(db_session, "bk_restore_fail_admin", "admin")
+    tok = await _login(client, "bk_restore_fail_admin")
+    headers = _auth(tok)
+
+    # Create the backup to restore
+    created = (await client.post("/api/backup", headers=headers)).json()
+    assert created["status"] == "verified"
+    backup_id = created["id"]
+
+    # Monkeypatch restore_snapshot to simulate a catastrophic failure
+    def _boom(**kwargs):  # noqa: ANN202
+        raise RuntimeError("boom")
+
+    monkeypatch.setattr(backup_mod.be, "restore_snapshot", _boom)
+
+    r = await client.post(
+        f"/api/backup/{backup_id}/restore",
+        json={"confirm": "RESTORE"},
+        headers=headers,
+    )
+    assert r.status_code == 500, r.text
+    detail = r.json().get("detail", "")
+    assert "safety snapshot" in detail.lower(), f"Expected 'safety snapshot' in detail: {detail!r}"
+
+    # A second (safety) backup row must have been created
+    from sqlalchemy import select
+
+    from app.models.backup import Backup
+
+    rows = (await db_session.execute(select(Backup))).scalars().all()
+    assert len(rows) >= 2, f"Expected at least 2 backup rows (original + safety), got {len(rows)}"
+
+
+@pytest.mark.asyncio
 async def test_scheduled_backup_runs(tmp_path, monkeypatch, db_session, db_engine):
     """scheduled_backup_job() creates a verified scheduled backup row.
 

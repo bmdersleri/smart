@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.auth import require_role
 from app.api.license_guard import require_writable
 from app.core.config import settings
-from app.core.database import get_db
+from app.core.database import engine, get_db
 from app.models.backup import Backup
 from app.services import backup_engine as be
 
@@ -56,7 +56,9 @@ async def run_backup(db: AsyncSession, *, trigger: str, user_id: int | None) -> 
     await db.refresh(rec)
     try:
         res = await be.create_snapshot(
-            dest_dir=settings.BACKUP_DIR, db_url=settings.DATABASE_URL, timestamp=_ts(now)
+            dest_dir=settings.BACKUP_DIR,
+            db_url=settings.DATABASE_URL,
+            timestamp=f"{_ts(now)}-{rec.id}",
         )
         rec.filename = res["filename"]
         rec.path = res["path"]
@@ -140,7 +142,7 @@ async def restore_backup(
     if rec is None or not rec.path or not os.path.exists(rec.path):
         raise HTTPException(status_code=404, detail="Backup file not found")
     # safety snapshot of the CURRENT state before overwriting
-    await run_backup(db, trigger="manual", user_id=getattr(user, "id", None))
+    safety = await run_backup(db, trigger="manual", user_id=getattr(user, "id", None))
     try:
         await asyncio.to_thread(
             be.restore_snapshot, backup_path=rec.path, db_url=settings.DATABASE_URL
@@ -149,4 +151,22 @@ async def restore_backup(
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except (FileNotFoundError, ValueError) as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
-    return {"restored": backup_id}
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=(
+                f"Restore failed; the live database may be inconsistent. "
+                f"Pre-restore safety snapshot id={safety.id} ({safety.filename}). "
+                f"Restart the backend and restore that snapshot if needed."
+            ),
+        ) from exc
+    # Dispose pool so stale connections don't serve a mix of old/new pages.
+    await engine.dispose()
+    return {
+        "restored": backup_id,
+        "safety_snapshot_id": safety.id,
+        "note": (
+            "Restore complete. Restart the backend to ensure all connections"
+            " use the restored database."
+        ),
+    }

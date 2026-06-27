@@ -104,3 +104,8 @@ def test_expired_backup_ids():
         SimpleNamespace(id=2, created_at=now - timedelta(days=10)),
     ]
     assert be.expired_backup_ids(rows, retention_days=365, now_ts=now.timestamp()) == [1]
+
+
+def test_verify_snapshot_missing_file():
+    """#1: verify_snapshot must return False (not a false-positive 'ok') for a non-existent path."""
+    assert be.verify_snapshot("/no/such/path.db", "sqlite") is False

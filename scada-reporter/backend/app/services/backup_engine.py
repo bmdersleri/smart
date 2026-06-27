@@ -27,6 +27,8 @@ def sha256_file(path: str) -> str:
 
 
 def verify_snapshot(path: str, dialect: str) -> bool:
+    if not os.path.exists(path):
+        return False
     if dialect == "sqlite":
         con = sqlite3.connect(path)
         try:
@@ -35,7 +37,7 @@ def verify_snapshot(path: str, dialect: str) -> bool:
         finally:
             con.close()
     # Postgres custom-format dumps are validated by pg_restore --list at restore time.
-    return os.path.exists(path) and os.path.getsize(path) > 0
+    return os.path.getsize(path) > 0
 
 
 def _sqlite_vacuum_into(src_path: str, dest_path: str) -> None:
