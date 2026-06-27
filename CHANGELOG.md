@@ -33,6 +33,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Frontend**: Lab Data Entry page with 4 tabs + i18n in 5 languages
     (EN/TR/DE/RU/AR); Lab Catalog card in Settings (admin).
 
+- **Grafana dashboard generator from lab data** — `POST /api/grafana/dashboards/from-lab`
+  (feature-gated `require_feature("grafana")`; any authenticated user): select a lab sample
+  point and parameters on the Monitoring & Analytics page → generates a Grafana dashboard with
+  one time-series panel per parameter (min/max limit lines) plus a latest-values table, uid
+  `sr-lab-{point_id}-{hash}`, overwrite-on-regenerate; queries the `v_lab_timeseries` view
+  (PostgreSQL/TimescaleDB datasource). uid allowlist `^[A-Za-z0-9_-]+$` prevents injection.
+
+- **Grafana dashboard delete** — `DELETE /api/grafana/dashboards/{uid}` (admin-only:
+  `require_role("admin")` + `require_writable` + `require_feature("grafana")`): admin-only ✕
+  delete control on each dashboard tab in the Monitoring & Analytics page with a confirm step.
+  uid validated against `^[A-Za-z0-9_-]+$` (traversal/SSRF guard); Grafana 404→404, provisioned
+  dashboards 400/412→409, other errors→502.
+
 - **Commercial licensing** — signed-JWT license system (asymmetric RS256/ES256):
   vendor signs with a private key, the backend verifies with the env-provisioned
   public key at startup.
@@ -47,6 +60,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     dashboard sidebar **license badge** shows the active mode.
   - **Generator + docs**: `scripts/generate_license.py` (`just license`) for key
     generation and license issuing; `docs/license-deployment.md` deployment guide.
+
+### Fixed
+
+- **Service-worker kill-switch** — replaced the PWA service worker (which intermittently served
+  a stale cached HTTP 401 response to the `/grafana-api` proxy on the Monitoring & Analytics
+  page) with a self-unregistering stub; the app no longer registers a service worker.
+- **Vite dev-proxy basic-auth** — the `/grafana-api` dev proxy now sends Grafana basic-auth
+  (`GRAFANA_USER`/`GRAFANA_PASSWORD`) so the dashboard list loads correctly even when Grafana
+  anonymous Viewer access is disabled.
 
 ---
 

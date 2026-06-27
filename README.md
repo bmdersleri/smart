@@ -27,8 +27,9 @@ Collects data directly from Siemens S7-1500 PLCs, stores it in a time-series dat
 | **Tags** | Tag listing, unit and description editing, active/inactive management |
 | **PLC Config** | Add/remove PLCs, manage IP/rack/slot/connection status |
 | **PLC Health** | Per-PLC health, incident summary, acknowledgement workflow |
-| **Metrics / Grafana** | Prometheus metrics view and embedded Grafana dashboards |
-| **Settings** | User preferences (theme, language, trend chart height); License status + admin license upload |
+| **Lab Data Entry** | Manual entry of lab analysis results (single-sample, batch grid, Excel/CSV import, records); hybrid parameter + sample-point catalog; mirrors values into SCADA tag readings |
+| **Monitoring & Analytics** | Prometheus metrics view + embedded Grafana dashboards; generate a Grafana dashboard from a lab sample point (time-series panels + latest-values table); admin delete of managed dashboards |
+| **Settings** | User preferences (theme, language, trend chart height); License status + admin license upload; Lab Catalog (admin) |
 | **Users** | Admin-only user management |
 
 ### Backend API (`/api/*`)
@@ -49,6 +50,8 @@ Collects data directly from Siemens S7-1500 PLCs, stores it in a time-series dat
 | AI | `/api/ai` | AI-assisted query, anomaly, prediction, report, and resolve helpers |
 | Query | `/api/query` | Read-only SQL query (SELECT / WITH / EXPLAIN) |
 | Explore | `/api/explore` | Schema and tag catalog discovery |
+| Lab | `/api/lab` | Lab parameters, sample points, samples, batch entry, Excel/CSV import (16 endpoints) |
+| Grafana Dashboards | `/api/grafana/dashboards` | Generate dashboard from lab sample point (POST); delete by uid (DELETE — admin) |
 | License | `/api/license` | License status (GET); admin upload/replace (POST) and revert-to-demo (DELETE) |
 | Health | `/live`, `/ready`, `/health`, `/metrics` | Liveness, readiness, system health, Prometheus metrics |
 
