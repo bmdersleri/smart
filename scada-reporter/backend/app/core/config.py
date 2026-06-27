@@ -32,6 +32,12 @@ class Settings(BaseSettings):
     # scheduler process'inde True.
     RUN_SCHEDULER: bool = True
 
+    # --- Backup ---
+    BACKUP_DIR: str = "backups"
+    BACKUP_RETENTION_DAYS: int = 365
+    BACKUP_SCHEDULE_CRON: str = "0 3 * * *"  # daily 03:00, 5-field cron (m h dom mon dow)
+    RUN_BACKUP_SCHEDULER: bool = True
+
     # Başlangıçta Base.metadata.create_all() çağrılsın mı? Dev'de True (varsayılan)
     # yeterli; production'da False yapın — şema Alembic migration'larıyla yönetilir.
     AUTO_CREATE_TABLES: bool = True
