@@ -11,6 +11,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Lab Data Entry & Tracking** — manual entry of laboratory analysis results
+  alongside automatic SCADA/PLC data.
+  - **4 entry modes**: single-sample form, batch/table grid, Excel/CSV import
+    (column-mapping UI + per-row error tolerance), and Records tab with
+    edit/delete for authorized users.
+  - **Hybrid catalog**: admin-managed parameters and sample points; operators
+    can add new entries on the fly (`approved=false`) pending admin approval.
+  - **`mirror_to_tag_id`**: a lab parameter can mirror its values into
+    `tag_readings` so it appears on existing SCADA Grafana panels and is
+    selectable by Advanced Reports — no new report generator code.
+  - **`v_lab_timeseries` view** joining lab tables; provisioned Grafana
+    `lab-quality` dashboard with point/parameter template variables, threshold
+    lines, and a latest-values table (requires PostgreSQL/TimescaleDB; view is
+    SQLite-portable for tests).
+  - **Permissions**: entry = operator + admin; edit/delete = admin or record
+    owner (`entered_by`); catalog approve = admin. Edit/delete are audited
+    (`lab.sample.update` / `lab.sample.delete` in `audit_log`).
+  - **API**: 16 endpoints under `/api/lab/` (parameters, sample-points,
+    samples, batch, import preview + commit).
+  - **Frontend**: Lab Data Entry page with 4 tabs + i18n in 5 languages
+    (EN/TR/DE/RU/AR); Lab Catalog card in Settings (admin).
+
 - **Commercial licensing** — signed-JWT license system (asymmetric RS256/ES256):
   vendor signs with a private key, the backend verifies with the env-provisioned
   public key at startup.
