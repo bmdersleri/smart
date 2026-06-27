@@ -162,6 +162,86 @@ The dashboard provides:
 
 ---
 
+## Generate a Grafana Dashboard from a Selection
+
+The **Monitoring & Analytics** page (sidebar: Monitoring & Analytics → Lab Dashboard
+section) lets you generate a Grafana dashboard on the fly from any combination of
+sample point and parameters — without touching provisioned JSON files.
+
+### How to use
+
+1. Open **Monitoring & Analytics** and scroll to the **Lab Dashboard** card.
+2. Select a **sample point** from the dropdown.
+3. Tick one or more **parameters** you want to visualise.
+4. Click **Generate Dashboard**. The backend calls
+   `POST /api/grafana/dashboards/from-lab` and creates (or overwrites) the
+   dashboard in Grafana.
+5. On success a link appears — **Open in Grafana** — pointing directly to the
+   new dashboard.
+
+### What the generated dashboard contains
+
+- **One time-series panel per selected parameter** — queries `v_lab_timeseries`
+  filtered to the chosen sample point and parameter code. If the parameter
+  catalog defines `min_limit` or `max_limit`, horizontal threshold lines are
+  drawn at those values (green → orange at min, orange → red at max).
+- **A latest-values table** — shows the most recent 200 readings for all
+  selected parameters in a single table panel (columns: time, parameter name,
+  value, unit, min_limit, max_limit).
+
+### Deterministic uid — overwrite on re-generate
+
+The dashboard uid is computed as:
+
+```
+sr-lab-{point_id}-{hash8}
+```
+
+where `hash8` is the first 8 hex digits of SHA-1 over the sorted, comma-joined
+parameter IDs. Because the uid is deterministic, re-generating the **same
+point + parameter selection** overwrites the existing dashboard in Grafana
+rather than creating a duplicate. Changing the selection (adding or removing a
+parameter) produces a different uid and therefore a new dashboard.
+
+### API
+
+```
+POST /api/grafana/dashboards/from-lab
+```
+
+Request body (JSON):
+
+```json
+{
+  "sample_point_id": 3,
+  "parameter_ids": [1, 4, 7]
+}
+```
+
+Response (200):
+
+```json
+{
+  "uid": "sr-lab-3-a1b2c3d4",
+  "url": "/d/sr-lab-3-a1b2c3d4/lab-point-name"
+}
+```
+
+Requires the `grafana` feature to be enabled (license gate). The endpoint is
+protected by `get_current_user` — any authenticated user may generate a
+dashboard.
+
+### Postgres/TimescaleDB requirement
+
+The time-series and table panels query `v_lab_timeseries` through a
+**PostgreSQL/TimescaleDB Grafana datasource**. In the SQLite development
+environment the view exists and the builder runs without errors (used in
+tests), but the Grafana panels will not display data because Grafana cannot
+query SQLite. Use `just docker-up` to start TimescaleDB and configure a
+matching datasource in Grafana for full end-to-end testing.
+
+---
+
 ## Permissions
 
 | Action | Who |
