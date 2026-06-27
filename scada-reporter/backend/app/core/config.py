@@ -45,6 +45,9 @@ class Settings(BaseSettings):
     S7_PLC_READ_TIMEOUT: float = 10.0  # saniye, tek PLC grup okuma üst sınırı
     # Deadband içinde kalan tag bile bu süre geçince zorla yazılır (heartbeat)
     S7_STORE_HEARTBEAT_SECONDS: int = 300
+    # Aktif tag kataloğu poller'da bu kadar saniye cache'lenir (her tick DB'den
+    # ~3000 satır çekmeyi önler). Tag CRUD sonrası en geç bu süre içinde yansır.
+    S7_TAG_CACHE_TTL: float = 30.0
     # Ham hypertable saklama süresi (gün); rollup'lar daha uzun tutulabilir
     RAW_RETENTION_DAYS: int = 90
 

@@ -53,6 +53,40 @@ class WriteBuffer:
 write_buffer = WriteBuffer()
 
 
+class TagCache:
+    """Aktif (long_term) tag listesini TTL ile tutar.
+
+    Her tick'te DB'den ~3000 satır çekmek yerine, liste `ttl` saniye boyunca
+    yeniden kullanılır. Tag CRUD değişiklikleri en geç TTL kadar gecikmeyle
+    poller'a yansır. Tag nesneleri okunduğu session kapandıktan sonra detached
+    olur; tüm kolon değerleri select ile yüklü olduğundan tick'ler arası
+    yeniden kullanım güvenli (DB'ye dönmez).
+    """
+
+    def __init__(self, ttl: float | None = None) -> None:
+        self.ttl = settings.S7_TAG_CACHE_TTL if ttl is None else ttl
+        self._tags: list[Tag] | None = None
+        self._fetched_at: float = -math.inf
+
+    def fresh(self, now: float) -> bool:
+        return self._tags is not None and (now - self._fetched_at) < self.ttl
+
+    def store(self, tags: list[Tag], now: float) -> None:
+        self._tags = tags
+        self._fetched_at = now
+
+    @property
+    def tags(self) -> list[Tag]:
+        return self._tags or []
+
+    def invalidate(self) -> None:
+        self._tags = None
+        self._fetched_at = -math.inf
+
+
+tag_cache = TagCache()
+
+
 async def read_plc_group(
     key: tuple[str, int, int],
     items: list[tuple[int, ReadSpec]],
@@ -145,6 +179,7 @@ async def run_once(
     timeout: float | None = None,
     last_stored: dict[int, tuple[float | None, int, float]] | None = None,
     buffer: WriteBuffer | None = None,
+    cache: TagCache | None = None,
 ) -> tuple[int, int]:
     """Bir tick: due tag'leri oku, cache + DB'ye yaz. (yazılan_satır, min_interval).
 
@@ -152,12 +187,19 @@ async def run_once(
     değerler DB'ye yazılmaz (cache yine güncellenir). None ise tüm satırlar yazılır.
     buffer verilirse DB yazma hatası satırları düşürmek yerine tamponlar; bir
     sonraki tick'te flush edilir (backpressure).
+    cache verilirse aktif tag listesi TTL boyunca yeniden kullanılır (her tick
+    DB sorgusunu önler). None ise her çağrıda taze çekilir (eski davranış).
     """
     timeout = settings.S7_PLC_READ_TIMEOUT if timeout is None else timeout
 
-    async with sessionmaker() as db:
-        result = await db.execute(select(Tag).where(Tag.is_active, Tag.long_term))
-        tags = result.scalars().all()
+    if cache is not None and cache.fresh(now):
+        tags = cache.tags
+    else:
+        async with sessionmaker() as db:
+            result = await db.execute(select(Tag).where(Tag.is_active, Tag.long_term))
+            tags = list(result.scalars().all())
+        if cache is not None:
+            cache.store(tags, now)
 
     min_interval = settings.S7_POLL_INTERVAL
     deadband_by_tag: dict[int, float | None] = {}
@@ -262,7 +304,11 @@ async def poll_loop() -> None:
         min_interval = settings.S7_POLL_INTERVAL
         try:
             _, min_interval = await run_once(
-                last_read, now=time.monotonic(), last_stored=last_stored, buffer=write_buffer
+                last_read,
+                now=time.monotonic(),
+                last_stored=last_stored,
+                buffer=write_buffer,
+                cache=tag_cache,
             )
         except Exception as e:
             logger.error("Poll hatasi: %s", e)

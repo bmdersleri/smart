@@ -350,3 +350,53 @@ async def test_run_once_writes_db_and_cache(db_engine, monkeypatch):
             select(func.count()).select_from(TagReading).where(TagReading.tag_id == tid)
         )
     assert cnt == 1
+
+
+@pytest.mark.asyncio
+async def test_run_once_reuses_tag_cache_within_ttl(db_engine, monkeypatch):
+    """cache verilince tag listesi TTL boyunca yeniden kullanılır (DB'ye dönmez)."""
+    from sqlalchemy import delete
+
+    sm = async_sessionmaker(db_engine, expire_on_commit=False)
+    async with sm() as s:
+        t = Tag(
+            node_id="ns=2;s=TC1",
+            name="TC1",
+            long_term=True,
+            plc_ip="10.0.0.21",
+            s7_address="DB10,DD0",
+            data_type="REAL",
+            sample_interval=1,
+        )
+        s.add(t)
+        await s.commit()
+        await s.refresh(t)
+        tid = t.id
+
+    async def fake_batch(ip, rack, slot, specs, name=""):
+        return [(5.0, 192) for _ in specs]
+
+    monkeypatch.setattr(poller.plc_manager, "read_plc_batch", fake_batch)
+
+    cache = poller.TagCache(ttl=10.0)
+    last_read: dict[int, float] = {}
+    try:
+        # 1) ilk tick: DB'den çeker, okur, yazar
+        w1, _ = await poller.run_once(last_read, now=100.0, sessionmaker=sm, timeout=5, cache=cache)
+        # tag'i DB'den sil — cache hâlâ TTL içinde olduğundan görmemeli
+        async with sm() as s:
+            await s.execute(delete(Tag).where(Tag.id == tid))
+            await s.commit()
+        # 2) TTL içinde tick: cache'ten okur → tag silinmiş olsa da yazar
+        w2, _ = await poller.run_once(last_read, now=105.0, sessionmaker=sm, timeout=5, cache=cache)
+        # 3) TTL aşıldı: yeniden çeker → tag yok → ilgili yazma yok
+        w3, _ = await poller.run_once(last_read, now=120.0, sessionmaker=sm, timeout=5, cache=cache)
+
+        assert w1 == 1  # ilk okuma
+        assert w2 == 1  # cache sayesinde silinen tag hâlâ okunur
+        assert w3 == 0  # TTL sonrası refetch → tag gitmiş
+    finally:
+        async with sm() as s:
+            await s.execute(delete(TagReading).where(TagReading.tag_id == tid))
+            await s.execute(delete(Tag).where(Tag.id == tid))
+            await s.commit()
