@@ -1,4 +1,5 @@
 import math
+import os
 from datetime import UTC, datetime, timedelta
 from typing import Literal
 
@@ -8,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.auth import get_current_user
 from app.core import metrics
+from app.core.config import settings
 from app.core.database import get_db
 from app.core.timeutils import as_utc, utc_iso
 from app.models.tag import Tag, TagReading
@@ -526,3 +528,85 @@ async def trend_agg(
     for s in out:
         s["data"] = downsample(s["data"], max_points)
     return out
+
+
+# ---------------------------------------------------------------------------
+# Database statistics
+# ---------------------------------------------------------------------------
+
+_DB_STAT_TABLES = [
+    "tag_readings",
+    "tags",
+    "lab_measurements",
+    "lab_samples",
+    "report_history",
+    "audit_logs",
+    "app_settings",
+]
+
+
+def _sqlite_size_bytes(url: str) -> int:
+    # sqlite+aiosqlite:///./scada_reporter.db  ->  ./scada_reporter.db
+    path = url.split(":///")[-1]
+    if not path or path == ":memory:":
+        return 0
+    total = 0
+    for suffix in ("", "-wal", "-shm"):
+        p = path + suffix
+        if os.path.exists(p):
+            total += os.path.getsize(p)
+    return total
+
+
+async def _table_count(db: AsyncSession, table: str) -> int:
+    try:
+        # nosec B608 - `table` is from the fixed _DB_STAT_TABLES allowlist, no user input
+        result = await db.execute(text(f"SELECT count(*) FROM {table}"))  # noqa: S608
+        return int(result.scalar() or 0)
+    except Exception:
+        return 0  # table may not exist on an older schema
+
+
+@router.get("/database")
+async def database_stats(
+    db: AsyncSession = Depends(get_db),
+    _=Depends(get_current_user),
+) -> dict:
+    url = settings.DATABASE_URL
+    if url.startswith("sqlite"):
+        size_bytes = _sqlite_size_bytes(url)
+    else:
+        size_bytes = int(
+            (await db.execute(text("SELECT pg_database_size(current_database())"))).scalar() or 0
+        )
+
+    total = int((await db.execute(text("SELECT count(*) FROM tag_readings"))).scalar() or 0)
+    earliest = (await db.execute(text("SELECT min(timestamp) FROM tag_readings"))).scalar()
+
+    now = datetime.utcnow()
+    sql_recent = text("SELECT count(*) FROM tag_readings WHERE timestamp >= :c")
+    last_day = int((await db.execute(sql_recent, {"c": now - timedelta(days=1)})).scalar() or 0)
+    last_week = int((await db.execute(sql_recent, {"c": now - timedelta(days=7)})).scalar() or 0)
+    last_month = int((await db.execute(sql_recent, {"c": now - timedelta(days=30)})).scalar() or 0)
+
+    tag_count = int((await db.execute(text("SELECT count(*) FROM tags"))).scalar() or 0)
+
+    tables = []
+    for tbl in _DB_STAT_TABLES:
+        tables.append({"name": tbl, "rows": await _table_count(db, tbl)})
+
+    daily_rows = last_day
+    est_monthly_growth = round((size_bytes / total) * daily_rows * 30) if total > 0 else 0
+
+    return {
+        "size_bytes": size_bytes,
+        "total_readings": total,
+        "earliest": str(earliest) if earliest is not None else None,
+        "last_day": last_day,
+        "last_week": last_week,
+        "last_month": last_month,
+        "tag_count": tag_count,
+        "tables": tables,
+        "daily_rows": daily_rows,
+        "est_monthly_growth_bytes": est_monthly_growth,
+    }
