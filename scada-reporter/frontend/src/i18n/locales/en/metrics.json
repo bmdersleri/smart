@@ -41,5 +41,17 @@
   "btn_pause": "Pause",
   "btn_resume": "Resume",
   "btn_clear": "Clear",
-  "console_empty": "Waiting for backend messages…"
+  "console_empty": "Waiting for backend messages…",
+  "db_title": "Database",
+  "db_refresh": "Refresh",
+  "db_size": "Size",
+  "db_total": "Total readings",
+  "db_earliest": "Oldest record",
+  "db_last_day": "Last 24h",
+  "db_last_week": "Last 7d",
+  "db_last_month": "Last 30d",
+  "db_tags": "Tags",
+  "db_daily": "Rows/day",
+  "db_growth": "Est. monthly growth",
+  "db_tables": "Rows per table"
 }

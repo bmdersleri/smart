@@ -41,5 +41,17 @@
   "btn_pause": "إيقاف مؤقت",
   "btn_resume": "استئناف",
   "btn_clear": "مسح",
-  "console_empty": "في انتظار رسائل الخادم…"
+  "console_empty": "في انتظار رسائل الخادم…",
+  "db_title": "قاعدة البيانات",
+  "db_refresh": "تحديث",
+  "db_size": "الحجم",
+  "db_total": "إجمالي القراءات",
+  "db_earliest": "أقدم سجل",
+  "db_last_day": "آخر 24 ساعة",
+  "db_last_week": "آخر 7 أيام",
+  "db_last_month": "آخر 30 يوم",
+  "db_tags": "العلامات",
+  "db_daily": "صفوف/يوم",
+  "db_growth": "النمو الشهري التقديري",
+  "db_tables": "صفوف لكل جدول"
 }

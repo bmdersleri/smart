@@ -41,5 +41,17 @@
   "btn_pause": "Duraklat",
   "btn_resume": "Devam",
   "btn_clear": "Temizle",
-  "console_empty": "Backend mesajları bekleniyor…"
+  "console_empty": "Backend mesajları bekleniyor…",
+  "db_title": "Veritabanı",
+  "db_refresh": "Yenile",
+  "db_size": "Boyut",
+  "db_total": "Toplam kayıt",
+  "db_earliest": "En eski kayıt",
+  "db_last_day": "Son 24s",
+  "db_last_week": "Son 7g",
+  "db_last_month": "Son 30g",
+  "db_tags": "Tag sayısı",
+  "db_daily": "Satır/gün",
+  "db_growth": "Tahmini aylık büyüme",
+  "db_tables": "Tablo başına satır"
 }

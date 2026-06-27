@@ -41,5 +41,17 @@
   "btn_pause": "Pause",
   "btn_resume": "Fortsetzen",
   "btn_clear": "Leeren",
-  "console_empty": "Warte auf Backend-Nachrichten…"
+  "console_empty": "Warte auf Backend-Nachrichten…",
+  "db_title": "Datenbank",
+  "db_refresh": "Aktualisieren",
+  "db_size": "Größe",
+  "db_total": "Gesamte Einträge",
+  "db_earliest": "Ältester Eintrag",
+  "db_last_day": "Letzte 24h",
+  "db_last_week": "Letzte 7 Tage",
+  "db_last_month": "Letzte 30 Tage",
+  "db_tags": "Tags",
+  "db_daily": "Zeilen/Tag",
+  "db_growth": "Gesch. monatl. Wachstum",
+  "db_tables": "Zeilen pro Tabelle"
 }
