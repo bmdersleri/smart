@@ -440,6 +440,11 @@ export const updateSamplePoint = (id: number, data: import('./generated/types.ge
 export const deleteSamplePoint = (id: number) =>
   api.delete(`/lab/sample-points/${id}`)
 
+// ── App Settings ─────────────────────────────────────────────────────────────
+export const getAppSettings = () => api.get<{ timezone: string }>('/settings')
+export const updateTimezone = (timezone: string) =>
+  api.put<{ timezone: string }>('/settings/timezone', { timezone })
+
 // ── License ───────────────────────────────────────────────────────────────────
 export type LicenseMode = 'unlicensed' | 'licensed' | 'demo'
 export interface LicenseStatus {
