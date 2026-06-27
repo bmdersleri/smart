@@ -21,6 +21,7 @@ from app.api import (
     grafana,
     grafana_dashboards,
     groups,
+    lab,
     plc,
     query,
     realtime,
@@ -219,6 +220,7 @@ app.include_router(ai.router, prefix="/api")
 app.include_router(watchlist_groups.router, prefix="/api")
 app.include_router(grafana_dashboards.router, prefix="/api")
 app.include_router(grafana.router, prefix="/api")
+app.include_router(lab.router, prefix="/api")
 app.include_router(license_api.router, prefix="/api")
 
 
