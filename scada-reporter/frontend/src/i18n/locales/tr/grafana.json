@@ -27,5 +27,12 @@
   "template_water_default_title": "Su Kalitesi",
   "generate_dashboard": "Dashboard oluştur",
   "generating": "Oluşturuluyor...",
-  "open_generated": "Oluşturulan dashboard'u aç"
+  "open_generated": "Oluşturulan dashboard'u aç",
+  "lab_gen_title": "Lab Dashboard",
+  "lab_gen_subtitle": "Lab verisinden Grafana panosu üret",
+  "lab_gen_point": "Numune Noktası",
+  "lab_gen_params": "Parametreler",
+  "lab_gen_button": "Dashboard Oluştur",
+  "lab_gen_generating": "Oluşturuluyor…",
+  "lab_gen_open": "Grafana'da Aç"
 }

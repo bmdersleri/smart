@@ -3,14 +3,20 @@ import type { FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   generateGrafanaDashboard,
+  generateLabDashboard,
   getTags,
   listGrafanaTemplates,
+  listLabParameters,
+  listLabSamplePoints,
   type GrafanaDashboardGenerated,
   type GrafanaTemplate,
+  type LabParameterOut,
+  type LabSamplePointOut,
   type Tag,
 } from '../api/client'
 import { useSettings } from '../context/SettingsContext'
 import SmartReportIcon from '../components/SmartReportIcon'
+import { canGenerateLab } from './labDashboard.helper'
 
 // iframe'ler dogrudan Grafana'ya gider (embedding acik). Dashboard LISTESI ise
 // same-origin /grafana-api proxy'sinden gelir (CORS yok) — bkz. vite.config.ts.
@@ -54,6 +60,13 @@ export default function Grafana() {
   const [generating, setGenerating] = useState(false)
   const [generateError, setGenerateError] = useState<string | null>(null)
   const [generated, setGenerated] = useState<GrafanaDashboardGenerated | null>(null)
+  const [labPoints, setLabPoints] = useState<LabSamplePointOut[]>([])
+  const [labParams, setLabParams] = useState<LabParameterOut[]>([])
+  const [labPointId, setLabPointId] = useState<number | ''>('')
+  const [labParamIds, setLabParamIds] = useState<number[]>([])
+  const [labGenerating, setLabGenerating] = useState(false)
+  const [labResult, setLabResult] = useState<{ uid: string; title: string; url: string; status: string } | null>(null)
+  const [labError, setLabError] = useState<string | null>(null)
 
   const loadDashboards = useCallback((signal?: AbortSignal) => {
     fetch('/grafana-api/api/search?type=dash-db')
@@ -102,6 +115,23 @@ export default function Grafana() {
     }
   }, [])
 
+  useEffect(() => {
+    let cancelled = false
+    Promise.all([listLabSamplePoints({ approved: true }), listLabParameters({ approved: true })])
+      .then(([pointsRes, paramsRes]) => {
+        if (cancelled) return
+        setLabPoints(pointsRes.data)
+        setLabParams(paramsRes.data)
+      })
+      .catch((e: unknown) => {
+        if (cancelled) return
+        setLabError(e instanceof Error ? e.message : String(e))
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   const active = useMemo(
     () => dashboards.find((d) => d.uid === activeUid),
     [dashboards, activeUid],
@@ -131,6 +161,23 @@ export default function Grafana() {
       setGenerateError(e instanceof Error ? e.message : String(e))
     } finally {
       setGenerating(false)
+    }
+  }
+
+  const handleLabGenerate = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (!canGenerateLab(labPointId, labParamIds)) return
+    setLabGenerating(true)
+    setLabError(null)
+    setLabResult(null)
+    try {
+      const res = await generateLabDashboard({ sample_point_id: Number(labPointId), parameter_ids: labParamIds })
+      setLabResult(res.data)
+      loadDashboards()
+    } catch (e) {
+      setLabError(e instanceof Error ? e.message : String(e))
+    } finally {
+      setLabGenerating(false)
     }
   }
 
@@ -247,6 +294,70 @@ export default function Grafana() {
         </div>
         {generateError && <p className="text-sm text-red-400 md:col-span-3">{generateError}</p>}
       </form>
+
+      <div className="rounded-lg border border-gray-800 bg-gray-950/40 p-4 space-y-3">
+        <div>
+          <h2 className="text-sm font-semibold text-gray-200">{t('lab_gen_title')}</h2>
+          <p className="text-xs text-gray-500">{t('lab_gen_subtitle')}</p>
+        </div>
+        <form onSubmit={handleLabGenerate} className="grid gap-3 md:grid-cols-[1fr_1fr_auto]">
+          <div className="space-y-2">
+            <label htmlFor="lab-point" className="block text-xs font-medium uppercase tracking-wide text-gray-500">
+              {t('lab_gen_point')}
+            </label>
+            <select
+              id="lab-point"
+              value={labPointId === '' ? '' : String(labPointId)}
+              onChange={(event) => setLabPointId(event.target.value === '' ? '' : Number(event.target.value))}
+              className="w-full rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-gray-100"
+            >
+              <option value="">—</option>
+              {labPoints.map((pt) => (
+                <option key={pt.id} value={pt.id}>{pt.name}</option>
+              ))}
+            </select>
+          </div>
+          <div className="space-y-2">
+            <label htmlFor="lab-params" className="block text-xs font-medium uppercase tracking-wide text-gray-500">
+              {t('lab_gen_params')}
+            </label>
+            <select
+              id="lab-params"
+              multiple
+              value={labParamIds.map(String)}
+              onChange={(event) => {
+                const ids = Array.from(event.target.selectedOptions, (option) => Number(option.value))
+                setLabParamIds(ids)
+              }}
+              className="h-24 w-full rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-gray-100"
+            >
+              {labParams.map((param) => (
+                <option key={param.id} value={param.id}>{param.name}{param.unit ? ` (${param.unit})` : ''}</option>
+              ))}
+            </select>
+          </div>
+          <div className="flex flex-col justify-end gap-2">
+            <button
+              type="submit"
+              disabled={!canGenerateLab(labPointId, labParamIds) || labGenerating}
+              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-gray-700"
+            >
+              {labGenerating ? t('lab_gen_generating') : t('lab_gen_button')}
+            </button>
+            {labResult && (
+              <a
+                href={buildGrafanaPath(labResult.url, theme)}
+                target="_blank"
+                rel="noreferrer"
+                className="text-center text-xs text-cyan-400 hover:underline"
+              >
+                {t('lab_gen_open')}
+              </a>
+            )}
+          </div>
+          {labError && <p className="text-sm text-red-400 md:col-span-3">{labError}</p>}
+        </form>
+      </div>
 
       {loading && <p className="text-sm text-gray-400">{t('loading')}</p>}
       {error && (

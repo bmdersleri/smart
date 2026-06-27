@@ -27,5 +27,12 @@
   "template_water_default_title": "جودة المياه",
   "generate_dashboard": "إنشاء لوحة",
   "generating": "جارٍ الإنشاء...",
-  "open_generated": "افتح اللوحة المنشأة"
+  "open_generated": "افتح اللوحة المنشأة",
+  "lab_gen_title": "لوحة المختبر",
+  "lab_gen_subtitle": "إنشاء لوحة Grafana من بيانات المختبر",
+  "lab_gen_point": "نقطة أخذ العينات",
+  "lab_gen_params": "المعاملات",
+  "lab_gen_button": "إنشاء لوحة",
+  "lab_gen_generating": "جارٍ الإنشاء…",
+  "lab_gen_open": "فتح في Grafana"
 }

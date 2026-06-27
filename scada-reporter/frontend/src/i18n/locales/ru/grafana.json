@@ -27,5 +27,12 @@
   "template_water_default_title": "Качество воды",
   "generate_dashboard": "Создать дашборд",
   "generating": "Создание...",
-  "open_generated": "Открыть созданный дашборд"
+  "open_generated": "Открыть созданный дашборд",
+  "lab_gen_title": "Лабораторный дашборд",
+  "lab_gen_subtitle": "Создать дашборд Grafana из лабораторных данных",
+  "lab_gen_point": "Точка отбора проб",
+  "lab_gen_params": "Параметры",
+  "lab_gen_button": "Создать дашборд",
+  "lab_gen_generating": "Создание…",
+  "lab_gen_open": "Открыть в Grafana"
 }

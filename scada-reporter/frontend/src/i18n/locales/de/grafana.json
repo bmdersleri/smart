@@ -27,5 +27,12 @@
   "template_water_default_title": "Wasserqualität",
   "generate_dashboard": "Dashboard erstellen",
   "generating": "Wird erstellt...",
-  "open_generated": "Erstelltes Dashboard öffnen"
+  "open_generated": "Erstelltes Dashboard öffnen",
+  "lab_gen_title": "Labor-Dashboard",
+  "lab_gen_subtitle": "Grafana-Dashboard aus Labordaten generieren",
+  "lab_gen_point": "Probenahmepunkt",
+  "lab_gen_params": "Parameter",
+  "lab_gen_button": "Dashboard generieren",
+  "lab_gen_generating": "Wird generiert…",
+  "lab_gen_open": "In Grafana öffnen"
 }

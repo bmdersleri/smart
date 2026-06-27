@@ -268,6 +268,11 @@ export const listGrafanaPanels = (uid: string) =>
 export const generateDashboardFromTemplate = (templateId: number) =>
   api.post<{ uid: string; title: string; url: string; template_id: number; status: string }>(
     `/grafana/dashboards/from-report-template/${templateId}`)
+export const generateLabDashboard = (data: { sample_point_id: number; parameter_ids: number[] }) =>
+  api.post<{ uid: string; title: string; url: string; status: string }>(
+    '/grafana/dashboards/from-lab',
+    data,
+  )
 // PLC Yönetimi
 export interface PlcEntry {
   name: string; ip: string; rack: number; slot: number
