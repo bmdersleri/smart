@@ -156,11 +156,13 @@ export const deleteAnnotation = (id: number) => api.delete(`/annotations/${id}`)
 export interface WatchlistItem {
   tag_id: number; name: string; device: string; unit: string
   value: number | null; timestamp: string | null; quality_ok: boolean
+  description: string
 }
 
 export interface DashboardTag {
   tag_id: number; name: string; device: string; unit: string
   value: number | null; timestamp: string | null; quality_ok: boolean
+  description: string
 }
 
 export interface DashboardTagsParams {

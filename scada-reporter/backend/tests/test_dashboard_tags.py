@@ -26,7 +26,12 @@ async def _register_and_login(client: AsyncClient, db: AsyncSession, username: s
 
 
 async def _make_tag(
-    db: AsyncSession, name: str, device: str = "DT_DEV1", daily: bool = False, interval: int = 5
+    db: AsyncSession,
+    name: str,
+    device: str = "DT_DEV1",
+    daily: bool = False,
+    interval: int = 5,
+    description: str = "",
 ) -> int:
     tag = Tag(
         node_id=f"ns=2;s={name}",
@@ -35,6 +40,7 @@ async def _make_tag(
         long_term=True,
         daily_tracking=daily,
         sample_interval=interval,
+        description=description,
     )
     db.add(tag)
     await db.commit()
@@ -195,3 +201,16 @@ async def test_latest_reading_picks_newest(client: AsyncClient, db_session: Asyn
     item = next(i for i in r.json()["items"] if i["name"] == "DT_LATEST_TAG")
     assert item["value"] == 2.0
     assert item["quality_ok"] is True
+
+
+@pytest.mark.asyncio
+async def test_items_include_description(client: AsyncClient, db_session: AsyncSession):
+    token = await _register_and_login(client, db_session, "dt_desc_user")
+    await _make_tag(
+        db_session, "DT_DESC_TAG", device="DT_DESC_DEV", description="Inlet channel flow"
+    )
+    headers = {"Authorization": f"Bearer {token}"}
+
+    r = await client.get("/api/dashboard/tags", params={"device": "DT_DESC_DEV"}, headers=headers)
+    item = next(i for i in r.json()["items"] if i["name"] == "DT_DESC_TAG")
+    assert item["description"] == "Inlet channel flow"

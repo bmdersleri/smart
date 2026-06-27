@@ -24,8 +24,16 @@ async def _register_and_login(client: AsyncClient, db: AsyncSession, username: s
     return r.json()["access_token"]
 
 
-async def _create_tag(db: AsyncSession, name: str, device: str = "DEV1") -> int:
-    tag = Tag(node_id=f"ns=2;s={name}", name=name, device=device, long_term=True)
+async def _create_tag(
+    db: AsyncSession, name: str, device: str = "DEV1", description: str = ""
+) -> int:
+    tag = Tag(
+        node_id=f"ns=2;s={name}",
+        name=name,
+        device=device,
+        long_term=True,
+        description=description,
+    )
     db.add(tag)
     await db.commit()
     await db.refresh(tag)
@@ -117,6 +125,19 @@ async def test_watchlist_includes_reading(client: AsyncClient, db_session: Async
     assert item is not None
     assert item["value"] == pytest.approx(42.5, abs=0.01)
     assert item["quality_ok"] is True
+
+
+@pytest.mark.asyncio
+async def test_watchlist_includes_description(client: AsyncClient, db_session: AsyncSession):
+    token = await _register_and_login(client, db_session, "wl_desc_user")
+    tag_id = await _create_tag(db_session, "WL_DESC_TAG", description="Aeration blower speed")
+    headers = {"Authorization": f"Bearer {token}"}
+
+    await client.post(f"/api/dashboard/watchlist/{tag_id}", headers=headers)
+    r = await client.get("/api/dashboard/watchlist", headers=headers)
+    item = next((i for i in r.json() if i["tag_id"] == tag_id), None)
+    assert item is not None
+    assert item["description"] == "Aeration blower speed"
 
 
 @pytest.mark.asyncio

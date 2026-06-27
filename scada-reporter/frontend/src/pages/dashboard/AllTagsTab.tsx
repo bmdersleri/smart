@@ -7,6 +7,7 @@ import { parseUtc } from '../../utils/time'
 import type { DashboardTag } from '../../api/client'
 import { useSortable } from '../../hooks/useSortable'
 import SortHeader from '../../components/SortHeader'
+import TagDescriptionCell from '../../components/TagDescriptionCell'
 
 function QualityDot({ ok }: { ok: boolean }) {
   return <span className={`inline-block w-2 h-2 rounded-full ${ok ? 'bg-green-400' : 'bg-red-400'}`} />
@@ -162,7 +163,9 @@ export default function AllTagsTab({ active }: { active: boolean }) {
                 const pinned = pinnedIds.has(item.tag_id)
                 return (
                   <tr key={item.tag_id} className="border-t border-gray-800 hover:bg-gray-800/40 transition-colors">
-                    <td className="px-4 py-2.5 text-sm text-white font-medium">{item.name}</td>
+                    <td className="px-4 py-2.5 text-sm text-white font-medium">
+                      <TagDescriptionCell name={item.name} description={item.description} />
+                    </td>
                     <td className="px-4 py-2.5 text-sm text-gray-400">{item.device || '—'}</td>
                     <td className="px-4 py-2.5 text-sm text-end font-mono text-cyan-300">{formatValue(item)}</td>
                     <td className="px-4 py-2.5 text-sm text-gray-400 text-end">{formatTs(item.timestamp)}</td>

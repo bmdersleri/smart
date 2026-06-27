@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { AxiosError } from 'axios'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -10,6 +10,7 @@ import type { Tag, Group, GroupNode } from '../api/client'
 import { useAuth } from '../context/AuthContext'
 import { useSortable } from '../hooks/useSortable'
 import SortHeader from '../components/SortHeader'
+import TagDescriptionCell from '../components/TagDescriptionCell'
 
 function downloadBlob(data: BlobPart, filename: string, type: string) {
   const url = URL.createObjectURL(new Blob([data], { type }))
@@ -110,8 +111,10 @@ function EditTagModal({ tag, groups, onClose }: { tag: Tag; groups: Group[]; onC
   const [unit, setUnit] = useState(tag.unit)
   const [device, setDevice] = useState(tag.device)
   const [channel, setChannel] = useState(tag.channel)
+  const [description, setDescription] = useState(tag.description ?? '')
   const [deadband, setDeadband] = useState(tag.deadband ?? '')
   const [groupId, setGroupId] = useState<number | null>(tag.group_id)
+  const descriptionId = useId()
 
   const mut = useMutation({
     mutationFn: async (payload: Parameters<typeof updateTag>[1]) => {
@@ -124,7 +127,13 @@ function EditTagModal({ tag, groups, onClose }: { tag: Tag; groups: Group[]; onC
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['tags'] }); onClose() },
   })
 
-  const save = () => mut.mutate({ unit, device, channel, deadband: deadband === '' ? null : Number(deadband) })
+  const save = () => mut.mutate({
+    unit,
+    device,
+    channel,
+    description,
+    deadband: deadband === '' ? null : Number(deadband),
+  })
 
   const inputCls = 'w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500'
 
@@ -153,6 +162,17 @@ function EditTagModal({ tag, groups, onClose }: { tag: Tag; groups: Group[]; onC
             <input className={inputCls} value={value} onChange={(e) => set(e.target.value)} placeholder={ph} />
           </div>
         ))}
+
+        <div>
+          <label htmlFor={descriptionId} className="text-xs text-gray-400 mb-1 block">{t('field_description')}</label>
+          <textarea
+            id={descriptionId}
+            className={`${inputCls} min-h-20 resize-y`}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            rows={3}
+          />
+        </div>
 
         <div>
           <label className="text-xs text-gray-400 mb-1 block">{t('field_group_hierarchy')}</label>
@@ -609,7 +629,7 @@ export default function Tags() {
         )}
       </div>
 
-      <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+      <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-visible">
         {viewMode === 'tree' ? (
           <TagTreeView source={treeSource} tags={tags} canEdit={canEdit} onEdit={setEditTag} onDelete={handleDelete} />
         ) : isLoading ? (
@@ -642,9 +662,11 @@ export default function Tags() {
                 <tr key={row.id} className="border-t border-gray-800 hover:bg-gray-800/40">
                   <td className="px-4 py-3 text-sm text-gray-400">{row.plc_name || row.device}</td>
                   <td className="px-4 py-3 text-sm font-medium text-white">
-                    {row.name}
-                    {row.long_term && <span className="ms-2 text-[10px] px-1.5 py-0.5 rounded bg-blue-900/50 text-blue-300">{t('badge_long_term')}</span>}
-                    {row.daily_tracking && <span className="ms-1 text-[10px] px-1.5 py-0.5 rounded bg-purple-900/50 text-purple-300">{t('badge_daily')}</span>}
+                    <div className="flex min-w-0 items-center gap-1.5">
+                      <TagDescriptionCell name={row.name} description={row.description} />
+                      {row.long_term && <span className="ms-1 text-[10px] px-1.5 py-0.5 rounded bg-blue-900/50 text-blue-300">{t('badge_long_term')}</span>}
+                      {row.daily_tracking && <span className="ms-1 text-[10px] px-1.5 py-0.5 rounded bg-purple-900/50 text-purple-300">{t('badge_daily')}</span>}
+                    </div>
                   </td>
                   <td className="px-4 py-3 text-xs font-mono text-gray-500">{row.plc_ip ?? '—'}</td>
                   <td className="px-4 py-3 text-xs font-mono text-gray-500">{row.s7_address ?? '—'}</td>

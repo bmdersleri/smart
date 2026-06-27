@@ -205,6 +205,7 @@ async def _fetch_tags_with_readings(db: AsyncSession, tag_ids: list[int]) -> lis
             TagReading.value,
             TagReading.timestamp,
             TagReading.quality,
+            Tag.description,
         )
         .outerjoin(subq, Tag.id == subq.c.tag_id)
         .outerjoin(
@@ -224,6 +225,7 @@ async def _fetch_tags_with_readings(db: AsyncSession, tag_ids: list[int]) -> lis
             "value": r[5],
             "timestamp": as_utc(r[6]),
             "quality_ok": r[7] == 192 if r[7] is not None else False,
+            "description": r[8] or "",
         }
         for r in rows
     ]
@@ -382,6 +384,7 @@ async def dashboard_tags(
                 "value": value,
                 "timestamp": as_utc(ts),
                 "quality_ok": quality_ok,
+                "description": t.description or "",
             }
         )
 

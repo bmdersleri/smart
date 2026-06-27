@@ -7,6 +7,7 @@ import type { WatchlistItem } from '../../api/client'
 import { useLatestStream } from '../../hooks/useLatestStream'
 import { useSortable } from '../../hooks/useSortable'
 import SortHeader from '../../components/SortHeader'
+import TagDescriptionCell from '../../components/TagDescriptionCell'
 import WatchlistGroups from './WatchlistGroups'
 import { tagInGroup } from '../../utils/watchlistGroups'
 
@@ -106,7 +107,9 @@ export default function WatchlistTab({ active }: { active: boolean }) {
           {rows.map((item) => (
             <tr key={item.tag_id} className="border-t border-gray-800 hover:bg-gray-800/40 transition-colors">
               <td className="px-4 py-3 text-sm text-gray-400">{item.device || '—'}</td>
-              <td className="px-4 py-3 text-sm text-white font-medium">{item.name}</td>
+              <td className="px-4 py-3 text-sm text-white font-medium">
+                <TagDescriptionCell name={item.name} description={item.description} />
+              </td>
               <td className="px-4 py-3 text-sm text-end font-mono">
                 <FlipCell value={formatValue(item)} className="text-cyan-300" />
               </td>
