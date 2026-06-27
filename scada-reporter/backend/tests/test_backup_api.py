@@ -141,3 +141,37 @@ async def test_delete_not_found(client: AsyncClient, db_session: AsyncSession):
 
     r = await client.delete("/api/backup/99999", headers=_auth(tok))
     assert r.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_restore_requires_confirm(
+    client: AsyncClient, db_session: AsyncSession, tmp_path, monkeypatch
+):
+    live = tmp_path / "live.db"
+    monkeypatch.setattr(settings, "DATABASE_URL", _seed_live_db(live))
+    monkeypatch.setattr(settings, "BACKUP_DIR", str(tmp_path / "bk"))
+
+    await _make_user(db_session, "bk_admin5", "admin")
+    tok = await _login(client, "bk_admin5")
+    admin_headers = _auth(tok)
+
+    created = (await client.post("/api/backup", headers=admin_headers)).json()
+    bad = await client.post(
+        f"/api/backup/{created['id']}/restore",
+        json={"confirm": "nope"},
+        headers=admin_headers,
+    )
+    assert bad.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_restore_requires_admin(client: AsyncClient, db_session: AsyncSession):
+    await _make_user(db_session, "bk_op3", "operator")
+    tok = await _login(client, "bk_op3")
+
+    r = await client.post(
+        "/api/backup/1/restore",
+        json={"confirm": "RESTORE"},
+        headers=_auth(tok),
+    )
+    assert r.status_code == 403

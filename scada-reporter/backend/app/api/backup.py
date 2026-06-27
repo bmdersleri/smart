@@ -1,3 +1,4 @@
+import asyncio
 import os
 from datetime import UTC, datetime
 
@@ -119,3 +120,33 @@ async def delete_backup(
     await db.delete(rec)
     await db.commit()
     return {"deleted": backup_id}
+
+
+class RestoreRequest(BaseModel):
+    confirm: str
+
+
+@router.post("/{backup_id}/restore")
+async def restore_backup(
+    backup_id: int,
+    body: RestoreRequest,
+    db: AsyncSession = Depends(get_db),
+    user=Depends(require_role("admin")),
+    _w=Depends(require_writable),
+) -> dict:
+    if body.confirm != "RESTORE":
+        raise HTTPException(status_code=400, detail="Confirmation token must be 'RESTORE'")
+    rec = await db.get(Backup, backup_id)
+    if rec is None or not rec.path or not os.path.exists(rec.path):
+        raise HTTPException(status_code=404, detail="Backup file not found")
+    # safety snapshot of the CURRENT state before overwriting
+    await run_backup(db, trigger="manual", user_id=getattr(user, "id", None))
+    try:
+        await asyncio.to_thread(
+            be.restore_snapshot, backup_path=rec.path, db_url=settings.DATABASE_URL
+        )
+    except NotImplementedError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except (FileNotFoundError, ValueError) as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return {"restored": backup_id}
