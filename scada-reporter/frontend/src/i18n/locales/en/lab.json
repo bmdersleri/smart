@@ -1,0 +1,19 @@
+{
+  "title": "Lab Data Entry",
+  "subtitle": "Enter laboratory analysis and measurement results",
+  "tab_single": "Single Sample",
+  "tab_batch": "Batch Table",
+  "tab_import": "Import",
+  "tab_records": "Records",
+  "sample_point": "Sample Point",
+  "sampled_at": "Date / Time",
+  "method": "Method",
+  "batch_no": "Batch No",
+  "note": "Note",
+  "add_parameter": "+ new parameter",
+  "add_point": "+ new point",
+  "save": "Save",
+  "saved": "Saved",
+  "out_of_range": "Out of range",
+  "value": "Value"
+}

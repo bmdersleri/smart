@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape, urlSearchParamsBodySerializer } from './client';
 import { client } from './client.gen';
-import type { AckIncidentApiPlcIncidentsIncidentIdAckPostData, AckIncidentApiPlcIncidentsIncidentIdAckPostErrors, AckIncidentApiPlcIncidentsIncidentIdAckPostResponses, AddMemberApiDashboardWatchlistGroupsGroupIdTagsTagIdPostData, AddMemberApiDashboardWatchlistGroupsGroupIdTagsTagIdPostErrors, AddMemberApiDashboardWatchlistGroupsGroupIdTagsTagIdPostResponses, AddWatchlistApiDashboardWatchlistTagIdPostData, AddWatchlistApiDashboardWatchlistTagIdPostErrors, AddWatchlistApiDashboardWatchlistTagIdPostResponses, AiHealthApiAiHealthGetData, AiHealthApiAiHealthGetResponses, AiReportGenerationApiAiReportsGeneratePostData, AiReportGenerationApiAiReportsGeneratePostErrors, AiReportGenerationApiAiReportsGeneratePostResponses, AnomalyDetectionApiAiAnomaliesPostData, AnomalyDetectionApiAiAnomaliesPostErrors, AnomalyDetectionApiAiAnomaliesPostResponses, AssignTagsApiGroupsGroupIdAssignPostData, AssignTagsApiGroupsGroupIdAssignPostErrors, AssignTagsApiGroupsGroupIdAssignPostResponses, BrowseTagsApiTagsBrowseGetData, BrowseTagsApiTagsBrowseGetResponses, CreateAnnotationApiAnnotationsPostData, CreateAnnotationApiAnnotationsPostErrors, CreateAnnotationApiAnnotationsPostResponses, CreateGroupApiDashboardWatchlistGroupsPostData, CreateGroupApiDashboardWatchlistGroupsPostErrors, CreateGroupApiDashboardWatchlistGroupsPostResponses, CreateGroupApiGroupsPostData, CreateGroupApiGroupsPostErrors, CreateGroupApiGroupsPostResponses, CreatePlcApiPlcPostData, CreatePlcApiPlcPostErrors, CreatePlcApiPlcPostResponses, CreateScheduledApiAdvancedReportsScheduledPostData, CreateScheduledApiAdvancedReportsScheduledPostErrors, CreateScheduledApiAdvancedReportsScheduledPostResponses, CreateTagApiTagsPostData, CreateTagApiTagsPostErrors, CreateTagApiTagsPostResponses, CreateTemplateApiAdvancedReportsTemplatesPostData, CreateTemplateApiAdvancedReportsTemplatesPostErrors, CreateTemplateApiAdvancedReportsTemplatesPostResponses, CreateTemplateApiExcelTemplatesPostData, CreateTemplateApiExcelTemplatesPostErrors, CreateTemplateApiExcelTemplatesPostResponses, CreateUserApiUsersPostData, CreateUserApiUsersPostErrors, CreateUserApiUsersPostResponses, DashboardTagsApiDashboardTagsGetData, DashboardTagsApiDashboardTagsGetErrors, DashboardTagsApiDashboardTagsGetResponses, DeadbandSavingsApiDashboardDeadbandSavingsGetData, DeadbandSavingsApiDashboardDeadbandSavingsGetErrors, DeadbandSavingsApiDashboardDeadbandSavingsGetResponses, DeleteAnnotationApiAnnotationsAnnotationIdDeleteData, DeleteAnnotationApiAnnotationsAnnotationIdDeleteErrors, DeleteAnnotationApiAnnotationsAnnotationIdDeleteResponses, DeleteArchiveApiAdvancedReportsArchiveArchiveIdDeleteData, DeleteArchiveApiAdvancedReportsArchiveArchiveIdDeleteErrors, DeleteArchiveApiAdvancedReportsArchiveArchiveIdDeleteResponses, DeleteGroupApiDashboardWatchlistGroupsGroupIdDeleteData, DeleteGroupApiDashboardWatchlistGroupsGroupIdDeleteErrors, DeleteGroupApiDashboardWatchlistGroupsGroupIdDeleteResponses, DeleteGroupApiGroupsGroupIdDeleteData, DeleteGroupApiGroupsGroupIdDeleteErrors, DeleteGroupApiGroupsGroupIdDeleteResponses, DeletePlcApiPlcNameDeleteData, DeletePlcApiPlcNameDeleteErrors, DeletePlcApiPlcNameDeleteResponses, DeleteScheduledApiAdvancedReportsScheduledScheduledIdDeleteData, DeleteScheduledApiAdvancedReportsScheduledScheduledIdDeleteErrors, DeleteScheduledApiAdvancedReportsScheduledScheduledIdDeleteResponses, DeleteTagApiTagsTagIdDeleteData, DeleteTagApiTagsTagIdDeleteErrors, DeleteTagApiTagsTagIdDeleteResponses, DeleteTemplateApiAdvancedReportsTemplatesTemplateIdDeleteData, DeleteTemplateApiAdvancedReportsTemplatesTemplateIdDeleteErrors, DeleteTemplateApiAdvancedReportsTemplatesTemplateIdDeleteResponses, DeleteTemplateApiExcelTemplatesTemplateIdDeleteData, DeleteTemplateApiExcelTemplatesTemplateIdDeleteErrors, DeleteTemplateApiExcelTemplatesTemplateIdDeleteResponses, DeleteUserApiUsersUserIdDeleteData, DeleteUserApiUsersUserIdDeleteErrors, DeleteUserApiUsersUserIdDeleteResponses, DevicesApiDashboardDevicesGetData, DevicesApiDashboardDevicesGetResponses, DownloadArchiveApiAdvancedReportsArchiveArchiveIdDownloadGetData, DownloadArchiveApiAdvancedReportsArchiveArchiveIdDownloadGetErrors, DownloadArchiveApiAdvancedReportsArchiveArchiveIdDownloadGetResponses, DownloadHistoryApiReportsHistoryHistoryIdDownloadGetData, DownloadHistoryApiReportsHistoryHistoryIdDownloadGetErrors, DownloadHistoryApiReportsHistoryHistoryIdDownloadGetResponses, ExportTagsApiTagsExportGetData, ExportTagsApiTagsExportGetErrors, ExportTagsApiTagsExportGetResponses, GenerateApiExcelTemplatesTemplateIdGeneratePostData, GenerateApiExcelTemplatesTemplateIdGeneratePostErrors, GenerateApiExcelTemplatesTemplateIdGeneratePostResponses, GenerateDashboardApiGrafanaDashboardsGeneratePostData, GenerateDashboardApiGrafanaDashboardsGeneratePostErrors, GenerateDashboardApiGrafanaDashboardsGeneratePostResponses, GenerateFromReportTemplateApiGrafanaDashboardsFromReportTemplateTemplateIdPostData, GenerateFromReportTemplateApiGrafanaDashboardsFromReportTemplateTemplateIdPostErrors, GenerateFromReportTemplateApiGrafanaDashboardsFromReportTemplateTemplateIdPostResponses, GenerateReportApiReportsGeneratePostData, GenerateReportApiReportsGeneratePostErrors, GenerateReportApiReportsGeneratePostResponses, GetArchiveEntryApiAdvancedReportsArchiveArchiveIdGetData, GetArchiveEntryApiAdvancedReportsArchiveArchiveIdGetErrors, GetArchiveEntryApiAdvancedReportsArchiveArchiveIdGetResponses, GetReadingsApiTagsTagIdReadingsGetData, GetReadingsApiTagsTagIdReadingsGetErrors, GetReadingsApiTagsTagIdReadingsGetResponses, GetSchemaApiExploreSchemaGetData, GetSchemaApiExploreSchemaGetResponses, GetStreamTokenApiAuthStreamTokenPostData, GetStreamTokenApiAuthStreamTokenPostResponses, GetSummaryApiExploreSummaryGetData, GetSummaryApiExploreSummaryGetResponses, GetTemplateApiAdvancedReportsTemplatesTemplateIdGetData, GetTemplateApiAdvancedReportsTemplatesTemplateIdGetErrors, GetTemplateApiAdvancedReportsTemplatesTemplateIdGetResponses, GetWatchlistApiDashboardWatchlistGetData, GetWatchlistApiDashboardWatchlistGetResponses, GrafanaTemplatesApiGrafanaTemplatesGetData, GrafanaTemplatesApiGrafanaTemplatesGetResponses, GroupTreeApiGroupsTreeGetData, GroupTreeApiGroupsTreeGetErrors, GroupTreeApiGroupsTreeGetResponses, HealthHealthGetData, HealthHealthGetResponses, ImportTagsApiTagsImportPostData, ImportTagsApiTagsImportPostErrors, ImportTagsApiTagsImportPostResponses, ImportTagsCsvApiTagsImportCsvPostData, ImportTagsCsvApiTagsImportCsvPostErrors, ImportTagsCsvApiTagsImportCsvPostResponses, IncidentsSummaryApiPlcIncidentsSummaryGetData, IncidentsSummaryApiPlcIncidentsSummaryGetResponses, InspectApiExcelTemplatesInspectPostData, InspectApiExcelTemplatesInspectPostErrors, InspectApiExcelTemplatesInspectPostResponses, LicenseStatusApiLicenseGetData, LicenseStatusApiLicenseGetResponses, ListAnnotationsApiAnnotationsGetData, ListAnnotationsApiAnnotationsGetErrors, ListAnnotationsApiAnnotationsGetResponses, ListArchiveApiAdvancedReportsArchiveGetData, ListArchiveApiAdvancedReportsArchiveGetErrors, ListArchiveApiAdvancedReportsArchiveGetResponses, ListAuditLogApiAuditGetData, ListAuditLogApiAuditGetErrors, ListAuditLogApiAuditGetResponses, ListDashboardsApiGrafanaDashboardsGetData, ListDashboardsApiGrafanaDashboardsGetResponses, ListGroupsApiDashboardWatchlistGroupsGetData, ListGroupsApiDashboardWatchlistGroupsGetResponses, ListGroupsApiGroupsGetData, ListGroupsApiGroupsGetResponses, ListHistoryApiReportsHistoryGetData, ListHistoryApiReportsHistoryGetResponses, ListIncidentsApiPlcIncidentsGetData, ListIncidentsApiPlcIncidentsGetErrors, ListIncidentsApiPlcIncidentsGetResponses, ListPanelsApiGrafanaDashboardsUidPanelsGetData, ListPanelsApiGrafanaDashboardsUidPanelsGetErrors, ListPanelsApiGrafanaDashboardsUidPanelsGetResponses, ListPlcsApiPlcGetData, ListPlcsApiPlcGetResponses, ListScheduledApiAdvancedReportsScheduledGetData, ListScheduledApiAdvancedReportsScheduledGetResponses, ListTagsApiTagsGetData, ListTagsApiTagsGetResponses, ListTemplatesApiAdvancedReportsTemplatesGetData, ListTemplatesApiAdvancedReportsTemplatesGetResponses, ListTemplatesApiExcelTemplatesGetData, ListTemplatesApiExcelTemplatesGetResponses, ListUsersApiUsersGetData, ListUsersApiUsersGetResponses, LivenessLiveGetData, LivenessLiveGetResponses, LoginApiAuthTokenPostData, LoginApiAuthTokenPostErrors, LoginApiAuthTokenPostResponses, LoginJsonApiAuthLoginPostData, LoginJsonApiAuthLoginPostErrors, LoginJsonApiAuthLoginPostResponses, LogsStreamApiDashboardLogsStreamGetData, LogsStreamApiDashboardLogsStreamGetErrors, LogsStreamApiDashboardLogsStreamGetResponses, MeApiAuthMeGetData, MeApiAuthMeGetResponses, MetricsSummaryApiDashboardMetricsGetData, MetricsSummaryApiDashboardMetricsGetResponses, NaturalLanguageQueryApiAiQueryPostData, NaturalLanguageQueryApiAiQueryPostErrors, NaturalLanguageQueryApiAiQueryPostResponses, OverviewApiDashboardOverviewGetData, OverviewApiDashboardOverviewGetResponses, PatchUserApiUsersUserIdPatchData, PatchUserApiUsersUserIdPatchErrors, PatchUserApiUsersUserIdPatchResponses, PlcHealthApiPlcHealthGetData, PlcHealthApiPlcHealthGetResponses, PrometheusMetricsMetricsGetData, PrometheusMetricsMetricsGetResponses, ReadinessReadyGetData, ReadinessReadyGetResponses, RegisterApiAuthRegisterPostData, RegisterApiAuthRegisterPostErrors, RegisterApiAuthRegisterPostResponses, RemoveMemberApiDashboardWatchlistGroupsGroupIdTagsTagIdDeleteData, RemoveMemberApiDashboardWatchlistGroupsGroupIdTagsTagIdDeleteErrors, RemoveMemberApiDashboardWatchlistGroupsGroupIdTagsTagIdDeleteResponses, RemoveWatchlistApiDashboardWatchlistTagIdDeleteData, RemoveWatchlistApiDashboardWatchlistTagIdDeleteErrors, RemoveWatchlistApiDashboardWatchlistTagIdDeleteResponses, RenameGroupApiDashboardWatchlistGroupsGroupIdPatchData, RenameGroupApiDashboardWatchlistGroupsGroupIdPatchErrors, RenameGroupApiDashboardWatchlistGroupsGroupIdPatchResponses, ResetPasswordApiUsersUserIdPasswordPostData, ResetPasswordApiUsersUserIdPasswordPostErrors, ResetPasswordApiUsersUserIdPasswordPostResponses, ResolveTagsApiAiResolvePostData, ResolveTagsApiAiResolvePostErrors, ResolveTagsApiAiResolvePostResponses, RevertLicenseApiLicenseDeleteData, RevertLicenseApiLicenseDeleteResponses, RunQueryApiQueryRunPostData, RunQueryApiQueryRunPostErrors, RunQueryApiQueryRunPostResponses, RunTemplateApiAdvancedReportsTemplatesTemplateIdRunPostData, RunTemplateApiAdvancedReportsTemplatesTemplateIdRunPostErrors, RunTemplateApiAdvancedReportsTemplatesTemplateIdRunPostResponses, StreamApiDashboardStreamGetData, StreamApiDashboardStreamGetErrors, StreamApiDashboardStreamGetResponses, SyncGrafanaApiDashboardWatchlistGroupsSyncGrafanaPostData, SyncGrafanaApiDashboardWatchlistGroupsSyncGrafanaPostResponses, ToggleScheduledApiAdvancedReportsScheduledScheduledIdTogglePatchData, ToggleScheduledApiAdvancedReportsScheduledScheduledIdTogglePatchErrors, ToggleScheduledApiAdvancedReportsScheduledScheduledIdTogglePatchResponses, TrendAggApiDashboardTrendAggGetData, TrendAggApiDashboardTrendAggGetErrors, TrendAggApiDashboardTrendAggGetResponses, TrendApiDashboardTrendGetData, TrendApiDashboardTrendGetErrors, TrendApiDashboardTrendGetResponses, TrendPredictionApiAiPredictPostData, TrendPredictionApiAiPredictPostErrors, TrendPredictionApiAiPredictPostResponses, TrendRangeApiDashboardTrendRangeGetData, TrendRangeApiDashboardTrendRangeGetErrors, TrendRangeApiDashboardTrendRangeGetResponses, UnassignTagsApiGroupsUnassignPostData, UnassignTagsApiGroupsUnassignPostErrors, UnassignTagsApiGroupsUnassignPostResponses, UpdateGroupApiGroupsGroupIdPatchData, UpdateGroupApiGroupsGroupIdPatchErrors, UpdateGroupApiGroupsGroupIdPatchResponses, UpdateMeApiAuthMePatchData, UpdateMeApiAuthMePatchErrors, UpdateMeApiAuthMePatchResponses, UpdatePlcApiPlcNamePatchData, UpdatePlcApiPlcNamePatchErrors, UpdatePlcApiPlcNamePatchResponses, UpdateScheduledApiAdvancedReportsScheduledScheduledIdPutData, UpdateScheduledApiAdvancedReportsScheduledScheduledIdPutErrors, UpdateScheduledApiAdvancedReportsScheduledScheduledIdPutResponses, UpdateTagApiTagsTagIdPatchData, UpdateTagApiTagsTagIdPatchErrors, UpdateTagApiTagsTagIdPatchResponses, UpdateTemplateApiAdvancedReportsTemplatesTemplateIdPutData, UpdateTemplateApiAdvancedReportsTemplatesTemplateIdPutErrors, UpdateTemplateApiAdvancedReportsTemplatesTemplateIdPutResponses, UploadLicenseApiLicensePostData, UploadLicenseApiLicensePostErrors, UploadLicenseApiLicensePostResponses } from './types.gen';
+import type { AckIncidentApiPlcIncidentsIncidentIdAckPostData, AckIncidentApiPlcIncidentsIncidentIdAckPostErrors, AckIncidentApiPlcIncidentsIncidentIdAckPostResponses, AddMemberApiDashboardWatchlistGroupsGroupIdTagsTagIdPostData, AddMemberApiDashboardWatchlistGroupsGroupIdTagsTagIdPostErrors, AddMemberApiDashboardWatchlistGroupsGroupIdTagsTagIdPostResponses, AddWatchlistApiDashboardWatchlistTagIdPostData, AddWatchlistApiDashboardWatchlistTagIdPostErrors, AddWatchlistApiDashboardWatchlistTagIdPostResponses, AiHealthApiAiHealthGetData, AiHealthApiAiHealthGetResponses, AiReportGenerationApiAiReportsGeneratePostData, AiReportGenerationApiAiReportsGeneratePostErrors, AiReportGenerationApiAiReportsGeneratePostResponses, AnomalyDetectionApiAiAnomaliesPostData, AnomalyDetectionApiAiAnomaliesPostErrors, AnomalyDetectionApiAiAnomaliesPostResponses, AssignTagsApiGroupsGroupIdAssignPostData, AssignTagsApiGroupsGroupIdAssignPostErrors, AssignTagsApiGroupsGroupIdAssignPostResponses, BrowseTagsApiTagsBrowseGetData, BrowseTagsApiTagsBrowseGetResponses, CreateAnnotationApiAnnotationsPostData, CreateAnnotationApiAnnotationsPostErrors, CreateAnnotationApiAnnotationsPostResponses, CreateGroupApiDashboardWatchlistGroupsPostData, CreateGroupApiDashboardWatchlistGroupsPostErrors, CreateGroupApiDashboardWatchlistGroupsPostResponses, CreateGroupApiGroupsPostData, CreateGroupApiGroupsPostErrors, CreateGroupApiGroupsPostResponses, CreateParameterApiLabParametersPostData, CreateParameterApiLabParametersPostErrors, CreateParameterApiLabParametersPostResponses, CreatePlcApiPlcPostData, CreatePlcApiPlcPostErrors, CreatePlcApiPlcPostResponses, CreateSampleApiLabSamplesPostData, CreateSampleApiLabSamplesPostErrors, CreateSampleApiLabSamplesPostResponses, CreateSamplePointApiLabSamplePointsPostData, CreateSamplePointApiLabSamplePointsPostErrors, CreateSamplePointApiLabSamplePointsPostResponses, CreateSamplesBatchApiLabSamplesBatchPostData, CreateSamplesBatchApiLabSamplesBatchPostErrors, CreateSamplesBatchApiLabSamplesBatchPostResponses, CreateScheduledApiAdvancedReportsScheduledPostData, CreateScheduledApiAdvancedReportsScheduledPostErrors, CreateScheduledApiAdvancedReportsScheduledPostResponses, CreateTagApiTagsPostData, CreateTagApiTagsPostErrors, CreateTagApiTagsPostResponses, CreateTemplateApiAdvancedReportsTemplatesPostData, CreateTemplateApiAdvancedReportsTemplatesPostErrors, CreateTemplateApiAdvancedReportsTemplatesPostResponses, CreateTemplateApiExcelTemplatesPostData, CreateTemplateApiExcelTemplatesPostErrors, CreateTemplateApiExcelTemplatesPostResponses, CreateUserApiUsersPostData, CreateUserApiUsersPostErrors, CreateUserApiUsersPostResponses, DashboardTagsApiDashboardTagsGetData, DashboardTagsApiDashboardTagsGetErrors, DashboardTagsApiDashboardTagsGetResponses, DeadbandSavingsApiDashboardDeadbandSavingsGetData, DeadbandSavingsApiDashboardDeadbandSavingsGetErrors, DeadbandSavingsApiDashboardDeadbandSavingsGetResponses, DeleteAnnotationApiAnnotationsAnnotationIdDeleteData, DeleteAnnotationApiAnnotationsAnnotationIdDeleteErrors, DeleteAnnotationApiAnnotationsAnnotationIdDeleteResponses, DeleteArchiveApiAdvancedReportsArchiveArchiveIdDeleteData, DeleteArchiveApiAdvancedReportsArchiveArchiveIdDeleteErrors, DeleteArchiveApiAdvancedReportsArchiveArchiveIdDeleteResponses, DeleteGroupApiDashboardWatchlistGroupsGroupIdDeleteData, DeleteGroupApiDashboardWatchlistGroupsGroupIdDeleteErrors, DeleteGroupApiDashboardWatchlistGroupsGroupIdDeleteResponses, DeleteGroupApiGroupsGroupIdDeleteData, DeleteGroupApiGroupsGroupIdDeleteErrors, DeleteGroupApiGroupsGroupIdDeleteResponses, DeleteParameterApiLabParametersParamIdDeleteData, DeleteParameterApiLabParametersParamIdDeleteErrors, DeleteParameterApiLabParametersParamIdDeleteResponses, DeletePlcApiPlcNameDeleteData, DeletePlcApiPlcNameDeleteErrors, DeletePlcApiPlcNameDeleteResponses, DeleteSampleApiLabSamplesSampleIdDeleteData, DeleteSampleApiLabSamplesSampleIdDeleteErrors, DeleteSampleApiLabSamplesSampleIdDeleteResponses, DeleteSamplePointApiLabSamplePointsPointIdDeleteData, DeleteSamplePointApiLabSamplePointsPointIdDeleteErrors, DeleteSamplePointApiLabSamplePointsPointIdDeleteResponses, DeleteScheduledApiAdvancedReportsScheduledScheduledIdDeleteData, DeleteScheduledApiAdvancedReportsScheduledScheduledIdDeleteErrors, DeleteScheduledApiAdvancedReportsScheduledScheduledIdDeleteResponses, DeleteTagApiTagsTagIdDeleteData, DeleteTagApiTagsTagIdDeleteErrors, DeleteTagApiTagsTagIdDeleteResponses, DeleteTemplateApiAdvancedReportsTemplatesTemplateIdDeleteData, DeleteTemplateApiAdvancedReportsTemplatesTemplateIdDeleteErrors, DeleteTemplateApiAdvancedReportsTemplatesTemplateIdDeleteResponses, DeleteTemplateApiExcelTemplatesTemplateIdDeleteData, DeleteTemplateApiExcelTemplatesTemplateIdDeleteErrors, DeleteTemplateApiExcelTemplatesTemplateIdDeleteResponses, DeleteUserApiUsersUserIdDeleteData, DeleteUserApiUsersUserIdDeleteErrors, DeleteUserApiUsersUserIdDeleteResponses, DevicesApiDashboardDevicesGetData, DevicesApiDashboardDevicesGetResponses, DownloadArchiveApiAdvancedReportsArchiveArchiveIdDownloadGetData, DownloadArchiveApiAdvancedReportsArchiveArchiveIdDownloadGetErrors, DownloadArchiveApiAdvancedReportsArchiveArchiveIdDownloadGetResponses, DownloadHistoryApiReportsHistoryHistoryIdDownloadGetData, DownloadHistoryApiReportsHistoryHistoryIdDownloadGetErrors, DownloadHistoryApiReportsHistoryHistoryIdDownloadGetResponses, ExportTagsApiTagsExportGetData, ExportTagsApiTagsExportGetErrors, ExportTagsApiTagsExportGetResponses, GenerateApiExcelTemplatesTemplateIdGeneratePostData, GenerateApiExcelTemplatesTemplateIdGeneratePostErrors, GenerateApiExcelTemplatesTemplateIdGeneratePostResponses, GenerateDashboardApiGrafanaDashboardsGeneratePostData, GenerateDashboardApiGrafanaDashboardsGeneratePostErrors, GenerateDashboardApiGrafanaDashboardsGeneratePostResponses, GenerateFromReportTemplateApiGrafanaDashboardsFromReportTemplateTemplateIdPostData, GenerateFromReportTemplateApiGrafanaDashboardsFromReportTemplateTemplateIdPostErrors, GenerateFromReportTemplateApiGrafanaDashboardsFromReportTemplateTemplateIdPostResponses, GenerateReportApiReportsGeneratePostData, GenerateReportApiReportsGeneratePostErrors, GenerateReportApiReportsGeneratePostResponses, GetArchiveEntryApiAdvancedReportsArchiveArchiveIdGetData, GetArchiveEntryApiAdvancedReportsArchiveArchiveIdGetErrors, GetArchiveEntryApiAdvancedReportsArchiveArchiveIdGetResponses, GetReadingsApiTagsTagIdReadingsGetData, GetReadingsApiTagsTagIdReadingsGetErrors, GetReadingsApiTagsTagIdReadingsGetResponses, GetSampleApiLabSamplesSampleIdGetData, GetSampleApiLabSamplesSampleIdGetErrors, GetSampleApiLabSamplesSampleIdGetResponses, GetSchemaApiExploreSchemaGetData, GetSchemaApiExploreSchemaGetResponses, GetStreamTokenApiAuthStreamTokenPostData, GetStreamTokenApiAuthStreamTokenPostResponses, GetSummaryApiExploreSummaryGetData, GetSummaryApiExploreSummaryGetResponses, GetTemplateApiAdvancedReportsTemplatesTemplateIdGetData, GetTemplateApiAdvancedReportsTemplatesTemplateIdGetErrors, GetTemplateApiAdvancedReportsTemplatesTemplateIdGetResponses, GetWatchlistApiDashboardWatchlistGetData, GetWatchlistApiDashboardWatchlistGetResponses, GrafanaTemplatesApiGrafanaTemplatesGetData, GrafanaTemplatesApiGrafanaTemplatesGetResponses, GroupTreeApiGroupsTreeGetData, GroupTreeApiGroupsTreeGetErrors, GroupTreeApiGroupsTreeGetResponses, HealthHealthGetData, HealthHealthGetResponses, ImportCommitApiLabImportCommitPostData, ImportCommitApiLabImportCommitPostErrors, ImportCommitApiLabImportCommitPostResponses, ImportPreviewApiLabImportPreviewPostData, ImportPreviewApiLabImportPreviewPostErrors, ImportPreviewApiLabImportPreviewPostResponses, ImportTagsApiTagsImportPostData, ImportTagsApiTagsImportPostErrors, ImportTagsApiTagsImportPostResponses, ImportTagsCsvApiTagsImportCsvPostData, ImportTagsCsvApiTagsImportCsvPostErrors, ImportTagsCsvApiTagsImportCsvPostResponses, IncidentsSummaryApiPlcIncidentsSummaryGetData, IncidentsSummaryApiPlcIncidentsSummaryGetResponses, InspectApiExcelTemplatesInspectPostData, InspectApiExcelTemplatesInspectPostErrors, InspectApiExcelTemplatesInspectPostResponses, LicenseStatusApiLicenseGetData, LicenseStatusApiLicenseGetResponses, ListAnnotationsApiAnnotationsGetData, ListAnnotationsApiAnnotationsGetErrors, ListAnnotationsApiAnnotationsGetResponses, ListArchiveApiAdvancedReportsArchiveGetData, ListArchiveApiAdvancedReportsArchiveGetErrors, ListArchiveApiAdvancedReportsArchiveGetResponses, ListAuditLogApiAuditGetData, ListAuditLogApiAuditGetErrors, ListAuditLogApiAuditGetResponses, ListDashboardsApiGrafanaDashboardsGetData, ListDashboardsApiGrafanaDashboardsGetResponses, ListGroupsApiDashboardWatchlistGroupsGetData, ListGroupsApiDashboardWatchlistGroupsGetResponses, ListGroupsApiGroupsGetData, ListGroupsApiGroupsGetResponses, ListHistoryApiReportsHistoryGetData, ListHistoryApiReportsHistoryGetResponses, ListIncidentsApiPlcIncidentsGetData, ListIncidentsApiPlcIncidentsGetErrors, ListIncidentsApiPlcIncidentsGetResponses, ListPanelsApiGrafanaDashboardsUidPanelsGetData, ListPanelsApiGrafanaDashboardsUidPanelsGetErrors, ListPanelsApiGrafanaDashboardsUidPanelsGetResponses, ListParametersApiLabParametersGetData, ListParametersApiLabParametersGetErrors, ListParametersApiLabParametersGetResponses, ListPlcsApiPlcGetData, ListPlcsApiPlcGetResponses, ListSamplePointsApiLabSamplePointsGetData, ListSamplePointsApiLabSamplePointsGetErrors, ListSamplePointsApiLabSamplePointsGetResponses, ListSamplesApiLabSamplesGetData, ListSamplesApiLabSamplesGetErrors, ListSamplesApiLabSamplesGetResponses, ListScheduledApiAdvancedReportsScheduledGetData, ListScheduledApiAdvancedReportsScheduledGetResponses, ListTagsApiTagsGetData, ListTagsApiTagsGetResponses, ListTemplatesApiAdvancedReportsTemplatesGetData, ListTemplatesApiAdvancedReportsTemplatesGetResponses, ListTemplatesApiExcelTemplatesGetData, ListTemplatesApiExcelTemplatesGetResponses, ListUsersApiUsersGetData, ListUsersApiUsersGetResponses, LivenessLiveGetData, LivenessLiveGetResponses, LoginApiAuthTokenPostData, LoginApiAuthTokenPostErrors, LoginApiAuthTokenPostResponses, LoginJsonApiAuthLoginPostData, LoginJsonApiAuthLoginPostErrors, LoginJsonApiAuthLoginPostResponses, LogsStreamApiDashboardLogsStreamGetData, LogsStreamApiDashboardLogsStreamGetErrors, LogsStreamApiDashboardLogsStreamGetResponses, MeApiAuthMeGetData, MeApiAuthMeGetResponses, MetricsSummaryApiDashboardMetricsGetData, MetricsSummaryApiDashboardMetricsGetResponses, NaturalLanguageQueryApiAiQueryPostData, NaturalLanguageQueryApiAiQueryPostErrors, NaturalLanguageQueryApiAiQueryPostResponses, OverviewApiDashboardOverviewGetData, OverviewApiDashboardOverviewGetResponses, PatchUserApiUsersUserIdPatchData, PatchUserApiUsersUserIdPatchErrors, PatchUserApiUsersUserIdPatchResponses, PlcHealthApiPlcHealthGetData, PlcHealthApiPlcHealthGetResponses, PrometheusMetricsMetricsGetData, PrometheusMetricsMetricsGetResponses, ReadinessReadyGetData, ReadinessReadyGetResponses, RegisterApiAuthRegisterPostData, RegisterApiAuthRegisterPostErrors, RegisterApiAuthRegisterPostResponses, RemoveMemberApiDashboardWatchlistGroupsGroupIdTagsTagIdDeleteData, RemoveMemberApiDashboardWatchlistGroupsGroupIdTagsTagIdDeleteErrors, RemoveMemberApiDashboardWatchlistGroupsGroupIdTagsTagIdDeleteResponses, RemoveWatchlistApiDashboardWatchlistTagIdDeleteData, RemoveWatchlistApiDashboardWatchlistTagIdDeleteErrors, RemoveWatchlistApiDashboardWatchlistTagIdDeleteResponses, RenameGroupApiDashboardWatchlistGroupsGroupIdPatchData, RenameGroupApiDashboardWatchlistGroupsGroupIdPatchErrors, RenameGroupApiDashboardWatchlistGroupsGroupIdPatchResponses, ResetPasswordApiUsersUserIdPasswordPostData, ResetPasswordApiUsersUserIdPasswordPostErrors, ResetPasswordApiUsersUserIdPasswordPostResponses, ResolveTagsApiAiResolvePostData, ResolveTagsApiAiResolvePostErrors, ResolveTagsApiAiResolvePostResponses, RevertLicenseApiLicenseDeleteData, RevertLicenseApiLicenseDeleteResponses, RunQueryApiQueryRunPostData, RunQueryApiQueryRunPostErrors, RunQueryApiQueryRunPostResponses, RunTemplateApiAdvancedReportsTemplatesTemplateIdRunPostData, RunTemplateApiAdvancedReportsTemplatesTemplateIdRunPostErrors, RunTemplateApiAdvancedReportsTemplatesTemplateIdRunPostResponses, StreamApiDashboardStreamGetData, StreamApiDashboardStreamGetErrors, StreamApiDashboardStreamGetResponses, SyncGrafanaApiDashboardWatchlistGroupsSyncGrafanaPostData, SyncGrafanaApiDashboardWatchlistGroupsSyncGrafanaPostResponses, ToggleScheduledApiAdvancedReportsScheduledScheduledIdTogglePatchData, ToggleScheduledApiAdvancedReportsScheduledScheduledIdTogglePatchErrors, ToggleScheduledApiAdvancedReportsScheduledScheduledIdTogglePatchResponses, TrendAggApiDashboardTrendAggGetData, TrendAggApiDashboardTrendAggGetErrors, TrendAggApiDashboardTrendAggGetResponses, TrendApiDashboardTrendGetData, TrendApiDashboardTrendGetErrors, TrendApiDashboardTrendGetResponses, TrendPredictionApiAiPredictPostData, TrendPredictionApiAiPredictPostErrors, TrendPredictionApiAiPredictPostResponses, TrendRangeApiDashboardTrendRangeGetData, TrendRangeApiDashboardTrendRangeGetErrors, TrendRangeApiDashboardTrendRangeGetResponses, UnassignTagsApiGroupsUnassignPostData, UnassignTagsApiGroupsUnassignPostErrors, UnassignTagsApiGroupsUnassignPostResponses, UpdateGroupApiGroupsGroupIdPatchData, UpdateGroupApiGroupsGroupIdPatchErrors, UpdateGroupApiGroupsGroupIdPatchResponses, UpdateMeApiAuthMePatchData, UpdateMeApiAuthMePatchErrors, UpdateMeApiAuthMePatchResponses, UpdateParameterApiLabParametersParamIdPatchData, UpdateParameterApiLabParametersParamIdPatchErrors, UpdateParameterApiLabParametersParamIdPatchResponses, UpdatePlcApiPlcNamePatchData, UpdatePlcApiPlcNamePatchErrors, UpdatePlcApiPlcNamePatchResponses, UpdateSampleApiLabSamplesSampleIdPatchData, UpdateSampleApiLabSamplesSampleIdPatchErrors, UpdateSampleApiLabSamplesSampleIdPatchResponses, UpdateSamplePointApiLabSamplePointsPointIdPatchData, UpdateSamplePointApiLabSamplePointsPointIdPatchErrors, UpdateSamplePointApiLabSamplePointsPointIdPatchResponses, UpdateScheduledApiAdvancedReportsScheduledScheduledIdPutData, UpdateScheduledApiAdvancedReportsScheduledScheduledIdPutErrors, UpdateScheduledApiAdvancedReportsScheduledScheduledIdPutResponses, UpdateTagApiTagsTagIdPatchData, UpdateTagApiTagsTagIdPatchErrors, UpdateTagApiTagsTagIdPatchResponses, UpdateTemplateApiAdvancedReportsTemplatesTemplateIdPutData, UpdateTemplateApiAdvancedReportsTemplatesTemplateIdPutErrors, UpdateTemplateApiAdvancedReportsTemplatesTemplateIdPutResponses, UploadLicenseApiLicensePostData, UploadLicenseApiLicensePostErrors, UploadLicenseApiLicensePostResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -826,6 +826,200 @@ export const assignTagsApiGroupsGroupIdAssignPost = <ThrowOnError extends boolea
     responseType: 'json',
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/groups/{group_id}/assign',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Import Commit
+ */
+export const importCommitApiLabImportCommitPost = <ThrowOnError extends boolean = false>(options: Options<ImportCommitApiLabImportCommitPostData, ThrowOnError>): RequestResult<ImportCommitApiLabImportCommitPostResponses, ImportCommitApiLabImportCommitPostErrors, ThrowOnError> => (options.client ?? client).post<ImportCommitApiLabImportCommitPostResponses, ImportCommitApiLabImportCommitPostErrors, ThrowOnError>({
+    responseType: 'json',
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/lab/import/commit',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Import Preview
+ */
+export const importPreviewApiLabImportPreviewPost = <ThrowOnError extends boolean = false>(options: Options<ImportPreviewApiLabImportPreviewPostData, ThrowOnError>): RequestResult<ImportPreviewApiLabImportPreviewPostResponses, ImportPreviewApiLabImportPreviewPostErrors, ThrowOnError> => (options.client ?? client).post<ImportPreviewApiLabImportPreviewPostResponses, ImportPreviewApiLabImportPreviewPostErrors, ThrowOnError>({
+    ...formDataBodySerializer,
+    responseType: 'json',
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/lab/import/preview',
+    ...options,
+    headers: {
+        'Content-Type': null,
+        ...options.headers
+    }
+});
+
+/**
+ * List Parameters
+ */
+export const listParametersApiLabParametersGet = <ThrowOnError extends boolean = false>(options?: Options<ListParametersApiLabParametersGetData, ThrowOnError>): RequestResult<ListParametersApiLabParametersGetResponses, ListParametersApiLabParametersGetErrors, ThrowOnError> => (options?.client ?? client).get<ListParametersApiLabParametersGetResponses, ListParametersApiLabParametersGetErrors, ThrowOnError>({
+    responseType: 'json',
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/lab/parameters',
+    ...options
+});
+
+/**
+ * Create Parameter
+ */
+export const createParameterApiLabParametersPost = <ThrowOnError extends boolean = false>(options: Options<CreateParameterApiLabParametersPostData, ThrowOnError>): RequestResult<CreateParameterApiLabParametersPostResponses, CreateParameterApiLabParametersPostErrors, ThrowOnError> => (options.client ?? client).post<CreateParameterApiLabParametersPostResponses, CreateParameterApiLabParametersPostErrors, ThrowOnError>({
+    responseType: 'json',
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/lab/parameters',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Delete Parameter
+ */
+export const deleteParameterApiLabParametersParamIdDelete = <ThrowOnError extends boolean = false>(options: Options<DeleteParameterApiLabParametersParamIdDeleteData, ThrowOnError>): RequestResult<DeleteParameterApiLabParametersParamIdDeleteResponses, DeleteParameterApiLabParametersParamIdDeleteErrors, ThrowOnError> => (options.client ?? client).delete<DeleteParameterApiLabParametersParamIdDeleteResponses, DeleteParameterApiLabParametersParamIdDeleteErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/lab/parameters/{param_id}',
+    ...options
+});
+
+/**
+ * Update Parameter
+ */
+export const updateParameterApiLabParametersParamIdPatch = <ThrowOnError extends boolean = false>(options: Options<UpdateParameterApiLabParametersParamIdPatchData, ThrowOnError>): RequestResult<UpdateParameterApiLabParametersParamIdPatchResponses, UpdateParameterApiLabParametersParamIdPatchErrors, ThrowOnError> => (options.client ?? client).patch<UpdateParameterApiLabParametersParamIdPatchResponses, UpdateParameterApiLabParametersParamIdPatchErrors, ThrowOnError>({
+    responseType: 'json',
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/lab/parameters/{param_id}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * List Sample Points
+ */
+export const listSamplePointsApiLabSamplePointsGet = <ThrowOnError extends boolean = false>(options?: Options<ListSamplePointsApiLabSamplePointsGetData, ThrowOnError>): RequestResult<ListSamplePointsApiLabSamplePointsGetResponses, ListSamplePointsApiLabSamplePointsGetErrors, ThrowOnError> => (options?.client ?? client).get<ListSamplePointsApiLabSamplePointsGetResponses, ListSamplePointsApiLabSamplePointsGetErrors, ThrowOnError>({
+    responseType: 'json',
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/lab/sample-points',
+    ...options
+});
+
+/**
+ * Create Sample Point
+ */
+export const createSamplePointApiLabSamplePointsPost = <ThrowOnError extends boolean = false>(options: Options<CreateSamplePointApiLabSamplePointsPostData, ThrowOnError>): RequestResult<CreateSamplePointApiLabSamplePointsPostResponses, CreateSamplePointApiLabSamplePointsPostErrors, ThrowOnError> => (options.client ?? client).post<CreateSamplePointApiLabSamplePointsPostResponses, CreateSamplePointApiLabSamplePointsPostErrors, ThrowOnError>({
+    responseType: 'json',
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/lab/sample-points',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Delete Sample Point
+ */
+export const deleteSamplePointApiLabSamplePointsPointIdDelete = <ThrowOnError extends boolean = false>(options: Options<DeleteSamplePointApiLabSamplePointsPointIdDeleteData, ThrowOnError>): RequestResult<DeleteSamplePointApiLabSamplePointsPointIdDeleteResponses, DeleteSamplePointApiLabSamplePointsPointIdDeleteErrors, ThrowOnError> => (options.client ?? client).delete<DeleteSamplePointApiLabSamplePointsPointIdDeleteResponses, DeleteSamplePointApiLabSamplePointsPointIdDeleteErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/lab/sample-points/{point_id}',
+    ...options
+});
+
+/**
+ * Update Sample Point
+ */
+export const updateSamplePointApiLabSamplePointsPointIdPatch = <ThrowOnError extends boolean = false>(options: Options<UpdateSamplePointApiLabSamplePointsPointIdPatchData, ThrowOnError>): RequestResult<UpdateSamplePointApiLabSamplePointsPointIdPatchResponses, UpdateSamplePointApiLabSamplePointsPointIdPatchErrors, ThrowOnError> => (options.client ?? client).patch<UpdateSamplePointApiLabSamplePointsPointIdPatchResponses, UpdateSamplePointApiLabSamplePointsPointIdPatchErrors, ThrowOnError>({
+    responseType: 'json',
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/lab/sample-points/{point_id}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * List Samples
+ */
+export const listSamplesApiLabSamplesGet = <ThrowOnError extends boolean = false>(options?: Options<ListSamplesApiLabSamplesGetData, ThrowOnError>): RequestResult<ListSamplesApiLabSamplesGetResponses, ListSamplesApiLabSamplesGetErrors, ThrowOnError> => (options?.client ?? client).get<ListSamplesApiLabSamplesGetResponses, ListSamplesApiLabSamplesGetErrors, ThrowOnError>({
+    responseType: 'json',
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/lab/samples',
+    ...options
+});
+
+/**
+ * Create Sample
+ */
+export const createSampleApiLabSamplesPost = <ThrowOnError extends boolean = false>(options: Options<CreateSampleApiLabSamplesPostData, ThrowOnError>): RequestResult<CreateSampleApiLabSamplesPostResponses, CreateSampleApiLabSamplesPostErrors, ThrowOnError> => (options.client ?? client).post<CreateSampleApiLabSamplesPostResponses, CreateSampleApiLabSamplesPostErrors, ThrowOnError>({
+    responseType: 'json',
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/lab/samples',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Create Samples Batch
+ */
+export const createSamplesBatchApiLabSamplesBatchPost = <ThrowOnError extends boolean = false>(options: Options<CreateSamplesBatchApiLabSamplesBatchPostData, ThrowOnError>): RequestResult<CreateSamplesBatchApiLabSamplesBatchPostResponses, CreateSamplesBatchApiLabSamplesBatchPostErrors, ThrowOnError> => (options.client ?? client).post<CreateSamplesBatchApiLabSamplesBatchPostResponses, CreateSamplesBatchApiLabSamplesBatchPostErrors, ThrowOnError>({
+    responseType: 'json',
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/lab/samples/batch',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Delete Sample
+ */
+export const deleteSampleApiLabSamplesSampleIdDelete = <ThrowOnError extends boolean = false>(options: Options<DeleteSampleApiLabSamplesSampleIdDeleteData, ThrowOnError>): RequestResult<DeleteSampleApiLabSamplesSampleIdDeleteResponses, DeleteSampleApiLabSamplesSampleIdDeleteErrors, ThrowOnError> => (options.client ?? client).delete<DeleteSampleApiLabSamplesSampleIdDeleteResponses, DeleteSampleApiLabSamplesSampleIdDeleteErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/lab/samples/{sample_id}',
+    ...options
+});
+
+/**
+ * Get Sample
+ */
+export const getSampleApiLabSamplesSampleIdGet = <ThrowOnError extends boolean = false>(options: Options<GetSampleApiLabSamplesSampleIdGetData, ThrowOnError>): RequestResult<GetSampleApiLabSamplesSampleIdGetResponses, GetSampleApiLabSamplesSampleIdGetErrors, ThrowOnError> => (options.client ?? client).get<GetSampleApiLabSamplesSampleIdGetResponses, GetSampleApiLabSamplesSampleIdGetErrors, ThrowOnError>({
+    responseType: 'json',
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/lab/samples/{sample_id}',
+    ...options
+});
+
+/**
+ * Update Sample
+ */
+export const updateSampleApiLabSamplesSampleIdPatch = <ThrowOnError extends boolean = false>(options: Options<UpdateSampleApiLabSamplesSampleIdPatchData, ThrowOnError>): RequestResult<UpdateSampleApiLabSamplesSampleIdPatchResponses, UpdateSampleApiLabSamplesSampleIdPatchErrors, ThrowOnError> => (options.client ?? client).patch<UpdateSampleApiLabSamplesSampleIdPatchResponses, UpdateSampleApiLabSamplesSampleIdPatchErrors, ThrowOnError>({
+    responseType: 'json',
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/lab/samples/{sample_id}',
     ...options,
     headers: {
         'Content-Type': 'application/json',

@@ -18,6 +18,7 @@ const nav = [
   { to: '/excel-templates', labelKey: 'nav_excel_templates' },
   { to: '/metrics', labelKey: 'nav_metrics' },
   { to: '/grafana', labelKey: 'nav_grafana' },
+  { to: '/lab', labelKey: 'nav_lab' },
   { to: '/settings', labelKey: 'nav_settings' },
 ]
 

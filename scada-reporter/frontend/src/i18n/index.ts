@@ -76,6 +76,11 @@ import trWG from './locales/tr/watchlistGroups.json'
 import ruWG from './locales/ru/watchlistGroups.json'
 import deWG from './locales/de/watchlistGroups.json'
 import arWG from './locales/ar/watchlistGroups.json'
+import enLab from './locales/en/lab.json'
+import trLab from './locales/tr/lab.json'
+import ruLab from './locales/ru/lab.json'
+import deLab from './locales/de/lab.json'
+import arLab from './locales/ar/lab.json'
 
 export const SUPPORTED_LANGS = ['en', 'tr', 'ru', 'de', 'ar'] as const
 export type Lang = (typeof SUPPORTED_LANGS)[number]
@@ -96,15 +101,15 @@ const initialLng = (SUPPORTED_LANGS as readonly string[]).includes(stored ?? '')
 
 i18n.use(initReactI18next).init({
   resources: {
-    en: { common: enCommon, login: enLogin, settings: enSettings, dashboard: enDashboard, tags: enTags, trend: enTrend, reports: enReports, advancedReports: enAdvancedReports, plc: enPlc, metrics: enMetrics, grafana: enGrafana, users: enUsers, excelTemplates: enExcelTemplates, plcHealth: enPlcHealth, watchlistGroups: enWG },
-    tr: { common: trCommon, login: trLogin, settings: trSettings, dashboard: trDashboard, tags: trTags, trend: trTrend, reports: trReports, advancedReports: trAdvancedReports, plc: trPlc, metrics: trMetrics, grafana: trGrafana, users: trUsers, excelTemplates: trExcelTemplates, plcHealth: trPlcHealth, watchlistGroups: trWG },
-    ru: { common: ruCommon, login: ruLogin, settings: ruSettings, dashboard: ruDashboard, tags: ruTags, trend: ruTrend, reports: ruReports, advancedReports: ruAdvancedReports, plc: ruPlc, metrics: ruMetrics, grafana: ruGrafana, users: ruUsers, excelTemplates: ruExcelTemplates, plcHealth: ruPlcHealth, watchlistGroups: ruWG },
-    de: { common: deCommon, login: deLogin, settings: deSettings, dashboard: deDashboard, tags: deTags, trend: deTrend, reports: deReports, advancedReports: deAdvancedReports, plc: dePlc, metrics: deMetrics, grafana: deGrafana, users: deUsers, excelTemplates: deExcelTemplates, plcHealth: dePlcHealth, watchlistGroups: deWG },
-    ar: { common: arCommon, login: arLogin, settings: arSettings, dashboard: arDashboard, tags: arTags, trend: arTrend, reports: arReports, advancedReports: arAdvancedReports, plc: arPlc, metrics: arMetrics, grafana: arGrafana, users: arUsers, excelTemplates: arExcelTemplates, plcHealth: arPlcHealth, watchlistGroups: arWG },
+    en: { common: enCommon, login: enLogin, settings: enSettings, dashboard: enDashboard, tags: enTags, trend: enTrend, reports: enReports, advancedReports: enAdvancedReports, plc: enPlc, metrics: enMetrics, grafana: enGrafana, users: enUsers, excelTemplates: enExcelTemplates, plcHealth: enPlcHealth, watchlistGroups: enWG, lab: enLab },
+    tr: { common: trCommon, login: trLogin, settings: trSettings, dashboard: trDashboard, tags: trTags, trend: trTrend, reports: trReports, advancedReports: trAdvancedReports, plc: trPlc, metrics: trMetrics, grafana: trGrafana, users: trUsers, excelTemplates: trExcelTemplates, plcHealth: trPlcHealth, watchlistGroups: trWG, lab: trLab },
+    ru: { common: ruCommon, login: ruLogin, settings: ruSettings, dashboard: ruDashboard, tags: ruTags, trend: ruTrend, reports: ruReports, advancedReports: ruAdvancedReports, plc: ruPlc, metrics: ruMetrics, grafana: ruGrafana, users: ruUsers, excelTemplates: ruExcelTemplates, plcHealth: ruPlcHealth, watchlistGroups: ruWG, lab: ruLab },
+    de: { common: deCommon, login: deLogin, settings: deSettings, dashboard: deDashboard, tags: deTags, trend: deTrend, reports: deReports, advancedReports: deAdvancedReports, plc: dePlc, metrics: deMetrics, grafana: deGrafana, users: deUsers, excelTemplates: deExcelTemplates, plcHealth: dePlcHealth, watchlistGroups: deWG, lab: deLab },
+    ar: { common: arCommon, login: arLogin, settings: arSettings, dashboard: arDashboard, tags: arTags, trend: arTrend, reports: arReports, advancedReports: arAdvancedReports, plc: arPlc, metrics: arMetrics, grafana: arGrafana, users: arUsers, excelTemplates: arExcelTemplates, plcHealth: arPlcHealth, watchlistGroups: arWG, lab: arLab },
   },
   lng: initialLng,
   fallbackLng: 'en',
-  ns: ['common', 'login', 'settings', 'dashboard', 'tags', 'trend', 'reports', 'advancedReports', 'plc', 'metrics', 'grafana', 'users', 'excelTemplates', 'plcHealth', 'watchlistGroups'],
+  ns: ['common', 'login', 'settings', 'dashboard', 'tags', 'trend', 'reports', 'advancedReports', 'plc', 'metrics', 'grafana', 'users', 'excelTemplates', 'plcHealth', 'watchlistGroups', 'lab'],
   defaultNS: 'common',
   interpolation: { escapeValue: false },
 })

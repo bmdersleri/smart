@@ -370,6 +370,18 @@ export const getArchive = (params: { page?: number; page_size?: number; template
 export const getArchiveEntry = (id: number) => api.get<ArchiveEntry>(`/advanced-reports/archive/${id}`)
 export const downloadArchiveReport = (id: number) => api.get(`/advanced-reports/archive/${id}/download`, { responseType: 'blob' })
 
+// ── Lab Data Entry ────────────────────────────────────────────────────────────
+export type { LabParameterOut, LabSamplePointOut, SampleCreate, SampleOut, MeasurementIn } from './generated/types.gen'
+
+export const listLabParameters = (params?: { approved?: boolean; active?: boolean }) =>
+  api.get<import('./generated/types.gen').LabParameterOut[]>('/lab/parameters', { params })
+
+export const listLabSamplePoints = (params?: { approved?: boolean; active?: boolean }) =>
+  api.get<import('./generated/types.gen').LabSamplePointOut[]>('/lab/sample-points', { params })
+
+export const createSample = (data: import('./generated/types.gen').SampleCreate) =>
+  api.post<import('./generated/types.gen').SampleOut>('/lab/samples', data)
+
 // ── License ───────────────────────────────────────────────────────────────────
 export type LicenseMode = 'unlicensed' | 'licensed' | 'demo'
 export interface LicenseStatus {

@@ -185,6 +185,26 @@ export type AuditOut = {
 };
 
 /**
+ * BatchCreate
+ */
+export type BatchCreate = {
+    /**
+     * Rows
+     */
+    rows: Array<SampleCreate>;
+};
+
+/**
+ * Body_import_preview_api_lab_import_preview_post
+ */
+export type BodyImportPreviewApiLabImportPreviewPost = {
+    /**
+     * File
+     */
+    file: Blob | File;
+};
+
+/**
  * Body_import_tags_api_tags_import_post
  */
 export type BodyImportTagsApiTagsImportPost = {
@@ -425,6 +445,222 @@ export type HttpValidationError = {
 };
 
 /**
+ * ImportCommit
+ */
+export type ImportCommit = {
+    /**
+     * Headers
+     */
+    headers: Array<string>;
+    /**
+     * Mapping
+     */
+    mapping: {
+        [key: string]: number;
+    };
+    /**
+     * Rows
+     */
+    rows: Array<Array<string>>;
+    /**
+     * Sample Point Id
+     */
+    sample_point_id: number;
+    /**
+     * Time Column
+     */
+    time_column: string;
+};
+
+/**
+ * LabParameterCreate
+ */
+export type LabParameterCreate = {
+    /**
+     * Category
+     */
+    category?: string;
+    /**
+     * Code
+     */
+    code: string;
+    /**
+     * Max Limit
+     */
+    max_limit?: number | null;
+    /**
+     * Min Limit
+     */
+    min_limit?: number | null;
+    /**
+     * Mirror To Tag Id
+     */
+    mirror_to_tag_id?: number | null;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Unit
+     */
+    unit?: string;
+};
+
+/**
+ * LabParameterOut
+ */
+export type LabParameterOut = {
+    /**
+     * Approved
+     */
+    approved: boolean;
+    /**
+     * Category
+     */
+    category: string;
+    /**
+     * Code
+     */
+    code: string;
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Is Active
+     */
+    is_active: boolean;
+    /**
+     * Max Limit
+     */
+    max_limit: number | null;
+    /**
+     * Min Limit
+     */
+    min_limit: number | null;
+    /**
+     * Mirror To Tag Id
+     */
+    mirror_to_tag_id: number | null;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Unit
+     */
+    unit: string;
+};
+
+/**
+ * LabParameterUpdate
+ */
+export type LabParameterUpdate = {
+    /**
+     * Approved
+     */
+    approved?: boolean | null;
+    /**
+     * Category
+     */
+    category?: string | null;
+    /**
+     * Is Active
+     */
+    is_active?: boolean | null;
+    /**
+     * Max Limit
+     */
+    max_limit?: number | null;
+    /**
+     * Min Limit
+     */
+    min_limit?: number | null;
+    /**
+     * Mirror To Tag Id
+     */
+    mirror_to_tag_id?: number | null;
+    /**
+     * Name
+     */
+    name?: string | null;
+    /**
+     * Unit
+     */
+    unit?: string | null;
+};
+
+/**
+ * LabSamplePointCreate
+ */
+export type LabSamplePointCreate = {
+    /**
+     * Code
+     */
+    code: string;
+    /**
+     * Description
+     */
+    description?: string;
+    /**
+     * Name
+     */
+    name: string;
+};
+
+/**
+ * LabSamplePointOut
+ */
+export type LabSamplePointOut = {
+    /**
+     * Approved
+     */
+    approved: boolean;
+    /**
+     * Code
+     */
+    code: string;
+    /**
+     * Description
+     */
+    description: string;
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Is Active
+     */
+    is_active: boolean;
+    /**
+     * Name
+     */
+    name: string;
+};
+
+/**
+ * LabSamplePointUpdate
+ */
+export type LabSamplePointUpdate = {
+    /**
+     * Approved
+     */
+    approved?: boolean | null;
+    /**
+     * Description
+     */
+    description?: string | null;
+    /**
+     * Is Active
+     */
+    is_active?: boolean | null;
+    /**
+     * Name
+     */
+    name?: string | null;
+};
+
+/**
  * LoginRequest
  */
 export type LoginRequest = {
@@ -436,6 +672,50 @@ export type LoginRequest = {
      * Username
      */
     username: string;
+};
+
+/**
+ * MeasurementIn
+ */
+export type MeasurementIn = {
+    /**
+     * Parameter Id
+     */
+    parameter_id: number;
+    /**
+     * Text Value
+     */
+    text_value?: string | null;
+    /**
+     * Value
+     */
+    value?: number | null;
+};
+
+/**
+ * MeasurementOut
+ */
+export type MeasurementOut = {
+    /**
+     * Flag
+     */
+    flag: string | null;
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Parameter Id
+     */
+    parameter_id: number;
+    /**
+     * Text Value
+     */
+    text_value: string | null;
+    /**
+     * Value
+     */
+    value: number | null;
 };
 
 /**
@@ -572,6 +852,74 @@ export type RunRequest = {
      * Start
      */
     start?: string | null;
+};
+
+/**
+ * SampleCreate
+ */
+export type SampleCreate = {
+    /**
+     * Batch No
+     */
+    batch_no?: string;
+    /**
+     * Measurements
+     */
+    measurements?: Array<MeasurementIn>;
+    /**
+     * Method
+     */
+    method?: string;
+    /**
+     * Note
+     */
+    note?: string;
+    /**
+     * Sample Point Id
+     */
+    sample_point_id: number;
+    /**
+     * Sampled At
+     */
+    sampled_at: string;
+};
+
+/**
+ * SampleOut
+ */
+export type SampleOut = {
+    /**
+     * Batch No
+     */
+    batch_no: string;
+    /**
+     * Entered By
+     */
+    entered_by: number;
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Measurements
+     */
+    measurements: Array<MeasurementOut>;
+    /**
+     * Method
+     */
+    method: string;
+    /**
+     * Note
+     */
+    note: string;
+    /**
+     * Sample Point Id
+     */
+    sample_point_id: number;
+    /**
+     * Sampled At
+     */
+    sampled_at: string;
 };
 
 /**
@@ -3245,6 +3593,488 @@ export type AssignTagsApiGroupsGroupIdAssignPostResponses = {
      */
     200: unknown;
 };
+
+export type ImportCommitApiLabImportCommitPostData = {
+    body: ImportCommit;
+    path?: never;
+    query?: never;
+    url: '/api/lab/import/commit';
+};
+
+export type ImportCommitApiLabImportCommitPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ImportCommitApiLabImportCommitPostError = ImportCommitApiLabImportCommitPostErrors[keyof ImportCommitApiLabImportCommitPostErrors];
+
+export type ImportCommitApiLabImportCommitPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type ImportPreviewApiLabImportPreviewPostData = {
+    body: BodyImportPreviewApiLabImportPreviewPost;
+    path?: never;
+    query?: never;
+    url: '/api/lab/import/preview';
+};
+
+export type ImportPreviewApiLabImportPreviewPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ImportPreviewApiLabImportPreviewPostError = ImportPreviewApiLabImportPreviewPostErrors[keyof ImportPreviewApiLabImportPreviewPostErrors];
+
+export type ImportPreviewApiLabImportPreviewPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type ListParametersApiLabParametersGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Approved
+         */
+        approved?: boolean | null;
+        /**
+         * Active
+         */
+        active?: boolean | null;
+    };
+    url: '/api/lab/parameters';
+};
+
+export type ListParametersApiLabParametersGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ListParametersApiLabParametersGetError = ListParametersApiLabParametersGetErrors[keyof ListParametersApiLabParametersGetErrors];
+
+export type ListParametersApiLabParametersGetResponses = {
+    /**
+     * Response List Parameters Api Lab Parameters Get
+     *
+     * Successful Response
+     */
+    200: Array<LabParameterOut>;
+};
+
+export type ListParametersApiLabParametersGetResponse = ListParametersApiLabParametersGetResponses[keyof ListParametersApiLabParametersGetResponses];
+
+export type CreateParameterApiLabParametersPostData = {
+    body: LabParameterCreate;
+    path?: never;
+    query?: never;
+    url: '/api/lab/parameters';
+};
+
+export type CreateParameterApiLabParametersPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CreateParameterApiLabParametersPostError = CreateParameterApiLabParametersPostErrors[keyof CreateParameterApiLabParametersPostErrors];
+
+export type CreateParameterApiLabParametersPostResponses = {
+    /**
+     * Successful Response
+     */
+    201: LabParameterOut;
+};
+
+export type CreateParameterApiLabParametersPostResponse = CreateParameterApiLabParametersPostResponses[keyof CreateParameterApiLabParametersPostResponses];
+
+export type DeleteParameterApiLabParametersParamIdDeleteData = {
+    body?: never;
+    path: {
+        /**
+         * Param Id
+         */
+        param_id: number;
+    };
+    query?: never;
+    url: '/api/lab/parameters/{param_id}';
+};
+
+export type DeleteParameterApiLabParametersParamIdDeleteErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DeleteParameterApiLabParametersParamIdDeleteError = DeleteParameterApiLabParametersParamIdDeleteErrors[keyof DeleteParameterApiLabParametersParamIdDeleteErrors];
+
+export type DeleteParameterApiLabParametersParamIdDeleteResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type DeleteParameterApiLabParametersParamIdDeleteResponse = DeleteParameterApiLabParametersParamIdDeleteResponses[keyof DeleteParameterApiLabParametersParamIdDeleteResponses];
+
+export type UpdateParameterApiLabParametersParamIdPatchData = {
+    body: LabParameterUpdate;
+    path: {
+        /**
+         * Param Id
+         */
+        param_id: number;
+    };
+    query?: never;
+    url: '/api/lab/parameters/{param_id}';
+};
+
+export type UpdateParameterApiLabParametersParamIdPatchErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateParameterApiLabParametersParamIdPatchError = UpdateParameterApiLabParametersParamIdPatchErrors[keyof UpdateParameterApiLabParametersParamIdPatchErrors];
+
+export type UpdateParameterApiLabParametersParamIdPatchResponses = {
+    /**
+     * Successful Response
+     */
+    200: LabParameterOut;
+};
+
+export type UpdateParameterApiLabParametersParamIdPatchResponse = UpdateParameterApiLabParametersParamIdPatchResponses[keyof UpdateParameterApiLabParametersParamIdPatchResponses];
+
+export type ListSamplePointsApiLabSamplePointsGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Approved
+         */
+        approved?: boolean | null;
+        /**
+         * Active
+         */
+        active?: boolean | null;
+    };
+    url: '/api/lab/sample-points';
+};
+
+export type ListSamplePointsApiLabSamplePointsGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ListSamplePointsApiLabSamplePointsGetError = ListSamplePointsApiLabSamplePointsGetErrors[keyof ListSamplePointsApiLabSamplePointsGetErrors];
+
+export type ListSamplePointsApiLabSamplePointsGetResponses = {
+    /**
+     * Response List Sample Points Api Lab Sample Points Get
+     *
+     * Successful Response
+     */
+    200: Array<LabSamplePointOut>;
+};
+
+export type ListSamplePointsApiLabSamplePointsGetResponse = ListSamplePointsApiLabSamplePointsGetResponses[keyof ListSamplePointsApiLabSamplePointsGetResponses];
+
+export type CreateSamplePointApiLabSamplePointsPostData = {
+    body: LabSamplePointCreate;
+    path?: never;
+    query?: never;
+    url: '/api/lab/sample-points';
+};
+
+export type CreateSamplePointApiLabSamplePointsPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CreateSamplePointApiLabSamplePointsPostError = CreateSamplePointApiLabSamplePointsPostErrors[keyof CreateSamplePointApiLabSamplePointsPostErrors];
+
+export type CreateSamplePointApiLabSamplePointsPostResponses = {
+    /**
+     * Successful Response
+     */
+    201: LabSamplePointOut;
+};
+
+export type CreateSamplePointApiLabSamplePointsPostResponse = CreateSamplePointApiLabSamplePointsPostResponses[keyof CreateSamplePointApiLabSamplePointsPostResponses];
+
+export type DeleteSamplePointApiLabSamplePointsPointIdDeleteData = {
+    body?: never;
+    path: {
+        /**
+         * Point Id
+         */
+        point_id: number;
+    };
+    query?: never;
+    url: '/api/lab/sample-points/{point_id}';
+};
+
+export type DeleteSamplePointApiLabSamplePointsPointIdDeleteErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DeleteSamplePointApiLabSamplePointsPointIdDeleteError = DeleteSamplePointApiLabSamplePointsPointIdDeleteErrors[keyof DeleteSamplePointApiLabSamplePointsPointIdDeleteErrors];
+
+export type DeleteSamplePointApiLabSamplePointsPointIdDeleteResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type DeleteSamplePointApiLabSamplePointsPointIdDeleteResponse = DeleteSamplePointApiLabSamplePointsPointIdDeleteResponses[keyof DeleteSamplePointApiLabSamplePointsPointIdDeleteResponses];
+
+export type UpdateSamplePointApiLabSamplePointsPointIdPatchData = {
+    body: LabSamplePointUpdate;
+    path: {
+        /**
+         * Point Id
+         */
+        point_id: number;
+    };
+    query?: never;
+    url: '/api/lab/sample-points/{point_id}';
+};
+
+export type UpdateSamplePointApiLabSamplePointsPointIdPatchErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateSamplePointApiLabSamplePointsPointIdPatchError = UpdateSamplePointApiLabSamplePointsPointIdPatchErrors[keyof UpdateSamplePointApiLabSamplePointsPointIdPatchErrors];
+
+export type UpdateSamplePointApiLabSamplePointsPointIdPatchResponses = {
+    /**
+     * Successful Response
+     */
+    200: LabSamplePointOut;
+};
+
+export type UpdateSamplePointApiLabSamplePointsPointIdPatchResponse = UpdateSamplePointApiLabSamplePointsPointIdPatchResponses[keyof UpdateSamplePointApiLabSamplePointsPointIdPatchResponses];
+
+export type ListSamplesApiLabSamplesGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Point Id
+         */
+        point_id?: number | null;
+        /**
+         * Parameter Id
+         */
+        parameter_id?: number | null;
+        /**
+         * Start
+         */
+        start?: string | null;
+        /**
+         * End
+         */
+        end?: string | null;
+        /**
+         * Entered By
+         */
+        entered_by?: number | null;
+        /**
+         * Limit
+         */
+        limit?: number;
+        /**
+         * Offset
+         */
+        offset?: number;
+    };
+    url: '/api/lab/samples';
+};
+
+export type ListSamplesApiLabSamplesGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ListSamplesApiLabSamplesGetError = ListSamplesApiLabSamplesGetErrors[keyof ListSamplesApiLabSamplesGetErrors];
+
+export type ListSamplesApiLabSamplesGetResponses = {
+    /**
+     * Response List Samples Api Lab Samples Get
+     *
+     * Successful Response
+     */
+    200: Array<SampleOut>;
+};
+
+export type ListSamplesApiLabSamplesGetResponse = ListSamplesApiLabSamplesGetResponses[keyof ListSamplesApiLabSamplesGetResponses];
+
+export type CreateSampleApiLabSamplesPostData = {
+    body: SampleCreate;
+    path?: never;
+    query?: never;
+    url: '/api/lab/samples';
+};
+
+export type CreateSampleApiLabSamplesPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CreateSampleApiLabSamplesPostError = CreateSampleApiLabSamplesPostErrors[keyof CreateSampleApiLabSamplesPostErrors];
+
+export type CreateSampleApiLabSamplesPostResponses = {
+    /**
+     * Successful Response
+     */
+    201: SampleOut;
+};
+
+export type CreateSampleApiLabSamplesPostResponse = CreateSampleApiLabSamplesPostResponses[keyof CreateSampleApiLabSamplesPostResponses];
+
+export type CreateSamplesBatchApiLabSamplesBatchPostData = {
+    body: BatchCreate;
+    path?: never;
+    query?: never;
+    url: '/api/lab/samples/batch';
+};
+
+export type CreateSamplesBatchApiLabSamplesBatchPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CreateSamplesBatchApiLabSamplesBatchPostError = CreateSamplesBatchApiLabSamplesBatchPostErrors[keyof CreateSamplesBatchApiLabSamplesBatchPostErrors];
+
+export type CreateSamplesBatchApiLabSamplesBatchPostResponses = {
+    /**
+     * Successful Response
+     */
+    201: unknown;
+};
+
+export type DeleteSampleApiLabSamplesSampleIdDeleteData = {
+    body?: never;
+    path: {
+        /**
+         * Sample Id
+         */
+        sample_id: number;
+    };
+    query?: never;
+    url: '/api/lab/samples/{sample_id}';
+};
+
+export type DeleteSampleApiLabSamplesSampleIdDeleteErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DeleteSampleApiLabSamplesSampleIdDeleteError = DeleteSampleApiLabSamplesSampleIdDeleteErrors[keyof DeleteSampleApiLabSamplesSampleIdDeleteErrors];
+
+export type DeleteSampleApiLabSamplesSampleIdDeleteResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type DeleteSampleApiLabSamplesSampleIdDeleteResponse = DeleteSampleApiLabSamplesSampleIdDeleteResponses[keyof DeleteSampleApiLabSamplesSampleIdDeleteResponses];
+
+export type GetSampleApiLabSamplesSampleIdGetData = {
+    body?: never;
+    path: {
+        /**
+         * Sample Id
+         */
+        sample_id: number;
+    };
+    query?: never;
+    url: '/api/lab/samples/{sample_id}';
+};
+
+export type GetSampleApiLabSamplesSampleIdGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetSampleApiLabSamplesSampleIdGetError = GetSampleApiLabSamplesSampleIdGetErrors[keyof GetSampleApiLabSamplesSampleIdGetErrors];
+
+export type GetSampleApiLabSamplesSampleIdGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: SampleOut;
+};
+
+export type GetSampleApiLabSamplesSampleIdGetResponse = GetSampleApiLabSamplesSampleIdGetResponses[keyof GetSampleApiLabSamplesSampleIdGetResponses];
+
+export type UpdateSampleApiLabSamplesSampleIdPatchData = {
+    body: SampleCreate;
+    path: {
+        /**
+         * Sample Id
+         */
+        sample_id: number;
+    };
+    query?: never;
+    url: '/api/lab/samples/{sample_id}';
+};
+
+export type UpdateSampleApiLabSamplesSampleIdPatchErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateSampleApiLabSamplesSampleIdPatchError = UpdateSampleApiLabSamplesSampleIdPatchErrors[keyof UpdateSampleApiLabSamplesSampleIdPatchErrors];
+
+export type UpdateSampleApiLabSamplesSampleIdPatchResponses = {
+    /**
+     * Successful Response
+     */
+    200: SampleOut;
+};
+
+export type UpdateSampleApiLabSamplesSampleIdPatchResponse = UpdateSampleApiLabSamplesSampleIdPatchResponses[keyof UpdateSampleApiLabSamplesSampleIdPatchResponses];
 
 export type RevertLicenseApiLicenseDeleteData = {
     body?: never;

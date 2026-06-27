@@ -1,0 +1,19 @@
+{
+  "title": "Labordateneingabe",
+  "subtitle": "Laboranalyse- und Messergebnisse eingeben",
+  "tab_single": "Einzelprobe",
+  "tab_batch": "Stapeltabelle",
+  "tab_import": "Importieren",
+  "tab_records": "Aufzeichnungen",
+  "sample_point": "Probenahmepunkt",
+  "sampled_at": "Datum / Uhrzeit",
+  "method": "Methode",
+  "batch_no": "Chargennummer",
+  "note": "Notiz",
+  "add_parameter": "+ neuer Parameter",
+  "add_point": "+ neuer Punkt",
+  "save": "Speichern",
+  "saved": "Gespeichert",
+  "out_of_range": "Außerhalb des Bereichs",
+  "value": "Wert"
+}
