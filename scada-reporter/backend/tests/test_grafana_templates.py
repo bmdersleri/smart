@@ -3,10 +3,16 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.core.security import hash_password
 from app.models.tag import Tag
 from app.models.user import User
-from app.services.grafana_templates import build_dashboard, dashboard_uid, list_templates
+from app.services.grafana_templates import (
+    build_dashboard,
+    build_report_template_dashboard,
+    dashboard_uid,
+    list_templates,
+)
 
 
 async def _auth(client: AsyncClient, db_session: AsyncSession, uname: str = "grafana"):
@@ -98,3 +104,36 @@ async def test_generate_dashboard_requires_tags_for_water_quality(
         headers=headers,
     )
     assert response.status_code == 422
+
+
+def test_build_facility_dashboard_is_frser():
+    dash = build_dashboard("facility_overview", "sr-fac-x", "Tesis")
+    assert "facility-overview" in dash["tags"]
+    for panel in dash["panels"]:
+        assert panel["datasource"]["type"] == "frser-sqlite-datasource"
+        assert panel["datasource"]["uid"] == settings.GRAFANA_DATASOURCE_UID
+        tgt = panel["targets"][0]
+        assert "$__" not in tgt["queryText"]
+        assert "now() - INTERVAL" not in tgt["queryText"]
+        assert "EXTRACT(EPOCH" not in tgt["queryText"]
+    sqls = {p["title"]: p["targets"][0]["queryText"] for p in dash["panels"]}
+    assert "/ 300) * 300 AS time" in sqls["Okuma Hacmi"]
+    assert "datetime('now', '-24 hours')" in sqls["Okuma Hacmi"]
+    assert "row_number()" in sqls["Son Değerler"]
+    assert "DISTINCT ON" not in sqls["Son Değerler"]
+
+
+def test_report_template_dashboard_still_postgres():
+    dash = build_report_template_dashboard(
+        template_id=1,
+        title="Rapor",
+        tag_ids=[1, 2],
+        time_range_type="last_24h",
+        show_trend_charts=True,
+        show_summary_stats=True,
+        anomaly_enabled=False,
+        show_anomaly_table=False,
+    )
+    trend = dash["panels"][0]
+    assert trend["datasource"] == {"type": "postgres", "uid": "timescaledb"}
+    assert "$__timeFilter" in trend["targets"][0]["rawSql"]

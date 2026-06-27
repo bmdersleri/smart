@@ -77,12 +77,14 @@ def _timeseries_panel(
     w: int,
     h: int,
     unit: str = "short",
+    datasource: dict | None = None,
+    target: dict | None = None,
 ) -> dict:
     return {
         "id": panel_id,
         "type": "timeseries",
         "title": title,
-        "datasource": {"type": "postgres", "uid": "timescaledb"},
+        "datasource": datasource or {"type": "postgres", "uid": "timescaledb"},
         "gridPos": {"x": x, "y": y, "w": w, "h": h},
         "fieldConfig": {
             "defaults": {
@@ -106,16 +108,27 @@ def _timeseries_panel(
             },
             "tooltip": {"mode": "multi", "sort": "desc"},
         },
-        "targets": [{"refId": "A", "format": "time_series", "rawSql": raw_sql}],
+        "targets": [target or {"refId": "A", "format": "time_series", "rawSql": raw_sql}],
     }
 
 
-def _stat_panel(panel_id: int, title: str, raw_sql: str, *, x: int, y: int, w: int, h: int) -> dict:
+def _stat_panel(
+    panel_id: int,
+    title: str,
+    raw_sql: str,
+    *,
+    x: int,
+    y: int,
+    w: int,
+    h: int,
+    datasource: dict | None = None,
+    target: dict | None = None,
+) -> dict:
     return {
         "id": panel_id,
         "type": "stat",
         "title": title,
-        "datasource": {"type": "postgres", "uid": "timescaledb"},
+        "datasource": datasource or {"type": "postgres", "uid": "timescaledb"},
         "gridPos": {"x": x, "y": y, "w": w, "h": h},
         "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []},
         "options": {
@@ -126,7 +139,7 @@ def _stat_panel(panel_id: int, title: str, raw_sql: str, *, x: int, y: int, w: i
             "graphMode": "none",
             "justifyMode": "auto",
         },
-        "targets": [{"refId": "A", "format": "table", "rawSql": raw_sql}],
+        "targets": [target or {"refId": "A", "format": "table", "rawSql": raw_sql}],
     }
 
 
@@ -139,15 +152,17 @@ def _table_panel(
     y: int,
     w: int,
     h: int,
+    datasource: dict | None = None,
+    target: dict | None = None,
 ) -> dict:
     return {
         "id": panel_id,
         "type": "table",
         "title": title,
-        "datasource": {"type": "postgres", "uid": "timescaledb"},
+        "datasource": datasource or {"type": "postgres", "uid": "timescaledb"},
         "gridPos": {"x": x, "y": y, "w": w, "h": h},
         "fieldConfig": {"defaults": {}, "overrides": []},
-        "targets": [{"refId": "A", "format": "table", "rawSql": raw_sql}],
+        "targets": [target or {"refId": "A", "format": "table", "rawSql": raw_sql}],
         "options": {"showHeader": True},
     }
 
@@ -167,86 +182,121 @@ def _base_dashboard(uid: str, title: str, tags: list[str], panels: list[dict]) -
 
 
 def build_facility_overview_dashboard(uid: str, title: str) -> dict:
+    ds = _frser_datasource()
+    tag_count_sql = 'SELECT count(*) AS "Tag" FROM tags'
+    last_read_sql = (
+        "SELECT CAST(strftime('%s', max(timestamp)) AS INTEGER) * 1000 "
+        'AS "Son Okuma" FROM tag_readings'
+    )
+    reads_24h_sql = (
+        'SELECT count(*) AS "Okuma" FROM tag_readings '
+        "WHERE timestamp >= datetime('now', '-24 hours')"
+    )
+    bad_pct_sql = (
+        "SELECT 100.0 * sum(CASE WHEN quality <> 192 THEN 1 ELSE 0 END) "
+        '/ NULLIF(count(*), 0) AS "BAD %" FROM tag_readings '
+        "WHERE timestamp >= datetime('now', '-24 hours')"
+    )
+    volume_sql = (
+        "SELECT (CAST(strftime('%s', timestamp) AS INTEGER) / 300) * 300 AS time, "
+        'count(*) AS "Okuma" FROM tag_readings '
+        "WHERE timestamp >= datetime('now', '-24 hours') GROUP BY 1 ORDER BY 1"
+    )
+    bad_rate_sql = (
+        "SELECT (CAST(strftime('%s', timestamp) AS INTEGER) / 900) * 900 AS time, "
+        "100.0 * sum(CASE WHEN quality <> 192 THEN 1 ELSE 0 END) "
+        '/ NULLIF(count(*), 0) AS "BAD %" FROM tag_readings '
+        "WHERE timestamp >= datetime('now', '-24 hours') GROUP BY 1 ORDER BY 1"
+    )
+    last_values_sql = (
+        "SELECT name, device, value, unit, quality, timestamp FROM ("
+        "SELECT t.name, t.device, tr.value, t.unit, tr.quality, tr.timestamp, "
+        "row_number() OVER (PARTITION BY t.id ORDER BY tr.timestamp DESC) AS rn "
+        "FROM tags t JOIN tag_readings tr ON tr.tag_id = t.id"
+        ") WHERE rn = 1 ORDER BY timestamp DESC LIMIT 20"
+    )
     return _base_dashboard(
         uid,
         title,
         ["facility-overview"],
         [
-            _stat_panel(1, "Toplam Tag", 'SELECT count(*) AS "Tag" FROM tags', x=0, y=0, w=6, h=5),
+            _stat_panel(
+                1,
+                "Toplam Tag",
+                tag_count_sql,
+                x=0,
+                y=0,
+                w=6,
+                h=5,
+                datasource=ds,
+                target=_frser_target(tag_count_sql, time_series=False),
+            ),
             _stat_panel(
                 2,
                 "Son Okuma",
-                'SELECT EXTRACT(EPOCH FROM max(timestamp)) * 1000 AS "Son Okuma" FROM tag_readings',
+                last_read_sql,
                 x=6,
                 y=0,
                 w=6,
                 h=5,
+                datasource=ds,
+                target=_frser_target(last_read_sql, time_series=False),
             ),
             _stat_panel(
                 3,
                 "Son 24s Okuma",
-                (
-                    'SELECT count(*) AS "Okuma" FROM tag_readings '
-                    "WHERE timestamp >= now() - INTERVAL '24 hours'"
-                ),
+                reads_24h_sql,
                 x=12,
                 y=0,
                 w=6,
                 h=5,
+                datasource=ds,
+                target=_frser_target(reads_24h_sql, time_series=False),
             ),
             _stat_panel(
                 4,
                 "BAD Kalite %",
-                (
-                    "SELECT 100.0 * sum(CASE WHEN quality <> 192 THEN 1 ELSE 0 END) "
-                    '/ NULLIF(count(*), 0) AS "BAD %" FROM tag_readings '
-                    "WHERE timestamp >= now() - INTERVAL '24 hours'"
-                ),
+                bad_pct_sql,
                 x=18,
                 y=0,
                 w=6,
                 h=5,
+                datasource=ds,
+                target=_frser_target(bad_pct_sql, time_series=False),
             ),
             _timeseries_panel(
                 5,
                 "Okuma Hacmi",
-                (
-                    "SELECT $__timeGroupAlias(timestamp, '5m'), count(*) AS \"Okuma\" "
-                    "FROM tag_readings WHERE $__timeFilter(timestamp) GROUP BY 1 ORDER BY 1"
-                ),
+                volume_sql,
                 x=0,
                 y=5,
                 w=12,
                 h=8,
+                datasource=ds,
+                target=_frser_target(volume_sql, time_series=True),
             ),
             _timeseries_panel(
                 6,
                 "BAD Kalite Oranı",
-                (
-                    "SELECT $__timeGroupAlias(timestamp, '15m'), "
-                    "100.0 * sum(CASE WHEN quality <> 192 THEN 1 ELSE 0 END) "
-                    '/ NULLIF(count(*), 0) AS "BAD %" FROM tag_readings '
-                    "WHERE $__timeFilter(timestamp) GROUP BY 1 ORDER BY 1"
-                ),
+                bad_rate_sql,
                 x=12,
                 y=5,
                 w=12,
                 h=8,
                 unit="percent",
+                datasource=ds,
+                target=_frser_target(bad_rate_sql, time_series=True),
             ),
             _table_panel(
                 7,
                 "Son Değerler",
-                (
-                    "SELECT DISTINCT ON (t.id) t.name, t.device, tr.value, "
-                    "t.unit, tr.quality, tr.timestamp "
-                    "FROM tags t JOIN tag_readings tr ON tr.tag_id = t.id "
-                    "ORDER BY t.id, tr.timestamp DESC LIMIT 20"
-                ),
+                last_values_sql,
                 x=0,
                 y=13,
                 w=24,
                 h=8,
+                datasource=ds,
+                target=_frser_target(last_values_sql, time_series=False),
             ),
         ],
     )
@@ -340,14 +390,14 @@ def lab_dashboard_uid(point_id: int, parameter_ids: list[int]) -> str:
     return f"sr-lab-{int(point_id)}-{digest}"
 
 
-def _lab_datasource() -> dict:
+def _frser_datasource() -> dict:
     return {"type": "frser-sqlite-datasource", "uid": settings.GRAFANA_DATASOURCE_UID}
 
 
 def _frser_target(sql: str, *, time_series: bool) -> dict:
     return {
         "refId": "A",
-        "datasource": _lab_datasource(),
+        "datasource": _frser_datasource(),
         "queryType": "time series" if time_series else "table",
         "queryText": sql,
         "rawQueryText": sql,
@@ -376,7 +426,7 @@ def _lab_timeseries_panel(panel_id: int, point_code: str, param: LabParamSpec, *
         "id": panel_id,
         "type": "timeseries",
         "title": title,
-        "datasource": _lab_datasource(),
+        "datasource": _frser_datasource(),
         "gridPos": {"x": 0, "y": y, "w": 24, "h": 8},
         "fieldConfig": {
             "defaults": {
@@ -430,7 +480,7 @@ def build_lab_dashboard(
             "id": len(params) + 1,
             "type": "table",
             "title": "Son değerler",
-            "datasource": _lab_datasource(),
+            "datasource": _frser_datasource(),
             "gridPos": {"x": 0, "y": y, "w": 24, "h": 10},
             "fieldConfig": {"defaults": {}, "overrides": []},
             "options": {"showHeader": True},
