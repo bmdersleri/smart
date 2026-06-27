@@ -12,15 +12,19 @@ from app.api.auth import get_current_user
 from app.api.license_guard import require_feature
 from app.core.config import settings
 from app.core.database import get_db
+from app.models.lab import LabParameter, LabSamplePoint
 from app.models.report_template import ReportTemplate
 from app.models.tag import Tag
 from app.models.user import User
 from app.services.grafana_render import render_auth, render_headers
 from app.services.grafana_templates import (
+    LabParamSpec,
     build_dashboard,
+    build_lab_dashboard,
     build_report_template_dashboard,
     dashboard_uid,
     get_template,
+    lab_dashboard_uid,
     list_templates,
     report_dashboard_uid,
 )
@@ -47,6 +51,26 @@ class DashboardGenerateIn(BaseModel):
     @classmethod
     def _unique_positive_tags(cls, v: list[int]) -> list[int]:
         return sorted({int(tag_id) for tag_id in v if int(tag_id) > 0})
+
+
+class LabDashboardGenerateIn(BaseModel):
+    sample_point_id: int
+    parameter_ids: list[int] = Field(min_length=1, max_length=50)
+
+    @field_validator("parameter_ids")
+    @classmethod
+    def _unique_positive(cls, v: list[int]) -> list[int]:
+        out = [int(i) for i in v if int(i) > 0]
+        if not out:
+            raise ValueError("en az bir parametre seçin")
+        # preserve order, drop duplicates
+        seen: set[int] = set()
+        result = []
+        for i in out:
+            if i not in seen:
+                seen.add(i)
+                result.append(i)
+        return result
 
 
 @router.get("/templates")
@@ -184,5 +208,79 @@ async def generate_from_report_template(
         "title": tmpl.name,
         "url": payload.get("url") or f"/d/{report_dashboard_uid(tmpl.id)}",
         "template_id": tmpl.id,
+        "status": payload.get("status", "success"),
+    }
+
+
+@router.post("/dashboards/from-lab")
+async def generate_from_lab(
+    body: LabDashboardGenerateIn,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+    _feature=Depends(require_feature("grafana")),
+) -> dict:
+    point = await db.get(LabSamplePoint, body.sample_point_id)
+    if point is None:
+        raise HTTPException(status_code=404, detail="Numune noktası bulunamadı")
+
+    rows = (
+        (await db.execute(select(LabParameter).where(LabParameter.id.in_(body.parameter_ids))))
+        .scalars()
+        .all()
+    )
+    by_id = {p.id: p for p in rows}
+    missing = [pid for pid in body.parameter_ids if pid not in by_id]
+    if missing:
+        raise HTTPException(status_code=404, detail={"missing_parameter_ids": missing})
+
+    # preserve the request's parameter order
+    params = [
+        LabParamSpec(
+            id=p.id,
+            code=p.code,
+            name=p.name,
+            unit=p.unit,
+            min_limit=p.min_limit,
+            max_limit=p.max_limit,
+        )
+        for p in (by_id[pid] for pid in body.parameter_ids)
+    ]
+
+    try:
+        dashboard = build_lab_dashboard(
+            point_id=point.id,
+            point_code=point.code,
+            point_name=point.name,
+            params=params,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e)) from None
+
+    try:
+        async with httpx.AsyncClient(
+            base_url=settings.GRAFANA_URL,
+            auth=render_auth(),
+            headers=render_headers(),
+            timeout=10.0,
+            transport=_transport,
+        ) as http:
+            response = await http.post(
+                "/api/dashboards/db",
+                json={"dashboard": dashboard, "overwrite": True},
+            )
+    except httpx.HTTPError as e:
+        raise HTTPException(status_code=502, detail=f"Grafana erişilemedi: {e}") from None
+
+    if response.status_code >= 400:
+        raise HTTPException(
+            status_code=502, detail=f"Grafana dashboard yazılamadı: HTTP {response.status_code}"
+        )
+
+    payload = response.json()
+    uid = lab_dashboard_uid(point.id, body.parameter_ids)
+    return {
+        "uid": uid,
+        "title": f"Lab — {point.name}",
+        "url": payload.get("url") or f"/d/{uid}",
         "status": payload.get("status", "success"),
     }
