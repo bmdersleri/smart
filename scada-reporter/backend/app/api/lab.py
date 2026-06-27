@@ -1,13 +1,14 @@
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel
+from sqlalchemy import and_, select
 from sqlalchemy import delete as sa_delete
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.auth import get_current_user, require_role
 from app.api.license_guard import require_writable
+from app.core.audit import record_audit
 from app.core.database import get_db
 from app.models.lab import LabMeasurement, LabParameter, LabSample, LabSamplePoint
 from app.models.tag import TagReading
@@ -332,3 +333,140 @@ async def create_samples_batch(
         ids.append(sample.id)
     await db.commit()
     return {"inserted": len(ids), "sample_ids": ids}
+
+
+# ---- List / get / edit / delete with ownership + audit ----
+
+
+def _assert_can_edit(user: User, sample: LabSample) -> None:
+    if user.role != "admin" and sample.entered_by != user.id:
+        raise HTTPException(status_code=403, detail="Yalnizca kendi kaydinizi duzenleyebilirsiniz")
+
+
+@router.get("/samples", response_model=list[SampleOut])
+async def list_samples(
+    point_id: int | None = Query(default=None),
+    parameter_id: int | None = Query(default=None),
+    start: datetime | None = Query(default=None),
+    end: datetime | None = Query(default=None),
+    entered_by: int | None = Query(default=None),
+    limit: int = Query(default=100, ge=1, le=500),
+    offset: int = Query(default=0, ge=0),
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_user),
+):
+    conditions = []
+    if point_id is not None:
+        conditions.append(LabSample.sample_point_id == point_id)
+    if start is not None:
+        conditions.append(LabSample.sampled_at >= start)
+    if end is not None:
+        conditions.append(LabSample.sampled_at <= end)
+    if entered_by is not None:
+        conditions.append(LabSample.entered_by == entered_by)
+    query = select(LabSample)
+    if parameter_id is not None:
+        query = query.join(LabMeasurement).where(LabMeasurement.parameter_id == parameter_id)
+    if conditions:
+        query = query.where(and_(*conditions))
+    query = query.order_by(LabSample.sampled_at.desc()).limit(limit).offset(offset).distinct()
+    samples = (await db.execute(query)).scalars().unique().all()
+    # eager-load measurements
+    for s in samples:
+        await db.refresh(s, attribute_names=["measurements"])
+    return samples
+
+
+async def _get_sample_or_404(db: AsyncSession, sample_id: int) -> LabSample:
+    sample = (
+        await db.execute(select(LabSample).where(LabSample.id == sample_id))
+    ).scalar_one_or_none()
+    if not sample:
+        raise HTTPException(status_code=404, detail="Numune bulunamadi")
+    await db.refresh(sample, attribute_names=["measurements"])
+    return sample
+
+
+@router.get("/samples/{sample_id}", response_model=SampleOut)
+async def get_sample(
+    sample_id: int,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_user),
+):
+    return await _get_sample_or_404(db, sample_id)
+
+
+@router.patch("/samples/{sample_id}", response_model=SampleOut)
+async def update_sample(
+    sample_id: int,
+    data: SampleCreate,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role("admin", "operator")),
+    _w=Depends(require_writable),
+):
+    sample = await _get_sample_or_404(db, sample_id)
+    _assert_can_edit(user, sample)
+    # Update scalar fields
+    sample.sample_point_id = data.sample_point_id
+    sample.sampled_at = data.sampled_at
+    sample.method = data.method
+    sample.batch_no = data.batch_no
+    sample.note = data.note
+    # Full replace of measurements (clears + rebuilds; mirror not re-applied on edit)
+    for existing in list(sample.measurements):
+        await db.delete(existing)
+    await db.flush()
+    param_ids = [m.parameter_id for m in data.measurements]
+    params = {}
+    if param_ids:
+        rows = await db.execute(select(LabParameter).where(LabParameter.id.in_(param_ids)))
+        params = {p.id: p for p in rows.scalars().all()}
+    for m in data.measurements:
+        param = params.get(m.parameter_id)
+        if param is None:
+            raise HTTPException(status_code=400, detail=f"Parametre yok: {m.parameter_id}")
+        db.add(
+            LabMeasurement(
+                sample_id=sample.id,
+                parameter_id=m.parameter_id,
+                value=m.value,
+                text_value=m.text_value,
+                flag=compute_flag(m.value, param.min_limit, param.max_limit),
+            )
+        )
+    await record_audit(
+        db,
+        actor=user,
+        action="lab.sample.update",
+        target_type="lab_sample",
+        target_id=sample.id,
+        detail={"sample_point_id": data.sample_point_id, "n_measurements": len(data.measurements)},
+        ip=request.client.host if request.client else None,
+    )
+    await db.commit()
+    await db.refresh(sample, attribute_names=["measurements"])
+    return sample
+
+
+@router.delete("/samples/{sample_id}", status_code=204)
+async def delete_sample(
+    sample_id: int,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role("admin", "operator")),
+    _w=Depends(require_writable),
+):
+    sample = await _get_sample_or_404(db, sample_id)
+    _assert_can_edit(user, sample)
+    await record_audit(
+        db,
+        actor=user,
+        action="lab.sample.delete",
+        target_type="lab_sample",
+        target_id=sample.id,
+        detail={"sample_point_id": sample.sample_point_id},
+        ip=request.client.host if request.client else None,
+    )
+    await db.delete(sample)
+    await db.commit()
