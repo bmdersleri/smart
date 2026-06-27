@@ -15,6 +15,7 @@ from app.api import (
     app_settings,
     audit,
     auth,
+    backup,
     dashboard,
     excel_templates,
     explore,
@@ -51,6 +52,7 @@ from app.core.timescaledb import (
 from app.models import annotation as _annotation  # noqa: F401
 from app.models import app_setting as _app_setting  # noqa: F401
 from app.models import audit_log as _audit_log  # noqa: F401
+from app.models import backup as _backup  # noqa: F401
 from app.models import excel_template as _excel_template  # noqa: F401
 from app.models import lab as _lab  # noqa: F401
 from app.models import plc_health as _plc_health  # noqa: F401
@@ -206,6 +208,7 @@ app.include_router(lab.router, prefix="/api")
 app.include_router(app_settings.router, prefix="/api")
 app.include_router(license_api.router, prefix="/api")
 app.include_router(runtime.router, prefix="/api")
+app.include_router(backup.router, prefix="/api")
 
 
 @app.get("/metrics")
