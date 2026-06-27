@@ -26,5 +26,9 @@
   "unit": "Birim",
   "description": "Açıklama",
   "add": "Ekle",
-  "delete": "Sil"
+  "delete": "Sil",
+  "add_row": "+ Satır",
+  "edit": "Düzenle",
+  "cancel": "İptal",
+  "edit_record": "Kaydı Düzenle"
 }

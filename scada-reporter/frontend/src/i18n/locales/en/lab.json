@@ -26,5 +26,9 @@
   "unit": "Unit",
   "description": "Description",
   "add": "Add",
-  "delete": "Delete"
+  "delete": "Delete",
+  "add_row": "+ Row",
+  "edit": "Edit",
+  "cancel": "Cancel",
+  "edit_record": "Edit Record"
 }

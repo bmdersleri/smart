@@ -26,5 +26,9 @@
   "unit": "Einheit",
   "description": "Beschreibung",
   "add": "Hinzufügen",
-  "delete": "Löschen"
+  "delete": "Löschen",
+  "add_row": "+ Zeile",
+  "edit": "Bearbeiten",
+  "cancel": "Abbrechen",
+  "edit_record": "Eintrag bearbeiten"
 }

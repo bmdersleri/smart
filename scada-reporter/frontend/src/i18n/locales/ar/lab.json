@@ -26,5 +26,9 @@
   "unit": "الوحدة",
   "description": "الوصف",
   "add": "إضافة",
-  "delete": "حذف"
+  "delete": "حذف",
+  "add_row": "+ صف",
+  "edit": "تعديل",
+  "cancel": "إلغاء",
+  "edit_record": "تعديل السجل"
 }

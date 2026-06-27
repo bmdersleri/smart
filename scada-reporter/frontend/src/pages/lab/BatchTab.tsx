@@ -148,7 +148,7 @@ export default function BatchTab() {
           onClick={addRow}
           className="rounded-lg border border-gray-700 px-3 py-1.5 text-sm text-gray-400 hover:text-white hover:bg-gray-800"
         >
-          + {t('sampled_at')}
+          {t('add_row')}
         </button>
         <button
           onClick={handleSave}
