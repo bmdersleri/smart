@@ -41,10 +41,19 @@ def test_build_water_quality_dashboard_shape():
     dashboard = build_dashboard("water_quality", uid, "Su Kalitesi Hat 1", [2, 1])
     assert dashboard["uid"] == uid
     assert "water-quality" in dashboard["tags"]
-    sql = dashboard["panels"][0]["targets"][0]["rawSql"]
+    assert dashboard["time"] == {"from": "now-7d", "to": "now"}
+    trend = dashboard["panels"][0]
+    assert trend["datasource"]["type"] == "frser-sqlite-datasource"
+    assert trend["datasource"]["uid"] == settings.GRAFANA_DATASOURCE_UID
+    sql = trend["targets"][0]["queryText"]
     assert "tr.tag_id IN (1, 2)" in sql
-    assert "$__timeFilter" in sql
-    assert dashboard["panels"][0]["datasource"]["uid"] == "timescaledb"
+    assert "$__" not in sql
+    assert "strftime('%s'" in sql
+    assert "datetime('now', '-7 days')" in sql
+    # latest-values table uses a window function, not DISTINCT ON
+    table_sql = dashboard["panels"][1]["targets"][0]["queryText"]
+    assert "row_number()" in table_sql
+    assert "DISTINCT ON" not in table_sql
 
 
 def test_water_quality_requires_tags():

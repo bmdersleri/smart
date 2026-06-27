@@ -304,7 +304,33 @@ def build_facility_overview_dashboard(uid: str, title: str) -> dict:
 
 def build_water_quality_dashboard(uid: str, title: str, tag_ids: list[int]) -> dict:
     ids = _tag_filter(tag_ids)
-    return _base_dashboard(
+    ds = _frser_datasource()
+    trend_sql = (
+        "SELECT CAST(strftime('%s', tr.timestamp) AS INTEGER) AS time, "
+        "t.name AS metric, tr.value AS value "
+        "FROM tag_readings tr JOIN tags t ON t.id = tr.tag_id "
+        f"WHERE tr.timestamp >= datetime('now', '-7 days') AND tr.tag_id IN ({ids}) "
+        "ORDER BY time"
+    )
+    latest_sql = (
+        "SELECT name, value, unit, quality, timestamp FROM ("
+        "SELECT t.id AS tid, t.name, tr.value, t.unit, tr.quality, tr.timestamp, "
+        "row_number() OVER (PARTITION BY t.id ORDER BY tr.timestamp DESC) AS rn "
+        "FROM tags t JOIN tag_readings tr ON tr.tag_id = t.id "
+        f"WHERE t.id IN ({ids})"
+        ") WHERE rn = 1 ORDER BY tid"
+    )
+    breach_sql = (
+        "SELECT t.name, "
+        "sum(CASE WHEN t.min_alarm IS NOT NULL "
+        'AND tr.value < t.min_alarm THEN 1 ELSE 0 END) AS "Alt Limit", '
+        "sum(CASE WHEN t.max_alarm IS NOT NULL "
+        'AND tr.value > t.max_alarm THEN 1 ELSE 0 END) AS "Üst Limit" '
+        "FROM tags t JOIN tag_readings tr ON tr.tag_id = t.id "
+        f"WHERE tr.timestamp >= datetime('now', '-7 days') AND t.id IN ({ids}) "
+        "GROUP BY t.name ORDER BY t.name"
+    )
+    dash = _base_dashboard(
         uid,
         title,
         ["water-quality"],
@@ -312,51 +338,40 @@ def build_water_quality_dashboard(uid: str, title: str, tag_ids: list[int]) -> d
             _timeseries_panel(
                 1,
                 "Su Kalitesi Trendleri",
-                (
-                    "SELECT $__time(tr.timestamp) AS time, t.name AS metric, tr.value AS value "
-                    "FROM tag_readings tr JOIN tags t ON t.id = tr.tag_id "
-                    f"WHERE $__timeFilter(tr.timestamp) AND tr.tag_id IN ({ids}) ORDER BY 1"
-                ),
+                trend_sql,
                 x=0,
                 y=0,
                 w=24,
                 h=11,
+                datasource=ds,
+                target=_frser_target(trend_sql, time_series=True),
             ),
             _table_panel(
                 2,
                 "Son Değerler",
-                (
-                    "SELECT DISTINCT ON (t.id) t.name, tr.value, t.unit, tr.quality, tr.timestamp "
-                    "FROM tags t JOIN tag_readings tr ON tr.tag_id = t.id "
-                    f"WHERE t.id IN ({ids}) ORDER BY t.id, tr.timestamp DESC"
-                ),
+                latest_sql,
                 x=0,
                 y=11,
                 w=12,
                 h=8,
+                datasource=ds,
+                target=_frser_target(latest_sql, time_series=False),
             ),
             _table_panel(
                 3,
                 "Limit Aşımı Özeti",
-                (
-                    "SELECT t.name, "
-                    "sum(CASE WHEN t.min_alarm IS NOT NULL "
-                    "AND tr.value < t.min_alarm THEN 1 ELSE 0 END) "
-                    'AS "Alt Limit", '
-                    "sum(CASE WHEN t.max_alarm IS NOT NULL "
-                    "AND tr.value > t.max_alarm THEN 1 ELSE 0 END) "
-                    'AS "Üst Limit" '
-                    "FROM tags t JOIN tag_readings tr ON tr.tag_id = t.id "
-                    f"WHERE $__timeFilter(tr.timestamp) AND t.id IN ({ids}) "
-                    "GROUP BY t.name ORDER BY t.name"
-                ),
+                breach_sql,
                 x=12,
                 y=11,
                 w=12,
                 h=8,
+                datasource=ds,
+                target=_frser_target(breach_sql, time_series=False),
             ),
         ],
     )
+    dash["time"] = {"from": "now-7d", "to": "now"}
+    return dash
 
 
 _LAB_CODE_RE = re.compile(r"^[A-Za-z0-9_-]+$")
