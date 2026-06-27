@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from sqlalchemy import and_, select
 from sqlalchemy import delete as sa_delete
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.api.auth import get_current_user, require_role
 from app.api.license_guard import require_writable
@@ -364,26 +365,26 @@ async def list_samples(
         conditions.append(LabSample.sampled_at <= end)
     if entered_by is not None:
         conditions.append(LabSample.entered_by == entered_by)
-    query = select(LabSample)
+    query = select(LabSample).options(selectinload(LabSample.measurements))
     if parameter_id is not None:
         query = query.join(LabMeasurement).where(LabMeasurement.parameter_id == parameter_id)
     if conditions:
         query = query.where(and_(*conditions))
     query = query.order_by(LabSample.sampled_at.desc()).limit(limit).offset(offset).distinct()
     samples = (await db.execute(query)).scalars().unique().all()
-    # eager-load measurements
-    for s in samples:
-        await db.refresh(s, attribute_names=["measurements"])
     return samples
 
 
 async def _get_sample_or_404(db: AsyncSession, sample_id: int) -> LabSample:
     sample = (
-        await db.execute(select(LabSample).where(LabSample.id == sample_id))
+        await db.execute(
+            select(LabSample)
+            .options(selectinload(LabSample.measurements))
+            .where(LabSample.id == sample_id)
+        )
     ).scalar_one_or_none()
     if not sample:
         raise HTTPException(status_code=404, detail="Numune bulunamadi")
-    await db.refresh(sample, attribute_names=["measurements"])
     return sample
 
 

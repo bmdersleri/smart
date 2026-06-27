@@ -77,6 +77,12 @@ async def test_admin_can_delete_any_sample(client, db_session):
     _as("admin", uid=1)
     resp = await client.delete(f"/api/lab/samples/{s['id']}")
     assert resp.status_code == 204
+    rows = (
+        (await db_session.execute(select(AuditLog).where(AuditLog.action == "lab.sample.delete")))
+        .scalars()
+        .all()
+    )
+    assert len(rows) == 1
 
 
 @pytest.mark.asyncio
