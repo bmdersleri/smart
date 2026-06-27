@@ -8,6 +8,7 @@ from sqlalchemy import select
 from app.api.auth import get_current_user
 from app.main import app
 from app.models.lab import LabParameter, LabSample, LabSamplePoint
+from app.services.lab_import import parse_table
 
 
 def _as(role: str, uid: int = 7):
@@ -86,3 +87,8 @@ async def test_commit_imports_rows(client, db_session):
     assert len(body["errors"]) == 1
     samples = (await db_session.execute(select(LabSample))).scalars().all()
     assert len(samples) == 2
+
+
+def test_parse_table_raises_on_unreadable_xls():
+    with pytest.raises(ValueError):
+        parse_table(b"not a real xlsx", "bad.xls")

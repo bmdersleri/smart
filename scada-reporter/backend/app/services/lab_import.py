@@ -19,7 +19,10 @@ def parse_table(content: bytes, filename: str) -> tuple[list[str], list[list[str
     if name.endswith((".xlsx", ".xls")):
         from openpyxl import load_workbook
 
-        wb = load_workbook(io.BytesIO(content), read_only=True, data_only=True)
+        try:
+            wb = load_workbook(io.BytesIO(content), read_only=True, data_only=True)
+        except Exception as e:  # noqa: BLE001 — surface any openpyxl read failure as a 400
+            raise ValueError(f"Excel dosyasi okunamadi: {e}") from e
         ws = wb.active
         all_rows = [
             [("" if c is None else str(c)).strip() for c in row]
@@ -28,6 +31,6 @@ def parse_table(content: bytes, filename: str) -> tuple[list[str], list[list[str
         if not all_rows:
             return [], []
         headers = all_rows[0]
-        rows = [r for r in all_rows[1:] if any(c for c in r)]
+        rows = [r for r in all_rows[1:] if any(c.strip() for c in r)]
         return headers, rows
     raise ValueError("Desteklenmeyen dosya turu (.csv veya .xlsx)")
