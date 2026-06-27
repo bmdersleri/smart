@@ -487,10 +487,14 @@ class SyncScadaClient:
     """AsyncScadaClient üzerine senkron facade — CLI bunu kullanır."""
 
     def __init__(self, *args, **kwargs) -> None:
+        self._loop = asyncio.new_event_loop()
+        self._closed = False
         self._async = AsyncScadaClient(*args, **kwargs)
 
     def _run(self, coro):
-        return asyncio.run(coro)
+        if self._closed:
+            raise RuntimeError("SyncScadaClient is closed")
+        return self._loop.run_until_complete(coro)
 
     def set_token(self, token: str) -> None:
         self._async.set_token(token)
@@ -506,4 +510,10 @@ class SyncScadaClient:
         return attr
 
     def close(self) -> None:
-        self._run(self._async.aclose())
+        if self._closed:
+            return
+        try:
+            self._loop.run_until_complete(self._async.aclose())
+        finally:
+            self._closed = True
+            self._loop.close()

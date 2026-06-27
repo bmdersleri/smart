@@ -80,3 +80,8 @@ grafana-*.png
 ~$*.docx
 ~$*.xlsx
 docs/~$*
+
+# Generated presentation exports; source is docs/tanitim.md.
+docs/tanitim.docx
+docs/tanitim.html
+docs/tanitim.pdf

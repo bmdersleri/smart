@@ -751,16 +751,16 @@ Agent setup and usage instructions have one clear source of truth.
 
 **Current state**
 
-`.gitignore` already covers many local folders and runtime artifacts. The working tree still shows local/generated or untracked areas such as:
+`.gitignore` already covers many local folders and runtime artifacts. At the time of
+the original review, the working tree showed local/generated or untracked areas such
+as:
 
 - `xlsx/`
-- `docs/tanitim.html`
 - `docs/recommend.md`
 - `docs/superpowers/plans/...`
 - `.claude/worktrees/`
 - `.commit_msg.txt`
 - `cld.bat`
-- `docs/project-improvement-recommendations.md` is currently untracked
 
 **Risk**
 

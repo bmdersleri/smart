@@ -20,3 +20,20 @@ def test_sync_legacy_output_on_error():
     r = c.list_plcs()
     assert r.legacy() == {"error": True, "status": 404, "detail": {"detail": "no"}}
     c.close()
+
+
+def test_sync_client_reuses_one_event_loop_for_multiple_calls():
+    seen = []
+
+    def handler(req):
+        seen.append(req.url.path)
+        if req.url.path == "/ready":
+            return httpx.Response(200, json={"status": "ready"})
+        return httpx.Response(200, json={"status": "ok"})
+
+    c = SyncScadaClient(base_url="http://t", transport=httpx.MockTransport(handler))
+    assert c.health().ok
+    assert c.ready().ok
+    c.close()
+
+    assert seen == ["/health", "/ready"]
