@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import LanguageSelector from '../components/LanguageSelector'
 import LicenseCard from '../components/LicenseCard'
 import LabCatalogCard from './lab/LabCatalogCard'
+import SettingsTimezoneCard from './SettingsTimezoneCard'
 
 const MIN_H = 300
 const MAX_H = 2000
@@ -51,6 +52,7 @@ export default function Settings() {
       <LicenseCard />
 
       {user?.role === 'admin' && <LabCatalogCard />}
+      {user?.role === 'admin' && <SettingsTimezoneCard />}
 
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 space-y-6">
         <h2 className="text-sm font-medium text-gray-400 uppercase tracking-wider">{t('trend_chart')}</h2>

@@ -7,18 +7,21 @@ import {
   type LabParameterOut,
   type LabSamplePointOut,
 } from '../../api/client'
+import { useTimezone } from '../../hooks/useTimezone'
+import { nowInTz, wallclockToUtcIso } from '../../utils/labTime'
 
 interface BatchRow {
   sampled_at: string
   values: Record<number, string>
 }
 
-function emptyRow(): BatchRow {
-  return { sampled_at: new Date().toISOString().slice(0, 16), values: {} }
-}
-
 export default function BatchTab() {
   const { t } = useTranslation('lab')
+  const tz = useTimezone()
+
+  function emptyRow(): BatchRow {
+    return { sampled_at: nowInTz(tz), values: {} }
+  }
   const [points, setPoints] = useState<LabSamplePointOut[]>([])
   const [params, setParams] = useState<LabParameterOut[]>([])
   const [pointId, setPointId] = useState<number | ''>('')
@@ -61,7 +64,7 @@ export default function BatchTab() {
     try {
       const batchRows = rows.map((r) => ({
         sample_point_id: Number(pointId),
-        sampled_at: new Date(r.sampled_at).toISOString(),
+        sampled_at: wallclockToUtcIso(r.sampled_at, tz),
         measurements: Object.entries(r.values)
           .filter(([, v]) => v !== '')
           .map(([pid, v]) => ({ parameter_id: Number(pid), value: Number(v) })),

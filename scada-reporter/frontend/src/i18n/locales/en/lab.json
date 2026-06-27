@@ -30,5 +30,8 @@
   "add_row": "+ Row",
   "edit": "Edit",
   "cancel": "Cancel",
-  "edit_record": "Edit Record"
+  "edit_record": "Edit Record",
+  "tz_title": "Timezone",
+  "tz_subtitle": "Facility timezone for all operators",
+  "tz_saved": "Saved"
 }

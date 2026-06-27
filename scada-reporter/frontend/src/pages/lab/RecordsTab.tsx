@@ -9,6 +9,8 @@ import {
   type SampleOut,
 } from '../../api/client'
 import { useAuth } from '../../context/AuthContext'
+import { useTimezone } from '../../hooks/useTimezone'
+import { utcToTzInput, utcToTzDisplay, wallclockToUtcIso } from '../../utils/labTime'
 
 // eslint-disable-next-line react-refresh/only-export-components
 export function canEditRecord(
@@ -25,14 +27,9 @@ interface EditState {
   values: Record<number, string>
 }
 
-function toLocalDatetime(iso: string): string {
-  const d = new Date(iso)
-  const pad = (n: number) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
-}
-
 export default function RecordsTab() {
-  const { t } = useTranslation('lab')
+  const { t, i18n } = useTranslation('lab')
+  const tz = useTimezone()
   const { user } = useAuth()
   const [samples, setSamples] = useState<SampleOut[]>([])
   const [params, setParams] = useState<LabParameterOut[]>([])
@@ -65,7 +62,7 @@ export default function RecordsTab() {
     setEditing({
       sample: s,
       sample_point_id: s.sample_point_id,
-      sampled_at: toLocalDatetime(s.sampled_at),
+      sampled_at: utcToTzInput(s.sampled_at, tz),
       values,
     })
   }
@@ -82,7 +79,7 @@ export default function RecordsTab() {
         .map(([pid, v]) => ({ parameter_id: Number(pid), value: Number(v) }))
       await updateSample(editing.sample.id, {
         sample_point_id: editing.sample_point_id,
-        sampled_at: new Date(editing.sampled_at).toISOString(),
+        sampled_at: wallclockToUtcIso(editing.sampled_at, tz),
         measurements,
       })
       closeEdit()
@@ -156,7 +153,7 @@ export default function RecordsTab() {
         <tbody>
           {samples.map((s) => (
             <tr key={s.id} className="border-t border-gray-800">
-              <td>{new Date(s.sampled_at).toLocaleString()}</td>
+              <td>{utcToTzDisplay(s.sampled_at, tz, i18n.language)}</td>
               <td>{s.sample_point_id}</td>
               <td className="text-end space-x-2">
                 {user && canEditRecord({ role: user.role, id: user.id }, s.entered_by) && (

@@ -9,6 +9,8 @@ import {
   type LabParameterOut,
   type LabSamplePointOut,
 } from '../../api/client'
+import { useTimezone } from '../../hooks/useTimezone'
+import { nowInTz, wallclockToUtcIso } from '../../utils/labTime'
 
 // Pure, unit-tested: a value is out of range when below min or above max.
 // eslint-disable-next-line react-refresh/only-export-components
@@ -31,10 +33,12 @@ export function canCreate(code: string, name: string): boolean {
 
 export default function SingleSampleTab() {
   const { t } = useTranslation('lab')
+  const tz = useTimezone()
   const [points, setPoints] = useState<LabSamplePointOut[]>([])
   const [params, setParams] = useState<LabParameterOut[]>([])
   const [pointId, setPointId] = useState<number | ''>('')
-  const [sampledAt, setSampledAt] = useState(() => new Date().toISOString().slice(0, 16))
+  const [sampledAt, setSampledAt] = useState(() => nowInTz('Europe/Istanbul'))
+  const [touched, setTouched] = useState(false)
   const [values, setValues] = useState<Record<number, string>>({})
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -54,6 +58,11 @@ export default function SingleSampleTab() {
   const [addingParam, setAddingParam] = useState(false)
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (!touched) setSampledAt(nowInTz(tz))
+  }, [tz, touched])
+
+  useEffect(() => {
     Promise.all([listLabSamplePoints({ approved: true }), listLabParameters({ approved: true })])
       .then(([pts, prs]) => {
         setPoints(pts.data ?? [])
@@ -71,7 +80,7 @@ export default function SingleSampleTab() {
       .filter(([, v]) => v !== '')
       .map(([pid, v]) => ({ parameter_id: Number(pid), value: Number(v) }))
     try {
-      await createSample({ sample_point_id: Number(pointId), sampled_at: new Date(sampledAt).toISOString(), measurements })
+      await createSample({ sample_point_id: Number(pointId), sampled_at: wallclockToUtcIso(sampledAt, tz), measurements })
       setSaved(true)
       setValues({})
     } catch (e) {
@@ -175,7 +184,7 @@ export default function SingleSampleTab() {
           <input
             type="datetime-local"
             value={sampledAt}
-            onChange={(e) => setSampledAt(e.target.value)}
+            onChange={(e) => { setTouched(true); setSampledAt(e.target.value) }}
             className="w-full rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-gray-100"
           />
         </label>
