@@ -1,5 +1,5 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import '../i18n'
 import SettingsRuntimeCard from './SettingsRuntimeCard'
 
@@ -31,6 +31,10 @@ vi.mock('../api/client', () => ({
 }))
 
 describe('SettingsRuntimeCard', () => {
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
   beforeEach(() => {
     getRuntimeStatus.mockReset()
     startCollector.mockReset()
@@ -48,6 +52,7 @@ describe('SettingsRuntimeCard', () => {
     expect(screen.getByText('Collector')).toBeInTheDocument()
     expect(screen.getByText('Scheduler')).toBeInTheDocument()
     expect(screen.getByText('1m 5s')).toBeInTheDocument()
+    expect(screen.getByText(/Last updated/)).toBeInTheDocument()
   })
 
   it('starts stopped collector', async () => {
@@ -56,6 +61,7 @@ describe('SettingsRuntimeCard', () => {
     fireEvent.click(screen.getAllByText('Start')[0])
 
     await waitFor(() => expect(startCollector).toHaveBeenCalledTimes(1))
+    expect(await screen.findByText('Collector started.')).toBeInTheDocument()
   })
 
   it('stops running scheduler', async () => {
@@ -64,5 +70,34 @@ describe('SettingsRuntimeCard', () => {
     fireEvent.click(screen.getAllByText('Stop')[0])
 
     await waitFor(() => expect(stopScheduler).toHaveBeenCalledTimes(1))
+  })
+
+  it('auto-refreshes status while mounted', async () => {
+    vi.useFakeTimers()
+    render(<SettingsRuntimeCard />)
+
+    await act(async () => {
+      await Promise.resolve()
+    })
+    expect(screen.getByText('Collector')).toBeInTheDocument()
+    expect(getRuntimeStatus).toHaveBeenCalledTimes(1)
+
+    await act(async () => {
+      vi.advanceTimersByTime(10_000)
+      await Promise.resolve()
+    })
+
+    expect(getRuntimeStatus).toHaveBeenCalledTimes(2)
+  })
+
+  it('includes HTTP status and detail in load errors', async () => {
+    getRuntimeStatus.mockRejectedValueOnce({
+      isAxiosError: true,
+      response: { status: 503, data: { detail: 'runtime unavailable' } },
+    })
+
+    render(<SettingsRuntimeCard />)
+
+    expect(await screen.findByText('Runtime status could not be loaded. (503: runtime unavailable)')).toBeInTheDocument()
   })
 })
