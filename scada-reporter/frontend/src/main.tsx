@@ -10,9 +10,12 @@ createRoot(document.getElementById('root')!).render(
   </StrictMode>,
 )
 
-// PWA service worker — yalnız production build'de (dev'de HMR'ı bozmasın)
-if ('serviceWorker' in navigator && import.meta.env.PROD) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => {})
+// Service worker KALDIRILDI. Eski SW'ler /grafana-api proxy'sini kesip tekrarlayan
+// HTTP 401'e yol açıyordu (İzleme & Analitik panoları yüklenemiyordu). Artık SW
+// kaydetmiyoruz; /sw.js bir kill-switch'e dönüştü (kendini siler). Daha önce SW
+// kaydetmiş tarayıcılar bir sonraki yüklemede güncel /sw.js'i çekip kaydı kaldırır.
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then((regs) => {
+    for (const r of regs) r.unregister()
   })
 }

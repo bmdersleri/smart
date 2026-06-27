@@ -1,52 +1,22 @@
-// EKONT SMART REPORT — minimal service worker (uygulama kabuğu offline önbelleği).
-// API çağrıları ASLA önbelleklenmez (canlı veri); yalnız statik kabuk + navigasyon.
-const CACHE = 'scada-shell-v2'
-const SHELL = ['/', '/index.html', '/icon.svg', '/manifest.webmanifest']
-
-self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()))
-})
+// EKONT SMART REPORT — service worker KILL-SWITCH.
+// Eski PWA service worker'ları /grafana-api proxy isteklerini kesip tekrarlayan
+// HTTP 401'e yol açıyordu (İzleme & Analitik "Panolar yüklenemedi"). Offline kabuk
+// önbelleği bu localhost SCADA aracı için kritik değil; bu yüzden SW tamamen
+// kaldırıldı. Bu dosya yalnızca kendini siler: önbellekleri temizler, kaydı kaldırır
+// ve kontrol ettiği sayfaları bir kez yeniler ki ağ (proxy) doğrudan devreye girsin.
+self.addEventListener('install', () => self.skipWaiting())
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
-    ).then(() => self.clients.claim())
+    (async () => {
+      const keys = await caches.keys()
+      await Promise.all(keys.map((k) => caches.delete(k)))
+      await self.registration.unregister()
+      const clients = await self.clients.matchAll({ type: 'window' })
+      for (const client of clients) client.navigate(client.url)
+    })(),
   )
 })
 
-self.addEventListener('fetch', (event) => {
-  const { request } = event
-  const url = new URL(request.url)
-
-  // API / health / metrics / grafana proxy — daima ağ, önbellek yok (canlı veri)
-  if (
-    url.pathname.startsWith('/api') ||
-    url.pathname.startsWith('/grafana-api') ||
-    url.pathname.startsWith('/health') ||
-    url.pathname.startsWith('/metrics')
-  ) {
-    return
-  }
-  if (request.method !== 'GET') return
-
-  // Navigasyon (SPA): ağ-önce, çevrimdışıysa kabuk
-  if (request.mode === 'navigate') {
-    event.respondWith(fetch(request).catch(() => caches.match('/index.html')))
-    return
-  }
-
-  // Statik varlıklar: önbellek-önce, ardından ağ
-  event.respondWith(
-    caches.match(request).then((cached) =>
-      cached ||
-      fetch(request).then((resp) => {
-        if (resp.ok && url.origin === self.location.origin) {
-          const copy = resp.clone()
-          caches.open(CACHE).then((c) => c.put(request, copy))
-        }
-        return resp
-      })
-    )
-  )
-})
+// Hiçbir isteği elleme — her şey doğrudan ağa gitsin.
+self.addEventListener('fetch', () => {})
