@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json as _json
+import re
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException
@@ -8,8 +9,8 @@ from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.auth import get_current_user
-from app.api.license_guard import require_feature
+from app.api.auth import get_current_user, require_role
+from app.api.license_guard import require_feature, require_writable
 from app.core.config import settings
 from app.core.database import get_db
 from app.models.lab import LabParameter, LabSamplePoint
@@ -32,6 +33,12 @@ from app.services.grafana_templates import (
 router = APIRouter(prefix="/grafana", tags=["grafana"])
 
 _transport = None  # httpx.MockTransport | None — testlerde monkeypatch'lenir
+
+_GRAFANA_UID_RE = re.compile(r"^[A-Za-z0-9_-]+$")
+
+
+def _valid_grafana_uid(uid: str) -> bool:
+    return bool(_GRAFANA_UID_RE.match(uid or ""))
 
 
 class DashboardGenerateIn(BaseModel):
@@ -284,3 +291,36 @@ async def generate_from_lab(
         "url": payload.get("url") or f"/d/{uid}",
         "status": payload.get("status", "success"),
     }
+
+
+@router.delete("/dashboards/{uid}")
+async def delete_dashboard(
+    uid: str,
+    user: User = Depends(require_role("admin")),
+    _writable=Depends(require_writable),
+    _feature=Depends(require_feature("grafana")),
+) -> dict:
+    if not _valid_grafana_uid(uid):
+        raise HTTPException(status_code=422, detail="Geçersiz dashboard uid")
+
+    try:
+        async with httpx.AsyncClient(
+            base_url=settings.GRAFANA_URL,
+            auth=render_auth(),
+            headers=render_headers(),
+            timeout=10.0,
+            transport=_transport,
+        ) as http:
+            response = await http.delete(f"/api/dashboards/uid/{uid}")
+    except httpx.HTTPError as e:
+        raise HTTPException(status_code=502, detail=f"Grafana erişilemedi: {e}") from None
+
+    if response.status_code == 404:
+        raise HTTPException(status_code=404, detail="Dashboard bulunamadı")
+    if response.status_code in (400, 412):
+        raise HTTPException(status_code=409, detail="Dashboard silinemez (provisioned olabilir)")
+    if response.status_code >= 400:
+        raise HTTPException(
+            status_code=502, detail=f"Grafana dashboard silinemedi: HTTP {response.status_code}"
+        )
+    return {"uid": uid, "status": "deleted"}
