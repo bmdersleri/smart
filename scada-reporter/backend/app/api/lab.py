@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, UploadFile
 from pydantic import BaseModel
 from sqlalchemy import and_, select
 from sqlalchemy import delete as sa_delete
@@ -14,6 +14,7 @@ from app.core.database import get_db
 from app.models.lab import LabMeasurement, LabParameter, LabSample, LabSamplePoint
 from app.models.tag import TagReading
 from app.models.user import User
+from app.services.lab_import import parse_table
 
 router = APIRouter(prefix="/lab", tags=["lab"])
 
@@ -471,3 +472,81 @@ async def delete_sample(
     )
     await db.delete(sample)
     await db.commit()
+
+
+@router.post("/import/preview")
+async def import_preview(
+    file: UploadFile,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(require_role("admin", "operator")),
+    _w=Depends(require_writable),
+):
+    content = await file.read()
+    try:
+        headers, rows = parse_table(content, file.filename or "")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    # Suggest a parameter per header by case-insensitive code/name match.
+    params = (await db.execute(select(LabParameter))).scalars().all()
+    by_code = {p.code.lower(): p.id for p in params}
+    by_name = {p.name.lower(): p.id for p in params}
+    suggestions: dict[str, int | None] = {}
+    for h in headers:
+        key = h.lower()
+        suggestions[h] = by_code.get(key) or by_name.get(key)
+    return {"headers": headers, "rows": rows[:200], "suggestions": suggestions}
+
+
+class ImportCommit(BaseModel):
+    sample_point_id: int
+    time_column: str
+    headers: list[str]
+    mapping: dict[str, int]  # header -> parameter_id
+    rows: list[list[str]]
+
+
+@router.post("/import/commit")
+async def import_commit(
+    data: ImportCommit,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role("admin", "operator")),
+    _w=Depends(require_writable),
+):
+    try:
+        time_idx = data.headers.index(data.time_column)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail="Zaman kolonu basliklarda yok") from e
+    col_index = {h: i for i, h in enumerate(data.headers)}
+    inserted, errors = 0, []
+    for row_no, row in enumerate(data.rows, start=2):
+        raw_time = row[time_idx] if time_idx < len(row) else ""
+        try:
+            sampled_at = datetime.fromisoformat(raw_time)
+        except ValueError:
+            errors.append(f"satir {row_no}: gecersiz tarih ({raw_time})")
+            continue
+        measurements = []
+        for header, param_id in data.mapping.items():
+            idx = col_index.get(header)
+            if idx is None or idx >= len(row) or row[idx] == "":
+                continue
+            try:
+                value = float(row[idx])
+            except ValueError:
+                errors.append(f"satir {row_no}: {header} sayi degil ({row[idx]})")
+                continue
+            measurements.append(MeasurementIn(parameter_id=param_id, value=value))
+        if not measurements:
+            continue
+        await _build_sample(
+            db,
+            SampleCreate(
+                sample_point_id=data.sample_point_id,
+                sampled_at=sampled_at,
+                measurements=measurements,
+            ),
+            entered_by=user.id,
+        )
+        inserted += 1
+    await db.commit()
+    return {"inserted": inserted, "errors": errors}
