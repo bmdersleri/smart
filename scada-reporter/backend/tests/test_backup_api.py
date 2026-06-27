@@ -175,3 +175,40 @@ async def test_restore_requires_admin(client: AsyncClient, db_session: AsyncSess
         headers=_auth(tok),
     )
     assert r.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_scheduled_backup_runs(tmp_path, monkeypatch, db_session, db_engine):
+    """scheduled_backup_job() creates a verified scheduled backup row.
+
+    Visibility approach: scheduled_backup_job opens its own session via
+    AsyncSessionLocal (local import from app.core.database). We patch
+    app.core.database.AsyncSessionLocal to a session factory bound to the
+    same in-memory test engine (db_engine) so the job's writes are visible
+    to db_session. We also patch settings.DATABASE_URL to a real temp sqlite
+    file because backup_engine.create_snapshot uses VACUUM INTO which requires
+    a file-backed source DB.
+    """
+    from sqlalchemy.ext.asyncio import async_sessionmaker
+
+    import app.core.database as database_mod
+    from app.core.config import settings
+    from app.services.scheduler import scheduled_backup_job
+
+    # Redirect the session factory the job opens to use the test engine.
+    test_session_factory = async_sessionmaker(db_engine, expire_on_commit=False)
+    monkeypatch.setattr(database_mod, "AsyncSessionLocal", test_session_factory)
+
+    # Provide a real sqlite file as the "live DB" for VACUUM INTO.
+    live = tmp_path / "live.db"
+    monkeypatch.setattr(settings, "DATABASE_URL", _seed_live_db(live))
+    monkeypatch.setattr(settings, "BACKUP_DIR", str(tmp_path / "bk"))
+
+    await scheduled_backup_job()  # must not raise; creates a verified backup row
+
+    from sqlalchemy import select
+
+    from app.models.backup import Backup
+
+    rows = (await db_session.execute(select(Backup))).scalars().all()
+    assert any(r.trigger == "scheduled" and r.status == "verified" for r in rows)

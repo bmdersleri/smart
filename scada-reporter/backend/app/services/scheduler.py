@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import os
 from datetime import UTC, datetime, timedelta
 
 from apscheduler.executors.asyncio import AsyncIOExecutor
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from sqlalchemy import select
 
 _scheduler: AsyncIOScheduler | None = None
 _RUNNING_RECENT_WINDOW = timedelta(minutes=5)
@@ -66,6 +68,46 @@ async def start_scheduler(db_url: str) -> None:
         minute=30,
         replace_existing=True,
     )
+
+    from app.core.config import settings
+
+    if settings.RUN_BACKUP_SCHEDULER:
+        m, h, dom, mon, dow = settings.BACKUP_SCHEDULE_CRON.split()
+        _scheduler.add_job(
+            scheduled_backup_job,
+            "cron",
+            id="db_backup",
+            minute=m,
+            hour=h,
+            day=dom,
+            month=mon,
+            day_of_week=dow,
+            replace_existing=True,
+        )
+
+
+async def scheduled_backup_job() -> None:
+    """Nightly backup + retention prune. Opens its own session."""
+    from app.api.backup import run_backup  # local import avoids router import cycle
+    from app.core.config import settings
+    from app.core.database import AsyncSessionLocal
+    from app.models.backup import Backup
+    from app.services import backup_engine as be
+
+    async with AsyncSessionLocal() as db:
+        await run_backup(db, trigger="scheduled", user_id=None)
+        rows = list((await db.execute(select(Backup))).scalars().all())
+        now_ts = datetime.now(UTC).timestamp()
+        for bid in be.expired_backup_ids(
+            rows, retention_days=settings.BACKUP_RETENTION_DAYS, now_ts=now_ts
+        ):
+            rec = await db.get(Backup, bid)
+            if rec is None:
+                continue
+            if rec.path and os.path.exists(rec.path):
+                os.remove(rec.path)
+            await db.delete(rec)
+        await db.commit()
 
 
 async def register_job(scheduled) -> str:
