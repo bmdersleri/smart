@@ -50,7 +50,7 @@ class Tag(Base):
     deadband: Mapped[float | None] = mapped_column(Float, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
-    readings: Mapped[list["TagReading"]] = relationship(back_populates="tag")
+    readings: Mapped[list[TagReading]] = relationship(back_populates="tag")
 
 
 class TagReading(Base):
@@ -63,4 +63,4 @@ class TagReading(Base):
     quality: Mapped[int] = mapped_column(Integer, default=192)  # OPC quality: 192=Good
     timestamp: Mapped[datetime] = mapped_column(DateTime, nullable=False, index=True)
 
-    tag: Mapped["Tag"] = relationship(back_populates="readings")
+    tag: Mapped[Tag] = relationship(back_populates="readings")

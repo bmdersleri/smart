@@ -1,7 +1,7 @@
 # Faz 1 — Baseline Hizalama (Tasarım)
 
 **Tarih:** 2026-06-21
-**Üst-metin:** `docs/superpowers/plans/2026-06-21-project-hardening-roadmap.md` (Faz 1)
+**Üst-metin:** `docs/project-improvement-recommendations.md` (Faz 1 kaynak metni)
 **Kaynak bulgular:** `docs/project-improvement-recommendations.md` §5.1, 5.7, 5.11, 5.12, 5.13, 5.14, 5.16, 5.21
 **Kapsam:** Baseline + DX + CI. **Runtime davranışına dokunmaz** (app kodu değişmez). En düşük risk, en yüksek sinyal.
 **Önkoşul:** yok — hemen yürütülebilir.

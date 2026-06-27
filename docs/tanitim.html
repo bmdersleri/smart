@@ -1,0 +1,487 @@
+<!DOCTYPE html><html><head><meta charset='utf-8'><style>
+@page { size: A4; margin: 2cm; }
+body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.5; color: #1a1a1a; }
+h1 { font-size: 22pt; color: #005a9e; border-bottom: 2px solid #005a9e; padding-bottom: 6px; margin-top: 30px; }
+h2 { font-size: 16pt; color: #005a9e; margin-top: 28px; }
+h3 { font-size: 13pt; color: #333; margin-top: 20px; }
+h4 { font-size: 11pt; color: #444; margin-top: 14px; }
+table { border-collapse: collapse; width: 100%; margin: 14px 0; page-break-inside: avoid; font-size: 9.5pt; }
+th { background-color: #005a9e; color: white; padding: 7px 10px; text-align: left; font-weight: 700; border: 1px solid #005a9e; }
+td { padding: 5px 10px; border: 1px solid #bbb; vertical-align: top; }
+tr:nth-child(even) td { background-color: #f5f8fc; }
+code { background: #eef; padding: 1px 5px; border-radius: 3px; font-family: 'Cascadia Code', 'Consolas', monospace; font-size: 9.5pt; }
+pre { background: #f5f5f5; padding: 12px; border-left: 4px solid #005a9e; font-family: 'Cascadia Code', 'Consolas', monospace; font-size: 9pt; overflow-x: auto; }
+hr { border: none; border-top: 1px solid #ddd; margin: 24px 0; }
+strong { color: #005a9e; }
+ul, ol { padding-left: 22px; }
+li { margin: 3px 0; }
+p { margin: 6px 0; }
+</style></head><body><h1>Ekont Smart Scada Reporter</h1>
+<h2>Yapay Zeka Ajan Destekli Yeni Nesil Raporlama Sistemi</h2>
+<hr />
+<p>Ekont Smart Scada Reporter, <strong>yapay zeka ajanları</strong> tarafından doğrudan kullanılıp konfigüre edilebilen yeni nesil bir raporlama sistemidir. Siemens S7-1500 PLC'lerden Ekont Universal Collector ile toplanan endüstriyel veriyi, gelişmiş <strong>MCP (Model Context Protocol)</strong> desteği sayesinde yapay zeka ajanlarına anlamlı ve yapılandırılmış şekilde sunar. Kullanıcılar <strong>web tarayıcısı üzerinden mobil, tablet ve masaüstü cihazlardan</strong> sisteme erişebilir, yapay zeka ajanları ise MCP protokolü ile sisteme doğrudan bağlanarak veri sorgulama, analiz ve raporlama işlemlerini gerçekleştirebilir.</p>
+<hr />
+<h3>Temel Özellikler</h3>
+<h4>PLC Bağlantısı ve Veri Toplama</h4>
+<ul>
+<li>Siemens S7-1500 PLC ailesine <strong>Ekont Universal Collector</strong> ile doğrudan TCP bağlantısı</li>
+<li><strong>3000+ etiket kataloğu</strong> ile geniş veri noktası desteği</li>
+<li><strong>Ekont Smart Recording System</strong>: değişmeyen verileri yazmaz, yalnızca belirlenen eşik değerini aşan değişimleri kaydeder. Örneğin bir seviye sensörü 0–100% aralığında %1'lik bir eşikle yapılandırıldığında, seviye sabitken hiç kayıt yapılmaz, yalnızca %1'den büyük her değişim anında kaydedilir. Bu sayede <strong>veritabanı hacmi %95'e varan oranda azalır</strong>, disk ve sorgu yükü minimuma iner</li>
+<li>Her etiket için <strong>özelleştirilebilir eşik aralığı</strong> (mutlak değer ve yüzdelik)</li>
+<li><strong>Çoklu PLC yönetimi</strong>: her PLC için ayrı IP, rack ve slot yapılandırması</li>
+<li><strong>5 saniye aralıklı periyodik okuma</strong> ile güncel veri</li>
+<li>PLC ulaşılamadığında <strong>simülasyon modu</strong> ile kesintisiz çalışma</li>
+<li>Dahili <strong>Ekont OPC UA Server</strong> (<code>opc.tcp://localhost:4840</code>) ile dış sistemlere veri yayını</li>
+</ul>
+<h4>Yapay Zeka Ajan Desteği ve MCP Protokolü</h4>
+<ul>
+<li><strong>MCP (Model Context Protocol)</strong> desteği ile yapay zeka ajanları sisteme doğrudan bağlanabilir</li>
+<li>AI ajanlar <strong>veri sorgulama, analiz, rapor oluşturma ve sistem konfigürasyonu</strong> yapabilir</li>
+<li><strong>Doğal dil ile veri sorgulama</strong>: "Geçen hafta boyunca pompa-3 kaç kez devreye girmiş?" gibi sorulara REST API üzerinden anında yanıt (<code>POST /api/ai/query</code>)</li>
+<li><strong>AI anomali tespiti</strong>: Z-score ve sıçrama analizi ile anormal değerler otomatik işaretlenir (<code>POST /api/ai/anomalies</code>)</li>
+<li><strong>Trend tahmini</strong>: Lineer regresyon ile gelecek değer tahmini ve güven aralığı (<code>POST /api/ai/predict</code>)</li>
+<li><strong>AI rapor oluşturma</strong>: Belirtilen etiketler, zaman aralığı ve toplulaştırma ile özet rapor üretimi (<code>POST /api/ai/reports/generate</code>)</li>
+<li><strong>Otomatik izleme ajanı</strong>: <code>scada agent monitor</code> komutu ile periyodik sistem denetimi, anomali taraması ve gecikme kontrolü</li>
+<li><strong>MCP araçları (tools)</strong> sayesinde ajanlar tag listesi, trend verisi, rapor şablonları ve sistem konfigürasyonuna doğrudan erişebilir</li>
+<li>Claude, ChatGPT, Gemini ve özel AI ajanlar ile tam uyumlu</li>
+<li>Ajanlar kullanıcı adına <strong>periyodik raporları hazırlayıp dağıtabilir</strong>**</li>
+</ul>
+<h4>WinCC SCADA'dan Sorunsuz Tag Geçişi</h4>
+<ul>
+<li><strong>WinCC'dan doğrudan tag listesi içe aktarma</strong> — elle yeniden tanımlamaya gerek yok</li>
+<li>CSV, Excel ve WinCC dışa aktarma formatlarını otomatik tanıma</li>
+<li><strong>Veri tipi, adres ve birim eşleme</strong> otomatik yapılır</li>
+<li><strong>Toplu tag içe/dışa aktarma</strong> ile dakikalar içinde yüzlerce etiket taşıma</li>
+<li>Mevcut WinCC etiket adlarını koruyarak <strong>sıfır kesinti ile geçiş</strong></li>
+<li>Geçiş sonrası tüm etiketleri web arayüzünden doğrulama ve düzenleme</li>
+</ul>
+<h4>Web Tabanlı Arayüz — Her Yerden Erişim</h4>
+<p>Modern React altyapısı ile geliştirilmiş <strong>tamamen web tabanlı</strong> kullanıcı arayüzü. Herhangi bir kurulum gerektirmez, yalnızca bir tarayıcı yeterlidir.</p>
+<ul>
+<li><strong>Mobil, tablet ve masaüstü</strong> cihazlardan eksiksiz erişim — responsive tasarım, her ekrana uyumlu</li>
+<li><strong>Kurulum gerektirmez</strong> — cihaza uygulama yüklemeye gerek yok, doğrudan tarayıcıdan açılır</li>
+<li><strong>VPN veya yerel ağ</strong> üzerinden güvenli uzak erişim</li>
+<li><strong>HTTPS desteği</strong> ile şifreli iletişim</li>
+<li><strong>PWA uyumlu</strong> — mobil cihazda ana ekrana eklenerek uygulama gibi kullanılabilir</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Modül</th>
+<th>Özellikler</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Dashboard</strong></td>
+<td>Genel bakış sayıcıları, kişisel izleme listesi, tüm etiketlerde filtreli arama ve sayfalama</td>
+</tr>
+<tr>
+<td><strong>Trend Analizi</strong></td>
+<td>Çoklu etiket ve çoklu Y-ekseni, zoom/pan, sarı kesikli imleç, istatistiksel analiz (ortalama/trend çizgisi/min-max), periyot karşılaştırma, anotasyon desteği, PNG/Excel dışa aktarım, ön ayar yönetimi, zaman dilimi desteği</td>
+</tr>
+<tr>
+<td><strong>Raporlar</strong></td>
+<td>Etiket ve zaman aralığı seçimi, saatlik/günlük/haftalık/aylık toplulaştırma (min/max/avg/toplam/std sapma), Excel/PDF/JSON/CSV çıktı, filtre ön ayarları, koşullu rapor tetikleme</td>
+</tr>
+<tr>
+<td><strong>Gelişmiş Raporlar</strong></td>
+<td>Kullanıcı tanımlı şablonlar, zamanlayıcı ile periyodik otomatik rapor, e-posta dağıtımı, rapor arşivi, toplu indirme, kurumsal kimlik uyumlu başlık/logo/altbilgi</td>
+</tr>
+<tr>
+<td><strong>Etiket Yönetimi</strong></td>
+<td>Etiket listeleme, birim ve açıklama düzenleme, aktif/pasif durumu yönetimi</td>
+</tr>
+<tr>
+<td><strong>PLC Yönetimi</strong></td>
+<td>PLC ekleme/kaldırma, IP/rack/slot yapılandırması, bağlantı durumu izleme</td>
+</tr>
+<tr>
+<td><strong>Ayarlar</strong></td>
+<td>Dil seçimi, kullanıcı tercihleri (ör. trend grafik yüksekliği 300–2000 px)</td>
+</tr>
+<tr>
+<td><strong>Kullanıcı Yönetimi</strong></td>
+<td>Kullanıcı ekleme/düzenleme/silme, rol atama, mikro izin yapılandırması</td>
+</tr>
+</tbody>
+</table>
+<h4>Zaman Serisi Veritabanı</h4>
+<ul>
+<li><strong>PostgreSQL + TimescaleDB</strong> ile optimize edilmiş zaman-serisi sorguları</li>
+<li>Yıllar sürecek veri birikiminde dahi yüksek sorgu performansı</li>
+<li>Otomatik veri toplulaştırma ve saklama politikaları</li>
+</ul>
+<h4>Çoklu Dil Desteği</h4>
+<ul>
+<li><strong>Tamamen yerelleştirilmiş arayüz</strong> — Türkçe, İngilizce ve isteğe bağlı ek diller</li>
+<li>Kullanıcı bazında dil tercihi, oturumdan bağımsız kalıcı</li>
+<li>Tarih, saat ve sayı formatları dile göre otomatik uyum</li>
+<li>Rapor çıktılarında dil seçimi</li>
+<li>Yeni dil eklemek için merkezi dil dosyası — kod değişikliği gerektirmez</li>
+</ul>
+<h4>Çoklu Kullanıcı ve Mikro Yetkilendirme</h4>
+<ul>
+<li><strong>Sınırsız kullanıcı</strong> tanımlama</li>
+<li><strong>Hiyerarşik yetkilendirme modeli</strong>: roller ve izinler katmanlı olarak yapılandırılır</li>
+<li><strong>Ön tanımlı roller</strong>: <code>admin</code> (tam erişim), <code>operator</code> (okuma/yazma), <code>viewer</code> (salt okunur), <code>reporter</code> (yalnızca raporlama)</li>
+<li><strong>Mikro izinler</strong>: her modül için ayrı ayrı tanımlanabilir</li>
+<li>Dashboard erişimi</li>
+<li>Trend grafiği görüntüleme</li>
+<li>Rapor oluşturma / düzenleme / silme</li>
+<li>Etiket yönetimi</li>
+<li>PLC yapılandırması</li>
+<li>Kullanıcı yönetimi</li>
+<li><strong>Etiket bazında yetkilendirme</strong>: hangi kullanıcı hangi etiketleri görebilir / düzenleyebilir</li>
+<li><strong>PLC bazında yetkilendirme</strong>: her kullanıcının erişebileceği PLC'ler ayrı ayrı belirlenir</li>
+<li><strong>Oturum yönetimi</strong>: JWT tabanlı, token süresi yapılandırılabilir, refresh token desteği</li>
+<li><strong>Denetim günlüğü</strong>: tüm kullanıcı işlemleri kaydedilir</li>
+</ul>
+<h4>Raporlama</h4>
+<ul>
+<li><strong>Çoklu çıktı formatı</strong>: Excel (openpyxl), PDF (WeasyPrint), JSON, CSV</li>
+<li><strong>Şablon tabanlı raporlama</strong>: kullanıcı tanımlı şablonlar, sürükle-bırak alan seçimi</li>
+<li><strong>Toplulaştırma seçenekleri</strong>: saatlik, günlük, haftalık, aylık, yıllık; ortalama, min, max, toplam, standart sapma</li>
+<li><strong>Zamanlayıcı</strong>: periyodik rapor üretimi (günlük/haftalık/aylık), e-posta ile otomatik dağıtım</li>
+<li><strong>Rapor arşivi</strong>: geçmiş raporları katalog tarama, tarih aralığı filtreleme, toplu indirme</li>
+<li><strong>Koşullu raporlama</strong>: belirli eşik aşımlarında otomatik rapor tetikleme</li>
+<li><strong>Özelleştirilebilir başlık/logo/altbilgi</strong>: kurumsal kimlik uyumlu çıktı</li>
+<li><strong>Aynı anda birden çok etiket ve zaman aralığı seçimi</strong></li>
+</ul>
+<h4>Gelişmiş Trend Analizi</h4>
+<ul>
+<li><strong>Çoklu etiket ve çoklu Y-ekseni</strong>: farklı birimlerdeki etiketler aynı grafikte karşılaştırılabilir</li>
+<li><strong>Zoom / Pan</strong>: brush seçimi ve fare tekerleği ile detaylı inceleme</li>
+<li><strong>Sarı kesikli imleç</strong>: grafik üzerinde anlık değer okuma, hover veri tablosu</li>
+<li><strong>İstatistiksel analiz</strong>: trend üzerinde ortalama, trend çizgisi, min/max işaretleyicileri</li>
+<li><strong>Periyot karşılaştırma</strong>: aynı grafikte farklı tarih aralıklarını üst üste çizdirme (ör. bu hafta vs geçen hafta)</li>
+<li><strong>Anotasyon desteği</strong>: grafik üzerine not ekleme, bakım/arıma kayıtlarını işaretleme</li>
+<li><strong>Dışa aktarım</strong>: PNG (görsel), Excel (ham veri), grafik ön ayarlarını kaydetme/yükleme</li>
+<li><strong>Zaman dilimi desteği</strong>: farklı zaman dilimlerinde görüntüleme</li>
+</ul>
+<hr />
+<h3>Kullanım Senaryoları</h3>
+<h4>1. İçme Suyu Arıtma Tesisi</h4>
+<p><strong>İhtiyaç:</strong> Ham su giriş debisi, kimyasal dozaj miktarları, filtre seviyeleri, çıkış suyu bulanıklık ve klor değerlerinin anlık izlenmesi ve raporlanması.</p>
+<p><strong>Ekont Smart Scada Reporter ile Çözüm:</strong>
+- PLC üzerinden tüm sensör verileri Ekont Universal Collector ile toplanır
+- Dashboard'da giriş/çıkış parametreleri anlık izlenir
+- Trend grafiği ile geçmiş veri analizi yapılır, AI ajan anormallikleri otomatik işaretler
+- Günlük ve aylık raporlar AI ajan tarafından doğal dilde özetlenerek hazırlanır
+- OPC UA ile üst katman SCADA sistemine veri aktarılır
+- <strong>AI ajan</strong> MCP üzerinden "Son 24 saatteki pH ortalaması nedir?" sorusuna anında yanıt verir</p>
+<p><strong>Takip Edilen Parametreler:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parametre</th>
+<th>Sensör</th>
+<th>Periyot</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Ham su debisi</td>
+<td>Debimetre</td>
+<td>Sürekli</td>
+</tr>
+<tr>
+<td>pH değeri</td>
+<td>pH sensörü</td>
+<td>5 sn</td>
+</tr>
+<tr>
+<td>Klor dozajı</td>
+<td>Enjeksiyon pompası</td>
+<td>5 sn</td>
+</tr>
+<tr>
+<td>Filtre seviyesi</td>
+<td>Seviye sensörü</td>
+<td>5 sn</td>
+</tr>
+<tr>
+<td>Çıkış bulanıklığı</td>
+<td>Bulanıklık sensörü</td>
+<td>5 sn</td>
+</tr>
+<tr>
+<td>Rezervuar seviyesi</td>
+<td>Ultrasonik sensör</td>
+<td>Sürekli</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h4>2. Atık Su Arıtma Tesisi</h4>
+<p><strong>İhtiyaç:</strong> Havalandırma havuzu çözünmüş oksijen (DO) seviyesi, debi, kimyasal dozaj, çamur yoğunluğu ve deşarj parametrelerinin izlenmesi.</p>
+<p><strong>Ekont Smart Scada Reporter ile Çözüm:</strong>
+- Havalandırma ünitelerinin enerji tüketimi ve DO seviyeleri eş zamanlı izlenir
+- Biyolojik arıtma performansı trend grafikleri ile analiz edilir, AI ajan performans düşüşlerini önceden tahmin eder
+- Deşarj limit aşımlarında anlık uyarı mekanizması, AI ajan otomatik rapor oluşturur
+- Çevre Bakanlığı raporlamaları için günlük/aylık Excel çıktıları AI ajan tarafından hazırlanır
+- <strong>AI ajan</strong> MCP üzerinden "KOİ değeri son 3 ayda limit aşımı yaptı mı?" sorusuna trend analizi ile yanıt verir</p>
+<p><strong>Takip Edilen Parametreler:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parametre</th>
+<th>Önemi</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Çözünmüş Oksijen (DO)</td>
+<td>Biyolojik aktivite için kritik</td>
+</tr>
+<tr>
+<td>Kimyasal Oksijen İhtiyacı (KOİ)</td>
+<td>Deşarj limit parametresi</td>
+</tr>
+<tr>
+<td>Askıda Katı Madde (AKM)</td>
+<td>Deşarj limit parametresi</td>
+</tr>
+<tr>
+<td>Havalandırma debisi</td>
+<td>Enerji verimliliği</td>
+</tr>
+<tr>
+<td>Çamur yoğunluğu</td>
+<td>Çamur yönetimi</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h4>3. Pompa İstasyonu ve Terfi Merkezi</h4>
+<p><strong>İhtiyaç:</strong> Pompaların çalışma durumu, basınç, debi, enerji tüketimi ve arıza kayıtlarının izlenmesi.</p>
+<p><strong>Ekont Smart Scada Reporter ile Çözüm:</strong>
+- Her pompa için çalışma/süre/durum bilgisi anlık izlenir
+- Enerji tüketimi AI ajan tarafından zaman bazlı analiz edilir ve raporlanır
+- Basınç düşüşlerinde trend analizi ile kaçak tespiti, AI ajan anormal desenleri işaretler
+- Pompa arıza kayıtları otomatik tutulur, AI ajan bakım zamanı geldiğinde uyarı verir
+- <strong>AI ajan</strong> MCP üzerinden "Pompa-2'nin enerji tüketimi geçen aya göre nasıl değişti?" sorusunu yanıtlar</p>
+<p><strong>Takip Edilen Parametreler:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parametre</th>
+<th>Kullanımı</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Pompa açma/kapama sayısı</td>
+<td>Aşınma takibi</td>
+</tr>
+<tr>
+<td>Çalışma saati</td>
+<td>Bakım zamanlaması</td>
+</tr>
+<tr>
+<td>Enerji tüketimi (kWh)</td>
+<td>Maliyet analizi</td>
+</tr>
+<tr>
+<td>Basınç (bar)</td>
+<td>Kaçak tespiti</td>
+</tr>
+<tr>
+<td>Debi (m³/h)</td>
+<td>Verimlilik hesapları</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h4>4. Enerji İzleme ve Yönetim Sistemi</h4>
+<p><strong>İhtiyaç:</strong> Tesisteki enerji tüketiminin PLC üzerinden okunması, zaman bazlı analizi ve maliyet raporlaması.</p>
+<p><strong>Ekont Smart Scada Reporter ile Çözüm:</strong>
+- Enerji analizörlerinden PLC'ye gelen tüketim verileri okunur
+- Anlık güç, günlük/aylık/yıllık tüketim dashboard'da görüntülenir
+- Pik tüketim saatleri trend grafiği ile belirlenir
+- Birim maliyet raporları otomatik oluşturulur</p>
+<p><strong>Takip Edilen Parametreler:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parametre</th>
+<th>Açıklama</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Aktif güç (kW)</td>
+<td>Anlık çekilen güç</td>
+</tr>
+<tr>
+<td>Reaktif güç (kVAr)</td>
+<td>Kompanzasyon takibi</td>
+</tr>
+<tr>
+<td>Toplam enerji (kWh)</td>
+<td>Tüketim takibi</td>
+</tr>
+<tr>
+<td>Güç faktörü (cos φ)</td>
+<td>Verimlilik göstergesi</td>
+</tr>
+<tr>
+<td>Hat akımları (A)</td>
+<td>Yük dengesi analizi</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h4>5. Endüstriyel Soğutma ve HVAC Sistemleri</h4>
+<p><strong>İhtiyaç:</strong> Soğutma kuleleri, chiller grupları ve klima santrallerinin sıcaklık, basınç, debi ve enerji parametrelerinin merkezi izlenmesi.</p>
+<p><strong>Ekont Smart Scada Reporter ile Çözüm:</strong>
+- Chiller giriş/çıkış sıcaklıkları ve enerji tüketimleri kaydedilir
+- Soğutma kulesi fan ve pompa durumları izlenir
+- HVAC filtre kirlilik seviyeleri takip edilir
+- Enerji verimliliği (COP/EER) trend raporları oluşturulur</p>
+<hr />
+<h3>Teknoloji Altyapısı</h3>
+<table>
+<thead>
+<tr>
+<th>Katman</th>
+<th>Teknoloji</th>
+<th>Rolü</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Backend</strong></td>
+<td>Python 3.14, FastAPI, Uvicorn</td>
+<td>REST API sunucusu</td>
+</tr>
+<tr>
+<td><strong>PLC İletişimi</strong></td>
+<td>Ekont Universal Collector</td>
+<td>Siemens PLC'ye doğrudan TCP bağlantısı</td>
+</tr>
+<tr>
+<td><strong>OPC UA</strong></td>
+<td>Ekont OPC UA Server (asyncua)</td>
+<td>Harici sistemlere standart veri yayını</td>
+</tr>
+<tr>
+<td><strong>Veritabanı</strong></td>
+<td>PostgreSQL 16 + TimescaleDB</td>
+<td>Zaman-serisi veri depolama</td>
+</tr>
+<tr>
+<td><strong>Ön Yüz</strong></td>
+<td>React + Vite</td>
+<td>Modern web arayüzü</td>
+</tr>
+<tr>
+<td><strong>ORM</strong></td>
+<td>SQLAlchemy 2.0 (async) + Alembic</td>
+<td>Veritabanı yönetimi ve migrasyon</td>
+</tr>
+<tr>
+<td><strong>Raporlama</strong></td>
+<td>openpyxl, WeasyPrint</td>
+<td>Excel ve PDF çıktı</td>
+</tr>
+<tr>
+<td><strong>Kimlik Doğrulama</strong></td>
+<td>JWT (OAuth2)</td>
+<td>Güvenli erişim kontrolü</td>
+</tr>
+<tr>
+<td><strong>Yerelleştirme</strong></td>
+<td>react-i18next</td>
+<td>Çoklu dil desteği (Türkçe / İngilizce)</td>
+</tr>
+<tr>
+<td><strong>Yetkilendirme</strong></td>
+<td>Rol + izin tabanlı</td>
+<td>Mikro yetkilendirme, etiket/PLC bazında kısıtlama</td>
+</tr>
+<tr>
+<td><strong>AI Ajan Protokolü</strong></td>
+<td>MCP (Model Context Protocol)</td>
+<td>Yapay zeka ajanlarının sisteme doğrudan bağlanması</td>
+</tr>
+<tr>
+<td><strong>AI Entegrasyonu</strong></td>
+<td>Claude, ChatGPT, Gemini ve özel ajanlar</td>
+<td>Doğal dil ile sorgulama, anomali tespiti, trend tahmini ve raporlama</td>
+</tr>
+<tr>
+<td><strong>AI API'leri</strong></td>
+<td>FastAPI /api/ai/*</td>
+<td>Anomali tespiti, trend tahmini, NL sorgu, rapor oluşturma</td>
+</tr>
+<tr>
+<td><strong>Ajan CLI</strong></td>
+<td><code>scada agent</code> komut grubu</td>
+<td>İzleme, sorgulama, anomali analizi, tahmin ve servis durumu</td>
+</tr>
+<tr>
+<td><strong>Altyapı</strong></td>
+<td>Docker Compose</td>
+<td>TimescaleDB, Redis, Grafana yönetimi</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3>Mimari Akış</h3>
+<p><img alt="Ekont Smart Scada Reporter - Mimari Akış" src="mimari-akis.png" /></p>
+<hr />
+<h3>Entegrasyon Yetenekleri</h3>
+<table>
+<thead>
+<tr>
+<th>Sistem</th>
+<th>Entegrasyon Yöntemi</th>
+<th>Açıklama</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Üst Katman SCADA</strong></td>
+<td>OPC UA</td>
+<td>ISA-95 uyumlu veri aktarımı</td>
+</tr>
+<tr>
+<td><strong>ERP / MES</strong></td>
+<td>REST API</td>
+<td>JSON tabanlı veri paylaşımı</td>
+</tr>
+<tr>
+<td><strong>Grafana</strong></td>
+<td>PostgreSQL (read-only)</td>
+<td>Kurumsal dashboard oluşturma</td>
+</tr>
+<tr>
+<td><strong>Harici Raporlama</strong></td>
+<td>Excel / JSON çıktı</td>
+<td>Dosya tabanlı entegrasyon</td>
+</tr>
+<tr>
+<td><strong>IoT Platformları</strong></td>
+<td>OPC UA</td>
+<td>Bulut sistemlere veri köprüleme</td>
+</tr>
+<tr>
+<td><strong>WinCC SCADA</strong></td>
+<td>Tag içe aktarma (CSV/Excel)</td>
+<td>Mevcut WinCC etiket kataloğunuzu sıfırdan tanımlamadan taşıyın</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3>Performans ve Ölçeklenebilirlik</h3>
+<ul>
+<li><strong>Tek PLC'de 3000+ etiket</strong> desteği</li>
+<li><strong>5 sn okuma periyodu</strong> ile sürekli veri akışı</li>
+<li><strong>Ekont Smart Recording System</strong> sayesinde yalnızca anlamlı değişimler kaydedilir — sabit değerler veritabanını şişirmez, <strong>disk kullanımı ve sorgu yükü %95'e varan oranda azalır</strong></li>
+<li><strong>Çoklu PLC</strong> aynı anda izlenebilir</li>
+<li>TimescaleDB ile <strong>yıllarca sürecek veri birikiminde</strong> sabit sorgu performansı</li>
+<li>OPC UA ile <strong>sınırsız sayıda dış istemciye</strong> veri yayını</li>
+</ul>
+<hr />
+<p><em>Ekont Smart Scada Reporter — Yapay zeka ajan destekli yeni nesil raporlama sistemi.</em></p></body></html>

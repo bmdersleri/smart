@@ -37,7 +37,7 @@ def _to_out(row: AuditLog) -> AuditOut:
     if row.detail is not None:
         try:
             detail = json.loads(row.detail)
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             detail = None
     return AuditOut(
         id=row.id,

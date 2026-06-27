@@ -46,6 +46,11 @@
 
 ## 2. Backup Procedures
 
+> **Script platform note:** `scripts/backup.sh` is a Bash script. On Windows,
+> run it from WSL, Git Bash, or another Bash-compatible shell. Native Windows
+> Grafana service provisioning uses `scripts/configure-grafana-windows-service.ps1`
+> instead.
+
 ### 2.1 PostgreSQL / TimescaleDB — Logical Backup (`pg_dump`)
 
 A logical dump via `pg_dump` is the recommended path for most backup/restore scenarios. It produces a portable SQL file that works across minor TimescaleDB versions.

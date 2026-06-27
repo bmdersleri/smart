@@ -10,6 +10,7 @@ import {
   type Tag,
 } from '../api/client'
 import { useSettings } from '../context/SettingsContext'
+import SmartReportIcon from '../components/SmartReportIcon'
 
 // iframe'ler dogrudan Grafana'ya gider (embedding acik). Dashboard LISTESI ise
 // same-origin /grafana-api proxy'sinden gelir (CORS yok) — bkz. vite.config.ts.
@@ -136,9 +137,14 @@ export default function Grafana() {
   return (
     <div className="p-6 space-y-5">
       <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-        <div>
-          <h1 className="text-xl font-semibold text-white">{t('title')}</h1>
-          <p className="text-sm text-gray-500">{t('subtitle')}</p>
+        <div className="flex items-start gap-3">
+          <span className="w-9 h-9 flex items-center justify-center flex-shrink-0">
+            <SmartReportIcon className="w-8 h-8" />
+          </span>
+          <div>
+            <h1 className="text-xl font-semibold text-white">{t('title')}</h1>
+            <p className="text-sm text-gray-500">{t('subtitle')}</p>
+          </div>
         </div>
         {active && (
           <a

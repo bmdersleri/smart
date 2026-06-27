@@ -156,6 +156,14 @@ check: backend-check frontend-check cli-check mcp-check contract-check
 
 # ── Araçlar ──────────────────────────────────────────────────────────────────
 
+# Lisans üretici (vendor tarafı): keygen + issue.
+# Ör: just license "keygen --type rsa"
+#     just license "issue --private-key license_private.pem --algorithm RS256 \
+#                   --customer 'ACME' --features grafana,export --max-tags 500 --days 365 \
+#                   --out license.jwt --public-key license_public.pem"
+license *args:
+    cd {{be}} && .venv/Scripts/python ../../scripts/generate_license.py {{args}}
+
 # S7 PLC'ye bağlantı testi
 test-plc:
     cd {{be}} && .venv/Scripts/python -c "import snap7; c=snap7.Client(); c.connect('192.168.112.50',0,1); print('PLC BASARILI'); print('CPU:', c.get_cpu_state()); c.disconnect(); c.destroy()"
@@ -189,7 +197,7 @@ ah := "scada-reporter/agent-harness"
 
 # Agent CLI'yi yükle (editable mode)
 install-agent:
-    {{venv}}/Scripts/uv pip install -e {{ah}}
+    uv pip install --python {{venv}}/Scripts/python.exe -e scada-reporter/packages/scada-core -e {{ah}}
 
 # Agent CLI testleri
 test-agent:
@@ -206,6 +214,10 @@ agent-repl:
 # Agent CLI --help
 agent-help:
     {{venv}}/Scripts/scada --help
+
+# Yerel geliştirme ortamını denetle (non-destructive)
+doctor:
+    powershell -NoProfile -ExecutionPolicy Bypass -File scripts/doctor.ps1
 
 # Proje yapısını göster
 tree:

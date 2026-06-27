@@ -7,7 +7,8 @@
       "PowerShell(Get-ItemProperty *)",
       "PowerShell(Test-NetConnection *)",
       "PowerShell(Test-Path *)",
-      "Bash(codegraph *)"
+      "Bash(codegraph *)",
+      "Bash(git add scada-reporter/backend/.env.example)"
     ]
   },
   "hooks": {

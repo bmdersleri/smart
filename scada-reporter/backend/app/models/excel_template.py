@@ -32,7 +32,7 @@ class ExcelTemplate(Base):
     )
     created_by: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
 
-    columns: Mapped[list["ExcelTemplateColumn"]] = relationship(
+    columns: Mapped[list[ExcelTemplateColumn]] = relationship(
         back_populates="template",
         cascade="all, delete-orphan",
         order_by="ExcelTemplateColumn.id",
@@ -55,4 +55,4 @@ class ExcelTemplateColumn(Base):
     source_code: Mapped[str] = mapped_column(String(64), default="")
     enabled: Mapped[bool] = mapped_column(Boolean, default=True)
 
-    template: Mapped["ExcelTemplate"] = relationship(back_populates="columns")
+    template: Mapped[ExcelTemplate] = relationship(back_populates="columns")

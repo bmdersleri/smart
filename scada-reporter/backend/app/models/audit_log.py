@@ -46,5 +46,5 @@ class AuditLog(Base):
             return {}
         try:
             return json.loads(self.detail)
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             return {}

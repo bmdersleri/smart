@@ -6,6 +6,46 @@
 
 ---
 
+## 0. Current Status Update - 2026-06-22
+
+This document is now historical below this section. The repository has already
+implemented several items that were open when the original review was written:
+
+- Python baseline is aligned on Python 3.14 across backend, CLI/core metadata,
+  local tooling, and CI.
+- Backend runtime/dev dependencies are split and committed lock files exist:
+  `requirements.lock` and `requirements-dev.lock`.
+- Frontend package management is standardized on pnpm with a single
+  `pnpm-lock.yaml`.
+- CI now covers backend, frontend, agent CLI, OpenAPI contract freshness, and
+  MCP server tests.
+- The generated OpenAPI TypeScript client is committed under
+  `frontend/src/api/generated`.
+- Auth now includes JSON login, login rate limiting, token versioning, and a
+  short-lived scoped SSE stream token.
+- `/live` and `/ready` exist separately from `/health`.
+- Production config validation rejects unsafe default secret, demo DB/local DSN,
+  and unsafe CORS values; Grafana weak password is warned.
+- `AUTO_CREATE_TABLES` and `RUN_COLLECTOR` are explicit settings, and deployment
+  docs describe API/collector process separation.
+- RBAC role values are constrained by API types and a DB check constraint.
+- Grafana datasource/dashboard provisioning and backup/deployment docs exist.
+
+The current active production infrastructure priorities are tracked in:
+
+- `docs/superpowers/specs/2026-06-23-production-infrastructure-maturity-design.md`
+- `docs/superpowers/plans/2026-06-23-production-infrastructure-maturity.md`
+
+Current remaining focus:
+
+1. Keep `just check` green locally.
+2. Keep frontend i18n lint and generated client freshness passing.
+3. Keep `just install-agent` and `just doctor` reliable on Windows.
+4. Treat unexpected Alembic readiness probe failures as not ready.
+5. Keep this document as historical context unless it is fully rewritten.
+
+---
+
 ## 1. Executive Summary
 
 EKONT SMART REPORT has a strong foundation: a FastAPI backend, React/Vite frontend, agent-native CLI, shared `scada-core` package, TimescaleDB/Alembic infrastructure, Prometheus metrics, multilingual frontend, Docker services, and GitHub Actions CI.

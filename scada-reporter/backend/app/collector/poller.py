@@ -144,7 +144,7 @@ async def run_once(
     sessionmaker=AsyncSessionLocal,
     timeout: float | None = None,
     last_stored: dict[int, tuple[float | None, int, float]] | None = None,
-    buffer: "WriteBuffer | None" = None,
+    buffer: WriteBuffer | None = None,
 ) -> tuple[int, int]:
     """Bir tick: due tag'leri oku, cache + DB'ye yaz. (yazılan_satır, min_interval).
 

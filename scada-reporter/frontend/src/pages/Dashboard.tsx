@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import AllTagsTab from './dashboard/AllTagsTab'
 import OverviewTab from './dashboard/OverviewTab'
 import WatchlistTab from './dashboard/WatchlistTab'
+import SmartReportIcon from '../components/SmartReportIcon'
 
 type Tab = 'overview' | 'watchlist' | 'tags'
 
@@ -19,7 +20,12 @@ export default function Dashboard() {
   return (
     <div className="p-6 space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-white">{t('title')}</h1>
+        <h1 className="flex items-center gap-3 text-xl font-bold text-white">
+          <span className="w-9 h-9 flex items-center justify-center">
+            <SmartReportIcon className="w-8 h-8" />
+          </span>
+          {t('title')}
+        </h1>
       </div>
 
       {/* Tab bar */}
