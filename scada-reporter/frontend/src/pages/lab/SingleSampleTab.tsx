@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
+  createParameter,
   createSample,
+  createSamplePoint,
   listLabParameters,
   listLabSamplePoints,
   type LabParameterOut,
@@ -21,6 +23,12 @@ export function isOutOfRange(
   return false
 }
 
+// Pure, unit-tested: both code and name must be non-empty strings.
+// eslint-disable-next-line react-refresh/only-export-components
+export function canCreate(code: string, name: string): boolean {
+  return code.trim().length > 0 && name.trim().length > 0
+}
+
 export default function SingleSampleTab() {
   const { t } = useTranslation('lab')
   const [points, setPoints] = useState<LabSamplePointOut[]>([])
@@ -31,6 +39,19 @@ export default function SingleSampleTab() {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // New sample point inline form
+  const [showNewPoint, setShowNewPoint] = useState(false)
+  const [newPointCode, setNewPointCode] = useState('')
+  const [newPointName, setNewPointName] = useState('')
+  const [addingPoint, setAddingPoint] = useState(false)
+
+  // New parameter inline form
+  const [showNewParam, setShowNewParam] = useState(false)
+  const [newParamCode, setNewParamCode] = useState('')
+  const [newParamName, setNewParamName] = useState('')
+  const [newParamUnit, setNewParamUnit] = useState('')
+  const [addingParam, setAddingParam] = useState(false)
 
   useEffect(() => {
     Promise.all([listLabSamplePoints({ approved: true }), listLabParameters({ approved: true })])
@@ -60,22 +81,95 @@ export default function SingleSampleTab() {
     }
   }
 
+  const handleAddPoint = async () => {
+    if (!canCreate(newPointCode, newPointName)) return
+    setAddingPoint(true)
+    setError(null)
+    try {
+      const res = await createSamplePoint({ code: newPointCode.trim(), name: newPointName.trim() })
+      setPoints((prev) => [...prev, res.data])
+      setPointId(res.data.id)
+      setShowNewPoint(false)
+      setNewPointCode('')
+      setNewPointName('')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e))
+    } finally {
+      setAddingPoint(false)
+    }
+  }
+
+  const handleAddParam = async () => {
+    if (!canCreate(newParamCode, newParamName)) return
+    setAddingParam(true)
+    setError(null)
+    try {
+      const res = await createParameter({ code: newParamCode.trim(), name: newParamName.trim(), unit: newParamUnit.trim() || undefined })
+      setParams((prev) => [...prev, res.data])
+      setShowNewParam(false)
+      setNewParamCode('')
+      setNewParamName('')
+      setNewParamUnit('')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e))
+    } finally {
+      setAddingParam(false)
+    }
+  }
+
   return (
     <div className="space-y-4">
       <div className="grid gap-3 md:grid-cols-2">
-        <label className="space-y-1">
+        <div className="space-y-1">
           <span className="block text-xs uppercase text-gray-500">{t('sample_point')}</span>
-          <select
-            value={pointId}
-            onChange={(e) => setPointId(e.target.value === '' ? '' : Number(e.target.value))}
-            className="w-full rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-gray-100"
-          >
-            <option value="">—</option>
-            {points.map((p) => (
-              <option key={p.id} value={p.id}>{p.name}</option>
-            ))}
-          </select>
-        </label>
+          <div className="flex items-center gap-2">
+            <select
+              value={pointId}
+              onChange={(e) => setPointId(e.target.value === '' ? '' : Number(e.target.value))}
+              className="flex-1 rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-gray-100"
+            >
+              <option value="">—</option>
+              {points.map((p) => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+            </select>
+            <button
+              onClick={() => setShowNewPoint((v) => !v)}
+              className="shrink-0 rounded-lg border border-gray-700 bg-gray-800 px-2 py-2 text-xs text-gray-300 hover:bg-gray-700"
+            >
+              {t('add_point')}
+            </button>
+          </div>
+          {showNewPoint && (
+            <div className="mt-2 flex flex-wrap items-center gap-2 rounded-lg border border-gray-700 bg-gray-800 p-2">
+              <input
+                value={newPointCode}
+                onChange={(e) => setNewPointCode(e.target.value)}
+                placeholder={t('code')}
+                className="w-24 rounded-lg border border-gray-700 bg-gray-900 px-2 py-1 text-sm text-gray-100"
+              />
+              <input
+                value={newPointName}
+                onChange={(e) => setNewPointName(e.target.value)}
+                placeholder={t('name')}
+                className="w-36 rounded-lg border border-gray-700 bg-gray-900 px-2 py-1 text-sm text-gray-100"
+              />
+              <button
+                onClick={handleAddPoint}
+                disabled={addingPoint || !canCreate(newPointCode, newPointName)}
+                className="rounded-lg bg-blue-600 px-3 py-1 text-xs text-white disabled:bg-gray-700"
+              >
+                {t('add')}
+              </button>
+              <button
+                onClick={() => { setShowNewPoint(false); setNewPointCode(''); setNewPointName('') }}
+                className="rounded-lg border border-gray-700 bg-gray-800 px-3 py-1 text-xs text-gray-400 hover:bg-gray-700"
+              >
+                {t('cancel')}
+              </button>
+            </div>
+          )}
+        </div>
         <label className="space-y-1">
           <span className="block text-xs uppercase text-gray-500">{t('sampled_at')}</span>
           <input
@@ -106,6 +200,50 @@ export default function SingleSampleTab() {
             </div>
           )
         })}
+
+        <div>
+          <button
+            onClick={() => setShowNewParam((v) => !v)}
+            className="rounded-lg border border-gray-700 bg-gray-800 px-2 py-1 text-xs text-gray-300 hover:bg-gray-700"
+          >
+            {t('add_parameter')}
+          </button>
+          {showNewParam && (
+            <div className="mt-2 flex flex-wrap items-center gap-2 rounded-lg border border-gray-700 bg-gray-800 p-2">
+              <input
+                value={newParamCode}
+                onChange={(e) => setNewParamCode(e.target.value)}
+                placeholder={t('code')}
+                className="w-24 rounded-lg border border-gray-700 bg-gray-900 px-2 py-1 text-sm text-gray-100"
+              />
+              <input
+                value={newParamName}
+                onChange={(e) => setNewParamName(e.target.value)}
+                placeholder={t('name')}
+                className="w-36 rounded-lg border border-gray-700 bg-gray-900 px-2 py-1 text-sm text-gray-100"
+              />
+              <input
+                value={newParamUnit}
+                onChange={(e) => setNewParamUnit(e.target.value)}
+                placeholder={t('unit')}
+                className="w-20 rounded-lg border border-gray-700 bg-gray-900 px-2 py-1 text-sm text-gray-100"
+              />
+              <button
+                onClick={handleAddParam}
+                disabled={addingParam || !canCreate(newParamCode, newParamName)}
+                className="rounded-lg bg-blue-600 px-3 py-1 text-xs text-white disabled:bg-gray-700"
+              >
+                {t('add')}
+              </button>
+              <button
+                onClick={() => { setShowNewParam(false); setNewParamCode(''); setNewParamName(''); setNewParamUnit('') }}
+                className="rounded-lg border border-gray-700 bg-gray-800 px-3 py-1 text-xs text-gray-400 hover:bg-gray-700"
+              >
+                {t('cancel')}
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       <button
