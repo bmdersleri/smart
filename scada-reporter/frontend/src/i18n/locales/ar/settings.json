@@ -42,6 +42,8 @@
   "runtime_collector_stopped": "تم إيقاف Collector.",
   "runtime_scheduler_started": "تم بدء Scheduler.",
   "runtime_scheduler_stopped": "تم إيقاف Scheduler.",
+  "runtime_confirm_stop_collector": "إيقاف Collector؟ سيتم إيقاف جمع البيانات الحية مؤقتًا.",
+  "runtime_confirm_stop_scheduler": "إيقاف Scheduler؟ سيتم إيقاف التقارير المجدولة مؤقتًا.",
   "mode_licensed": "مُرخّص",
   "mode_demo": "تجريبي",
   "mode_unlicensed": "كامل",

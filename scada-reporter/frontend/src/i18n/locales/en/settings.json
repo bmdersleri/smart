@@ -42,6 +42,8 @@
   "runtime_collector_stopped": "Collector stopped.",
   "runtime_scheduler_started": "Scheduler started.",
   "runtime_scheduler_stopped": "Scheduler stopped.",
+  "runtime_confirm_stop_collector": "Stop collector? Live data collection will pause.",
+  "runtime_confirm_stop_scheduler": "Stop scheduler? Scheduled reports will pause.",
   "mode_licensed": "Licensed",
   "mode_demo": "Demo",
   "mode_unlicensed": "Full",

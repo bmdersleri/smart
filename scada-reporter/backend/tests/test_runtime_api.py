@@ -3,10 +3,12 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 import pytest_asyncio
+from sqlalchemy import select
 
 import app.api.runtime as runtime_api
 from app.api.auth import get_current_user
 from app.main import app
+from app.models.audit_log import AuditLog
 
 
 def _user(role: str):
@@ -75,11 +77,13 @@ async def test_runtime_status_returns_collector_and_scheduler_state(client, as_a
 
 
 @pytest.mark.asyncio
-async def test_runtime_collector_start_stop(client, as_admin, monkeypatch):
+async def test_runtime_collector_start_stop(client, db_session, as_admin, monkeypatch):
     start_collector = AsyncMock()
     stop_collector = AsyncMock()
     status = Mock(
         side_effect=[
+            _status(collector_running=False),
+            _status(collector_running=True),
             _status(collector_running=True),
             _status(collector_running=False),
         ]
@@ -97,14 +101,23 @@ async def test_runtime_collector_start_stop(client, as_admin, monkeypatch):
     assert stop_resp.json()["collector"]["running"] is False
     start_collector.assert_awaited_once()
     stop_collector.assert_awaited_once()
+    rows = (await db_session.execute(select(AuditLog).order_by(AuditLog.id))).scalars().all()
+    assert [row.action for row in rows] == ["runtime.collector.start", "runtime.collector.stop"]
+    assert [row.target_id for row in rows] == ["collector", "collector"]
+    assert rows[0].detail_dict["before_running"] is False
+    assert rows[0].detail_dict["after_running"] is True
+    assert rows[1].detail_dict["before_running"] is True
+    assert rows[1].detail_dict["after_running"] is False
 
 
 @pytest.mark.asyncio
-async def test_runtime_scheduler_start_stop(client, as_admin, monkeypatch):
+async def test_runtime_scheduler_start_stop(client, db_session, as_admin, monkeypatch):
     start_scheduler = AsyncMock()
     stop_scheduler = Mock()
     status = Mock(
         side_effect=[
+            _status(scheduler_running=False),
+            _status(scheduler_running=True),
             _status(scheduler_running=True),
             _status(scheduler_running=False),
         ]
@@ -122,3 +135,10 @@ async def test_runtime_scheduler_start_stop(client, as_admin, monkeypatch):
     assert stop_resp.json()["scheduler"]["running"] is False
     start_scheduler.assert_awaited_once()
     stop_scheduler.assert_called_once()
+    rows = (await db_session.execute(select(AuditLog).order_by(AuditLog.id))).scalars().all()
+    assert [row.action for row in rows] == ["runtime.scheduler.start", "runtime.scheduler.stop"]
+    assert [row.target_id for row in rows] == ["scheduler", "scheduler"]
+    assert rows[0].detail_dict["before_running"] is False
+    assert rows[0].detail_dict["after_running"] is True
+    assert rows[1].detail_dict["before_running"] is True
+    assert rows[1].detail_dict["after_running"] is False
