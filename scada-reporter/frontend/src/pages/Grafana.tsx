@@ -194,7 +194,8 @@ export default function Grafana() {
       setActiveUid((prev) => (prev === uid ? '' : prev))
       loadDashboards()
     } catch (e) {
-      setDeleteError(e instanceof Error ? e.message : String(e))
+      const detail = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail
+      setDeleteError(detail ?? t('delete_error'))
     }
   }
 
@@ -413,7 +414,7 @@ export default function Grafana() {
               </div>
             ))}
           </div>
-          {deleteError && <p className="text-sm text-red-400">{t('delete_error')}: {deleteError}</p>}
+          {deleteError && <p className="text-sm text-red-400">{deleteError}</p>}
 
           {active && (
             <iframe
