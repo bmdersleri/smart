@@ -20,4 +20,8 @@ describe('labTime', () => {
   it('nowInTz returns a YYYY-MM-DDTHH:mm string', () => {
     expect(nowInTz('UTC')).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/)
   })
+  it('handles a DST zone in summer (Berlin = +02)', () => {
+    expect(wallclockToUtcIso('2026-07-15T12:00', 'Europe/Berlin')).toBe('2026-07-15T10:00:00.000Z')
+    expect(utcToTzInput('2026-07-15T10:00:00.000Z', 'Europe/Berlin')).toBe('2026-07-15T12:00')
+  })
 })

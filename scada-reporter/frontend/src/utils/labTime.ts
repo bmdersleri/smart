@@ -43,8 +43,12 @@ function tzOffsetMs(tz: string, date: Date): number {
 // A datetime-local `value` (interpreted as a wall-clock in `tz`) -> UTC ISO.
 export function wallclockToUtcIso(value: string, tz: string): string {
   const naiveUtc = new Date(`${value}:00Z`).getTime()
-  const off = tzOffsetMs(tz, new Date(naiveUtc))
-  return new Date(naiveUtc - off).toISOString()
+  // Two-pass: re-query the offset at the first-pass UTC estimate so DST-observing
+  // zones resolve correctly near a transition (the offset at the naive instant can
+  // differ from the offset at the true instant).
+  const off1 = tzOffsetMs(tz, new Date(naiveUtc))
+  const off2 = tzOffsetMs(tz, new Date(naiveUtc - off1))
+  return new Date(naiveUtc - off2).toISOString()
 }
 
 // A stored UTC ISO -> datetime-local value in `tz` (edit-form prefill).
