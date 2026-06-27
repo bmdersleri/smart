@@ -307,6 +307,86 @@ def build_water_quality_dashboard(uid: str, title: str, tag_ids: list[int]) -> d
     )
 
 
+_LAB_CODE_RE = re.compile(r"^[A-Za-z0-9_-]+$")
+
+
+def _lab_sql_code(value: str) -> str:
+    """Return *value* as a safe single-quoted SQL literal.
+
+    Codes come from the lab catalog, where operators can add entries, so they
+    are validated against a strict allowlist (letters, digits, '_' and '-').
+    The allowlist forbids quotes, so no SQL injection is possible.
+    """
+    if not _LAB_CODE_RE.match(value or ""):
+        raise ValueError(f"Geçersiz kod (yalnız harf/rakam/_/- izinli): {value!r}")
+    return f"'{value}'"
+
+
+@dataclass
+class LabParamSpec:
+    id: int
+    code: str
+    name: str
+    unit: str
+    min_limit: float | None
+    max_limit: float | None
+
+
+def lab_dashboard_uid(point_id: int, parameter_ids: list[int]) -> str:
+    ids = ",".join(str(i) for i in sorted({int(i) for i in parameter_ids}))
+    digest = hashlib.sha1(ids.encode("utf-8")).hexdigest()[:8]  # noqa: S324 (not security)
+    return f"sr-lab-{int(point_id)}-{digest}"
+
+
+def _lab_timeseries_panel(panel_id: int, point_code: str, param: LabParamSpec, *, y: int) -> dict:
+    """A v_lab_timeseries time-series panel for one parameter, with min/max limit lines."""
+    raw_sql = (
+        f'SELECT time AS "time", param_code AS metric, value '
+        f"FROM v_lab_timeseries "
+        f"WHERE point_code = {_lab_sql_code(point_code)} "
+        f"AND param_code = {_lab_sql_code(param.code)} "
+        f"AND $__timeFilter(time) ORDER BY time"
+    )
+    title = f"{param.name}{f' ({param.unit})' if param.unit else ''}"
+    panel = _timeseries_panel(
+        panel_id, title, raw_sql, x=0, y=y, w=24, h=8, unit=param.unit or "short"
+    )
+    steps: list[dict] = [{"color": "green", "value": None}]
+    if param.min_limit is not None:
+        steps.append({"color": "orange", "value": param.min_limit})
+    if param.max_limit is not None:
+        steps.append({"color": "red", "value": param.max_limit})
+    # Grafana wants steps sorted ascending; the base None step stays first.
+    steps[1:] = sorted(steps[1:], key=lambda s: s["value"])
+    panel["fieldConfig"]["defaults"]["thresholds"] = {"mode": "absolute", "steps": steps}
+    panel["fieldConfig"]["defaults"]["custom"]["thresholdsStyle"] = {"mode": "line"}
+    return panel
+
+
+def build_lab_dashboard(
+    *, point_id: int, point_code: str, point_name: str, params: list[LabParamSpec]
+) -> dict:
+    if not params:
+        raise ValueError("Dashboard için en az bir parametre seçilmeli")
+    panels: list[dict] = []
+    y = 0
+    for idx, param in enumerate(params, start=1):
+        panels.append(_lab_timeseries_panel(idx, point_code, param, y=y))
+        y += 8
+    # latest-values table across the whole selection
+    codes_in = ", ".join(_lab_sql_code(p.code) for p in params)
+    table_sql = (
+        f"SELECT time, param_name, value, unit, min_limit, max_limit "
+        f"FROM v_lab_timeseries "
+        f"WHERE point_code = {_lab_sql_code(point_code)} "
+        f"AND param_code IN ({codes_in}) "
+        f"AND $__timeFilter(time) ORDER BY time DESC LIMIT 200"
+    )
+    panels.append(_table_panel(len(params) + 1, "Son değerler", table_sql, x=0, y=y, w=24, h=10))
+    uid = lab_dashboard_uid(point_id, [p.id for p in params])
+    return _base_dashboard(uid, f"Lab — {point_name}", ["lab"], panels)
+
+
 def build_dashboard(template: str, uid: str, title: str, tag_ids: list[int] | None = None) -> dict:
     selected = tag_ids or []
     if template == "facility_overview":
