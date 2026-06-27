@@ -47,5 +47,18 @@
   "mode_licensed": "Lizenziert",
   "mode_demo": "Demo",
   "mode_unlicensed": "Voll",
-  "demo_banner": "Demo-Modus — schreibgeschützt, Premium-Funktionen deaktiviert. Lizenz hochladen zum Freischalten."
+  "demo_banner": "Demo-Modus — schreibgeschützt, Premium-Funktionen deaktiviert. Lizenz hochladen zum Freischalten.",
+  "backup_title": "Datenbank-Sicherung",
+  "backup_hint": "Datenbanksicherungen erstellen, herunterladen und wiederherstellen",
+  "backup_create": "Sicherung erstellen",
+  "backup_none": "Noch keine Sicherungen vorhanden",
+  "backup_download": "Herunterladen",
+  "backup_restore": "Wiederherstellen",
+  "backup_delete": "Löschen",
+  "backup_confirm_delete": "Sind Sie sicher, dass Sie diese Sicherung löschen möchten?",
+  "backup_confirm_restore": "ACHTUNG: Die aktuelle Datenbank wird überschrieben. Zuerst wird eine Sicherheitskopie erstellt. Fortfahren?",
+  "backup_load_failed": "Sicherungen konnten nicht geladen werden",
+  "backup_create_failed": "Sicherung konnte nicht erstellt werden",
+  "backup_delete_failed": "Sicherung konnte nicht gelöscht werden",
+  "backup_restore_failed": "Wiederherstellung fehlgeschlagen"
 }

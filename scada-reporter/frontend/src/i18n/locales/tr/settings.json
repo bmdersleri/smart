@@ -47,5 +47,18 @@
   "mode_licensed": "Lisanslı",
   "mode_demo": "Demo",
   "mode_unlicensed": "Tam",
-  "demo_banner": "Demo modu — salt-okuma, premium özellikler kapalı. Açmak için lisans yükleyin."
+  "demo_banner": "Demo modu — salt-okuma, premium özellikler kapalı. Açmak için lisans yükleyin.",
+  "backup_title": "Yedekleme",
+  "backup_hint": "Veritabanı yedeklerini al, indir, geri yükle",
+  "backup_create": "Yedek Al",
+  "backup_none": "Henüz yedek yok",
+  "backup_download": "İndir",
+  "backup_restore": "Geri Yükle",
+  "backup_delete": "Sil",
+  "backup_confirm_delete": "Bu yedeği silmek istediğinize emin misiniz?",
+  "backup_confirm_restore": "DİKKAT: Mevcut veritabanının üzerine yazılacak. Önce güvenlik yedeği alınır. Devam edilsin mi?",
+  "backup_load_failed": "Yedekler yüklenemedi",
+  "backup_create_failed": "Yedek alınamadı",
+  "backup_delete_failed": "Yedek silinemedi",
+  "backup_restore_failed": "Geri yükleme başarısız"
 }

@@ -532,3 +532,5 @@ export const deleteBackup = (id: number) => api.delete<{ deleted: number }>(`/ba
 export const restoreBackup = (id: number) =>
   api.post<{ restored: number }>(`/backup/${id}/restore`, { confirm: 'RESTORE' })
 export const backupDownloadUrl = (id: number) => `${api.defaults.baseURL}/backup/${id}/download`
+export const downloadBackup = (id: number) =>
+  api.get<Blob>(`/backup/${id}/download`, { responseType: 'blob' })

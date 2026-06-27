@@ -47,5 +47,18 @@
   "mode_licensed": "Licensed",
   "mode_demo": "Demo",
   "mode_unlicensed": "Full",
-  "demo_banner": "Demo mode — read-only, premium features disabled. Upload a license to unlock."
+  "demo_banner": "Demo mode — read-only, premium features disabled. Upload a license to unlock.",
+  "backup_title": "Database Backup",
+  "backup_hint": "Create, download, and restore database backups",
+  "backup_create": "Create Backup",
+  "backup_none": "No backups yet",
+  "backup_download": "Download",
+  "backup_restore": "Restore",
+  "backup_delete": "Delete",
+  "backup_confirm_delete": "Are you sure you want to delete this backup?",
+  "backup_confirm_restore": "WARNING: This will overwrite the current database. A safety backup will be created first. Continue?",
+  "backup_load_failed": "Failed to load backups",
+  "backup_create_failed": "Failed to create backup",
+  "backup_delete_failed": "Failed to delete backup",
+  "backup_restore_failed": "Restore failed"
 }

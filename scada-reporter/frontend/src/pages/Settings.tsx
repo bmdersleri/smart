@@ -6,6 +6,7 @@ import LicenseCard from '../components/LicenseCard'
 import LabCatalogCard from './lab/LabCatalogCard'
 import SettingsTimezoneCard from './SettingsTimezoneCard'
 import SettingsRuntimeCard from './SettingsRuntimeCard'
+import SettingsBackupCard from './SettingsBackupCard'
 
 const MIN_H = 300
 const MAX_H = 2000
@@ -58,6 +59,7 @@ export default function Settings() {
           <LicenseCard />
 
           {user?.role === 'admin' && <SettingsRuntimeCard />}
+          {user?.role === 'admin' && <SettingsBackupCard />}
           {user?.role === 'admin' && <LabCatalogCard />}
         </div>
 
