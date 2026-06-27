@@ -135,6 +135,11 @@ scada dashboard current-values --json-output
 # System overview
 scada dashboard overview --json-output
 
+# Agent triage
+scada doctor --json-output
+just doctor-agent
+just agent-check
+
 # Database schema
 scada explore schema --json-output
 
@@ -166,6 +171,7 @@ Most read-oriented commands support `--json-output` for machine-readable output 
 | `query` | Run read-only SQL against the SCADA database |
 | `explore` | Database schema discovery and summary statistics |
 | `shell` | Interactive Python REPL with data pre-loaded |
+| `doctor` | Agent triage: API reachability, readiness, auth, catalog sanity |
 | `agent` | AI agent workflow helpers: monitor, analyze |
 | `watchlist` | Manage tag watchlists for monitoring |
 | `annotations` | Annotate time-series events on tags |

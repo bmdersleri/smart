@@ -13,4 +13,8 @@ PROMPTS: dict[str, str] = {
         "get_system_health çağır; PLC bağlantısı kopuk veya stale tag varsa işaretle "
         "ve list_plcs ile teşhis et."
     ),
+    "agent_session_triage": (
+        "Önce health ve ready çağır; token yoksa auth login ihtiyacını bildir. "
+        "Sonra get_system_health ile PLC/tag özetini çıkar ve kritik sorunları kısa listele."
+    ),
 }

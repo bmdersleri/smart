@@ -26,8 +26,15 @@ commands:
   - scada explore summary [--json-output]
   - scada explore tags [--json-output]
   # Query / Shell
-  - scada query run "SELECT ..." [--limit N] [--json-output]
+  - scada query run [--limit N] [--json-output]
   - scada shell
+  - scada doctor [--json-output]
+  # Agent
+  - scada agent monitor [--interval N] [--tags TEXT] [--threshold N] [--once] [--json-output]
+  - scada agent ask <question> [--json-output]
+  - scada agent anomalies <tag_name> [--window TEXT] [--threshold N] [--json-output]
+  - scada agent forecast <tag_name> [--horizon TEXT] [--json-output]
+  - scada agent status [--json-output]
   # Operational write helpers (JSON output by default)
   - scada watchlist add <tag_id>
   - scada watchlist remove <tag_id>
@@ -36,11 +43,23 @@ commands:
   - scada templates create --payload JSON
   - scada templates update <template_id> --payload JSON
   - scada templates run <template_id> [--start ISO] [--end ISO]
+  - scada templates delete <template_id>
   - scada scheduled create --payload JSON
+  - scada scheduled update <scheduled_id> --payload JSON
+  - scada scheduled toggle <scheduled_id>
+  - scada scheduled delete <scheduled_id>
   - scada groups create <name> [--parent-id N] [--sort-order N]
+  - scada groups update <group_id> [--name TEXT] [--parent-id N] [--sort-order N]
   - scada groups assign <group_id> --tag-ids 1,2,3
+  - scada groups unassign --tag-ids 1,2,3
+  - scada groups delete <group_id>
   - scada plc create <name> [--ip TEXT] [--rack N] [--slot N]
+  - scada plc update <name> --ip TEXT [--rack N] [--slot N]
+  - scada plc delete <name>
   - scada users create <username> --email EMAIL --password PASSWORD --confirm
+  - scada users update <user_id> [--email EMAIL] [--full-name TEXT] [--role ROLE] [--is-active / --no-is-active]
+  - scada users set-password <user_id> --password PASSWORD
+  - scada users delete <user_id>
   # Health
   - scada health [--json-output]
 environment:

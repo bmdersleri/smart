@@ -14,17 +14,23 @@ def load_config() -> dict:
     return {}
 
 
+def token_with_source() -> tuple[str | None, str]:
+    env_token = os.environ.get("SCADA_TOKEN")
+    if env_token:
+        return env_token, "env"
+    cfg = load_config()
+    token = cfg.get("token")
+    return token, "config" if token else "missing"
+
+
 def save_config(cfg: dict) -> None:
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
     CONFIG_FILE.write_text(json.dumps(cfg, indent=2))
 
 
 def get_token() -> str | None:
-    token = os.environ.get("SCADA_TOKEN")
-    if token:
-        return token
-    cfg = load_config()
-    return cfg.get("token")
+    token, _ = token_with_source()
+    return token
 
 
 def set_token(token: str) -> None:

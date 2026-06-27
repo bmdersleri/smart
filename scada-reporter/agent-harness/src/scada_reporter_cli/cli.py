@@ -15,6 +15,7 @@ from scada_reporter_cli.commands.dashboard import dashboard_cmd
 from scada_reporter_cli.commands.reports import reports_cmd
 from scada_reporter_cli.commands.query import query_cmd
 from scada_reporter_cli.commands.explore import explore_cmd
+from scada_reporter_cli.commands.doctor import doctor
 from scada_reporter_cli.commands.shell import shell
 from scada_reporter_cli.commands.agent import agent_cmd
 from scada_reporter_cli.commands.watchlist import watchlist_cmd
@@ -53,6 +54,7 @@ cli.add_command(dashboard_cmd)
 cli.add_command(reports_cmd)
 cli.add_command(query_cmd)
 cli.add_command(explore_cmd)
+cli.add_command(doctor)
 cli.add_command(shell)
 cli.add_command(agent_cmd)
 cli.add_command(watchlist_cmd)
@@ -132,6 +134,7 @@ Komutlar:
   query run <sql>               SQL sorgusu calistir
   explore schema                Veritabani semasi
   explore summary               Sistem ozet istatistikleri
+  doctor                        Agent triage: health, auth, readiness
   shell                         Python REPL (Pandas ile)
   health                        Sistem sagligi
 

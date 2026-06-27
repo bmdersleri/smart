@@ -17,3 +17,7 @@ def test_trend_range_path():
 
 def test_resolve_path():
     assert ep.AI_RESOLVE == "api/ai/resolve"
+
+
+def test_ready_path():
+    assert ep.READY == "ready"

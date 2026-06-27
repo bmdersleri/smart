@@ -211,6 +211,13 @@ test-agent:
 agent args="--help":
     {{venv}}/Scripts/scada {{args}}
 
+# Agent triage: API, readiness, auth, catalog
+doctor-agent:
+    {{venv}}/Scripts/scada doctor --json-output
+
+# Agent surface gate: CLI + MCP + doctor
+agent-check: doctor-agent cli-check mcp-check
+
 # Agent REPL
 agent-repl:
     {{venv}}/Scripts/scada

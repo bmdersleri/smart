@@ -31,6 +31,7 @@ AI_HEALTH = "api/ai/health"
 AI_QUERY = "api/ai/query"
 
 HEALTH = "health"
+READY = "ready"
 
 # --- Spec 2: write endpoints ---
 WATCHLIST_ITEM = "api/dashboard/watchlist/{tag_id}"

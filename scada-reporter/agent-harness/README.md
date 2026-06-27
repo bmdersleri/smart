@@ -5,6 +5,16 @@
 This directory contains the `scada` CLI harness — a Click-based, agent-native
 command-line interface to the EKONT SMART REPORT REST API.
 
+The `scada doctor` command is the fastest way to triage an agent session:
+it checks API reachability, token availability, readiness, and catalog health in
+one pass.
+
+For automation-only flows, `just doctor-agent` runs the same check with JSON
+output and no REPL side effects.
+
+For a broader agent gate, use `just agent-check` to run the CLI and MCP checks
+alongside `scada doctor --json-output`.
+
 ## Install (editable / dev)
 
 ```bash

@@ -55,3 +55,14 @@ async def test_login_sets_token():
     r = await c.list_tags()
     assert r.ok
     await c.aclose()
+
+
+async def test_ready_uses_root_ready_endpoint():
+    def handler(req):
+        assert req.url.path == "/ready"
+        return httpx.Response(200, json={"status": "ready"})
+
+    c = _client(handler)
+    r = await c.ready()
+    assert r.ok and r.data["status"] == "ready"
+    await c.aclose()

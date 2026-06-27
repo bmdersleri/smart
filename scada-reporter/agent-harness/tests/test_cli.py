@@ -20,6 +20,77 @@ def test_health_no_api():
     assert "API" in result.output or "saglik" in result.output.lower()
 
 
+def test_doctor_json_output_with_token():
+    """doctor JSON, health/readiness/auth özetini tek yerde toplamalı."""
+    import json
+
+    mock_client = MagicMock()
+    mock_client.health.return_value = {
+        "status": "ok",
+        "collector_running": True,
+        "scheduler_running": False,
+    }
+    mock_client.ready.return_value = {
+        "status": "ready",
+        "checks": {"db": True, "alembic_head": True, "scheduler": "disabled"},
+    }
+    mock_client.system_health.return_value = {
+        "health": {"status": "ok"},
+        "plc_count": 2,
+        "tag_count": 7,
+    }
+    mock_client.me.return_value = {"username": "admin", "role": "admin"}
+
+    with (
+        patch.dict(os.environ, {"SCADA_TOKEN": "token-from-env"}, clear=False),
+        patch(
+            "scada_reporter_cli.commands.doctor.SyncScadaClient",
+            return_value=mock_client,
+        ),
+    ):
+        result = runner.invoke(cli, ["doctor", "--json-output"])
+
+    assert result.exit_code == 0
+    data = json.loads(result.output)
+    assert data["status"] == "ok"
+    assert data["token"] == {"present": True, "source": "env"}
+    assert data["health"]["status"] == "ok"
+    assert data["ready"]["status"] == "ready"
+    assert data["system"]["plc_count"] == 2
+    assert data["auth"]["username"] == "admin"
+    mock_client.me.assert_called_once()
+
+
+def test_doctor_without_token_reports_warning():
+    """doctor token yokken de faydalı bir triage vermeli."""
+    import json
+
+    mock_client = MagicMock()
+    mock_client.health.return_value = {"status": "ok"}
+    mock_client.ready.return_value = {"status": "ready", "checks": {}}
+    mock_client.system_health.return_value = {"plc_count": 0, "tag_count": 0}
+
+    with (
+        patch.dict(os.environ, {}, clear=True),
+        patch(
+            "scada_reporter_cli.commands.doctor.SyncScadaClient",
+            return_value=mock_client,
+        ),
+        patch(
+            "scada_reporter_cli.commands.doctor.token_with_source",
+            return_value=(None, "missing"),
+        ),
+    ):
+        result = runner.invoke(cli, ["doctor", "--json-output"])
+
+    assert result.exit_code == 0
+    data = json.loads(result.output)
+    assert data["status"] == "warning"
+    assert data["token"] == {"present": False, "source": "missing"}
+    assert data["issues"][0]["kind"] == "auth"
+    mock_client.me.assert_not_called()
+
+
 def test_list_tags_no_auth():
     """Token olmadan tags list auth hatasi vermeli."""
     _clear_token()
@@ -71,7 +142,7 @@ def test_repl_invalid_command():
 
 
 @pytest.mark.parametrize(
-    "cmd", ["auth", "tags", "dashboard", "reports", "query", "explore"]
+    "cmd", ["auth", "tags", "dashboard", "reports", "query", "explore", "doctor"]
 )
 def test_group_help(cmd: str):
     """Her komut grubu --help calistirabilmeli."""

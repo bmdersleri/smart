@@ -105,6 +105,9 @@ class AsyncScadaClient:
     async def health(self) -> Result:
         return await self._request("GET", ep.HEALTH)
 
+    async def ready(self) -> Result:
+        return await self._request("GET", ep.READY)
+
     # -- Composed capabilities ----------------------------------------------
     async def resolve_ids(self, names: list[str]) -> Result:
         # /api/ai/resolve gövdesi düz JSON listesidir (descriptions: list[str])
