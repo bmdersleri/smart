@@ -1,0 +1,59 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "schemaVersion": 39,
+  "title": "Lab Quality",
+  "uid": "lab-quality",
+  "tags": ["lab"],
+  "templating": {
+    "list": [
+      {
+        "name": "point",
+        "label": "Sample Point",
+        "datasource": { "type": "postgres", "uid": "timescaledb" },
+        "query": "SELECT DISTINCT point_code FROM v_lab_timeseries ORDER BY 1",
+        "type": "query",
+        "includeAll": true,
+        "multi": true
+      },
+      {
+        "name": "param",
+        "label": "Parameter",
+        "datasource": { "type": "postgres", "uid": "timescaledb" },
+        "query": "SELECT DISTINCT param_code FROM v_lab_timeseries ORDER BY 1",
+        "type": "query",
+        "includeAll": true,
+        "multi": true
+      }
+    ]
+  },
+  "time": { "from": "now-30d", "to": "now" },
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Lab measurements over time",
+      "datasource": { "type": "postgres", "uid": "timescaledb" },
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "format": "time_series",
+          "rawSql": "SELECT time AS \"time\", param_code AS metric, value FROM v_lab_timeseries WHERE point_code IN (${point:sqlstring}) AND param_code IN (${param:sqlstring}) AND $__timeFilter(time) ORDER BY time",
+          "rawQuery": true
+        }
+      ]
+    },
+    {
+      "type": "table",
+      "title": "Latest values",
+      "datasource": { "type": "postgres", "uid": "timescaledb" },
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 10 },
+      "targets": [
+        {
+          "format": "table",
+          "rawSql": "SELECT time, point_code, param_name, value, unit, min_limit, max_limit FROM v_lab_timeseries WHERE point_code IN (${point:sqlstring}) AND param_code IN (${param:sqlstring}) AND $__timeFilter(time) ORDER BY time DESC LIMIT 200",
+          "rawQuery": true
+        }
+      ]
+    }
+  ]
+}
