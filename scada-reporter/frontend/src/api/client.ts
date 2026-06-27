@@ -273,6 +273,8 @@ export const generateLabDashboard = (data: { sample_point_id: number; parameter_
     '/grafana/dashboards/from-lab',
     data,
   )
+export const deleteGrafanaDashboard = (uid: string) =>
+  api.delete<{ uid: string; status: string }>(`/grafana/dashboards/${encodeURIComponent(uid)}`)
 // PLC Yönetimi
 export interface PlcEntry {
   name: string; ip: string; rack: number; slot: number

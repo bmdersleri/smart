@@ -34,5 +34,9 @@
   "lab_gen_params": "Parametreler",
   "lab_gen_button": "Dashboard Oluştur",
   "lab_gen_generating": "Oluşturuluyor…",
-  "lab_gen_open": "Grafana'da Aç"
+  "lab_gen_open": "Grafana'da Aç",
+  "delete": "Sil",
+  "confirm_delete": "\"{{title}}\" panosunu sil?",
+  "deleted": "Silindi",
+  "delete_error": "Silinemedi"
 }

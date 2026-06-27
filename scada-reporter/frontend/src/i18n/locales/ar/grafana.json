@@ -34,5 +34,9 @@
   "lab_gen_params": "المعاملات",
   "lab_gen_button": "إنشاء لوحة",
   "lab_gen_generating": "جارٍ الإنشاء…",
-  "lab_gen_open": "فتح في Grafana"
+  "lab_gen_open": "فتح في Grafana",
+  "delete": "حذف",
+  "confirm_delete": "حذف اللوحة \"{{title}}\"؟",
+  "deleted": "تم الحذف",
+  "delete_error": "تعذر الحذف"
 }

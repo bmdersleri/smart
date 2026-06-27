@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
+  deleteGrafanaDashboard,
   generateGrafanaDashboard,
   generateLabDashboard,
   getTags,
@@ -14,9 +15,11 @@ import {
   type LabSamplePointOut,
   type Tag,
 } from '../api/client'
+import { useAuth } from '../context/AuthContext'
 import { useSettings } from '../context/SettingsContext'
 import SmartReportIcon from '../components/SmartReportIcon'
 import { canGenerateLab } from './labDashboard.helper'
+import { canDeleteDashboard } from './grafanaDelete.helper'
 
 // iframe'ler dogrudan Grafana'ya gider (embedding acik). Dashboard LISTESI ise
 // same-origin /grafana-api proxy'sinden gelir (CORS yok) — bkz. vite.config.ts.
@@ -47,6 +50,7 @@ function buildGrafanaPath(path: string, theme: 'dark' | 'light') {
 export default function Grafana() {
   const { t } = useTranslation('grafana')
   const { theme: appTheme } = useSettings()
+  const { user } = useAuth()
   const theme = appTheme === 'light' ? 'light' : 'dark'
   const [dashboards, setDashboards] = useState<GrafanaDashboard[]>([])
   const [activeUid, setActiveUid] = useState('')
@@ -67,6 +71,7 @@ export default function Grafana() {
   const [labGenerating, setLabGenerating] = useState(false)
   const [labResult, setLabResult] = useState<{ uid: string; title: string; url: string; status: string } | null>(null)
   const [labError, setLabError] = useState<string | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   const loadDashboards = useCallback((signal?: AbortSignal) => {
     fetch('/grafana-api/api/search?type=dash-db')
@@ -178,6 +183,18 @@ export default function Grafana() {
       setLabError(e instanceof Error ? e.message : String(e))
     } finally {
       setLabGenerating(false)
+    }
+  }
+
+  const handleDelete = async (uid: string, dashTitle: string) => {
+    if (!window.confirm(t('confirm_delete', { title: dashTitle }))) return
+    setDeleteError(null)
+    try {
+      await deleteGrafanaDashboard(uid)
+      setActiveUid((prev) => (prev === uid ? '' : prev))
+      loadDashboards()
+    } catch (e) {
+      setDeleteError(e instanceof Error ? e.message : String(e))
     }
   }
 
@@ -373,19 +390,30 @@ export default function Grafana() {
         <>
           <div className="flex flex-wrap gap-2 border-b border-gray-800 pb-3">
             {dashboards.map((dash) => (
-              <button
-                key={dash.uid}
-                onClick={() => setActiveUid(dash.uid)}
-                className={`rounded-lg px-4 py-2 text-sm transition-colors ${
-                  activeUid === dash.uid
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-900 text-gray-400 hover:bg-gray-800 hover:text-white'
-                }`}
-              >
-                {dash.title}
-              </button>
+              <div key={dash.uid} className="flex items-center gap-1">
+                <button
+                  onClick={() => setActiveUid(dash.uid)}
+                  className={`rounded-lg px-4 py-2 text-sm transition-colors ${
+                    activeUid === dash.uid
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-900 text-gray-400 hover:bg-gray-800 hover:text-white'
+                  }`}
+                >
+                  {dash.title}
+                </button>
+                {canDeleteDashboard(user?.role) && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); void handleDelete(dash.uid, dash.title) }}
+                    title={t('delete')}
+                    className="rounded px-1.5 py-1 text-xs text-gray-500 hover:bg-gray-800 hover:text-red-400"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
             ))}
           </div>
+          {deleteError && <p className="text-sm text-red-400">{t('delete_error')}: {deleteError}</p>}
 
           {active && (
             <iframe

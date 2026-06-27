@@ -34,5 +34,9 @@
   "lab_gen_params": "Parameters",
   "lab_gen_button": "Generate Dashboard",
   "lab_gen_generating": "Generating…",
-  "lab_gen_open": "Open in Grafana"
+  "lab_gen_open": "Open in Grafana",
+  "delete": "Delete",
+  "confirm_delete": "Delete dashboard \"{{title}}\"?",
+  "deleted": "Deleted",
+  "delete_error": "Could not delete"
 }
