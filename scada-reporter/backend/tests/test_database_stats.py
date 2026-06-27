@@ -27,6 +27,7 @@ async def test_database_stats_empty(client):
     assert r.status_code == 200, r.text
     body = r.json()
     assert body["total_readings"] == 0
+    assert body["total_is_estimate"] is False  # SQLite (dev) = tam count
     assert body["earliest"] is None
     assert body["est_monthly_growth_bytes"] == 0
     assert body["size_bytes"] >= 0
@@ -50,6 +51,7 @@ async def test_database_stats_counts(client, db_session):
     r = await client.get("/api/dashboard/database")
     body = r.json()
     assert body["total_readings"] == 2
+    assert body["total_is_estimate"] is False
     assert body["last_day"] == 1  # only the recent row
     assert body["last_month"] == 2  # both within 30 days
     assert body["tag_count"] == 1

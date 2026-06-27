@@ -567,6 +567,42 @@ async def _table_count(db: AsyncSession, table: str) -> int:
         return 0  # table may not exist on an older schema
 
 
+async def _total_readings(db: AsyncSession, url: str) -> tuple[int, bool]:
+    """tag_readings satır sayısı. (count, is_exact) döner.
+
+    SQLite (dev) küçük → tam `count(*)`. Postgres/TimescaleDB'de tablo on
+    milyonlarca satır; tam count tam tarama yapar (saniyeler). Önce Timescale
+    hypertable `approximate_row_count`, sonra planner `reltuples` tahminini
+    dener — ikisi de anlık. Hiçbiri yoksa son çare tam count.
+    """
+    if url.startswith("sqlite"):
+        total = int((await db.execute(text("SELECT count(*) FROM tag_readings"))).scalar() or 0)
+        return total, True
+
+    # Timescale hypertable: chunk istatistiklerinden anlık tahmin.
+    try:
+        est = (await db.execute(text("SELECT approximate_row_count('tag_readings')"))).scalar()
+        if est is not None and int(est) > 0:
+            return int(est), False
+    except Exception:
+        pass  # Timescale eklentisi yok ya da tablo hypertable değil
+
+    # Postgres planner istatistiği (ANALYZE sonrası). -1 = hiç analiz edilmemiş.
+    try:
+        est = (
+            await db.execute(
+                text("SELECT reltuples::bigint FROM pg_class WHERE relname = 'tag_readings'")
+            )
+        ).scalar()
+        if est is not None and int(est) >= 0:
+            return int(est), False
+    except Exception:
+        pass
+
+    total = int((await db.execute(text("SELECT count(*) FROM tag_readings"))).scalar() or 0)
+    return total, True
+
+
 @router.get("/database")
 async def database_stats(
     db: AsyncSession = Depends(get_db),
@@ -580,7 +616,7 @@ async def database_stats(
             (await db.execute(text("SELECT pg_database_size(current_database())"))).scalar() or 0
         )
 
-    total = int((await db.execute(text("SELECT count(*) FROM tag_readings"))).scalar() or 0)
+    total, total_is_exact = await _total_readings(db, url)
     earliest = (await db.execute(text("SELECT min(timestamp) FROM tag_readings"))).scalar()
 
     now = datetime.utcnow()
@@ -601,6 +637,7 @@ async def database_stats(
     return {
         "size_bytes": size_bytes,
         "total_readings": total,
+        "total_is_estimate": not total_is_exact,
         "earliest": str(earliest) if earliest is not None else None,
         "last_day": last_day,
         "last_week": last_week,

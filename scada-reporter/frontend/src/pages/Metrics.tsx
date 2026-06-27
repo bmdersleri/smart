@@ -263,7 +263,7 @@ export default function Metrics() {
               <div className="p-4 space-y-4">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <StatCard label={t('db_size')} value={formatBytes(dbStats.size_bytes)} accent="text-blue-300" />
-                  <StatCard label={t('db_total')} value={dbStats.total_readings.toLocaleString(i18n.language)} accent="text-cyan-300" />
+                  <StatCard label={t('db_total')} value={`${dbStats.total_is_estimate ? '~' : ''}${dbStats.total_readings.toLocaleString(i18n.language)}`} accent="text-cyan-300" />
                   <StatCard label={t('db_earliest')} value={dbStats.earliest ? new Date(dbStats.earliest).toLocaleDateString(i18n.language) : '—'} />
                   <StatCard label={t('db_tags')} value={dbStats.tag_count.toLocaleString(i18n.language)} />
                 </div>

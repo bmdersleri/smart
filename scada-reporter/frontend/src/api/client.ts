@@ -91,6 +91,7 @@ export interface Tag {
   id: number; node_id: string; name: string; unit: string; device: string; channel: string
   is_active: boolean; group_id: number | null
   min_alarm: number | null; max_alarm: number | null; deadband: number | null
+  description: string
   plc_name: string; plc_ip: string | null; s7_address: string | null; data_type: string
   sample_interval: number; long_term: boolean; daily_tracking: boolean
   // tag ekleme yanıtında dolu gelir
@@ -243,6 +244,7 @@ export const getDeadbandSavings = (hours = 24) =>
 export interface DatabaseStats {
   size_bytes: number
   total_readings: number
+  total_is_estimate: boolean
   earliest: string | null
   last_day: number
   last_week: number
