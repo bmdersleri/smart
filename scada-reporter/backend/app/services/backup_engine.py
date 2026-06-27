@@ -6,6 +6,7 @@ import asyncio
 import hashlib
 import os
 import sqlite3
+from datetime import UTC
 
 
 def sqlite_db_path(url: str) -> str | None:
@@ -96,3 +97,46 @@ async def create_snapshot(*, dest_dir: str, db_url: str, timestamp: str) -> dict
         "size_bytes": os.path.getsize(dest),
         "sha256": await asyncio.to_thread(sha256_file, dest),
     }
+
+
+def restore_snapshot(*, backup_path: str, db_url: str) -> None:
+    """Restore a snapshot into the live DB.
+
+    SQLite: copies backup pages into the live DB file via the sqlite3 online
+    backup API (in-place overwrite, WAL-safe). Stop the collector/scheduler
+    first to avoid concurrent writes racing the restore.
+
+    Postgres: not automated here — restore a -Fc dump out-of-band with
+    `pg_restore --clean --if-exists -d <url> <file>`.
+    """
+    if not os.path.exists(backup_path):
+        raise FileNotFoundError(backup_path)
+
+    live = sqlite_db_path(db_url)
+    if live is None:
+        raise NotImplementedError(
+            "Automated restore supports SQLite only; use pg_restore for Postgres."
+        )
+    if not verify_snapshot(backup_path, "sqlite"):
+        raise ValueError("backup failed integrity check; refusing to restore")
+
+    src = sqlite3.connect(backup_path)
+    dest = sqlite3.connect(live)
+    try:
+        src.backup(dest)  # online backup API: page-by-page copy into live db
+        dest.commit()
+    finally:
+        dest.close()
+        src.close()
+
+
+def expired_backup_ids(rows: list, *, retention_days: int, now_ts: float) -> list[int]:
+    cutoff = now_ts - retention_days * 86400
+    out: list[int] = []
+    for r in rows:
+        created = r.created_at
+        if created.tzinfo is None:
+            created = created.replace(tzinfo=UTC)
+        if created.timestamp() < cutoff:
+            out.append(r.id)
+    return out

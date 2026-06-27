@@ -1,5 +1,7 @@
 import os
 import sqlite3
+from datetime import UTC, datetime, timedelta
+from types import SimpleNamespace
 
 import pytest
 from sqlalchemy import select
@@ -66,3 +68,39 @@ async def test_create_snapshot_sqlite(tmp_path):
     assert con.execute("SELECT count(*) FROM t").fetchone()[0] == 3
     con.close()
     assert be.verify_snapshot(res["path"], "sqlite") is True
+
+
+@pytest.mark.asyncio
+async def test_restore_sqlite_overwrites_live(tmp_path):
+    live = tmp_path / "live.db"
+    _make_sqlite(str(live))  # 3 rows
+    res = await be.create_snapshot(
+        dest_dir=str(tmp_path / "bk"),
+        db_url=f"sqlite+aiosqlite:///{live}",
+        timestamp="20260627-031500",
+    )
+    # mutate live DB after snapshot
+    con = sqlite3.connect(str(live))
+    con.execute("DELETE FROM t")
+    con.commit()
+    con.close()
+    assert sqlite3.connect(str(live)).execute("SELECT count(*) FROM t").fetchone()[0] == 0
+    # restore brings back the 3 rows
+    be.restore_snapshot(backup_path=res["path"], db_url=f"sqlite+aiosqlite:///{live}")
+    assert sqlite3.connect(str(live)).execute("SELECT count(*) FROM t").fetchone()[0] == 3
+
+
+def test_restore_missing_file_raises(tmp_path):
+    with pytest.raises(FileNotFoundError):
+        be.restore_snapshot(
+            backup_path=str(tmp_path / "nope.db"), db_url="sqlite+aiosqlite:///x.db"
+        )
+
+
+def test_expired_backup_ids():
+    now = datetime(2026, 6, 27, tzinfo=UTC)
+    rows = [
+        SimpleNamespace(id=1, created_at=now - timedelta(days=400)),
+        SimpleNamespace(id=2, created_at=now - timedelta(days=10)),
+    ]
+    assert be.expired_backup_ids(rows, retention_days=365, now_ts=now.timestamp()) == [1]
