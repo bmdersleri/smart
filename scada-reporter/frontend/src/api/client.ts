@@ -510,3 +510,25 @@ export const uploadLicense = (file: File) => {
   return api.post<LicenseStatus & { persisted: boolean }>('/license', fd)
 }
 export const revertLicense = () => api.delete<LicenseStatus>('/license')
+
+// ── DB Backup ─────────────────────────────────────────────────────────────────
+export interface BackupItem {
+  id: number
+  filename: string
+  dialect: string
+  kind: string
+  status: string
+  trigger: string
+  size_bytes: number | null
+  sha256: string | null
+  error: string | null
+  created_at: string
+  completed_at: string | null
+}
+
+export const listBackups = () => api.get<BackupItem[]>('/backup')
+export const createBackup = () => api.post<BackupItem>('/backup')
+export const deleteBackup = (id: number) => api.delete<{ deleted: number }>(`/backup/${id}`)
+export const restoreBackup = (id: number) =>
+  api.post<{ restored: number }>(`/backup/${id}/restore`, { confirm: 'RESTORE' })
+export const backupDownloadUrl = (id: number) => `${api.defaults.baseURL}/backup/${id}/download`
