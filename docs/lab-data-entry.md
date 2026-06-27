@@ -15,6 +15,25 @@ feature provides:
 
 ---
 
+## Timezone
+
+Lab sample times are entered and displayed in a **facility-global timezone**,
+configurable by an admin on the **Settings** page ("Saat Dilimi" card). The
+default is `Europe/Istanbul` (UTC+03). The entry form's default time, the saved
+value, and the Records list all use this zone, so operators see and record their
+local wall clock rather than UTC.
+
+- Storage stays UTC: `sampled_at` is persisted as a UTC instant; the configured
+  IANA zone only governs entry/display (`src/utils/labTime.ts` does the
+  conversion via `Intl`, with a two-pass offset so DST zones are correct).
+- Backend: `GET /api/settings` → `{ "timezone": ... }` (any authenticated user);
+  `PUT /api/settings/timezone` (admin) validates the zone against
+  `zoneinfo.available_timezones()`. The value lives in the `app_settings`
+  key/value table. While the setting is unreachable the frontend falls back to
+  `Europe/Istanbul`.
+
+---
+
 ## Entry Modes
 
 The Lab Data Entry page has four tabs.
