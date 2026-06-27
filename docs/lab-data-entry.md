@@ -131,12 +131,16 @@ JOIN lab_sample_points sp ON sp.id = ls.sample_point_id
 WHERE lm.value IS NOT NULL
 ```
 
-Grafana dashboards query this view through the TimescaleDB/PostgreSQL datasource.
+Two Grafana surfaces read this view, and they use **different datasources**:
 
-**SQLite-dev caveat:** The view is created on SQLite during tests (the same SQL
-is portable). However, the **Grafana lab-quality dashboard requires a
-PostgreSQL/TimescaleDB datasource** — it will not work against the SQLite dev
-database. Use `just docker-up` to start TimescaleDB for full Grafana testing.
+- **Generated lab dashboards** (the "Generate a Grafana Dashboard" feature
+  below) query the view through the **`frser-sqlite-datasource`** (uid from
+  `GRAFANA_DATASOURCE_UID`, default `scadadb`), which reads the backend's SQLite
+  file directly — so they render data in the SQLite dev deployment with no
+  PostgreSQL required.
+- The **static provisioned `lab-quality.json`** dashboard still targets a
+  **PostgreSQL/TimescaleDB datasource** (uid `timescaledb`) and will not display
+  data against SQLite — run `just docker-up` to start TimescaleDB for it.
 
 ---
 
@@ -231,14 +235,22 @@ Requires the `grafana` feature to be enabled (license gate). The endpoint is
 protected by `get_current_user` — any authenticated user may generate a
 dashboard.
 
-### Postgres/TimescaleDB requirement
+### Datasource (frser-sqlite)
 
-The time-series and table panels query `v_lab_timeseries` through a
-**PostgreSQL/TimescaleDB Grafana datasource**. In the SQLite development
-environment the view exists and the builder runs without errors (used in
-tests), but the Grafana panels will not display data because Grafana cannot
-query SQLite. Use `just docker-up` to start TimescaleDB and configure a
-matching datasource in Grafana for full end-to-end testing.
+The generated time-series and table panels query `v_lab_timeseries` through the
+**`frser-sqlite-datasource`** Grafana plugin, whose uid is read from
+`GRAFANA_DATASOURCE_UID` (default `scadadb`). That datasource points Grafana
+directly at the backend's SQLite file (`scada_reporter.db`), so generated lab
+dashboards render data in the SQLite development deployment with no PostgreSQL
+required. The panels use SQLite time syntax (`CAST(strftime('%s', time) AS
+INTEGER) AS time`).
+
+If the project later moves to PostgreSQL/TimescaleDB, the lab generator would
+need the postgres dialect re-introduced (datasource type + `rawSql`/`$__timeFilter`
+queries) — explicitly out of scope for the current single-datasource
+implementation. The other generators (facility / water-quality / report-template)
+still emit the PostgreSQL/`timescaledb` datasource and are unaffected by this
+change.
 
 ---
 
