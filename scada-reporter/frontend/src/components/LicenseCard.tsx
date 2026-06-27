@@ -51,29 +51,29 @@ export default function LicenseCard() {
       : t('license_perpetual')
 
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 space-y-4 mb-4">
+    <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-5 space-y-4">
       <h2 className="text-sm font-medium text-gray-400 uppercase tracking-wider">{t('license')}</h2>
 
       {data && (
-        <dl className="grid grid-cols-[7rem_1fr] gap-y-1.5 text-sm">
+        <dl className="grid gap-x-4 gap-y-2 text-sm sm:grid-cols-[7rem_minmax(0,1fr)]">
           <dt className="text-gray-500">{t('license_mode')}</dt>
-          <dd className="text-white">{modeLabel(data.mode, t)}</dd>
+          <dd className="min-w-0 break-words text-white">{modeLabel(data.mode, t)}</dd>
           {data.customer && (
             <>
               <dt className="text-gray-500">{t('license_customer')}</dt>
-              <dd className="text-white">{data.customer}</dd>
+              <dd className="min-w-0 break-words text-white">{data.customer}</dd>
             </>
           )}
           {data.mode === 'licensed' && (
             <>
               <dt className="text-gray-500">{t('license_features')}</dt>
-              <dd className="text-white">
+              <dd className="min-w-0 break-words text-white">
                 {data.features.length ? data.features.join(', ') : t('mode_unlicensed')}
               </dd>
               <dt className="text-gray-500">{t('license_max_tags')}</dt>
-              <dd className="text-white">{data.max_tags ?? t('license_unlimited')}</dd>
+              <dd className="min-w-0 break-words text-white">{data.max_tags ?? t('license_unlimited')}</dd>
               <dt className="text-gray-500">{t('license_expires')}</dt>
-              <dd className="text-white">{expiry}</dd>
+              <dd className="min-w-0 break-words text-white">{expiry}</dd>
             </>
           )}
         </dl>
@@ -88,7 +88,7 @@ export default function LicenseCard() {
       {isAdmin && (
         <div className="pt-1 space-y-2">
           <p className="text-xs text-gray-500">{t('license_upload_hint')}</p>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <input
               ref={fileRef}
               type="file"
@@ -99,7 +99,7 @@ export default function LicenseCard() {
             <button
               onClick={() => fileRef.current?.click()}
               disabled={upload.isPending}
-              className="px-3 py-1.5 text-sm bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-lg transition-colors"
+              className="rounded-lg bg-blue-600 px-3 py-2 text-sm text-white transition-colors hover:bg-blue-500 disabled:opacity-50 sm:py-1.5"
             >
               {upload.isPending ? '…' : t('license_apply')}
             </button>
@@ -107,7 +107,7 @@ export default function LicenseCard() {
               <button
                 onClick={() => remove.mutate()}
                 disabled={remove.isPending}
-                className="px-3 py-1.5 text-sm text-gray-400 hover:text-red-400 hover:bg-gray-800 rounded-lg transition-colors"
+                className="rounded-lg px-3 py-2 text-sm text-gray-400 transition-colors hover:bg-gray-800 hover:text-red-400 disabled:opacity-50 sm:py-1.5"
               >
                 {t('license_remove')}
               </button>

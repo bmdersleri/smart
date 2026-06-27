@@ -13,8 +13,8 @@ import {
 type RuntimeTarget = 'collector' | 'scheduler'
 
 const REFRESH_MS = 10_000
-const cardCls = 'bg-gray-900 border border-gray-800 rounded-xl p-5 space-y-4 mb-4'
-const btnBase = 'px-3 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-50'
+const cardCls = 'bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-5 space-y-4'
+const btnBase = 'min-h-9 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-50'
 
 function fmtUptime(seconds: number) {
   if (!Number.isFinite(seconds) || seconds < 0) return '-'
@@ -161,7 +161,7 @@ export default function SettingsRuntimeCard() {
 
       {status && (
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-3 text-sm">
+          <div className="grid gap-3 text-sm sm:grid-cols-2">
             <div>
               <p className="text-xs text-gray-500">{t('runtime_backend')}</p>
               <p className="text-white font-medium">{status.backend.status}</p>
@@ -170,14 +170,14 @@ export default function SettingsRuntimeCard() {
               <p className="text-xs text-gray-500">{t('runtime_uptime')}</p>
               <p className="text-white font-medium">{fmtUptime(status.backend.uptime_seconds)}</p>
             </div>
-            <div className="col-span-2">
+            <div className="sm:col-span-2">
               <p className="text-xs text-gray-500">{t('runtime_started_at')}</p>
               <p className="text-gray-300 text-xs">{startedAt}</p>
             </div>
           </div>
 
           <div className="space-y-3">
-            <div className="flex items-center justify-between gap-3">
+            <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <span className={`h-2.5 w-2.5 rounded-full ${statusDot(status.collector.running)}`} />
@@ -201,7 +201,7 @@ export default function SettingsRuntimeCard() {
               </button>
             </div>
 
-            <div className="flex items-center justify-between gap-3">
+            <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <span className={`h-2.5 w-2.5 rounded-full ${statusDot(status.scheduler.running)}`} />

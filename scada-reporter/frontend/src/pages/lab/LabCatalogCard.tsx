@@ -109,7 +109,7 @@ export default function LabCatalogCard() {
   const approvedPoints = points.filter((p) => p.approved)
 
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 space-y-6 mt-4">
+    <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-5 space-y-6">
       <h2 className="text-sm font-medium text-gray-400 uppercase tracking-wider">
         {t('catalog_title')}
       </h2>
@@ -124,9 +124,9 @@ export default function LabCatalogCard() {
           <div className="space-y-1">
             <p className="text-xs uppercase text-yellow-600">{t('pending_approval')}</p>
             {pendingParams.map((p) => (
-              <div key={p.id} className="flex items-center justify-between gap-2 text-sm text-gray-300">
-                <span>{p.name} ({p.code})</span>
-                <div className="flex gap-2">
+              <div key={p.id} className="grid gap-2 text-sm text-gray-300 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+                <span className="min-w-0 break-words">{p.name} ({p.code})</span>
+                <div className="flex flex-wrap gap-2">
                   <button
                     onClick={() => handleApproveParam(p.id)}
                     className="text-xs text-green-400 hover:underline"
@@ -147,8 +147,8 @@ export default function LabCatalogCard() {
 
         <div className="space-y-1">
           {approvedParams.map((p) => (
-            <div key={p.id} className="flex items-center justify-between gap-2 text-sm text-gray-400">
-              <span>{p.name}{p.unit ? ` (${p.unit})` : ''}</span>
+            <div key={p.id} className="grid gap-2 text-sm text-gray-400 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+              <span className="min-w-0 break-words">{p.name}{p.unit ? ` (${p.unit})` : ''}</span>
               <button
                 onClick={() => handleDeleteParam(p.id)}
                 className="text-xs text-red-400 hover:underline"
@@ -159,29 +159,29 @@ export default function LabCatalogCard() {
           ))}
         </div>
 
-        <div className="flex gap-2 flex-wrap">
+        <div className="grid gap-2 sm:grid-cols-[minmax(8rem,1fr)_7rem_6rem_auto]">
           <input
             value={newParamName}
             onChange={(e) => setNewParamName(e.target.value)}
             placeholder={t('name')}
-            className="rounded-lg border border-gray-700 bg-gray-800 px-2 py-1 text-sm text-gray-100 w-36"
+            className="w-full min-w-0 rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100"
           />
           <input
             value={newParamCode}
             onChange={(e) => setNewParamCode(e.target.value)}
             placeholder={t('code')}
-            className="rounded-lg border border-gray-700 bg-gray-800 px-2 py-1 text-sm text-gray-100 w-24"
+            className="w-full min-w-0 rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100"
           />
           <input
             value={newParamUnit}
             onChange={(e) => setNewParamUnit(e.target.value)}
             placeholder={t('unit')}
-            className="rounded-lg border border-gray-700 bg-gray-800 px-2 py-1 text-sm text-gray-100 w-20"
+            className="w-full min-w-0 rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100"
           />
           <button
             onClick={handleAddParam}
             disabled={!newParamName || !newParamCode}
-            className="rounded-lg bg-blue-600 px-3 py-1 text-sm text-white disabled:bg-gray-700"
+            className="rounded-lg bg-blue-600 px-3 py-2 text-sm text-white disabled:bg-gray-700"
           >
             {t('add')}
           </button>
@@ -196,9 +196,9 @@ export default function LabCatalogCard() {
           <div className="space-y-1">
             <p className="text-xs uppercase text-yellow-600">{t('pending_approval')}</p>
             {pendingPoints.map((p) => (
-              <div key={p.id} className="flex items-center justify-between gap-2 text-sm text-gray-300">
-                <span>{p.name} ({p.code})</span>
-                <div className="flex gap-2">
+              <div key={p.id} className="grid gap-2 text-sm text-gray-300 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+                <span className="min-w-0 break-words">{p.name} ({p.code})</span>
+                <div className="flex flex-wrap gap-2">
                   <button
                     onClick={() => handleApprovePoint(p.id)}
                     className="text-xs text-green-400 hover:underline"
@@ -219,8 +219,8 @@ export default function LabCatalogCard() {
 
         <div className="space-y-1">
           {approvedPoints.map((p) => (
-            <div key={p.id} className="flex items-center justify-between gap-2 text-sm text-gray-400">
-              <span>{p.name}</span>
+            <div key={p.id} className="grid gap-2 text-sm text-gray-400 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+              <span className="min-w-0 break-words">{p.name}</span>
               <button
                 onClick={() => handleDeletePoint(p.id)}
                 className="text-xs text-red-400 hover:underline"
@@ -231,29 +231,29 @@ export default function LabCatalogCard() {
           ))}
         </div>
 
-        <div className="flex gap-2 flex-wrap">
+        <div className="grid gap-2 sm:grid-cols-[minmax(8rem,1fr)_7rem_minmax(8rem,1fr)_auto]">
           <input
             value={newPointName}
             onChange={(e) => setNewPointName(e.target.value)}
             placeholder={t('name')}
-            className="rounded-lg border border-gray-700 bg-gray-800 px-2 py-1 text-sm text-gray-100 w-36"
+            className="w-full min-w-0 rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100"
           />
           <input
             value={newPointCode}
             onChange={(e) => setNewPointCode(e.target.value)}
             placeholder={t('code')}
-            className="rounded-lg border border-gray-700 bg-gray-800 px-2 py-1 text-sm text-gray-100 w-24"
+            className="w-full min-w-0 rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100"
           />
           <input
             value={newPointDesc}
             onChange={(e) => setNewPointDesc(e.target.value)}
             placeholder={t('description')}
-            className="rounded-lg border border-gray-700 bg-gray-800 px-2 py-1 text-sm text-gray-100 w-40"
+            className="w-full min-w-0 rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100"
           />
           <button
             onClick={handleAddPoint}
             disabled={!newPointName || !newPointCode}
-            className="rounded-lg bg-blue-600 px-3 py-1 text-sm text-white disabled:bg-gray-700"
+            className="rounded-lg bg-blue-600 px-3 py-2 text-sm text-white disabled:bg-gray-700"
           >
             {t('add')}
           </button>
