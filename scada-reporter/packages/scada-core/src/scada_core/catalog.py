@@ -473,6 +473,75 @@ CAPABILITIES: list[Capability] = [
         lambda c, a: c.compliance_evaluate(a["permit_id"], a["start"], a["end"]),
         tier="write",
     ),
+    Capability(
+        "compliance_ask",
+        "Uyumluluk asistanına doğal dilde soru sor (en/tr). Deterministik niyet "
+        "sınıflandırması; gerçek olay/paket/izin ID'lerini bağlar. SADECE okuma + "
+        "taslak: paket oluşturmaz/onaylamaz, durum değiştirmez (öneri döner).",
+        _obj(
+            {
+                "question": {"type": "string", "description": "Uyumluluk sorusu (en/tr)"},
+                "permit_id": {"type": "integer"},
+                "start": {"type": "string", "description": "ISO 8601 başlangıç"},
+                "end": {"type": "string", "description": "ISO 8601 bitiş"},
+            },
+            ["question"],
+        ),
+        lambda c, a: c.compliance_assistant(
+            a["question"], a.get("permit_id"), a.get("start"), a.get("end")
+        ),
+        tier="read",
+    ),
+    Capability(
+        "compliance_add_note",
+        "Bir uyumluluk olayına operatör açıklama notu ekle (ilk not ilgili "
+        "needs_explanation olayını çözer).",
+        _obj(
+            {"event_id": {"type": "integer"}, "note": {"type": "string"}},
+            ["event_id", "note"],
+        ),
+        lambda c, a: c.compliance_add_note(a["event_id"], a["note"]),
+        tier="write",
+    ),
+    Capability(
+        "compliance_set_status",
+        "Bir uyumluluk olayının durumunu değiştir "
+        "(open/acknowledged/resolved/waived). 'waived' için reason zorunludur.",
+        _obj(
+            {
+                "event_id": {"type": "integer"},
+                "status": {
+                    "type": "string",
+                    "enum": ["open", "acknowledged", "resolved", "waived"],
+                },
+                "reason": {"type": "string", "description": "waive_reason (waived için zorunlu)"},
+            },
+            ["event_id", "status"],
+        ),
+        lambda c, a: c.compliance_set_status(a["event_id"], a["status"], a.get("reason")),
+        tier="write",
+    ),
+    Capability(
+        "compliance_create_report_pack",
+        "Bir izin ve dönem için taslak rapor paketi oluştur.",
+        _obj(
+            {
+                "permit_id": {"type": "integer"},
+                "start": {"type": "string", "description": "ISO 8601 başlangıç"},
+                "end": {"type": "string", "description": "ISO 8601 bitiş"},
+            },
+            ["permit_id", "start", "end"],
+        ),
+        lambda c, a: c.compliance_create_report_pack(a["permit_id"], a["start"], a["end"]),
+        tier="write",
+    ),
+    Capability(
+        "compliance_approve_report_pack",
+        "Bir rapor paketini onayla (admin; açık zorunlu açıklama yoksa).",
+        _obj({"pack_id": {"type": "integer"}}, ["pack_id"]),
+        lambda c, a: c.compliance_approve_report_pack(a["pack_id"]),
+        tier="write",
+    ),
 ]
 
 CATALOG: dict[str, Capability] = {c.name: c for c in CAPABILITIES}

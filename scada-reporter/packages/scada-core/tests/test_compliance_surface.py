@@ -20,6 +20,120 @@ def test_compliance_capabilities_exist_with_correct_tiers():
     assert CATALOG["compliance_evaluate"].tier == "write"
 
 
+def test_compliance_assistant_and_write_endpoint_constants():
+    assert ep.COMPLIANCE_ASSISTANT == "/api/compliance/assistant"
+    assert ep.COMPLIANCE_EVENT_NOTES == "/api/compliance/events/{event_id}/notes"
+    assert ep.COMPLIANCE_EVENT_STATUS == "/api/compliance/events/{event_id}/status"
+    assert ep.COMPLIANCE_REPORT_PACKS == "/api/compliance/report-packs"
+    assert ep.COMPLIANCE_REPORT_PACK_APPROVE == "/api/compliance/report-packs/{pack_id}/approve"
+
+
+def test_compliance_assistant_is_read_tier():
+    assert CATALOG["compliance_ask"].tier == "read"
+
+
+def test_compliance_write_capabilities_are_write_tier():
+    for name in (
+        "compliance_add_note",
+        "compliance_set_status",
+        "compliance_create_report_pack",
+        "compliance_approve_report_pack",
+    ):
+        assert CATALOG[name].tier == "write", name
+
+
+async def test_compliance_assistant_posts_body():
+    seen = {}
+
+    def handler(req):
+        seen["method"] = req.method
+        seen["path"] = req.url.path
+        seen["body"] = req.read().decode()
+        return httpx.Response(200, json={"intent": "breaches", "links": []})
+
+    c = _client(handler)
+    r = await c.compliance_assistant(
+        "Which limits were exceeded?", permit_id=3, start="2026-05-01T00:00:00"
+    )
+    assert r.ok
+    assert seen["method"] == "POST"
+    assert seen["path"] == "/api/compliance/assistant"
+    assert '"question"' in seen["body"]
+    assert '"permit_id"' in seen["body"]
+    await c.aclose()
+
+
+async def test_compliance_add_note_posts_to_event_path():
+    seen = {}
+
+    def handler(req):
+        seen["method"] = req.method
+        seen["path"] = req.url.path
+        seen["body"] = req.read().decode()
+        return httpx.Response(201, json={"id": 1, "event_id": 5, "note": "x"})
+
+    c = _client(handler)
+    r = await c.compliance_add_note(5, "Operator explanation.")
+    assert r.ok
+    assert seen["method"] == "POST"
+    assert seen["path"] == "/api/compliance/events/5/notes"
+    assert '"note"' in seen["body"]
+    await c.aclose()
+
+
+async def test_compliance_set_status_patches_with_reason():
+    seen = {}
+
+    def handler(req):
+        seen["method"] = req.method
+        seen["path"] = req.url.path
+        seen["body"] = req.read().decode()
+        return httpx.Response(200, json={"id": 5, "status": "waived"})
+
+    c = _client(handler)
+    r = await c.compliance_set_status(5, "waived", reason="Documented exception.")
+    assert r.ok
+    assert seen["method"] == "PATCH"
+    assert seen["path"] == "/api/compliance/events/5/status"
+    assert '"status"' in seen["body"]
+    assert '"waive_reason"' in seen["body"]
+    await c.aclose()
+
+
+async def test_compliance_create_report_pack_posts_body():
+    seen = {}
+
+    def handler(req):
+        seen["method"] = req.method
+        seen["path"] = req.url.path
+        seen["body"] = req.read().decode()
+        return httpx.Response(201, json={"id": 9, "status": "draft"})
+
+    c = _client(handler)
+    r = await c.compliance_create_report_pack(7, "2026-05-01T00:00:00", "2026-06-01T00:00:00")
+    assert r.ok
+    assert seen["method"] == "POST"
+    assert seen["path"] == "/api/compliance/report-packs"
+    assert '"permit_id"' in seen["body"]
+    await c.aclose()
+
+
+async def test_compliance_approve_report_pack_posts_to_approve_path():
+    seen = {}
+
+    def handler(req):
+        seen["method"] = req.method
+        seen["path"] = req.url.path
+        return httpx.Response(200, json={"id": 9, "status": "approved"})
+
+    c = _client(handler)
+    r = await c.compliance_approve_report_pack(9)
+    assert r.ok
+    assert seen["method"] == "POST"
+    assert seen["path"] == "/api/compliance/report-packs/9/approve"
+    await c.aclose()
+
+
 async def test_compliance_overview_path():
     def handler(req):
         return httpx.Response(200, json={"path": req.url.path, "method": req.method})

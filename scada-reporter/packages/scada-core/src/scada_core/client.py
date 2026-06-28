@@ -508,6 +508,54 @@ class AsyncScadaClient:
             json={"permit_id": permit_id, "start": start, "end": end},
         )
 
+    # -- Compliance assistant (read) + write surface ------------------------
+    async def compliance_assistant(
+        self,
+        question: str,
+        permit_id: int | None = None,
+        start: str | None = None,
+        end: str | None = None,
+    ) -> Result:
+        body: dict[str, Any] = {"question": question}
+        if permit_id is not None:
+            body["permit_id"] = permit_id
+        if start is not None:
+            body["start"] = start
+        if end is not None:
+            body["end"] = end
+        return await self._request("POST", ep.COMPLIANCE_ASSISTANT, json=body)
+
+    async def compliance_add_note(self, event_id: int, note: str) -> Result:
+        return await self._request(
+            "POST",
+            ep.COMPLIANCE_EVENT_NOTES.format(event_id=event_id),
+            json={"note": note},
+        )
+
+    async def compliance_set_status(
+        self, event_id: int, status: str, reason: str | None = None
+    ) -> Result:
+        body: dict[str, Any] = {"status": status}
+        if reason is not None:
+            body["waive_reason"] = reason
+        return await self._request(
+            "PATCH",
+            ep.COMPLIANCE_EVENT_STATUS.format(event_id=event_id),
+            json=body,
+        )
+
+    async def compliance_create_report_pack(self, permit_id: int, start: str, end: str) -> Result:
+        return await self._request(
+            "POST",
+            ep.COMPLIANCE_REPORT_PACKS,
+            json={"permit_id": permit_id, "start": start, "end": end},
+        )
+
+    async def compliance_approve_report_pack(self, pack_id: int) -> Result:
+        return await self._request(
+            "POST", ep.COMPLIANCE_REPORT_PACK_APPROVE.format(pack_id=pack_id)
+        )
+
     async def aclose(self) -> None:
         await self._client.aclose()
 

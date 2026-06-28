@@ -124,6 +124,18 @@ async def compliance_list_events(
     )
 
 
+async def compliance_ask(
+    question: str,
+    permit_id: int | None = None,
+    start: str | None = None,
+    end: str | None = None,
+) -> str:
+    return await call_capability(
+        "compliance_ask",
+        {"question": question, "permit_id": permit_id, "start": start, "end": end},
+    )
+
+
 # ---------------------------------------------------------------------------
 # Write / destructive tool functions
 # ---------------------------------------------------------------------------
@@ -373,6 +385,32 @@ async def compliance_evaluate(permit_id: int, start: str, end: str) -> str:
     )
 
 
+async def compliance_add_note(event_id: int, note: str) -> str:
+    return await call_capability(
+        "compliance_add_note", {"event_id": event_id, "note": note}
+    )
+
+
+async def compliance_set_status(
+    event_id: int, status: str, reason: str | None = None
+) -> str:
+    return await call_capability(
+        "compliance_set_status",
+        {"event_id": event_id, "status": status, "reason": reason},
+    )
+
+
+async def compliance_create_report_pack(permit_id: int, start: str, end: str) -> str:
+    return await call_capability(
+        "compliance_create_report_pack",
+        {"permit_id": permit_id, "start": start, "end": end},
+    )
+
+
+async def compliance_approve_report_pack(pack_id: int) -> str:
+    return await call_capability("compliance_approve_report_pack", {"pack_id": pack_id})
+
+
 # Register each tool with its capability name and description from the catalog.
 _TOOL_REGISTRY = [
     (query_current_values, "query_current_values"),
@@ -387,7 +425,12 @@ _TOOL_REGISTRY = [
     (resolve_tag, "resolve_tag"),
     (compliance_overview, "compliance_overview"),
     (compliance_list_events, "compliance_list_events"),
+    (compliance_ask, "compliance_ask"),
     (compliance_evaluate, "compliance_evaluate"),
+    (compliance_add_note, "compliance_add_note"),
+    (compliance_set_status, "compliance_set_status"),
+    (compliance_create_report_pack, "compliance_create_report_pack"),
+    (compliance_approve_report_pack, "compliance_approve_report_pack"),
     (update_tag, "update_tag"),
     (delete_tag, "delete_tag"),
     (watchlist_add, "watchlist_add"),

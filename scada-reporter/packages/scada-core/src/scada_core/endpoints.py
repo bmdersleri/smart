@@ -62,3 +62,10 @@ USER_PASSWORD = "api/users/{user_id}/password"
 COMPLIANCE_OVERVIEW = "/api/compliance/overview"
 COMPLIANCE_EVENTS = "/api/compliance/events"
 COMPLIANCE_EVALUATE = "/api/compliance/evaluate"
+
+# --- Compliance assistant + write surface ---
+COMPLIANCE_ASSISTANT = "/api/compliance/assistant"
+COMPLIANCE_EVENT_NOTES = "/api/compliance/events/{event_id}/notes"
+COMPLIANCE_EVENT_STATUS = "/api/compliance/events/{event_id}/status"
+COMPLIANCE_REPORT_PACKS = "/api/compliance/report-packs"
+COMPLIANCE_REPORT_PACK_APPROVE = "/api/compliance/report-packs/{pack_id}/approve"

@@ -43,6 +43,11 @@ EXPECTED = {
     "compliance_overview",
     "compliance_list_events",
     "compliance_evaluate",
+    "compliance_ask",
+    "compliance_add_note",
+    "compliance_set_status",
+    "compliance_create_report_pack",
+    "compliance_approve_report_pack",
 }
 
 
