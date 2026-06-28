@@ -853,6 +853,51 @@ export const listReportPacks = (permitId?: number, limit = 50, offset = 0) =>
   })
 export const createReportPack = (data: ComplianceReportPackPayload) =>
   api.post<ComplianceReportPack>('/compliance/report-packs', data)
+
+// ── Compliance AI Assistant ─────────────────────────────────────────────────
+// Mirrors backend app/services/compliance_assistant.py + POST /compliance/assistant.
+// The assistant is READ + DRAFT only: it surfaces deterministic data and links
+// real event/pack/permit IDs. create_pack/draft are PROPOSALS — the tab writes
+// only when the user explicitly clicks Save-as-note / Create-pack.
+export type ComplianceAssistantIntent =
+  | 'readiness'
+  | 'breaches'
+  | 'missing_explanations'
+  | 'draft_explanation'
+  | 'create_pack'
+  | 'fallback'
+
+export type ComplianceAssistantLinkType = 'event' | 'pack' | 'permit'
+
+export interface ComplianceAssistantLink {
+  type: ComplianceAssistantLinkType
+  id: number
+}
+
+export interface ComplianceAssistantProposedAction {
+  action: 'create_report_pack'
+  permit_id: number
+  period_start: string | null
+  period_end: string | null
+}
+
+export interface ComplianceAssistantResponse {
+  intent: ComplianceAssistantIntent
+  answer: string
+  links: ComplianceAssistantLink[]
+  data: { draft?: string | null; [k: string]: unknown }
+  proposed_action: ComplianceAssistantProposedAction | null
+}
+
+export interface ComplianceAssistantQuery {
+  question: string
+  permit_id?: number
+  start?: string
+  end?: string
+}
+
+export const askComplianceAssistant = (q: ComplianceAssistantQuery) =>
+  api.post<ComplianceAssistantResponse>('/compliance/assistant', q)
 export const getReportPack = (id: number) =>
   api.get<ComplianceReportPackDetail>(`/compliance/report-packs/${id}`)
 export const generateReportPack = (id: number) =>

@@ -22,7 +22,7 @@ const EMPTY_PERMIT: CompliancePermitPayload = {
   is_active: true,
 }
 
-export default function PermitsTab() {
+export default function PermitsTab({ focusPermitId }: { focusPermitId?: number | null } = {}) {
   const { t } = useTranslation(['compliance', 'common'])
   const { user } = useAuth()
   const qc = useQueryClient()
@@ -32,6 +32,15 @@ export default function PermitsTab() {
   const [showNew, setShowNew] = useState(false)
   const [form, setForm] = useState<CompliancePermitPayload>(EMPTY_PERMIT)
   const [err, setErr] = useState('')
+
+  // When the assistant links a permit, select it so its detail loads. Adjust
+  // state during render (React's recommended pattern over an effect) so a fresh
+  // focus id wins until the user clicks a different permit.
+  const [consumedFocus, setConsumedFocus] = useState<number | null>(null)
+  if (focusPermitId != null && focusPermitId !== consumedFocus) {
+    setConsumedFocus(focusPermitId)
+    setSelectedId(focusPermitId)
+  }
 
   const { data: permits = [], isLoading, isError } = useQuery({
     queryKey: ['compliance-permits'],

@@ -7,6 +7,7 @@
   "tab_permits": "التصاريح",
   "tab_events": "الأحداث",
   "tab_report_packs": "حزم التقارير",
+  "tab_assistant": "المساعد",
 
   "active_permits": "التصاريح النشطة",
   "open_events": "الأحداث المفتوحة",
@@ -160,5 +161,28 @@
   "pack_status_ready_for_review": "جاهز للمراجعة",
   "pack_status_failed": "فشل",
   "pack_status_approved": "معتمد",
-  "pack_status_exported": "مُصدَّر"
+  "pack_status_exported": "مُصدَّر",
+
+  "ai_question": "سؤال",
+  "ai_question_placeholder": "اطرح سؤالاً حول الامتثال…",
+  "ai_ask": "اسأل",
+  "ai_examples": "أمثلة",
+  "ai_empty": "اطرح سؤالاً للحصول على إجابة محددة مع معرّفات الأحداث والحزم والتصاريح المرتبطة.",
+  "ai_answer": "الإجابة",
+  "ai_links": "السجلات المرتبطة",
+  "ai_link_event": "الحدث",
+  "ai_link_pack": "حزمة التقرير",
+  "ai_link_permit": "التصريح",
+  "ai_draft": "مسودة التفسير",
+  "ai_save_note": "حفظ كملاحظة",
+  "ai_note_saved": "تم حفظ الملاحظة",
+  "ai_proposed_action": "الإجراء المقترح",
+  "ai_create_pack": "إنشاء حزمة",
+  "ai_pack_created": "تم إنشاء الحزمة",
+  "ai_error": "لم يتمكن المساعد من الإجابة على السؤال.",
+  "ai_prompt_readiness": "هل هذا الشهر جاهز للإبلاغ؟",
+  "ai_prompt_breaches": "ما حدود التصريح التي تم تجاوزها؟",
+  "ai_prompt_missing": "ما التفسيرات التي لا تزال مفقودة؟",
+  "ai_prompt_draft": "صِغ تفسير المشغّل لهذا الحدث.",
+  "ai_prompt_create_pack": "أنشئ حزمة تقرير مايو."
 }

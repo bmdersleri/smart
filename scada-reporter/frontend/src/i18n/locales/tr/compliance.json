@@ -7,6 +7,7 @@
   "tab_permits": "İzinler",
   "tab_events": "Olaylar",
   "tab_report_packs": "Rapor Paketleri",
+  "tab_assistant": "Asistan",
 
   "active_permits": "Aktif İzinler",
   "open_events": "Açık Olaylar",
@@ -160,5 +161,28 @@
   "pack_status_ready_for_review": "İncelemeye hazır",
   "pack_status_failed": "Başarısız",
   "pack_status_approved": "Onaylandı",
-  "pack_status_exported": "Dışa aktarıldı"
+  "pack_status_exported": "Dışa aktarıldı",
+
+  "ai_question": "Soru",
+  "ai_question_placeholder": "Bir uyumluluk sorusu sorun…",
+  "ai_ask": "Sor",
+  "ai_examples": "Örnekler",
+  "ai_empty": "Olay, paket ve izin numaralarına bağlı kesin bir yanıt almak için bir soru sorun.",
+  "ai_answer": "Yanıt",
+  "ai_links": "Bağlı kayıtlar",
+  "ai_link_event": "Olay",
+  "ai_link_pack": "Rapor paketi",
+  "ai_link_permit": "İzin",
+  "ai_draft": "Açıklama taslağı",
+  "ai_save_note": "Not olarak kaydet",
+  "ai_note_saved": "Not kaydedildi",
+  "ai_proposed_action": "Önerilen işlem",
+  "ai_create_pack": "Paket oluştur",
+  "ai_pack_created": "Paket oluşturuldu",
+  "ai_error": "Asistan soruyu yanıtlayamadı.",
+  "ai_prompt_readiness": "Bu ay raporlamaya hazır mı?",
+  "ai_prompt_breaches": "Hangi izin limitleri aşıldı?",
+  "ai_prompt_missing": "Hangi açıklamalar hâlâ eksik?",
+  "ai_prompt_draft": "Bu olay için bir operatör açıklaması taslağı hazırla.",
+  "ai_prompt_create_pack": "Mayıs rapor paketini oluştur."
 }

@@ -29,7 +29,7 @@ function StatusBadge({ status }: { status: string }) {
   )
 }
 
-export default function ReportPacksTab() {
+export default function ReportPacksTab({ focusPackId }: { focusPackId?: number | null } = {}) {
   const { t, i18n } = useTranslation(['compliance', 'common'])
   const { user } = useAuth()
   const qc = useQueryClient()
@@ -42,6 +42,15 @@ export default function ReportPacksTab() {
   const [end, setEnd] = useState(nowISO())
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [err, setErr] = useState('')
+
+  // When the assistant links a pack, select it so its detail loads. Adjust
+  // state during render (React's recommended pattern over an effect) so a fresh
+  // focus id wins until the user clicks a different pack.
+  const [consumedFocus, setConsumedFocus] = useState<number | null>(null)
+  if (focusPackId != null && focusPackId !== consumedFocus) {
+    setConsumedFocus(focusPackId)
+    setSelectedId(focusPackId)
+  }
 
   const { data: permits = [] } = useQuery({
     queryKey: ['compliance-permits'],

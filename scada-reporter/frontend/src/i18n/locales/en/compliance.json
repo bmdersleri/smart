@@ -7,6 +7,7 @@
   "tab_permits": "Permits",
   "tab_events": "Events",
   "tab_report_packs": "Report Packs",
+  "tab_assistant": "Assistant",
 
   "active_permits": "Active Permits",
   "open_events": "Open Events",
@@ -160,5 +161,28 @@
   "pack_status_ready_for_review": "Ready for review",
   "pack_status_failed": "Failed",
   "pack_status_approved": "Approved",
-  "pack_status_exported": "Exported"
+  "pack_status_exported": "Exported",
+
+  "ai_question": "Question",
+  "ai_question_placeholder": "Ask a compliance question…",
+  "ai_ask": "Ask",
+  "ai_examples": "Examples",
+  "ai_empty": "Ask a question to get a deterministic answer with linked event, pack and permit IDs.",
+  "ai_answer": "Answer",
+  "ai_links": "Linked records",
+  "ai_link_event": "Event",
+  "ai_link_pack": "Report pack",
+  "ai_link_permit": "Permit",
+  "ai_draft": "Draft explanation",
+  "ai_save_note": "Save as note",
+  "ai_note_saved": "Note saved",
+  "ai_proposed_action": "Proposed action",
+  "ai_create_pack": "Create pack",
+  "ai_pack_created": "Pack created",
+  "ai_error": "The assistant could not answer the question.",
+  "ai_prompt_readiness": "Is this month ready for reporting?",
+  "ai_prompt_breaches": "Which permit limits were exceeded?",
+  "ai_prompt_missing": "What explanations are still missing?",
+  "ai_prompt_draft": "Draft an operator explanation for this event.",
+  "ai_prompt_create_pack": "Create the May report pack."
 }

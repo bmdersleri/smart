@@ -28,7 +28,7 @@ export const REPORT_PACK_STATUSES = [
   'exported',
 ] as const
 
-export type ComplianceTab = 'overview' | 'permits' | 'events' | 'reportpacks'
+export type ComplianceTab = 'overview' | 'permits' | 'events' | 'reportpacks' | 'assistant'
 
 // Tailwind text-color accent per severity, used for event rows / badges.
 export const SEVERITY_ACCENT: Record<string, string> = {

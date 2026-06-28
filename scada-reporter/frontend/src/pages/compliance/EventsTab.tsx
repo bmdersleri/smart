@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   listEvents,
   listPermits,
+  getEvent,
   addEventNote,
   setEventStatus,
   type ComplianceEvent,
@@ -14,7 +15,7 @@ import { Card } from './helpers'
 import { fmtDateTime, fmtNum } from './format'
 import { EVENT_STATUSES, SEVERITIES, STATUS_ACCENT, SEVERITY_ACCENT } from './constants'
 
-export default function EventsTab() {
+export default function EventsTab({ focusEventId }: { focusEventId?: number | null } = {}) {
   const { t, i18n } = useTranslation(['compliance', 'common'])
   const { user } = useAuth()
   const qc = useQueryClient()
@@ -24,6 +25,22 @@ export default function EventsTab() {
   const [filters, setFilters] = useState<ComplianceEventFilters>({ limit: 100, offset: 0 })
   const [severity, setSeverity] = useState('')
   const [selected, setSelected] = useState<ComplianceEvent | null>(null)
+
+  // When the assistant links an event, fetch it and open its detail panel.
+  useEffect(() => {
+    if (focusEventId == null) return
+    let cancelled = false
+    getEvent(focusEventId)
+      .then((r) => {
+        if (!cancelled) setSelected(r.data)
+      })
+      .catch(() => {
+        /* a missing/forbidden event simply leaves the panel closed */
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [focusEventId])
 
   const { data: permits = [] } = useQuery({
     queryKey: ['compliance-permits'],

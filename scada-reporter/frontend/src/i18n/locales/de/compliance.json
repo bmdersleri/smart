@@ -7,6 +7,7 @@
   "tab_permits": "Genehmigungen",
   "tab_events": "Ereignisse",
   "tab_report_packs": "Berichtspakete",
+  "tab_assistant": "Assistent",
 
   "active_permits": "Aktive Genehmigungen",
   "open_events": "Offene Ereignisse",
@@ -160,5 +161,28 @@
   "pack_status_ready_for_review": "Bereit zur Prüfung",
   "pack_status_failed": "Fehlgeschlagen",
   "pack_status_approved": "Genehmigt",
-  "pack_status_exported": "Exportiert"
+  "pack_status_exported": "Exportiert",
+
+  "ai_question": "Frage",
+  "ai_question_placeholder": "Stellen Sie eine Compliance-Frage…",
+  "ai_ask": "Fragen",
+  "ai_examples": "Beispiele",
+  "ai_empty": "Stellen Sie eine Frage, um eine eindeutige Antwort mit verknüpften Ereignis-, Paket- und Genehmigungs-IDs zu erhalten.",
+  "ai_answer": "Antwort",
+  "ai_links": "Verknüpfte Datensätze",
+  "ai_link_event": "Ereignis",
+  "ai_link_pack": "Berichtspaket",
+  "ai_link_permit": "Genehmigung",
+  "ai_draft": "Erklärungsentwurf",
+  "ai_save_note": "Als Notiz speichern",
+  "ai_note_saved": "Notiz gespeichert",
+  "ai_proposed_action": "Vorgeschlagene Aktion",
+  "ai_create_pack": "Paket erstellen",
+  "ai_pack_created": "Paket erstellt",
+  "ai_error": "Der Assistent konnte die Frage nicht beantworten.",
+  "ai_prompt_readiness": "Ist dieser Monat berichtsbereit?",
+  "ai_prompt_breaches": "Welche Genehmigungsgrenzen wurden überschritten?",
+  "ai_prompt_missing": "Welche Erklärungen fehlen noch?",
+  "ai_prompt_draft": "Entwerfen Sie eine Bedienererklärung für dieses Ereignis.",
+  "ai_prompt_create_pack": "Erstellen Sie das Berichtspaket für Mai."
 }

@@ -7,6 +7,7 @@
   "tab_permits": "Разрешения",
   "tab_events": "События",
   "tab_report_packs": "Пакеты отчётов",
+  "tab_assistant": "Ассистент",
 
   "active_permits": "Активные разрешения",
   "open_events": "Открытые события",
@@ -160,5 +161,28 @@
   "pack_status_ready_for_review": "Готов к проверке",
   "pack_status_failed": "Ошибка",
   "pack_status_approved": "Утверждён",
-  "pack_status_exported": "Экспортирован"
+  "pack_status_exported": "Экспортирован",
+
+  "ai_question": "Вопрос",
+  "ai_question_placeholder": "Задайте вопрос по соответствию…",
+  "ai_ask": "Спросить",
+  "ai_examples": "Примеры",
+  "ai_empty": "Задайте вопрос, чтобы получить точный ответ со ссылками на события, пакеты и разрешения.",
+  "ai_answer": "Ответ",
+  "ai_links": "Связанные записи",
+  "ai_link_event": "Событие",
+  "ai_link_pack": "Пакет отчётов",
+  "ai_link_permit": "Разрешение",
+  "ai_draft": "Черновик пояснения",
+  "ai_save_note": "Сохранить как заметку",
+  "ai_note_saved": "Заметка сохранена",
+  "ai_proposed_action": "Предлагаемое действие",
+  "ai_create_pack": "Создать пакет",
+  "ai_pack_created": "Пакет создан",
+  "ai_error": "Ассистент не смог ответить на вопрос.",
+  "ai_prompt_readiness": "Готов ли этот месяц к отчётности?",
+  "ai_prompt_breaches": "Какие лимиты разрешения были превышены?",
+  "ai_prompt_missing": "Какие пояснения всё ещё отсутствуют?",
+  "ai_prompt_draft": "Составьте пояснение оператора для этого события.",
+  "ai_prompt_create_pack": "Создайте майский пакет отчётов."
 }
