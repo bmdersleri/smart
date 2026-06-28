@@ -11,7 +11,7 @@ Audit rows are written via ``record_audit`` inside the endpoint transaction.
 import json
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -32,9 +32,10 @@ from app.models.compliance import (
     ComplianceLimit,
     ComplianceParameter,
     CompliancePermit,
+    ComplianceReportPack,
 )
 from app.models.user import User
-from app.services import compliance_engine
+from app.services import compliance_engine, compliance_report
 
 router = APIRouter(prefix="/compliance", tags=["compliance"])
 
@@ -231,6 +232,47 @@ class EvaluateRequest(BaseModel):
     end: datetime
 
 
+class ReportPackCreate(BaseModel):
+    permit_id: int
+    start: datetime
+    end: datetime
+
+
+class ReportPackResponse(BaseModel):
+    id: int
+    permit_id: int
+    period_start: datetime
+    period_end: datetime
+    status: str
+    error_message: str | None
+    prepared_by: int | None
+    approved_by: int | None
+    approved_at: datetime | None
+    created_at: datetime
+    updated_at: datetime
+    has_pdf: bool = False
+    has_xlsx: bool = False
+    has_json: bool = False
+
+    model_config = {"from_attributes": True}
+
+
+class ReportPackListResponse(BaseModel):
+    total: int
+    items: list[ReportPackResponse]
+
+
+class BlockingIssue(BaseModel):
+    event_id: int
+    parameter_id: int
+    event_type: str
+    status: str
+
+
+class ReportPackDetailResponse(ReportPackResponse):
+    blocking_issues: list[BlockingIssue] = []
+
+
 # --------------------------------------------------------------------------
 # Helpers
 # --------------------------------------------------------------------------
@@ -319,6 +361,46 @@ def _validate_limit(limit_type: str, aggregation: str) -> None:
         raise HTTPException(status_code=422, detail=f"limit_type must be one of {LIMIT_TYPES}")
     if aggregation not in AGGREGATIONS:
         raise HTTPException(status_code=422, detail=f"aggregation must be one of {AGGREGATIONS}")
+
+
+def _pack_to_response(pack: ComplianceReportPack) -> ReportPackResponse:
+    return ReportPackResponse(
+        id=pack.id,
+        permit_id=pack.permit_id,
+        period_start=pack.period_start,
+        period_end=pack.period_end,
+        status=pack.status,
+        error_message=pack.error_message,
+        prepared_by=pack.prepared_by,
+        approved_by=pack.approved_by,
+        approved_at=pack.approved_at,
+        created_at=pack.created_at,
+        updated_at=pack.updated_at,
+        has_pdf=pack.pdf_blob is not None,
+        has_xlsx=pack.xlsx_blob is not None,
+        has_json=pack.json_blob is not None,
+    )
+
+
+async def _open_required_explanations(
+    db: AsyncSession,
+    permit_id: int,
+    period_start: datetime,
+    period_end: datetime,
+) -> list[ComplianceEvent]:
+    """Open ``needs_explanation`` events for the permit + period (approval blockers)."""
+    rows = (
+        await db.execute(
+            select(ComplianceEvent).where(
+                ComplianceEvent.permit_id == permit_id,
+                ComplianceEvent.period_start == period_start,
+                ComplianceEvent.period_end == period_end,
+                ComplianceEvent.event_type == "needs_explanation",
+                ComplianceEvent.status == "open",
+            )
+        )
+    ).scalars()
+    return list(rows)
 
 
 # --------------------------------------------------------------------------
@@ -1161,3 +1243,326 @@ async def update_status(
     await db.refresh(event)
     counts = await _note_counts(db, [event.id])
     return _event_to_response(event, counts.get(event.id, 0))
+
+
+# --------------------------------------------------------------------------
+# Report packs
+# --------------------------------------------------------------------------
+
+
+@router.get("/report-packs", response_model=ReportPackListResponse)
+async def list_report_packs(
+    permit_id: int | None = None,
+    limit: int = Query(default=50, ge=1, le=500),
+    offset: int = Query(default=0, ge=0),
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_user),
+) -> ReportPackListResponse:
+    filters = []
+    if permit_id is not None:
+        filters.append(ComplianceReportPack.permit_id == permit_id)
+
+    total = (
+        await db.execute(select(func.count()).select_from(ComplianceReportPack).where(*filters))
+    ).scalar_one()
+    rows = list(
+        (
+            await db.execute(
+                select(ComplianceReportPack)
+                .where(*filters)
+                .order_by(ComplianceReportPack.id.desc())
+                .limit(limit)
+                .offset(offset)
+            )
+        )
+        .scalars()
+        .all()
+    )
+    return ReportPackListResponse(
+        total=int(total),
+        items=[_pack_to_response(row) for row in rows],
+    )
+
+
+@router.post("/report-packs", response_model=ReportPackResponse, status_code=201)
+async def create_report_pack(
+    data: ReportPackCreate,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role("admin", "operator")),
+    _w=Depends(require_writable),
+) -> ReportPackResponse:
+    permit = await db.get(CompliancePermit, data.permit_id)
+    if permit is None:
+        raise HTTPException(status_code=404, detail="Permit bulunamadı")
+
+    pack = ComplianceReportPack(
+        permit_id=data.permit_id,
+        period_start=data.start.replace(tzinfo=None),
+        period_end=data.end.replace(tzinfo=None),
+        status="draft",
+        prepared_by=user.id,
+    )
+    db.add(pack)
+    await db.flush()
+    await record_audit(
+        db,
+        actor=user,
+        action="compliance.reportpack.create",
+        target_type="compliance_report_pack",
+        target_id=pack.id,
+        detail={"permit_id": data.permit_id},
+        ip=_client_ip(request),
+    )
+    await db.commit()
+    await db.refresh(pack)
+    return _pack_to_response(pack)
+
+
+@router.get("/report-packs/{pack_id}", response_model=ReportPackDetailResponse)
+async def get_report_pack(
+    pack_id: int,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_user),
+) -> ReportPackDetailResponse:
+    pack = await db.get(ComplianceReportPack, pack_id)
+    if pack is None:
+        raise HTTPException(status_code=404, detail="Rapor paketi bulunamadı")
+
+    blockers = await _open_required_explanations(
+        db, pack.permit_id, pack.period_start, pack.period_end
+    )
+    base = _pack_to_response(pack)
+    return ReportPackDetailResponse(
+        **base.model_dump(),
+        blocking_issues=[
+            BlockingIssue(
+                event_id=ev.id,
+                parameter_id=ev.parameter_id,
+                event_type=ev.event_type,
+                status=ev.status,
+            )
+            for ev in blockers
+        ],
+    )
+
+
+@router.post("/report-packs/{pack_id}/generate", response_model=ReportPackResponse)
+async def generate_report_pack(
+    pack_id: int,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role("admin", "operator")),
+    _w=Depends(require_writable),
+) -> ReportPackResponse:
+    pack = await db.get(ComplianceReportPack, pack_id)
+    if pack is None:
+        raise HTTPException(status_code=404, detail="Rapor paketi bulunamadı")
+
+    try:
+        data = await compliance_report.build_report_pack_data(
+            db, pack.permit_id, pack.period_start, pack.period_end
+        )
+        pack.json_blob = compliance_report.render_json(data)
+        pack.xlsx_blob = compliance_report.render_excel(data)
+        pack.pdf_blob = compliance_report.render_pdf(data)
+        pack.error_message = None
+        # success keeps the pack in draft (ready to submit for review)
+        if pack.status == "failed":
+            pack.status = "draft"
+    except Exception as exc:  # noqa: BLE001 — persist failure, never 500 the request
+        pack.status = "failed"
+        pack.error_message = str(exc)[:4096]
+
+    pack.updated_at = datetime.utcnow()
+    await record_audit(
+        db,
+        actor=user,
+        action="compliance.reportpack.generate",
+        target_type="compliance_report_pack",
+        target_id=pack.id,
+        detail={"status": pack.status},
+        ip=_client_ip(request),
+    )
+    await db.commit()
+    await db.refresh(pack)
+    return _pack_to_response(pack)
+
+
+@router.post("/report-packs/{pack_id}/submit-review", response_model=ReportPackResponse)
+async def submit_report_pack_review(
+    pack_id: int,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role("admin", "operator")),
+    _w=Depends(require_writable),
+) -> ReportPackResponse:
+    pack = await db.get(ComplianceReportPack, pack_id)
+    if pack is None:
+        raise HTTPException(status_code=404, detail="Rapor paketi bulunamadı")
+    if pack.status != "draft":
+        raise HTTPException(status_code=409, detail="Only a draft pack can be submitted for review")
+    if pack.pdf_blob is None or pack.xlsx_blob is None or pack.json_blob is None:
+        raise HTTPException(
+            status_code=409, detail="Outputs must be generated before submitting for review"
+        )
+
+    pack.status = "ready_for_review"
+    pack.updated_at = datetime.utcnow()
+    await record_audit(
+        db,
+        actor=user,
+        action="compliance.reportpack.submit_review",
+        target_type="compliance_report_pack",
+        target_id=pack.id,
+        detail={"status": pack.status},
+        ip=_client_ip(request),
+    )
+    await db.commit()
+    await db.refresh(pack)
+    return _pack_to_response(pack)
+
+
+@router.post("/report-packs/{pack_id}/approve", response_model=ReportPackResponse)
+async def approve_report_pack(
+    pack_id: int,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role("admin")),
+    _w=Depends(require_writable),
+) -> ReportPackResponse:
+    pack = await db.get(ComplianceReportPack, pack_id)
+    if pack is None:
+        raise HTTPException(status_code=404, detail="Rapor paketi bulunamadı")
+    if pack.pdf_blob is None or pack.xlsx_blob is None or pack.json_blob is None:
+        raise HTTPException(status_code=409, detail="Outputs must be generated before approval")
+
+    blockers = await _open_required_explanations(
+        db, pack.permit_id, pack.period_start, pack.period_end
+    )
+    if blockers:
+        raise HTTPException(
+            status_code=409,
+            detail="Required explanations are still open for this permit/period",
+        )
+
+    # Freeze the covered events + their evidence at approval time.
+    events = list(
+        (
+            await db.execute(
+                select(ComplianceEvent)
+                .where(
+                    ComplianceEvent.permit_id == pack.permit_id,
+                    ComplianceEvent.period_start == pack.period_start,
+                    ComplianceEvent.period_end == pack.period_end,
+                )
+                .order_by(ComplianceEvent.id)
+            )
+        )
+        .scalars()
+        .all()
+    )
+    snapshot = [
+        {
+            "event_id": ev.id,
+            "event_key": ev.event_key,
+            "parameter_id": ev.parameter_id,
+            "limit_id": ev.limit_id,
+            "event_type": ev.event_type,
+            "severity": ev.severity,
+            "status": ev.status,
+            "observed_value": ev.observed_value,
+            "limit_value": ev.limit_value,
+            "evidence": json.loads(ev.evidence_json) if ev.evidence_json else {},
+        }
+        for ev in events
+    ]
+    now = datetime.utcnow()
+    pack.events_snapshot_json = json.dumps(snapshot, separators=(",", ":"), sort_keys=True)
+    pack.status = "approved"
+    pack.approved_by = user.id
+    pack.approved_at = now
+    pack.updated_at = now
+
+    await record_audit(
+        db,
+        actor=user,
+        action="compliance.reportpack.approve",
+        target_type="compliance_report_pack",
+        target_id=pack.id,
+        detail={"event_count": len(snapshot)},
+        ip=_client_ip(request),
+    )
+    await db.commit()
+    await db.refresh(pack)
+    return _pack_to_response(pack)
+
+
+_XLSX_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+_DOWNLOAD_FORMATS = {
+    "pdf": ("pdf_blob", "application/pdf", "pdf"),
+    "excel": ("xlsx_blob", _XLSX_CONTENT_TYPE, "xlsx"),
+    "json": ("json_blob", "application/json", "json"),
+}
+
+
+@router.get("/report-packs/{pack_id}/download")
+async def download_report_pack(
+    pack_id: int,
+    format: str = Query(default="pdf"),
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_user),
+) -> Response:
+    if format not in _DOWNLOAD_FORMATS:
+        raise HTTPException(status_code=422, detail="format must be one of pdf|excel|json")
+    pack = await db.get(ComplianceReportPack, pack_id)
+    if pack is None:
+        raise HTTPException(status_code=404, detail="Rapor paketi bulunamadı")
+
+    attr, content_type, ext = _DOWNLOAD_FORMATS[format]
+    blob = getattr(pack, attr)
+    if blob is None:
+        raise HTTPException(status_code=404, detail="Bu format için çıktı oluşturulmamış")
+
+    # An approved pack that is exported flips to the exported terminal status.
+    if pack.status == "approved":
+        pack.status = "exported"
+        pack.updated_at = datetime.utcnow()
+        await db.commit()
+
+    filename = f"compliance_report_pack_{pack_id}.{ext}"
+    return Response(
+        content=bytes(blob),
+        media_type=content_type,
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@router.delete("/report-packs/{pack_id}")
+async def delete_report_pack(
+    pack_id: int,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role("admin")),
+    _w=Depends(require_writable),
+) -> dict:
+    pack = await db.get(ComplianceReportPack, pack_id)
+    if pack is None:
+        raise HTTPException(status_code=404, detail="Rapor paketi bulunamadı")
+    if pack.status not in ("draft", "failed"):
+        raise HTTPException(
+            status_code=409,
+            detail="Only draft or failed report packs can be deleted",
+        )
+    await db.delete(pack)
+    await record_audit(
+        db,
+        actor=user,
+        action="compliance.reportpack.delete",
+        target_type="compliance_report_pack",
+        target_id=pack_id,
+        detail={"permit_id": pack.permit_id},
+        ip=_client_ip(request),
+    )
+    await db.commit()
+    return {"id": pack_id, "deleted": True}

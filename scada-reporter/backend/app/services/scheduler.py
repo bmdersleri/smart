@@ -94,6 +94,27 @@ async def start_scheduler(db_url: str) -> None:
                 settings.BACKUP_SCHEDULE_CRON,
             )
 
+    if settings.RUN_COMPLIANCE_SCHEDULER:
+        try:
+            m, h, dom, mon, dow = settings.COMPLIANCE_SCHEDULE_CRON.split()
+            _scheduler.add_job(
+                compliance_period_close_job,
+                "cron",
+                id="compliance_period_close",
+                minute=m,
+                hour=h,
+                day=dom,
+                month=mon,
+                day_of_week=dow,
+                replace_existing=True,
+            )
+        except ValueError:
+            _logger.warning(
+                "COMPLIANCE_SCHEDULE_CRON %r is malformed (expected 5 fields); "
+                "compliance period-close job was NOT registered.",
+                settings.COMPLIANCE_SCHEDULE_CRON,
+            )
+
 
 async def scheduled_backup_job() -> None:
     """Nightly backup + retention prune. Opens its own session."""
@@ -116,6 +137,100 @@ async def scheduled_backup_job() -> None:
             if rec.path and os.path.exists(rec.path):
                 os.remove(rec.path)
             await db.delete(rec)
+        await db.commit()
+
+
+def closed_period_bounds(frequency: str, now: datetime) -> tuple[datetime, datetime] | None:
+    """Return the (start, end) of the most-recently *closed* reporting period.
+
+    Boundaries are naive UTC instants (matching how the engine/events store
+    ``period_start``/``period_end``). Returns ``None`` for frequencies whose
+    period close is not auto-derived (e.g. ``custom_cron``).
+    """
+    ref = now.replace(tzinfo=None) if now.tzinfo is not None else now
+    if frequency == "daily":
+        end = datetime(ref.year, ref.month, ref.day)
+        start = end - timedelta(days=1)
+        return start, end
+    if frequency == "weekly":
+        # ISO week: Monday start. The just-closed week ends this Monday 00:00.
+        this_monday = datetime(ref.year, ref.month, ref.day) - timedelta(days=ref.weekday())
+        end = this_monday
+        start = end - timedelta(days=7)
+        return start, end
+    if frequency == "monthly":
+        first_this_month = datetime(ref.year, ref.month, 1)
+        end = first_this_month
+        prev_year = ref.year - 1 if ref.month == 1 else ref.year
+        prev_month = 12 if ref.month == 1 else ref.month - 1
+        start = datetime(prev_year, prev_month, 1)
+        return start, end
+    if frequency == "quarterly":
+        q_start_month = ((ref.month - 1) // 3) * 3 + 1
+        end = datetime(ref.year, q_start_month, 1)
+        prev_q_month = q_start_month - 3
+        if prev_q_month <= 0:
+            start = datetime(ref.year - 1, prev_q_month + 12, 1)
+        else:
+            start = datetime(ref.year, prev_q_month, 1)
+        return start, end
+    return None
+
+
+async def compliance_period_close_job(now: datetime | None = None) -> None:
+    """Create draft report packs for active permits whose period just closed.
+
+    - Skips a period that already has any pack (draft/approved/exported/...).
+    - If unresolved required ``needs_explanation`` events remain, the pack is
+      still created as ``draft`` (blocking issues surface via the API/UI).
+    - ``custom_cron`` permits are skipped (no auto-derived period close).
+    Owns its own DB session; importable and testable in isolation.
+    """
+    from sqlalchemy import select
+
+    from app.core.database import AsyncSessionLocal
+    from app.models.compliance import CompliancePermit, ComplianceReportPack
+
+    if now is None:
+        now = datetime.now(UTC)
+
+    async with AsyncSessionLocal() as db:
+        permits = list(
+            (await db.execute(select(CompliancePermit).where(CompliancePermit.is_active.is_(True))))
+            .scalars()
+            .all()
+        )
+        for permit in permits:
+            bounds = closed_period_bounds(permit.report_frequency, now)
+            if bounds is None:
+                continue
+            start, end = bounds
+
+            existing = (
+                (
+                    await db.execute(
+                        select(ComplianceReportPack).where(
+                            ComplianceReportPack.permit_id == permit.id,
+                            ComplianceReportPack.period_start == start,
+                            ComplianceReportPack.period_end == end,
+                        )
+                    )
+                )
+                .scalars()
+                .first()
+            )
+            if existing is not None:
+                # Already have a pack (draft or frozen) for this period — skip.
+                continue
+
+            db.add(
+                ComplianceReportPack(
+                    permit_id=permit.id,
+                    period_start=start,
+                    period_end=end,
+                    status="draft",
+                )
+            )
         await db.commit()
 
 

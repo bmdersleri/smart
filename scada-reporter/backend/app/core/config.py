@@ -37,6 +37,10 @@ class Settings(BaseSettings):
     BACKUP_RETENTION_DAYS: int = 365
     BACKUP_SCHEDULE_CRON: str = "0 3 * * *"  # daily 03:00, 5-field cron (m h dom mon dow)
     RUN_BACKUP_SCHEDULER: bool = True
+    # Compliance period-close scheduler (daily draft report-pack creation).
+    RUN_COMPLIANCE_SCHEDULER: bool = True
+    # daily 04:00, 5-field cron (m h dom mon dow)
+    COMPLIANCE_SCHEDULE_CRON: str = "0 4 * * *"
     # zstd compression level for SQLite snapshots (1=fast .. 22=max ratio; 19 is a
     # strong ratio at reasonable speed, multithreaded). PG dumps are already -Fc.
     BACKUP_ZSTD_LEVEL: int = 19
