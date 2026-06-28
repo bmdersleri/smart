@@ -20,6 +20,7 @@ from app.models.user import User
 from app.services.grafana_render import render_auth, render_headers
 from app.services.grafana_templates import (
     LabParamSpec,
+    apply_tag_label,
     build_dashboard,
     build_lab_dashboard,
     build_report_template_dashboard,
@@ -291,6 +292,67 @@ async def generate_from_lab(
         "url": payload.get("url") or f"/d/{uid}",
         "status": payload.get("status", "success"),
     }
+
+
+@router.post("/dashboards/refresh-managed")
+async def refresh_managed_dashboards(
+    user: User = Depends(require_role("admin")),
+    _writable=Depends(require_writable),
+    _feature=Depends(require_feature("grafana")),
+) -> dict:
+    """Re-label all managed (sr-*) dashboards with the tag-description label,
+    in place. Idempotent: dashboards already using the label are skipped."""
+    updated = 0
+    skipped: list[dict] = []
+    try:
+        async with httpx.AsyncClient(
+            base_url=settings.GRAFANA_URL,
+            auth=render_auth(),
+            headers=render_headers(),
+            timeout=15.0,
+            transport=_transport,
+        ) as http:
+            search = await http.get("/api/search", params={"type": "dash-db"})
+            if search.status_code >= 400:
+                raise HTTPException(
+                    status_code=502, detail=f"Grafana arama hatası: HTTP {search.status_code}"
+                )
+            for row in search.json():
+                uid = row.get("uid", "")
+                if not uid.startswith("sr-") or not _valid_grafana_uid(uid):
+                    continue
+                try:
+                    got = await http.get(f"/api/dashboards/uid/{uid}")
+                    if got.status_code >= 400:
+                        skipped.append({"uid": uid, "reason": f"fetch HTTP {got.status_code}"})
+                        continue
+                    dashboard = got.json().get("dashboard") or {}
+                    changed = False
+                    for panel in dashboard.get("panels", []):
+                        for target in panel.get("targets", []):
+                            for key in ("rawQueryText", "queryText", "rawSql"):
+                                sql = target.get(key)
+                                if isinstance(sql, str):
+                                    new_sql = apply_tag_label(sql)
+                                    if new_sql != sql:
+                                        target[key] = new_sql
+                                        changed = True
+                    if not changed:
+                        skipped.append({"uid": uid, "reason": "no-op"})
+                        continue
+                    posted = await http.post(
+                        "/api/dashboards/db",
+                        json={"dashboard": dashboard, "overwrite": True},
+                    )
+                    if posted.status_code >= 400:
+                        skipped.append({"uid": uid, "reason": f"write HTTP {posted.status_code}"})
+                        continue
+                    updated += 1
+                except httpx.HTTPError as e:
+                    skipped.append({"uid": uid, "reason": f"error: {e}"})
+    except httpx.HTTPError as e:
+        raise HTTPException(status_code=502, detail=f"Grafana erişilemedi: {e}") from None
+    return {"updated": updated, "skipped": skipped}
 
 
 @router.delete("/dashboards/{uid}")
