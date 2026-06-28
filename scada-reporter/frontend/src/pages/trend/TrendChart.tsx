@@ -60,7 +60,7 @@ export function TrendChart({
   return (
     <div
       ref={chartContainerRef}
-      className="flex-1 bg-gray-900 border border-gray-800 rounded-xl p-4 flex flex-col"
+      className="flex-1 bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl p-4 flex flex-col"
       style={{ userSelect: 'none' }}
       onContextMenu={handleContextMenu}
     >

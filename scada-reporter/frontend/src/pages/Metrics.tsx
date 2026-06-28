@@ -11,7 +11,7 @@ import type { LogLine } from '../hooks/useLogStream'
 
 function StatCard({ label, value, sub, accent }: { label: string; value: string; sub?: string; accent?: string }) {
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
+    <div className="bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl p-4">
       <p className="text-xs text-gray-500 uppercase tracking-wide">{label}</p>
       <p className={`text-2xl font-semibold mt-1 font-mono ${accent ?? 'text-white'}`}>{value}</p>
       {sub && <p className="text-xs text-gray-600 mt-0.5">{sub}</p>}
@@ -57,7 +57,7 @@ function LiveConsole() {
   }
 
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+    <div className="bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl overflow-hidden">
       <div className="px-4 py-3 border-b border-gray-800 flex items-center justify-between gap-2">
         <div>
           <h2 className="text-sm font-medium text-white">{t('console_title')}</h2>
@@ -75,13 +75,13 @@ function LiveConsole() {
           </select>
           <button
             onClick={() => setPaused((p) => !p)}
-            className="px-2 py-1 text-xs rounded border border-gray-700 text-gray-200 hover:bg-gray-800"
+            className="px-2 py-1 text-xs rounded border border-gray-700 text-gray-200 hover:bg-white/5"
           >
             {paused ? t('btn_resume') : t('btn_pause')}
           </button>
           <button
             onClick={clear}
-            className="px-2 py-1 text-xs rounded border border-gray-700 text-gray-200 hover:bg-gray-800"
+            className="px-2 py-1 text-xs rounded border border-gray-700 text-gray-200 hover:bg-white/5"
           >
             {t('btn_clear')}
           </button>
@@ -197,7 +197,7 @@ export default function Metrics() {
             </div>
           )}
 
-          <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+          <div className="bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl overflow-hidden">
             <div className="px-4 py-3 border-b border-gray-800">
               <h2 className="text-sm font-medium text-white">{t('read_latency_title')}</h2>
               <p className="text-xs text-gray-500">{t('read_latency_sub', { value: m.plcs.length })}</p>
@@ -219,7 +219,7 @@ export default function Metrics() {
                     const pct = maxAvg > 0 ? ((p.avg_seconds ?? 0) / maxAvg) * 100 : 0
                     const slow = (p.avg_seconds ?? 0) > 0.5
                     return (
-                      <tr key={p.plc} className="border-t border-gray-800 hover:bg-gray-800/40">
+                      <tr key={p.plc} className="border-t border-gray-800 hover:bg-white/5/40">
                         <td className="px-4 py-2 text-sm text-white">{p.name || '—'}</td>
                         <td className="px-4 py-2 text-sm font-mono text-gray-400">{p.plc}</td>
                         <td className="px-4 py-2 text-sm text-end text-gray-300 font-mono">{p.tag_count.toLocaleString(i18n.language)}</td>
@@ -246,7 +246,7 @@ export default function Metrics() {
 
           <LiveConsole />
 
-          <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+          <div className="bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl overflow-hidden">
             <div className="px-4 py-3 border-b border-gray-800 flex items-center justify-between gap-2">
               <div>
                 <h2 className="text-sm font-medium text-white">{t('db_title')}</h2>
@@ -254,7 +254,7 @@ export default function Metrics() {
               <button
                 onClick={() => refetchDb()}
                 disabled={dbFetching}
-                className="px-2 py-1 text-xs rounded border border-gray-700 text-gray-200 hover:bg-gray-800 disabled:opacity-50"
+                className="px-2 py-1 text-xs rounded border border-gray-700 text-gray-200 hover:bg-white/5 disabled:opacity-50"
               >
                 {t('db_refresh')}
               </button>

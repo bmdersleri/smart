@@ -292,6 +292,21 @@ async def run_once(
     ts = datetime.now(UTC)
     latest_cache.update_many(rows, ts)  # cache her zaman taze değeri taşır
 
+    from app.core.broadcast import broadcast_manager
+
+    asyncio.create_task(
+        broadcast_manager.broadcast(
+            {
+                "type": "readings_update",
+                "timestamp": ts.isoformat(),
+                "readings": [
+                    {"tag_id": tag_id, "value": value, "quality": quality}
+                    for tag_id, value, quality in rows
+                ],
+            }
+        )
+    )
+
     if last_stored is None:
         store_rows = rows
     else:

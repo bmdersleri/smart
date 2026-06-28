@@ -82,7 +82,7 @@ function HistoryRow({ entry }: { entry: ReportHistoryEntry }) {
       <button
         onClick={reDownload}
         disabled={downloading}
-        className="text-xs text-blue-400 hover:text-blue-300 disabled:opacity-50 transition-colors"
+        className="text-xs text-cyan-400 hover:text-blue-300 disabled:opacity-50 transition-colors"
       >
         {downloading ? '...' : t('download')}
       </button>
@@ -193,7 +193,7 @@ export default function Reports() {
 
       {/* Saved presets */}
       {(presets.length > 0 || selectedTags.length > 0) && (
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 space-y-2">
+        <div className="bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl p-4 space-y-2">
           <div className="flex items-center justify-between">
             <p className="text-sm font-medium text-gray-300">{t('saved_selections')}</p>
             {selectedTags.length > 0 && savingName === null && (
@@ -222,7 +222,7 @@ export default function Reports() {
                 onChange={(e) => setSavingName(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') saveReportPreset(); if (e.key === 'Escape') setSavingName(null) }}
                 placeholder={t('selection_name_placeholder')}
-                className="flex-1 bg-gray-800 border border-blue-600 rounded-lg px-3 py-1.5 text-sm text-white placeholder-gray-600 focus:outline-none"
+                className="flex-1 bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all"
               />
               <button
                 onClick={saveReportPreset}
@@ -273,7 +273,7 @@ export default function Reports() {
       )}
 
       {/* Grouped tag selection */}
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 space-y-4">
+      <div className="bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl p-4 space-y-4">
         <div className="flex items-center justify-between">
           <p className="text-sm font-medium text-gray-300">{t('tag_selection')}</p>
           <span className="text-xs text-gray-500">{t('tags_selected', { value: selectedTags.length })}</span>
@@ -286,7 +286,7 @@ export default function Reports() {
                 <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">{device}</span>
                 <button
                   onClick={() => toggleGroup(groupTags)}
-                  className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                  className="text-xs text-cyan-400 hover:text-blue-300 transition-colors"
                 >
                   {allSelected ? t('deselect_all') : t('select_all')}
                 </button>
@@ -296,10 +296,10 @@ export default function Reports() {
                   <button
                     key={t.id}
                     onClick={() => toggleTag(t.id)}
-                    className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${
+                    className={`px-3 py-1.5 text-sm rounded-xl border transition-all duration-200 ${
                       selectedTags.includes(t.id)
-                        ? 'bg-blue-600/20 border-blue-500 text-blue-300'
-                        : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-600'
+                        ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-300 shadow-[inset_0_0_12px_rgba(6,182,212,0.1)]'
+                        : 'bg-black/20 border-white/5 text-gray-400 hover:border-white/20 hover:text-gray-200'
                     }`}
                   >
                     {t.name}{t.unit ? ` (${t.unit})` : ''}
@@ -312,16 +312,16 @@ export default function Reports() {
       </div>
 
       {/* Time range */}
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 space-y-3">
+      <div className="bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl p-4 space-y-3">
         <p className="text-sm font-medium text-gray-300">{t('time_range')}</p>
         <div className="flex gap-2 flex-wrap">
           {PRESETS.map((p) => (
-            <button key={p.id} onClick={() => selectPreset(p)}
-              className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${
-                activeTimePreset === p.id
-                  ? 'bg-blue-600/20 border-blue-500 text-blue-300'
-                  : 'bg-gray-800 hover:bg-gray-700 text-gray-300 border-gray-700'
-              }`}>
+              <button key={p.id} onClick={() => selectPreset(p)}
+                className={`px-3 py-1.5 text-xs rounded-xl border transition-all duration-200 ${
+                  activeTimePreset === p.id
+                    ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-300 shadow-[inset_0_0_12px_rgba(6,182,212,0.1)]'
+                    : 'bg-black/20 border-white/5 text-gray-400 hover:border-white/20 hover:text-gray-200'
+                }`}>
               {t(PRESET_LABEL_KEY[p.id])}
             </button>
           ))}
@@ -330,27 +330,27 @@ export default function Reports() {
           <div>
             <label className="text-xs text-gray-500 mb-1 block">{t('start')}</label>
             <input type="datetime-local" value={start} onChange={(e) => { setStart(e.target.value); setActiveTimePreset('') }}
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+              className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all" />
           </div>
           <div>
             <label className="text-xs text-gray-500 mb-1 block">{t('end')}</label>
             <input type="datetime-local" value={end} onChange={(e) => { setEnd(e.target.value); setActiveTimePreset('') }}
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+              className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all" />
           </div>
         </div>
       </div>
 
       {/* Grouping */}
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 space-y-3">
+      <div className="bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl p-4 space-y-3">
         <p className="text-sm font-medium text-gray-300">{t('grouping')}</p>
         <div className="flex gap-2">
           {[{ v: 'hourly', l: t('hourly') }, { v: 'daily', l: t('daily') }].map(({ v, l }) => (
-            <button key={v} onClick={() => setIntervalVal(v)}
-              className={`px-4 py-2 text-sm rounded-lg border transition-colors ${
-                interval === v
-                  ? 'bg-blue-600/20 border-blue-500 text-blue-300'
-                  : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-600'
-              }`}>
+              <button key={v} onClick={() => setIntervalVal(v)}
+                className={`px-4 py-2 text-sm rounded-xl border transition-all duration-200 ${
+                  interval === v
+                    ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-300 shadow-[inset_0_0_12px_rgba(6,182,212,0.1)]'
+                    : 'bg-black/20 border-white/5 text-gray-400 hover:border-white/20 hover:text-gray-200'
+                }`}>
               {l}
             </button>
           ))}
@@ -362,20 +362,20 @@ export default function Reports() {
       {/* Download buttons */}
       <div className="flex gap-3">
         <button onClick={() => download('excel')} disabled={loading}
-          className="flex items-center gap-2 px-5 py-2.5 bg-green-700 hover:bg-green-600 disabled:opacity-50 text-white rounded-lg font-medium text-sm transition-colors">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 disabled:opacity-50 text-white rounded-xl font-bold tracking-wide text-sm transition-all shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 active:scale-95">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
           </svg>
           {loading ? t('preparing') : t('excel_download')}
         </button>
         <button onClick={() => download('json')} disabled={loading}
-          className="flex items-center gap-2 px-5 py-2.5 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 text-gray-300 rounded-lg font-medium text-sm border border-gray-700 transition-colors">
+          className="flex items-center gap-2 px-6 py-3 bg-black/30 hover:bg-white/10 disabled:opacity-50 text-gray-300 rounded-xl font-semibold text-sm border border-white/10 transition-all hover:border-white/20 active:scale-95">
           JSON
         </button>
       </div>
 
       {/* Report history */}
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
+      <div className="bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl p-4">
         <p className="text-sm font-medium text-gray-300 mb-1">{t('recent_reports')}</p>
         {history.length === 0 ? (
           <p className="text-gray-500 text-sm py-4">{t('no_reports_yet')}</p>

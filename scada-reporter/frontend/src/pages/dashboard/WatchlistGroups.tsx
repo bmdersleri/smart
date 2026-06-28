@@ -26,7 +26,7 @@ export default function WatchlistGroups() {
   })
 
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 space-y-3">
+    <div className="bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl p-4 space-y-3">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold text-white">{t('title')}</h2>
         <div className="flex items-center gap-2">

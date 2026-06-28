@@ -216,7 +216,7 @@ export default function Grafana() {
             href={buildUrl(active, false, theme)}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center justify-center rounded-lg border border-gray-700 px-3 py-2 text-sm text-gray-200 hover:bg-gray-800"
+            className="inline-flex items-center justify-center rounded-lg border border-gray-700 px-3 py-2 text-sm text-gray-200 hover:bg-white/5"
           >
             {t('open_grafana')}
           </a>
@@ -247,7 +247,7 @@ export default function Grafana() {
               )
               setSelectedTagIds([])
             }}
-            className="w-full rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-gray-100"
+            className="w-full rounded-lg border border-gray-700 bg-gray-900/40 backdrop-blur-xl px-3 py-2 text-sm text-gray-100"
           >
             {templates.map((template) => (
               <option key={template.key} value={template.key}>
@@ -269,7 +269,7 @@ export default function Grafana() {
             id="grafana-title"
             value={title}
             onChange={(event) => setTitle(event.target.value)}
-            className="w-full rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-gray-100"
+            className="w-full rounded-lg border border-gray-700 bg-gray-900/40 backdrop-blur-xl px-3 py-2 text-sm text-gray-100"
           />
           {selectedTemplate?.requires_tags && (
             <select
@@ -280,7 +280,7 @@ export default function Grafana() {
                 const ids = Array.from(event.target.selectedOptions, (option) => Number(option.value))
                 setSelectedTagIds(ids)
               }}
-              className="h-24 w-full rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-gray-100"
+              className="h-24 w-full rounded-lg border border-gray-700 bg-gray-900/40 backdrop-blur-xl px-3 py-2 text-sm text-gray-100"
             >
               {tags.map((tag) => (
                 <option key={tag.id} value={tag.id}>
@@ -327,7 +327,7 @@ export default function Grafana() {
               id="lab-point"
               value={labPointId === '' ? '' : String(labPointId)}
               onChange={(event) => setLabPointId(event.target.value === '' ? '' : Number(event.target.value))}
-              className="w-full rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-gray-100"
+              className="w-full rounded-lg border border-gray-700 bg-gray-900/40 backdrop-blur-xl px-3 py-2 text-sm text-gray-100"
             >
               <option value="">—</option>
               {labPoints.map((pt) => (
@@ -347,7 +347,7 @@ export default function Grafana() {
                 const ids = Array.from(event.target.selectedOptions, (option) => Number(option.value))
                 setLabParamIds(ids)
               }}
-              className="h-24 w-full rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-gray-100"
+              className="h-24 w-full rounded-lg border border-gray-700 bg-gray-900/40 backdrop-blur-xl px-3 py-2 text-sm text-gray-100"
             >
               {labParams.map((param) => (
                 <option key={param.id} value={param.id}>{param.name}{param.unit ? ` (${param.unit})` : ''}</option>
@@ -396,8 +396,8 @@ export default function Grafana() {
                   onClick={() => setActiveUid(dash.uid)}
                   className={`rounded-lg px-4 py-2 text-sm transition-colors ${
                     activeUid === dash.uid
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-900 text-gray-400 hover:bg-gray-800 hover:text-white'
+                      ? 'bg-cyan-500/10 text-cyan-400 ring-1 ring-cyan-500/30'
+                      : 'bg-gray-900/40 backdrop-blur-xl text-gray-400 hover:bg-white/5 hover:text-white'
                   }`}
                 >
                   {dash.title}
@@ -406,7 +406,7 @@ export default function Grafana() {
                   <button
                     onClick={(e) => { e.stopPropagation(); void handleDelete(dash.uid, dash.title) }}
                     title={t('delete')}
-                    className="rounded px-1.5 py-1 text-xs text-gray-500 hover:bg-gray-800 hover:text-red-400"
+                    className="rounded px-1.5 py-1 text-xs text-gray-500 hover:bg-white/5 hover:text-red-400"
                   >
                     ✕
                   </button>

@@ -50,7 +50,7 @@ export default function WatchlistTab({ active }: { active: boolean }) {
   const { data: items = [], isLoading } = useQuery({
     queryKey: ['watchlist'],
     queryFn: () => getWatchlist().then((r) => r.data),
-    staleTime: Infinity,
+    staleTime: 60000, // WebSocket handles live updates
     enabled: active,
   })
 
@@ -116,7 +116,7 @@ export default function WatchlistTab({ active }: { active: boolean }) {
         </thead>
         <tbody>
           {rows.map((item) => (
-            <tr key={item.tag_id} className="border-t border-gray-800 hover:bg-gray-800/40 transition-colors">
+            <tr key={item.tag_id} className="border-t border-gray-800 hover:bg-white/5/40 transition-colors">
               <td className="px-4 py-3 text-sm text-gray-400">{item.device || '—'}</td>
               <td className="px-4 py-3 text-sm text-white font-medium">
                 <TagDescriptionCell name={item.name} description={item.description} />

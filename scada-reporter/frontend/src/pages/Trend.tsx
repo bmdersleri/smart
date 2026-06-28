@@ -329,7 +329,7 @@ export default function Trend() {
               key={v}
               onClick={() => setHours(v)}
               className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${
-                hours === v ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                hours === v ? 'bg-cyan-500/10 text-cyan-400 ring-1 ring-cyan-500/30' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
               }`}
             >
               {t(key)}
@@ -427,7 +427,7 @@ export default function Trend() {
       </div>
 
       {activePayload.length > 0 && (
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-3">
+        <div className="bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl p-3">
           <table className="w-full text-xs">
             <thead>
               <tr className="text-gray-500">
@@ -455,7 +455,7 @@ export default function Trend() {
       )}
 
       {selected.length > 0 && annotations.length > 0 && (
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-3">
+        <div className="bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl p-3">
           <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">{t('notes_title', { value: annotations.length })}</p>
           <div className="space-y-1 max-h-40 overflow-y-auto">
             {annotations.map((a) => (
@@ -486,21 +486,21 @@ export default function Trend() {
 
       {ctxMenu && (
         <div
-          className="fixed z-50 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl py-1 min-w-[180px]"
+          className="fixed z-50 bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-xl shadow-2xl py-1 min-w-[180px]"
           style={{ top: ctxMenu.y, left: ctxMenu.x }}
           onClick={(e) => e.stopPropagation()}
         >
           <button
             onClick={() => { exportPNG(); setCtxMenu(null) }}
             disabled={selected.length === 0 || chartData.length === 0}
-            className="w-full text-start px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+            className="w-full text-start px-4 py-2 text-sm text-gray-300 hover:bg-white/5 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
           >
             <span className="text-gray-500">↓</span> {t('ctx_save_png')}
           </button>
           <button
             onClick={() => { exportReport(); setCtxMenu(null) }}
             disabled={selected.length === 0 || exporting}
-            className="w-full text-start px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+            className="w-full text-start px-4 py-2 text-sm text-gray-300 hover:bg-white/5 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
           >
             <span className="text-gray-500">↓</span> {t('ctx_excel_report')}
           </button>
@@ -508,14 +508,14 @@ export default function Trend() {
           <button
             onClick={() => { setBrushIndices(null); setCtxMenu(null) }}
             disabled={brushIndices === null}
-            className="w-full text-start px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+            className="w-full text-start px-4 py-2 text-sm text-gray-300 hover:bg-white/5 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
           >
             <span className="text-gray-500">↺</span> {t('ctx_reset_zoom')}
           </button>
           <button
             onClick={() => { setSelected([]); setCtxMenu(null) }}
             disabled={selected.length === 0}
-            className="w-full text-start px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-red-400 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+            className="w-full text-start px-4 py-2 text-sm text-gray-300 hover:bg-white/5 hover:text-red-400 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
           >
             <span className="text-gray-500">✕</span> {t('ctx_clear_selection')}
           </button>

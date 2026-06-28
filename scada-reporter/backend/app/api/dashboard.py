@@ -3,7 +3,7 @@ import os
 from datetime import UTC, datetime, timedelta
 from typing import Literal
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, WebSocket, WebSocketDisconnect, status
 from sqlalchemy import distinct, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -685,3 +685,35 @@ async def database_stats(
         "daily_rows": daily_rows,
         "est_monthly_growth_bytes": est_monthly_growth,
     }
+
+
+# ---------------------------------------------------------------------------
+# WebSocket Stream
+# ---------------------------------------------------------------------------
+
+
+@router.websocket("/stream")
+async def dashboard_stream(
+    websocket: WebSocket, token: str = Query(None), db: AsyncSession = Depends(get_db)
+):
+    """Real-time tag readings WebSocket endpoint."""
+    from app.api.auth import authenticate_token
+    from app.core.broadcast import broadcast_manager
+
+    if not token:
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        return
+
+    try:
+        await authenticate_token(token, db, sse_allowed=True)
+    except Exception:
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        return
+
+    await broadcast_manager.connect(websocket)
+    try:
+        while True:
+            # Keep connection alive and optionally handle incoming client messages
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        broadcast_manager.disconnect(websocket)

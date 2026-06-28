@@ -61,7 +61,7 @@ export default function AllTagsTab({ active }: { active: boolean }) {
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ['dashboard-tags', params],
     queryFn: () => getDashboardTags(params).then((r) => r.data),
-    refetchInterval: 5000,
+    staleTime: 60000, // Relying on WebSocket for live updates
     enabled: active,
     retry: 1,
   })
@@ -90,7 +90,7 @@ export default function AllTagsTab({ active }: { active: boolean }) {
   return (
     <div className="space-y-4">
       {/* Filter bar */}
-      <div className="flex flex-wrap gap-2 items-center bg-gray-900 border border-gray-800 rounded-xl p-3">
+      <div className="flex flex-wrap gap-2 items-center bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl p-3">
         <select
           value={device}
           onChange={(e) => setDevice(e.target.value)}
@@ -136,17 +136,17 @@ export default function AllTagsTab({ active }: { active: boolean }) {
       {isLoading ? (
         <div className="text-center py-16 text-gray-500">{t('common:loading')}</div>
       ) : isError ? (
-        <div className="text-center py-16 bg-gray-900 rounded-xl border border-red-900">
+        <div className="text-center py-16 bg-gray-900/40 backdrop-blur-xl rounded-xl border border-red-900">
           <p className="text-red-400 font-medium">{t('load_failed')}</p>
           <p className="text-gray-500 text-sm mt-1">{String(error)}</p>
           <p className="text-gray-600 text-xs mt-2">{t('backend_hint')}</p>
         </div>
       ) : items.length === 0 ? (
-        <div className="text-center py-16 bg-gray-900 rounded-xl border border-gray-800">
+        <div className="text-center py-16 bg-gray-900/40 backdrop-blur-xl rounded-2xl border border-white/5">
           <p className="text-gray-400">{t('no_tags_found')}</p>
         </div>
       ) : (
-        <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+        <div className="bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl overflow-hidden">
           <table className="w-full">
             <thead>
               <tr className="text-xs text-gray-500 uppercase tracking-wide">
@@ -162,7 +162,7 @@ export default function AllTagsTab({ active }: { active: boolean }) {
               {items.map((item) => {
                 const pinned = pinnedIds.has(item.tag_id)
                 return (
-                  <tr key={item.tag_id} className="border-t border-gray-800 hover:bg-gray-800/40 transition-colors">
+                  <tr key={item.tag_id} className="border-t border-gray-800 hover:bg-white/5/40 transition-colors">
                     <td className="px-4 py-2.5 text-sm text-white font-medium">
                       <TagDescriptionCell name={item.name} description={item.description} />
                     </td>

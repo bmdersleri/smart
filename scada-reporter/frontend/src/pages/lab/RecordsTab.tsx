@@ -96,7 +96,7 @@ export default function RecordsTab() {
       {error && <p className="text-sm text-red-400">{error}</p>}
 
       {editing && (
-        <div className="rounded-lg border border-gray-700 bg-gray-900 p-4 space-y-3">
+        <div className="rounded-lg border border-gray-700 bg-gray-900/40 backdrop-blur-xl p-4 space-y-3">
           <p className="text-sm font-medium text-gray-300">{t('edit_record')}</p>
           <label className="block space-y-1">
             <span className="block text-xs uppercase text-gray-500">{t('sampled_at')}</span>
@@ -160,7 +160,7 @@ export default function RecordsTab() {
                   <>
                     <button
                       onClick={() => openEdit(s)}
-                      className="text-blue-400 hover:underline"
+                      className="text-cyan-400 hover:underline"
                     >
                       {t('edit')}
                     </button>

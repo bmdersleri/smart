@@ -53,7 +53,7 @@ export default function Users() {
       <h1 className="text-xl font-semibold mb-4">{t('title')}</h1>
 
       {/* Create form */}
-      <div className="bg-gray-900 border border-gray-800 rounded-lg p-4 mb-6 grid gap-2 max-w-xl">
+      <div className="bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl p-4 mb-6 grid gap-2 max-w-xl">
         <h2 className="font-medium">{t('new_user')}</h2>
         <input className="bg-gray-800 px-2 py-1 rounded" placeholder={t('username')} value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} />
         <input className="bg-gray-800 px-2 py-1 rounded" placeholder={t('email')} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
@@ -86,7 +86,7 @@ export default function Users() {
               <td>{u.is_active ? '✓' : '—'}</td>
               <td className="text-gray-500 text-xs">{u.permissions.join(', ')}</td>
               <td className="text-end space-x-2">
-                <button className="text-blue-400" onClick={() => setEditing(u)}>{t('edit')}</button>
+                <button className="text-cyan-400" onClick={() => setEditing(u)}>{t('edit')}</button>
                 <button className="text-amber-400" onClick={() => { const p = prompt(t('reset_password')); if (p) resetUserPassword(u.id, p).catch((e: unknown) => { const ax = e as { response?: { data?: { detail?: string } } }; alert(ax.response?.data?.detail || t('last_admin_error')) }) }}>{t('reset_password')}</button>
                 <button className="text-red-400" onClick={() => { if (confirm(t('confirm_delete'))) delMut.mutate(u.id) }}>{t('delete')}</button>
               </td>
@@ -98,7 +98,7 @@ export default function Users() {
       {/* Edit modal */}
       {editing && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center" onClick={() => setEditing(null)}>
-          <div className="bg-gray-900 border border-gray-800 rounded-lg p-4 grid gap-2 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl p-4 grid gap-2 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
             <h2 className="font-medium">{editing.username}</h2>
             <select className="bg-gray-800 px-2 py-1 rounded" value={editing.role} onChange={(e) => setEditing({ ...editing, role: e.target.value as UserRole })}>
               {ROLES.map((r) => <option key={r} value={r}>{t(`role_${r}`)}</option>)}

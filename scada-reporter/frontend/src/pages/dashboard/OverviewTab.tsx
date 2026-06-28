@@ -31,20 +31,25 @@ function StatCard({ label, value, sub, flash, flip, accent }: {
   accent?: string  // color class for value e.g. 'text-green-400'
 }) {
   return (
-    <div className={`bg-gray-900/80 backdrop-blur-md border rounded-xl p-4 transition-all duration-300 shadow-lg
-      ${flash ? 'border-cyan-500 shadow-[0_0_12px_rgba(6,182,212,0.25)]' : 'border-gray-800/60'}`}>
-      <p className="text-gray-400 text-xs uppercase tracking-wide mb-1">{label}</p>
-      <div className="overflow-hidden h-8">
+    <div className={`relative bg-gray-900/40 backdrop-blur-xl border rounded-2xl p-5 transition-all duration-300 shadow-xl overflow-hidden group
+      ${flash ? 'border-cyan-500/50 shadow-[0_0_20px_rgba(6,182,212,0.15)] bg-cyan-950/10' : 'border-white/5 hover:border-white/10 hover:bg-gray-900/60'}`}>
+      {/* Background gradients for premium feel */}
+      <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] to-transparent pointer-events-none" />
+      <div className={`absolute top-0 right-0 w-32 h-32 rounded-full transition-opacity duration-500 blur-3xl opacity-0 group-hover:opacity-10 pointer-events-none
+        ${flash ? 'bg-cyan-500' : 'bg-white'}`} />
+
+      <p className="text-gray-400 text-[11px] font-semibold uppercase tracking-wider mb-2 relative z-10">{label}</p>
+      <div className="overflow-hidden h-10 relative z-10 flex items-center">
         <p
           key={flip ? String(value) : undefined}
-          className={`text-2xl font-bold leading-8 transition-colors duration-300
-            ${flash ? 'text-cyan-400' : (accent ?? 'text-white')}
-            ${flip ? 'animate-[flipIn_0.5s_linear]' : ''}`}
+          className={`text-3xl font-bold tracking-tight transition-colors duration-300
+            ${flash ? 'text-cyan-300 drop-shadow-[0_0_8px_rgba(103,232,249,0.5)]' : (accent ?? 'text-white')}
+            ${flip ? 'animate-[flipIn_0.5s_ease-out]' : ''}`}
         >
           {value}
         </p>
       </div>
-      {sub && <p className="text-gray-500 text-xs mt-1">{sub}</p>}
+      {sub && <p className="text-gray-500 text-xs mt-1.5 font-medium relative z-10">{sub}</p>}
     </div>
   )
 }
@@ -103,7 +108,8 @@ function TopologyBar({ connectedCount, total, writeFlash }: {
 }) {
   if (total === 0) return null
   return (
-    <div className="flex items-center justify-center gap-3 py-3 px-4 bg-gray-950/60 backdrop-blur-md border-b border-gray-800/50">
+    <div className="flex items-center justify-center gap-4 py-3.5 px-5 bg-black/20 backdrop-blur-lg border-b border-white/5 relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-950/10 to-transparent pointer-events-none" />
       {/* PLC side */}
       <div className="flex items-center gap-1.5">
         <span className="text-gray-500 text-xs font-mono">PLC</span>
@@ -161,25 +167,25 @@ function PlcCard({ plc, writeFlash }: { plc: PlcEntry; writeFlash: boolean }) {
 
   return (
     <div
-      className={`relative bg-gray-950/80 backdrop-blur-sm border rounded-xl p-4 transition-all duration-200 overflow-hidden cursor-default
+      className={`relative bg-gray-900/40 backdrop-blur-xl border rounded-2xl p-5 transition-all duration-300 overflow-hidden cursor-default group
         ${isConnected
           ? writeFlash
-            ? 'border-cyan-600 shadow-[0_0_16px_rgba(6,182,212,0.2)]'
+            ? 'border-cyan-500/40 shadow-[0_0_24px_rgba(6,182,212,0.15)] bg-cyan-950/20'
             : hovered
-              ? 'border-cyan-700/80 shadow-[0_0_20px_rgba(6,182,212,0.15)] -translate-y-0.5'
-              : 'border-gray-700/60'
+              ? 'border-cyan-500/30 shadow-[0_8px_32px_rgba(6,182,212,0.1)] -translate-y-1 bg-gray-900/60'
+              : 'border-white/5 hover:border-white/10'
           : hovered
-            ? 'border-red-800/60 shadow-[0_0_12px_rgba(239,68,68,0.08)] -translate-y-0.5'
-            : 'border-gray-800'
+            ? 'border-red-500/30 shadow-[0_8px_32px_rgba(239,68,68,0.1)] -translate-y-1 bg-gray-900/60'
+            : 'border-white/5'
         }`}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
       {/* Hover gradient reveal */}
-      <div className={`absolute inset-0 pointer-events-none transition-opacity duration-200 rounded-xl
+      <div className={`absolute inset-0 pointer-events-none transition-opacity duration-300 rounded-2xl
         ${isConnected
-          ? 'bg-gradient-to-br from-cyan-950/30 via-transparent to-transparent'
-          : 'bg-gradient-to-br from-gray-800/20 via-transparent to-transparent'}
+          ? 'bg-gradient-to-br from-cyan-500/5 via-transparent to-transparent'
+          : 'bg-gradient-to-br from-red-500/5 via-transparent to-transparent'}
         ${hovered ? 'opacity-100' : 'opacity-0'}`}
       />
 
@@ -208,10 +214,10 @@ function PlcCard({ plc, writeFlash }: { plc: PlcEntry; writeFlash: boolean }) {
             {plc.ip || t('plc_no_ip')}
           </p>
         </div>
-        <span className={`text-xs px-2 py-0.5 rounded-full font-medium transition-all duration-150
+        <span className={`text-xs px-2.5 py-1 rounded-md font-semibold tracking-wide transition-all duration-200
           ${isConnected
-            ? hovered ? 'bg-green-800/60 text-green-300' : 'bg-green-900/40 text-green-400'
-            : hovered ? 'bg-red-900/50 text-red-400' : 'bg-red-900/30 text-red-500'
+            ? hovered ? 'bg-green-500/20 text-green-300 ring-1 ring-green-500/30' : 'bg-green-500/10 text-green-400'
+            : hovered ? 'bg-red-500/20 text-red-300 ring-1 ring-red-500/30' : 'bg-red-500/10 text-red-400'
           }`}>
           {t('plc_tag_count', { value: plc.tag_count.toLocaleString(i18n.language) })}
         </span>
@@ -379,10 +385,10 @@ export default function OverviewTab({ active }: { active: boolean }) {
 
       {/* PLC section */}
       {plcs.length > 0 && (
-        <div className="bg-gray-900/80 backdrop-blur-md border border-gray-800/60 rounded-xl overflow-hidden shadow-2xl">
+        <div className="bg-gray-900/30 backdrop-blur-xl border border-white/5 rounded-3xl overflow-hidden shadow-2xl ring-1 ring-white/5">
           {/* Header */}
-          <div className="px-4 py-3 border-b border-gray-800 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-white">{t('plc_status')}</h2>
+          <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between bg-gradient-to-r from-white/[0.02] to-transparent">
+            <h2 className="text-sm font-bold tracking-wide text-white uppercase">{t('plc_status')}</h2>
             <div className="flex items-center gap-4">
               {writeCount > 0 && (
                 <WriteCounter count={writeCount} flash={writeFlash} />
@@ -404,7 +410,7 @@ export default function OverviewTab({ active }: { active: boolean }) {
           />
 
           {/* PLC cards grid */}
-          <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+          <div className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {plcs.map((plc) => (
               <PlcCard key={plc.name} plc={plc} writeFlash={writeFlash} />
             ))}

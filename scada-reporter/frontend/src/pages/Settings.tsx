@@ -26,7 +26,7 @@ export default function Settings() {
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(22rem,0.75fr)]">
         <div className="space-y-5">
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-5 space-y-5">
+          <div className="bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl p-4 sm:p-5 space-y-5">
             <h2 className="text-sm font-medium text-gray-400 uppercase tracking-wider">{t('appearance')}</h2>
             <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
               <div className="min-w-0">
@@ -39,7 +39,7 @@ export default function Settings() {
                     key={val}
                     onClick={() => set('theme', val)}
                     className={`min-h-9 rounded-md px-3 py-1.5 text-sm transition-colors ${
-                      theme === val ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'
+                      theme === val ? 'bg-cyan-500/10 text-cyan-400 ring-1 ring-cyan-500/30' : 'text-gray-400 hover:text-white'
                     }`}
                   >
                     {label}
@@ -66,7 +66,7 @@ export default function Settings() {
         <div className="space-y-5">
           {user?.role === 'admin' && <SettingsTimezoneCard />}
 
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-5 space-y-6">
+          <div className="bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl p-4 sm:p-5 space-y-6">
             <h2 className="text-sm font-medium text-gray-400 uppercase tracking-wider">{t('trend_chart')}</h2>
 
             <div className="space-y-4">
@@ -83,7 +83,7 @@ export default function Settings() {
                       const v = Number(e.target.value)
                       if (v >= MIN_H && v <= MAX_H) set('trendChartHeight', v)
                     }}
-                    className="w-full min-w-0 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white text-end focus:outline-none focus:border-blue-500 sm:w-24"
+                    className="w-full min-w-0 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white text-end focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 sm:w-24"
                   />
                   <span className="text-sm text-gray-400">px</span>
                 </div>
@@ -109,7 +109,7 @@ export default function Settings() {
 
           <button
             onClick={reset}
-            className="w-full rounded-lg border border-gray-800 px-4 py-2 text-sm text-gray-400 transition-colors hover:bg-gray-800 hover:text-white sm:w-auto"
+            className="w-full rounded-lg border border-gray-800 px-4 py-2 text-sm text-gray-400 transition-colors hover:bg-white/5 hover:text-white sm:w-auto"
           >
             {t('common:reset')}
           </button>

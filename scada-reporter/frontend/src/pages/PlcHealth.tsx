@@ -91,7 +91,7 @@ export default function PlcHealth() {
 
       <section>
         <h2 className="text-sm font-semibold text-gray-300 mb-2">{t('per_plc')}</h2>
-        <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+        <div className="bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl overflow-hidden">
           <table className="w-full text-sm">
             <thead>
               <tr className="text-xs text-gray-500 uppercase">

@@ -46,11 +46,14 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4">
-      <div className="w-full max-w-sm">
+    <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-cyan-950/20 via-gray-950 to-gray-950 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Decorative background glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] bg-cyan-500/10 rounded-full blur-[120px] pointer-events-none" />
+
+      <div className="w-full max-w-sm relative z-10">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 mb-4">
-            <SmartReportIcon className="w-14 h-14" />
+          <div className="inline-flex items-center justify-center w-16 h-16 mb-4 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-blue-600/20 border border-cyan-500/20 shadow-lg shadow-cyan-500/10">
+            <SmartReportIcon className="w-10 h-10 text-cyan-400" />
           </div>
           <h1 className="text-2xl font-bold text-white">EKONT SMART REPORT</h1>
           <p className="text-gray-400 text-sm mt-1">{t('subtitle')}</p>
@@ -60,11 +63,11 @@ export default function Login() {
           </div>
         </div>
 
-        <form onSubmit={submit} className="bg-gray-900 rounded-2xl p-6 space-y-4 border border-gray-800">
+        <form onSubmit={submit} className="bg-gray-900/40 backdrop-blur-2xl rounded-3xl p-8 space-y-5 border border-white/10 shadow-2xl shadow-black/50">
           <div>
             <label className="block text-sm text-gray-400 mb-1">{t('username')}</label>
             <input
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+              className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all"
               value={username} onChange={(e) => setUsername(e.target.value)}
               placeholder="admin" autoComplete="username" required
             />
@@ -73,7 +76,7 @@ export default function Login() {
             <label className="block text-sm text-gray-400 mb-1">{t('password')}</label>
             <input
               type="password"
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+              className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all"
               value={password} onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••" autoComplete="current-password" required
             />
@@ -81,7 +84,7 @@ export default function Login() {
           {error && <p className="text-red-400 text-sm">{error}</p>}
           <button
             type="submit" disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-medium py-2.5 rounded-lg transition-colors"
+            className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 disabled:opacity-50 text-white font-bold tracking-wide py-3 rounded-xl transition-all shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 active:scale-[0.98]"
           >
             {loading ? t('submitting') : t('submit')}
           </button>

@@ -39,7 +39,7 @@ export default function SettingsTimezoneCard() {
   }
 
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-5 space-y-3">
+    <div className="bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl p-4 sm:p-5 space-y-3">
       <div>
         <h2 className="text-sm font-medium text-gray-400 uppercase tracking-wider">
           {t('tz_title')}

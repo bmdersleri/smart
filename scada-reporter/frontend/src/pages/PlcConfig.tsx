@@ -176,7 +176,7 @@ function PlcRow({
   const [confirming, setConfirming] = useState(false)
 
   return (
-    <tr className="border-t border-gray-800 hover:bg-gray-800/40 transition-colors">
+    <tr className="border-t border-gray-800 hover:bg-white/5/40 transition-colors">
       <td className="px-4 py-3 text-sm text-white font-medium">{plc.name}</td>
       <td className="px-4 py-3 text-sm text-gray-300 font-mono">{plc.ip || <span className="text-gray-600 italic">—</span>}</td>
       <td className="px-4 py-3 text-sm text-gray-400">{plc.rack}</td>
@@ -313,11 +313,11 @@ export default function PlcConfig() {
       {isLoading ? (
         <div className="text-center py-16 text-gray-500">{t('common:loading')}</div>
       ) : isError ? (
-        <div className="text-center py-16 bg-gray-900 rounded-xl border border-red-900">
+        <div className="text-center py-16 bg-gray-900/40 backdrop-blur-xl rounded-xl border border-red-900">
           <p className="text-red-400">{t('load_error')}</p>
         </div>
       ) : (
-        <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+        <div className="bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl overflow-hidden">
           <table className="w-full">
             <thead>
               <tr className="text-xs text-gray-500 uppercase tracking-wide">

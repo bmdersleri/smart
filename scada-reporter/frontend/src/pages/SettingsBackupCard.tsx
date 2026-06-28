@@ -13,7 +13,7 @@ import {
 } from '../api/client'
 import { parseUtc } from '../utils/time'
 
-const cardCls = 'bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-5 space-y-4'
+const cardCls = 'bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl p-4 sm:p-5 space-y-4'
 const btnBase = 'min-h-9 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-50'
 
 function fmtSize(n: number | null): string {
@@ -214,7 +214,7 @@ export default function SettingsBackupCard() {
                   type="button"
                   onClick={() => void onDownload(b.id, b.filename)}
                   disabled={busy || b.status !== 'verified'}
-                  className="text-xs text-blue-400 hover:underline disabled:opacity-50"
+                  className="text-xs text-cyan-400 hover:underline disabled:opacity-50"
                 >
                   {t('backup_download')}
                 </button>

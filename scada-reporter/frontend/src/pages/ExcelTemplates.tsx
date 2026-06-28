@@ -159,7 +159,7 @@ export default function ExcelTemplates() {
           </tbody>
         </table>
         <div className="mt-4 flex gap-2">
-          <button className="px-3 py-1 rounded bg-blue-600 text-white" onClick={() => saveMut.mutate()}>{t("save")}</button>
+          <button className="px-3 py-1 rounded bg-cyan-500/10 text-cyan-400 ring-1 ring-cyan-500/30" onClick={() => saveMut.mutate()}>{t("save")}</button>
           <button className="px-3 py-1 rounded border border-gray-700 text-gray-300" onClick={() => setView("list")}>{t("cancel")}</button>
         </div>
       </div>
@@ -170,7 +170,7 @@ export default function ExcelTemplates() {
     <div className="p-6">
       <h1 className="text-xl font-semibold mb-4 text-white">{t("title")}</h1>
       {can('report_template:create') && (
-        <label className="inline-block mb-4 px-3 py-1 rounded bg-blue-600 text-white cursor-pointer">
+        <label className="inline-block mb-4 px-3 py-1 rounded bg-cyan-500/10 text-cyan-400 ring-1 ring-cyan-500/30 cursor-pointer">
           {t("upload")}
           <input
             type="file"

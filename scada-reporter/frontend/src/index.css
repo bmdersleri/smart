@@ -163,3 +163,45 @@ html.light .hover\:bg-green-700:hover { background-color: #bbf7d0; }
   80%  { transform: translateY(3%); }
   100% { transform: translateY(0); }
 }
+
+/* ── Global Premium Table Styles ──────────────────────────────────────────────
+   Applies glassmorphism hover and spacing to all standard tables
+   inside the new rounded-2xl panels.
+   ─────────────────────────────────────────────────────────────────────────── */
+.bg-gray-900\/40 table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.bg-gray-900\/40 thead tr {
+  background: linear-gradient(to right, rgba(255,255,255,0.01), rgba(255,255,255,0.03));
+}
+
+.bg-gray-900\/40 th {
+  padding: 0.875rem 1rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94a3b8; /* gray-400 */
+  font-weight: 600;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.bg-gray-900\/40 tbody tr {
+  transition: all 0.2s ease;
+}
+
+.bg-gray-900\/40 tbody tr:not(:last-child) td {
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+
+.bg-gray-900\/40 tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+.bg-gray-900\/40 td {
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  color: #cbd5e1; /* gray-300 */
+}

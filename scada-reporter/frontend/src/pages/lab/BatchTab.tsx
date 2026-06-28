@@ -87,7 +87,7 @@ export default function BatchTab() {
         <select
           value={pointId}
           onChange={(e) => setPointId(e.target.value === '' ? '' : Number(e.target.value))}
-          className="rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-gray-100"
+          className="rounded-lg border border-gray-700 bg-gray-900/40 backdrop-blur-xl px-3 py-2 text-sm text-gray-100"
         >
           <option value="">—</option>
           {points.map((p) => (
@@ -117,7 +117,7 @@ export default function BatchTab() {
                     type="datetime-local"
                     value={row.sampled_at}
                     onChange={(e) => setTime(ri, e.target.value)}
-                    className="rounded-lg border border-gray-700 bg-gray-900 px-2 py-1 text-sm text-gray-100"
+                    className="rounded-lg border border-gray-700 bg-gray-900/40 backdrop-blur-xl px-2 py-1 text-sm text-gray-100"
                   />
                 </td>
                 {params.map((p) => (
@@ -126,7 +126,7 @@ export default function BatchTab() {
                       type="number"
                       value={row.values[p.id] ?? ''}
                       onChange={(e) => setCell(ri, p.id, e.target.value)}
-                      className="w-24 rounded-lg border border-gray-700 bg-gray-900 px-2 py-1 text-sm text-gray-100"
+                      className="w-24 rounded-lg border border-gray-700 bg-gray-900/40 backdrop-blur-xl px-2 py-1 text-sm text-gray-100"
                     />
                   </td>
                 ))}
@@ -149,7 +149,7 @@ export default function BatchTab() {
       <div className="flex items-center gap-3">
         <button
           onClick={addRow}
-          className="rounded-lg border border-gray-700 px-3 py-1.5 text-sm text-gray-400 hover:text-white hover:bg-gray-800"
+          className="rounded-lg border border-gray-700 px-3 py-1.5 text-sm text-gray-400 hover:text-white hover:bg-white/5"
         >
           {t('add_row')}
         </button>

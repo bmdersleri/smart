@@ -27,7 +27,7 @@ export default function LabEntry() {
           <button
             key={tb.key}
             onClick={() => setTab(tb.key)}
-            className={`rounded-lg px-4 py-2 text-sm transition-colors ${tab === tb.key ? 'bg-blue-600 text-white' : 'bg-gray-900 text-gray-400 hover:bg-gray-800'}`}
+            className={`rounded-lg px-4 py-2 text-sm transition-colors ${tab === tb.key ? 'bg-cyan-500/10 text-cyan-400 ring-1 ring-cyan-500/30' : 'bg-gray-900/40 backdrop-blur-xl text-gray-400 hover:bg-white/5'}`}
           >
             {tb.label}
           </button>
