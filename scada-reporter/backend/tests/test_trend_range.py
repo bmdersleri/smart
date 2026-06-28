@@ -60,6 +60,46 @@ async def test_trend_range_returns_only_window(client: AsyncClient, db_session: 
 
 
 @pytest.mark.asyncio
+async def test_trend_range_wide_window_falls_back_to_raw_on_sqlite(
+    client: AsyncClient, db_session: AsyncSession
+):
+    """Geniş pencere (>6h) rollup view dener; SQLite'ta view yok → ham veriye düşer.
+
+    Şeffaf olmalı: aynı seri verisi döner, sadece kaynak (rollup denemesi sonrası
+    ham fallback) değişir.
+    """
+    tok = await _admin(client, db_session, "range_wide")
+    h = {"Authorization": f"Bearer {tok}"}
+    tag = Tag(node_id="RNG3,REAL0", name="RngTag3", unit="m3", long_term=True)
+    db_session.add(tag)
+    await db_session.commit()
+    await db_session.refresh(tag)
+
+    base = datetime(2026, 6, 1, 0, 0, 0)
+    # points every 6 hours across 48h → window width 48h triggers rollup path
+    for i in range(9):
+        db_session.add(
+            TagReading(
+                tag_id=tag.id, value=float(i), quality=192, timestamp=base + timedelta(hours=6 * i)
+            )
+        )
+    await db_session.commit()
+
+    start = base.isoformat()
+    end = (base + timedelta(hours=48)).isoformat()
+    r = await client.get(
+        "/api/dashboard/trend_range",
+        params={"tag_ids": [tag.id], "start": start, "end": end},
+        headers=h,
+    )
+    assert r.status_code == 200
+    series = r.json()
+    assert len(series) == 1
+    values = [p["v"] for p in series[0]["data"]]
+    assert values == [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]
+
+
+@pytest.mark.asyncio
 async def test_trend_range_empty_window(client: AsyncClient, db_session: AsyncSession):
     tok = await _admin(client, db_session, "range_empty")
     h = {"Authorization": f"Bearer {tok}"}

@@ -463,6 +463,62 @@ def pick_rollup(hours: int) -> str | None:
     return "tag_readings_1h"
 
 
+def _naive(dt: datetime) -> datetime:
+    return dt.replace(tzinfo=None) if dt.tzinfo else dt
+
+
+async def _rollup_series_window(
+    db: AsyncSession,
+    tag_ids: list[int],
+    start: datetime,
+    end: datetime | None,
+    max_points: int | None,
+) -> list[dict] | None:
+    """[start, end] penceresini continuous-aggregate rollup'ından oku.
+
+    Pencere genişliğine göre view seçilir (pick_rollup). Kısa pencere (None),
+    rollup yok / sorgu hatası (ör. SQLite dev), veya boş sonuç → None döner;
+    çağıran ham seriye düşer. 54M satırlık tag_readings yerine rollup tarar.
+    """
+    span_end = end if end is not None else datetime.now(UTC)
+    hours = max(1, int((_naive(span_end) - _naive(start)).total_seconds() // 3600))
+    view = pick_rollup(hours)
+    if view is None:
+        return None
+
+    cond = "r.bucket >= :start"
+    params: dict = {"ids": tag_ids, "start": start}
+    if end is not None:
+        cond += " AND r.bucket <= :end"
+        params["end"] = end
+    try:
+        rows = (
+            await db.execute(
+                text(
+                    f"SELECT r.tag_id, t.name, t.unit, r.bucket, r.avg "  # nosec B608 — {view} fixed from pick_rollup(); {cond} internal; values bound
+                    f"FROM {view} r JOIN tags t ON t.id = r.tag_id "
+                    f"WHERE r.tag_id = ANY(:ids) AND {cond} "
+                    "ORDER BY r.bucket ASC"
+                ).bindparams(**params)
+            )
+        ).all()
+    except Exception:
+        await db.rollback()
+        return None
+    if not rows:
+        return None
+
+    series: dict[int, dict] = {}
+    for tag_id, name, unit, bucket, avg in rows:
+        if tag_id not in series:
+            series[tag_id] = {"tag_id": tag_id, "name": name, "unit": unit, "data": []}
+        series[tag_id]["data"].append({"t": utc_iso(bucket), "v": avg})
+    out = list(series.values())
+    for s in out:
+        s["data"] = downsample(s["data"], max_points)
+    return out
+
+
 @router.get("/trend")
 async def trend(
     tag_ids: list[int] = Query(...),
@@ -484,9 +540,12 @@ async def trend_range(
     db: AsyncSession = Depends(get_db),
     _=Depends(get_current_user),
 ):
-    """Açık başlangıç/bitiş penceresinde ham seri (dönem karşılaştırması için)."""
+    """Açık başlangıç/bitiş penceresi. Geniş pencerede rollup, kısa/yoksa ham."""
     s = start.replace(tzinfo=None) if start.tzinfo else start
     e = end.replace(tzinfo=None) if end.tzinfo else end
+    out = await _rollup_series_window(db, tag_ids, s, e, max_points)
+    if out is not None:
+        return out
     return await _raw_series_window(db, tag_ids, s, e, max_points)
 
 
@@ -503,34 +562,10 @@ async def trend_agg(
     Kısa pencere veya rollup yoksa (ör. SQLite dev) ham veriye düşer.
     """
     since = datetime.now(UTC) - timedelta(hours=hours)
-    view = pick_rollup(hours)
-    if view is None:
-        return await _raw_series(db, tag_ids, since, max_points)
-
-    try:
-        rows = (
-            await db.execute(
-                text(
-                    f"SELECT r.tag_id, t.name, t.unit, r.bucket, r.avg "  # nosec B608 — {view} is a fixed rollup name from pick_rollup(); ids/since bound via bindparams
-                    f"FROM {view} r JOIN tags t ON t.id = r.tag_id "
-                    "WHERE r.tag_id = ANY(:ids) AND r.bucket >= :since "
-                    "ORDER BY r.bucket ASC"
-                ).bindparams(ids=tag_ids, since=since)
-            )
-        ).all()
-    except Exception:
-        await db.rollback()
-        return await _raw_series(db, tag_ids, since, max_points)
-
-    series: dict[int, dict] = {}
-    for tag_id, name, unit, bucket, avg in rows:
-        if tag_id not in series:
-            series[tag_id] = {"tag_id": tag_id, "name": name, "unit": unit, "data": []}
-        series[tag_id]["data"].append({"t": utc_iso(bucket), "v": avg})
-    out = list(series.values())
-    for s in out:
-        s["data"] = downsample(s["data"], max_points)
-    return out
+    out = await _rollup_series_window(db, tag_ids, since, None, max_points)
+    if out is not None:
+        return out
+    return await _raw_series(db, tag_ids, since, max_points)
 
 
 # ---------------------------------------------------------------------------
