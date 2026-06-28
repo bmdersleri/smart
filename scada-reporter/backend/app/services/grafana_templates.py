@@ -57,6 +57,33 @@ def apply_tag_label(sql: str) -> str:
     return out
 
 
+# metric-kolonlu serilerde Grafana varsayılan adı "value <metric>" gösterir
+# (value = alan adı, metric = etiket). Bu displayName yalnız metric etiketini verir.
+_METRIC_DISPLAY_NAME = "${__field.labels.metric}"
+
+
+def apply_metric_display_name(panel: dict) -> bool:
+    """Sorgusunda bir `metric` kolonu seçen timeseries panellerinde legend'i
+    yalnız metric etiketini gösterecek şekilde ayarlar ("value " önekini kaldırır).
+    Panel değiştiyse True döner. Idempotent; metric'siz veya timeseries olmayan
+    paneller değişmez."""
+    if panel.get("type") != "timeseries":
+        return False
+    targets = panel.get("targets") or []
+    has_metric = any(
+        isinstance(t.get(k), str) and "AS metric" in t[k]
+        for t in targets
+        for k in ("rawQueryText", "queryText", "rawSql")
+    )
+    if not has_metric:
+        return False
+    defaults = panel.setdefault("fieldConfig", {}).setdefault("defaults", {})
+    if defaults.get("displayName") == _METRIC_DISPLAY_NAME:
+        return False
+    defaults["displayName"] = _METRIC_DISPLAY_NAME
+    return True
+
+
 TEMPLATES: tuple[GrafanaDashboardTemplate, ...] = (
     GrafanaDashboardTemplate(
         key="facility_overview",
@@ -116,9 +143,25 @@ def _timeseries_panel(
     w: int,
     h: int,
     unit: str = "short",
+    metric_series: bool = False,
     datasource: dict | None = None,
     target: dict | None = None,
 ) -> dict:
+    defaults: dict = {
+        "unit": unit,
+        "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 8,
+            "showPoints": "never",
+            "spanNulls": True,
+        },
+        "color": {"mode": "palette-classic"},
+    }
+    # metric-kolonlu sorgularda seri adı "value <metric>" olarak görünür (value =
+    # alan adı, metric = etiket). displayName ile yalnız metric etiketini göster.
+    if metric_series:
+        defaults["displayName"] = "${__field.labels.metric}"
     return {
         "id": panel_id,
         "type": "timeseries",
@@ -126,17 +169,7 @@ def _timeseries_panel(
         "datasource": datasource or {"type": "postgres", "uid": "timescaledb"},
         "gridPos": {"x": x, "y": y, "w": w, "h": h},
         "fieldConfig": {
-            "defaults": {
-                "unit": unit,
-                "custom": {
-                    "drawStyle": "line",
-                    "lineWidth": 1,
-                    "fillOpacity": 8,
-                    "showPoints": "never",
-                    "spanNulls": True,
-                },
-                "color": {"mode": "palette-classic"},
-            },
+            "defaults": defaults,
             "overrides": [],
         },
         "options": {
@@ -382,6 +415,7 @@ def build_water_quality_dashboard(uid: str, title: str, tag_ids: list[int]) -> d
                 y=0,
                 w=24,
                 h=11,
+                metric_series=True,
                 datasource=ds,
                 target=_frser_target(trend_sql, time_series=True),
             ),
@@ -485,6 +519,8 @@ def _lab_timeseries_panel(panel_id: int, point_code: str, param: LabParamSpec, *
         "fieldConfig": {
             "defaults": {
                 "unit": param.unit or "short",
+                # seri adı "value <param>" yerine yalnız param etiketi (metric)
+                "displayName": "${__field.labels.metric}",
                 "custom": {
                     "drawStyle": "line",
                     "lineWidth": 2,
@@ -609,6 +645,7 @@ def build_report_template_dashboard(
                 y=y,
                 w=24,
                 h=11,
+                metric_series=True,
             )
         )
         pid += 1

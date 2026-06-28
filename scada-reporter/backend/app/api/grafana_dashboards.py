@@ -20,6 +20,7 @@ from app.models.user import User
 from app.services.grafana_render import render_auth, render_headers
 from app.services.grafana_templates import (
     LabParamSpec,
+    apply_metric_display_name,
     apply_tag_label,
     build_dashboard,
     build_lab_dashboard,
@@ -337,6 +338,8 @@ async def refresh_managed_dashboards(
                                     if new_sql != sql:
                                         target[key] = new_sql
                                         changed = True
+                        if apply_metric_display_name(panel):
+                            changed = True
                     if not changed:
                         skipped.append({"uid": uid, "reason": "no-op"})
                         continue
