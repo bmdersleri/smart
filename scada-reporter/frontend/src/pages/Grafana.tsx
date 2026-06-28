@@ -74,7 +74,11 @@ export default function Grafana() {
   const [deleteError, setDeleteError] = useState<string | null>(null)
 
   const loadDashboards = useCallback((signal?: AbortSignal) => {
-    fetch('/grafana-api/api/search?type=dash-db')
+    // credentials:'omit' KRİTİK: bayat bir grafana_session cookie'si proxy üzerinden
+    // Grafana'ya giderse Grafana session-auth'a düşüp 401 verir (proxy'nin enjekte
+    // ettiği Basic auth'u kullanmaz). Cookie'yi hiç göndermeyerek her zaman proxy
+    // Basic auth (veya anonymous) ile kimlik doğrulanır — bayat cookie'den bağımsız.
+    fetch('/grafana-api/api/search?type=dash-db', { cache: 'no-store', credentials: 'omit' })
       .then((r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`)
         return r.json() as Promise<Array<{ uid: string; title: string; url: string }>>
