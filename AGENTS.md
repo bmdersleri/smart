@@ -169,6 +169,15 @@ scada compliance overview --json-output
 scada compliance events --permit-id 1 --status open --json-output
 scada compliance evaluate --permit-id 1 --start 2026-05-01T00:00:00 --end 2026-06-01T00:00:00 --json-output
 
+# Compliance AI assistant (read) — answers link deterministic event/pack IDs
+scada compliance ask "Is this month ready for reporting?" --permit-id 1 --json-output
+
+# Compliance writes (gated; explicit action only)
+scada compliance note add 42 "Heavy rain inflow; corrective action logged" --json-output
+scada compliance status set 42 acknowledged --json-output
+scada compliance report-pack create --permit-id 1 --start 2026-05-01T00:00:00 --end 2026-06-01T00:00:00 --json-output
+scada compliance report-pack approve 7 --json-output
+
 # Python REPL with data preloaded
 scada shell
 ```
@@ -197,7 +206,7 @@ Most read-oriented commands support `--json-output` for machine-readable output 
 | `groups` | Tag group management |
 | `plc` | PLC connection configuration |
 | `users` | User management (admin only) |
-| `compliance` | Permit-compliance: period overview, rule events, manual evaluate (evaluate is write-gated) |
+| `compliance` | Permit-compliance: overview, rule events, evaluate, AI `ask` (read; answers link event/pack IDs), and writes — `note add` / `status set` / `report-pack create|approve` (write-gated) |
 
 `health` is a top-level command (not a group): `scada health`. Use `--json-output` for machine-readable output: `scada health --json-output`.
 
