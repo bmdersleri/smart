@@ -18,6 +18,9 @@ class GrafanaDashboardTemplate:
     requires_tags: bool
 
 
+# Tag'in görünen etiketi: açıklama varsa onu, boşsa teknik ada düş.
+_TAG_LABEL = "COALESCE(NULLIF(t.description, ''), t.name)"
+
 TEMPLATES: tuple[GrafanaDashboardTemplate, ...] = (
     GrafanaDashboardTemplate(
         key="facility_overview",
@@ -209,8 +212,8 @@ def build_facility_overview_dashboard(uid: str, title: str) -> dict:
         "WHERE timestamp >= datetime('now', '-24 hours') GROUP BY 1 ORDER BY 1"
     )
     last_values_sql = (
-        "SELECT name, device, value, unit, quality, timestamp FROM ("
-        "SELECT t.name, t.device, tr.value, t.unit, tr.quality, tr.timestamp, "
+        'SELECT name AS "Etiket", device, value, unit, quality, timestamp FROM ('
+        f"SELECT {_TAG_LABEL} AS name, t.device, tr.value, t.unit, tr.quality, tr.timestamp, "
         "row_number() OVER (PARTITION BY t.id ORDER BY tr.timestamp DESC) AS rn "
         "FROM tags t JOIN tag_readings tr ON tr.tag_id = t.id"
         ") WHERE rn = 1 ORDER BY timestamp DESC LIMIT 20"
@@ -307,21 +310,21 @@ def build_water_quality_dashboard(uid: str, title: str, tag_ids: list[int]) -> d
     ds = _frser_datasource()
     trend_sql = (
         "SELECT CAST(strftime('%s', tr.timestamp) AS INTEGER) AS time, "
-        "t.name AS metric, tr.value AS value "
+        f"{_TAG_LABEL} AS metric, tr.value AS value "
         "FROM tag_readings tr JOIN tags t ON t.id = tr.tag_id "
         f"WHERE tr.timestamp >= datetime('now', '-7 days') AND tr.tag_id IN ({ids}) "
         "ORDER BY time"
     )
     latest_sql = (
-        "SELECT name, value, unit, quality, timestamp FROM ("
-        "SELECT t.id AS tid, t.name, tr.value, t.unit, tr.quality, tr.timestamp, "
+        'SELECT name AS "Etiket", value, unit, quality, timestamp FROM ('
+        f"SELECT t.id AS tid, {_TAG_LABEL} AS name, tr.value, t.unit, tr.quality, tr.timestamp, "
         "row_number() OVER (PARTITION BY t.id ORDER BY tr.timestamp DESC) AS rn "
         "FROM tags t JOIN tag_readings tr ON tr.tag_id = t.id "
         f"WHERE t.id IN ({ids})"
         ") WHERE rn = 1 ORDER BY tid"
     )
     breach_sql = (
-        "SELECT t.name, "
+        f'SELECT {_TAG_LABEL} AS "Etiket", '
         "sum(CASE WHEN t.min_alarm IS NOT NULL "
         'AND tr.value < t.min_alarm THEN 1 ELSE 0 END) AS "Alt Limit", '
         "sum(CASE WHEN t.max_alarm IS NOT NULL "

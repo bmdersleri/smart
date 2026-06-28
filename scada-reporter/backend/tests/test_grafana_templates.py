@@ -9,10 +9,45 @@ from app.models.tag import Tag
 from app.models.user import User
 from app.services.grafana_templates import (
     build_dashboard,
+    build_facility_overview_dashboard,
     build_report_template_dashboard,
+    build_water_quality_dashboard,
     dashboard_uid,
     list_templates,
 )
+
+_LABEL = "COALESCE(NULLIF(t.description, ''), t.name)"
+
+
+def _all_sql(dash: dict) -> str:
+    return " ".join(
+        t.get("rawQueryText", "") + " " + t.get("queryText", "")
+        for p in dash["panels"]
+        for t in p.get("targets", [])
+    )
+
+
+def test_water_quality_uses_description_label():
+    dash = build_water_quality_dashboard("sr-wq-x", "WQ", [1, 2])
+    sql = _all_sql(dash)
+    # trend series label
+    assert f"{_LABEL} AS metric" in sql
+    # latest-values table: inner label + outer readable header
+    assert f"{_LABEL} AS name" in sql
+    assert 'name AS "Etiket"' in sql
+    # breach table header
+    assert f'{_LABEL} AS "Etiket"' in sql
+    # grouping stays per-tag
+    assert "GROUP BY t.name" in sql
+    # no bare technical-name label remains
+    assert "t.name AS metric" not in sql
+
+
+def test_facility_overview_uses_description_label():
+    dash = build_facility_overview_dashboard("sr-fac-x", "FAC")
+    sql = _all_sql(dash)
+    assert f"{_LABEL} AS name" in sql
+    assert 'name AS "Etiket"' in sql
 
 
 async def _auth(client: AsyncClient, db_session: AsyncSession, uname: str = "grafana"):
