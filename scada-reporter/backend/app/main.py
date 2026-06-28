@@ -53,6 +53,7 @@ from app.models import annotation as _annotation  # noqa: F401
 from app.models import app_setting as _app_setting  # noqa: F401
 from app.models import audit_log as _audit_log  # noqa: F401
 from app.models import backup as _backup  # noqa: F401
+from app.models import compliance as _compliance  # noqa: F401
 from app.models import excel_template as _excel_template  # noqa: F401
 from app.models import lab as _lab  # noqa: F401
 from app.models import plc_health as _plc_health  # noqa: F401
