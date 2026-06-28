@@ -164,6 +164,11 @@ scada dashboard trend 1 2 --hours 24 --json-output
 # Read-only SQL
 scada query run "SELECT name, value, unit FROM tags LIMIT 5" --json-output
 
+# Compliance: period readiness + permit-rule events
+scada compliance overview --json-output
+scada compliance events --permit-id 1 --status open --json-output
+scada compliance evaluate --permit-id 1 --start 2026-05-01T00:00:00 --end 2026-06-01T00:00:00 --json-output
+
 # Python REPL with data preloaded
 scada shell
 ```
@@ -192,6 +197,7 @@ Most read-oriented commands support `--json-output` for machine-readable output 
 | `groups` | Tag group management |
 | `plc` | PLC connection configuration |
 | `users` | User management (admin only) |
+| `compliance` | Permit-compliance: period overview, rule events, manual evaluate (evaluate is write-gated) |
 
 `health` is a top-level command (not a group): `scada health`. Use `--json-output` for machine-readable output: `scada health --json-output`.
 

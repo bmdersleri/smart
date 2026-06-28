@@ -53,6 +53,7 @@ Collects data directly from Siemens S7-1500 PLCs, stores it in a time-series dat
 | Explore | `/api/explore` | Schema and tag catalog discovery |
 | Lab | `/api/lab` | Lab parameters, sample points, samples, batch entry, Excel/CSV import (16 endpoints) |
 | Grafana Dashboards | `/api/grafana/dashboards` | Generate from lab sample point or project template (POST); delete by uid (DELETE — admin) |
+| Compliance | `/api/compliance` | Permit profiles, deterministic rule evaluation, compliance events, notes, status transitions, overview |
 | License | `/api/license` | License status (GET); admin upload/replace (POST) and revert-to-demo (DELETE) |
 | Health | `/live`, `/ready`, `/health`, `/metrics` | Liveness, readiness, system health, Prometheus metrics |
 
@@ -254,6 +255,7 @@ scada tags list --json-output    # Tag list
 scada dashboard overview  # Overview
 scada query run "SELECT name, value FROM tags LIMIT 5" --json-output
 scada explore schema      # DB schema
+scada compliance overview --json-output   # Permit-compliance period readiness
 scada shell               # Python REPL (data loaded)
 ```
 
