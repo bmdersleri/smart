@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+<meta charset="UTF-8">
+<title>Compliance Report Pack — {{ data.cover.permit_name }}</title>
+<style>
+@page {
+    margin: 2cm;
+    @bottom-center {
+        content: "Page " counter(page) " / " counter(pages);
+        font-size: 9pt;
+        color: #6b7280;
+    }
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 10pt;
+    color: #111827;
+    background: #ffffff;
+}
+h1 { font-size: 20pt; margin-bottom: 8pt; }
+h2 { font-size: 13pt; margin: 16pt 0 6pt; color: #1f2937; border-bottom: 1px solid #d1d5db; padding-bottom: 3pt; }
+.meta td { padding: 2pt 8pt 2pt 0; }
+.meta td:first-child { color: #6b7280; }
+table.data { width: 100%; border-collapse: collapse; margin-top: 6pt; }
+table.data th, table.data td { border: 1px solid #d1d5db; padding: 4pt 6pt; text-align: left; font-size: 9pt; }
+table.data th { background: #1f2937; color: #ffffff; }
+.empty { color: #9ca3af; font-style: italic; }
+</style>
+</head>
+<body>
+
+<h1>Compliance Report Pack</h1>
+
+<h2>Cover</h2>
+<table class="meta">
+    <tr><td>Permit</td><td>{{ data.cover.permit_name }}</td></tr>
+    <tr><td>Facility</td><td>{{ data.cover.facility_name }}</td></tr>
+    <tr><td>Authority</td><td>{{ data.cover.authority }}</td></tr>
+    <tr><td>Permit Number</td><td>{{ data.cover.permit_number }}</td></tr>
+    <tr><td>Report Frequency</td><td>{{ data.cover.report_frequency }}</td></tr>
+</table>
+
+<h2>Reporting Period Summary</h2>
+<table class="meta">
+    <tr><td>Period Start</td><td>{{ data.period_summary.period_start }}</td></tr>
+    <tr><td>Period End</td><td>{{ data.period_summary.period_end }}</td></tr>
+    <tr><td>Total Events</td><td>{{ data.period_summary.total_events }}</td></tr>
+    <tr><td>Open Events</td><td>{{ data.period_summary.open_events }}</td></tr>
+    <tr><td>Parameters</td><td>{{ data.period_summary.parameter_count }}</td></tr>
+</table>
+
+<h2>Parameter &amp; Limit Table</h2>
+{% if data.parameter_limit_table %}
+<table class="data">
+    <thead><tr>
+        <th>Parameter</th><th>Unit</th><th>Source</th><th>Point</th>
+        <th>Limit Type</th><th>Min</th><th>Max</th><th>Aggregation</th><th>Severity</th>
+    </tr></thead>
+    <tbody>
+    {% for row in data.parameter_limit_table %}
+        <tr>
+            <td>{{ row.parameter_name }}</td><td>{{ row.unit }}</td><td>{{ row.source_type }}</td>
+            <td>{{ row.discharge_point }}</td><td>{{ row.limit_type }}</td>
+            <td>{{ row.min_value }}</td><td>{{ row.max_value }}</td>
+            <td>{{ row.aggregation }}</td><td>{{ row.severity }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}<p class="empty">No parameters configured.</p>{% endif %}
+
+<h2>Measurement Results</h2>
+{% if data.measurement_results %}
+<table class="data">
+    <thead><tr><th>Parameter</th><th>Event Type</th><th>Observed</th><th>Limit</th><th>Status</th></tr></thead>
+    <tbody>
+    {% for row in data.measurement_results %}
+        <tr><td>{{ row.parameter_name }}</td><td>{{ row.event_type }}</td>
+        <td>{{ row.observed_value }}</td><td>{{ row.limit_value }}</td><td>{{ row.status }}</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}<p class="empty">No measurement results.</p>{% endif %}
+
+<h2>Compliance Event Summary</h2>
+{% if data.event_summary %}
+<table class="data">
+    <thead><tr><th>Parameter</th><th>Event Type</th><th>Severity</th><th>Status</th><th>Observed</th><th>Limit</th></tr></thead>
+    <tbody>
+    {% for row in data.event_summary %}
+        <tr><td>{{ row.parameter_name }}</td><td>{{ row.event_type }}</td><td>{{ row.severity }}</td>
+        <td>{{ row.status }}</td><td>{{ row.observed_value }}</td><td>{{ row.limit_value }}</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}<p class="empty">No compliance events for this period.</p>{% endif %}
+
+<h2>Missing Sample List</h2>
+{% if data.missing_sample_list %}
+<table class="data">
+    <thead><tr><th>Parameter</th><th>Observed</th><th>Required</th><th>Status</th></tr></thead>
+    <tbody>
+    {% for row in data.missing_sample_list %}
+        <tr><td>{{ row.parameter_name }}</td><td>{{ row.observed_value }}</td>
+        <td>{{ row.limit_value }}</td><td>{{ row.status }}</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}<p class="empty">No missing samples.</p>{% endif %}
+
+<h2>Bad Quality Reading List</h2>
+{% if data.bad_quality_list %}
+<table class="data">
+    <thead><tr><th>Parameter</th><th>Observed Quality</th><th>Threshold</th><th>Status</th></tr></thead>
+    <tbody>
+    {% for row in data.bad_quality_list %}
+        <tr><td>{{ row.parameter_name }}</td><td>{{ row.observed_value }}</td>
+        <td>{{ row.limit_value }}</td><td>{{ row.status }}</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}<p class="empty">No bad-quality readings.</p>{% endif %}
+
+<h2>Operator Explanations</h2>
+{% if data.operator_explanations %}
+<table class="data">
+    <thead><tr><th>Event</th><th>User</th><th>Note</th><th>Created</th></tr></thead>
+    <tbody>
+    {% for row in data.operator_explanations %}
+        <tr><td>{{ row.event_id }}</td><td>{{ row.user_id }}</td>
+        <td>{{ row.note }}</td><td>{{ row.created_at }}</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}<p class="empty">No operator explanations.</p>{% endif %}
+
+<h2>Approval Block</h2>
+<table class="meta">
+    <tr><td>Status</td><td>{{ data.approval_block.status }}</td></tr>
+    <tr><td>Prepared By</td><td>{{ data.approval_block.prepared_by }}</td></tr>
+    <tr><td>Approved By</td><td>{{ data.approval_block.approved_by }}</td></tr>
+    <tr><td>Approved At</td><td>{{ data.approval_block.approved_at }}</td></tr>
+</table>
+
+<h2>Audit Metadata</h2>
+<table class="meta">
+    <tr><td>Generated At</td><td>{{ data.audit_metadata.generated_at }}</td></tr>
+    <tr><td>Permit ID</td><td>{{ data.audit_metadata.permit_id }}</td></tr>
+    <tr><td>Event Count</td><td>{{ data.audit_metadata.event_count }}</td></tr>
+    <tr><td>Note Count</td><td>{{ data.audit_metadata.note_count }}</td></tr>
+</table>
+
+</body>
+</html>
