@@ -193,6 +193,53 @@
         "tooltip": { "mode": "multi" },
         "legend": { "displayMode": "list", "placement": "bottom" }
       }
+    },
+    {
+      "id": 8,
+      "type": "stat",
+      "title": "Aktif WebSocket Bağlantıları",
+      "description": "Canlı Dashboard (Live Stream) WebSocket bağlantı sayısı.",
+      "gridPos": { "x": 0, "y": 23, "w": 12, "h": 6 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "unit": "short", "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null } ] } },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "scada_active_websockets",
+          "legendFormat": "Aktif Cihaz",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "id": 9,
+      "type": "timeseries",
+      "title": "HTTP 5xx (Sunucu Hataları) Oranı",
+      "description": "Son 5 dakikadaki sunucu taraflı çökme ve hataların saniyelik oranı.",
+      "gridPos": { "x": 12, "y": 23, "w": 12, "h": 6 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "unit": "reqps", "color": { "mode": "palette-classic" } },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "sum by (method, status) (rate(scada_http_requests_total{status=~\"5..\"}[5m]))",
+          "legendFormat": "{{method}} {{status}}",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "tooltip": { "mode": "multi" },
+        "legend": { "displayMode": "list", "placement": "bottom" }
+      }
     }
   ]
 }

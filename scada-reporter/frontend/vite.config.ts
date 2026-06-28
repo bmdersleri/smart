@@ -14,7 +14,7 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 5173,
       proxy: {
-        '/api': { target: 'http://127.0.0.1:8001', changeOrigin: true },
+        '/api': { target: 'http://127.0.0.1:8001', changeOrigin: true, ws: true },
         '/health': { target: 'http://127.0.0.1:8001', changeOrigin: true },
         // Grafana dashboard listesini same-origin cekmek icin (CORS yok). Sadece
         // dev; prod'da gercek reverse-proxy gerekir. iframe'ler dogrudan :3000.

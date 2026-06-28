@@ -62,6 +62,10 @@ db_pool_checked_out = Gauge(
     "scada_db_pool_checked_out",
     "Şu an kullanımda olan DB bağlantısı",
 )
+active_websockets = Gauge(
+    "scada_active_websockets",
+    "Anlık aktif WebSocket bağlantı sayısı",
+)
 
 # ── Process uptime ────────────────────────────────────────────────────────
 process_start_time_seconds = Gauge(

@@ -2,6 +2,8 @@ import logging
 
 from fastapi import WebSocket
 
+from app.core import metrics
+
 logger = logging.getLogger(__name__)
 
 
@@ -14,10 +16,12 @@ class ConnectionManager:
     async def connect(self, websocket: WebSocket):
         await websocket.accept()
         self.active_connections.append(websocket)
+        metrics.active_websockets.inc()
 
     def disconnect(self, websocket: WebSocket):
         if websocket in self.active_connections:
             self.active_connections.remove(websocket)
+            metrics.active_websockets.dec()
 
     async def broadcast(self, message: dict):
         """Broadcasts a JSON message to all connected clients."""
