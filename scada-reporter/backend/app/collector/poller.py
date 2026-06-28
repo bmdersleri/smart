@@ -171,10 +171,7 @@ async def _copy_readings(db, rows: list[tuple[int, float | None, int]], ts: date
     (INSERT semantiği ile aynı). Başka herhangi bir COPY hatası (sürüm/driver)
     → veri kaybı olmaması için INSERT'e düşülür.
     """
-    # tag_readings.timestamp = "timestamp without time zone"; raw asyncpg COPY
-    # (SQLAlchemy katmanı yok) tz-aware datetime'ı reddeder → naive UTC'ye çevir.
-    ts_naive = ts.replace(tzinfo=None) if ts.tzinfo else ts
-    records = [(tag_id, value, quality, ts_naive) for tag_id, value, quality in rows]
+    records = [(tag_id, value, quality, ts) for tag_id, value, quality in rows]
     try:
         conn = await db.connection()
         raw = await conn.get_raw_connection()
@@ -202,6 +199,11 @@ async def write_readings(
     """rows'u tek bulk yazımla kaydet. PG'de COPY, değilse INSERT. Çakışmada 0."""
     if not rows:
         return 0
+    # tag_readings.timestamp = "timestamp without time zone". Hem asyncpg INSERT
+    # hem raw COPY, tz-aware datetime'ı bu kolona reddeder ("can't subtract
+    # offset-naive and offset-aware"). Poller UTC-aware ts geçer → naive UTC'ye
+    # normalize et (gerçek-PG smoke testinde yakalandı; SQLite gizliyordu).
+    ts = ts.replace(tzinfo=None) if ts.tzinfo else ts
     async with sessionmaker() as db:
         if settings.S7_PG_COPY_INGEST and db.bind.dialect.name == "postgresql":
             return await _copy_readings(db, rows, ts)
