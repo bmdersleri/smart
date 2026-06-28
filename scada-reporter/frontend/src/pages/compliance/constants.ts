@@ -20,8 +20,15 @@ export const EVENT_TYPES = [
 ] as const
 export const EVENT_STATUSES = ['open', 'acknowledged', 'resolved', 'waived'] as const
 export const SEVERITIES = ['info', 'warning', 'critical'] as const
+export const REPORT_PACK_STATUSES = [
+  'draft',
+  'ready_for_review',
+  'failed',
+  'approved',
+  'exported',
+] as const
 
-export type ComplianceTab = 'overview' | 'permits' | 'events'
+export type ComplianceTab = 'overview' | 'permits' | 'events' | 'reportpacks'
 
 // Tailwind text-color accent per severity, used for event rows / badges.
 export const SEVERITY_ACCENT: Record<string, string> = {
@@ -35,4 +42,13 @@ export const STATUS_ACCENT: Record<string, string> = {
   acknowledged: 'text-amber-400',
   resolved: 'text-green-400',
   waived: 'text-gray-400',
+}
+
+// Tailwind text-color accent per report-pack status, used for pack badges.
+export const PACK_STATUS_ACCENT: Record<string, string> = {
+  draft: 'text-gray-300',
+  ready_for_review: 'text-amber-400',
+  failed: 'text-red-400',
+  approved: 'text-green-400',
+  exported: 'text-cyan-400',
 }

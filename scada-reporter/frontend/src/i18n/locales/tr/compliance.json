@@ -6,6 +6,7 @@
   "tab_overview": "Genel Bakış",
   "tab_permits": "İzinler",
   "tab_events": "Olaylar",
+  "tab_report_packs": "Rapor Paketleri",
 
   "active_permits": "Aktif İzinler",
   "open_events": "Açık Olaylar",
@@ -132,5 +133,32 @@
 
   "severity_info": "Bilgi",
   "severity_warning": "Uyarı",
-  "severity_critical": "Kritik"
+  "severity_critical": "Kritik",
+
+  "pack": "Rapor paketi",
+  "no_packs": "Henüz rapor paketi yok.",
+  "total_packs": "Toplam {{count}} rapor paketi",
+  "pack_select_hint": "Ayrıntılarını görmek için bir rapor paketi seçin.",
+  "pack_select_permit": "Önce bir izin seçin.",
+  "pack_create": "Paket oluştur",
+  "pack_outputs": "Çıktılar",
+  "pack_outputs_ready": "Oluşturuldu",
+  "pack_outputs_missing": "Oluşturulmadı",
+  "pack_approved_at": "Onay tarihi",
+  "pack_error": "Oluşturma hatası",
+  "pack_readiness": "Hazırlık durumu",
+  "pack_blocking_issues": "Onay, açık zorunlu açıklamalar nedeniyle engelleniyor:",
+  "pack_no_blocking_issues": "Engelleyici sorun yok — onaya hazır.",
+  "pack_download": "İndir",
+  "pack_actions": "İşlemler",
+  "pack_generate": "Oluştur",
+  "pack_submit_review": "İncelemeye gönder",
+  "pack_approve": "Onayla",
+  "pack_confirm_delete": "Bu rapor paketi silinsin mi?",
+
+  "pack_status_draft": "Taslak",
+  "pack_status_ready_for_review": "İncelemeye hazır",
+  "pack_status_failed": "Başarısız",
+  "pack_status_approved": "Onaylandı",
+  "pack_status_exported": "Dışa aktarıldı"
 }

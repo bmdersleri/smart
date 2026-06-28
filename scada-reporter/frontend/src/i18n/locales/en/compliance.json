@@ -6,6 +6,7 @@
   "tab_overview": "Overview",
   "tab_permits": "Permits",
   "tab_events": "Events",
+  "tab_report_packs": "Report Packs",
 
   "active_permits": "Active Permits",
   "open_events": "Open Events",
@@ -132,5 +133,32 @@
 
   "severity_info": "Info",
   "severity_warning": "Warning",
-  "severity_critical": "Critical"
+  "severity_critical": "Critical",
+
+  "pack": "Report pack",
+  "no_packs": "No report packs yet.",
+  "total_packs": "{{count}} report packs total",
+  "pack_select_hint": "Select a report pack to view its details.",
+  "pack_select_permit": "Select a permit first.",
+  "pack_create": "Create pack",
+  "pack_outputs": "Outputs",
+  "pack_outputs_ready": "Generated",
+  "pack_outputs_missing": "Not generated",
+  "pack_approved_at": "Approved at",
+  "pack_error": "Generation error",
+  "pack_readiness": "Readiness",
+  "pack_blocking_issues": "Approval is blocked by open required explanations:",
+  "pack_no_blocking_issues": "No blocking issues — ready for approval.",
+  "pack_download": "Download",
+  "pack_actions": "Actions",
+  "pack_generate": "Generate",
+  "pack_submit_review": "Submit for review",
+  "pack_approve": "Approve",
+  "pack_confirm_delete": "Delete this report pack?",
+
+  "pack_status_draft": "Draft",
+  "pack_status_ready_for_review": "Ready for review",
+  "pack_status_failed": "Failed",
+  "pack_status_approved": "Approved",
+  "pack_status_exported": "Exported"
 }

@@ -6,6 +6,7 @@
   "tab_overview": "Обзор",
   "tab_permits": "Разрешения",
   "tab_events": "События",
+  "tab_report_packs": "Пакеты отчётов",
 
   "active_permits": "Активные разрешения",
   "open_events": "Открытые события",
@@ -132,5 +133,32 @@
 
   "severity_info": "Инфо",
   "severity_warning": "Предупреждение",
-  "severity_critical": "Критично"
+  "severity_critical": "Критично",
+
+  "pack": "Пакет отчёта",
+  "no_packs": "Пакетов отчётов пока нет.",
+  "total_packs": "Всего пакетов отчётов: {{count}}",
+  "pack_select_hint": "Выберите пакет отчёта для просмотра деталей.",
+  "pack_select_permit": "Сначала выберите разрешение.",
+  "pack_create": "Создать пакет",
+  "pack_outputs": "Выходные файлы",
+  "pack_outputs_ready": "Сформированы",
+  "pack_outputs_missing": "Не сформированы",
+  "pack_approved_at": "Дата утверждения",
+  "pack_error": "Ошибка формирования",
+  "pack_readiness": "Готовность",
+  "pack_blocking_issues": "Утверждение заблокировано открытыми обязательными пояснениями:",
+  "pack_no_blocking_issues": "Блокирующих проблем нет — готов к утверждению.",
+  "pack_download": "Скачать",
+  "pack_actions": "Действия",
+  "pack_generate": "Сформировать",
+  "pack_submit_review": "Отправить на проверку",
+  "pack_approve": "Утвердить",
+  "pack_confirm_delete": "Удалить этот пакет отчёта?",
+
+  "pack_status_draft": "Черновик",
+  "pack_status_ready_for_review": "Готов к проверке",
+  "pack_status_failed": "Ошибка",
+  "pack_status_approved": "Утверждён",
+  "pack_status_exported": "Экспортирован"
 }

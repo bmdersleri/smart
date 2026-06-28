@@ -6,6 +6,7 @@
   "tab_overview": "Übersicht",
   "tab_permits": "Genehmigungen",
   "tab_events": "Ereignisse",
+  "tab_report_packs": "Berichtspakete",
 
   "active_permits": "Aktive Genehmigungen",
   "open_events": "Offene Ereignisse",
@@ -132,5 +133,32 @@
 
   "severity_info": "Info",
   "severity_warning": "Warnung",
-  "severity_critical": "Kritisch"
+  "severity_critical": "Kritisch",
+
+  "pack": "Berichtspaket",
+  "no_packs": "Noch keine Berichtspakete.",
+  "total_packs": "{{count}} Berichtspakete insgesamt",
+  "pack_select_hint": "Wählen Sie ein Berichtspaket, um die Details anzuzeigen.",
+  "pack_select_permit": "Bitte zuerst eine Genehmigung wählen.",
+  "pack_create": "Paket erstellen",
+  "pack_outputs": "Ausgaben",
+  "pack_outputs_ready": "Erstellt",
+  "pack_outputs_missing": "Nicht erstellt",
+  "pack_approved_at": "Genehmigt am",
+  "pack_error": "Erstellungsfehler",
+  "pack_readiness": "Bereitschaft",
+  "pack_blocking_issues": "Genehmigung durch offene erforderliche Erklärungen blockiert:",
+  "pack_no_blocking_issues": "Keine blockierenden Probleme — bereit zur Genehmigung.",
+  "pack_download": "Herunterladen",
+  "pack_actions": "Aktionen",
+  "pack_generate": "Erstellen",
+  "pack_submit_review": "Zur Prüfung einreichen",
+  "pack_approve": "Genehmigen",
+  "pack_confirm_delete": "Dieses Berichtspaket löschen?",
+
+  "pack_status_draft": "Entwurf",
+  "pack_status_ready_for_review": "Bereit zur Prüfung",
+  "pack_status_failed": "Fehlgeschlagen",
+  "pack_status_approved": "Genehmigt",
+  "pack_status_exported": "Exportiert"
 }

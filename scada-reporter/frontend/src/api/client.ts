@@ -797,3 +797,75 @@ export const setEventStatus = (
 // Evaluation
 export const runEvaluation = (data: { permit_id: number; start: string; end: string }) =>
   api.post<ComplianceEvaluateResult>('/compliance/evaluate', data)
+
+// ── Compliance Report Packs ─────────────────────────────────────────────────
+// Mirrors backend app/api/compliance.py report-pack endpoints.
+export type ComplianceReportPackStatus =
+  | 'draft'
+  | 'ready_for_review'
+  | 'failed'
+  | 'approved'
+  | 'exported'
+export type ComplianceReportPackFormat = 'pdf' | 'excel' | 'json'
+
+export interface ComplianceReportPack {
+  id: number
+  permit_id: number
+  period_start: string
+  period_end: string
+  status: string
+  error_message: string | null
+  prepared_by: number | null
+  approved_by: number | null
+  approved_at: string | null
+  created_at: string
+  updated_at: string
+  has_pdf: boolean
+  has_xlsx: boolean
+  has_json: boolean
+}
+
+export interface ComplianceReportPackBlockingIssue {
+  event_id: number
+  parameter_id: number
+  event_type: string
+  status: string
+}
+
+export interface ComplianceReportPackDetail extends ComplianceReportPack {
+  blocking_issues: ComplianceReportPackBlockingIssue[]
+}
+
+export interface ComplianceReportPackList {
+  total: number
+  items: ComplianceReportPack[]
+}
+
+export interface ComplianceReportPackPayload {
+  permit_id: number
+  start: string
+  end: string
+}
+
+export const listReportPacks = (permitId?: number, limit = 50, offset = 0) =>
+  api.get<ComplianceReportPackList>('/compliance/report-packs', {
+    params: { permit_id: permitId, limit, offset },
+  })
+export const createReportPack = (data: ComplianceReportPackPayload) =>
+  api.post<ComplianceReportPack>('/compliance/report-packs', data)
+export const getReportPack = (id: number) =>
+  api.get<ComplianceReportPackDetail>(`/compliance/report-packs/${id}`)
+export const generateReportPack = (id: number) =>
+  api.post<ComplianceReportPack>(`/compliance/report-packs/${id}/generate`)
+export const submitReportPackReview = (id: number) =>
+  api.post<ComplianceReportPack>(`/compliance/report-packs/${id}/submit-review`)
+export const approveReportPack = (id: number) =>
+  api.post<ComplianceReportPack>(`/compliance/report-packs/${id}/approve`)
+export const deleteReportPack = (id: number) =>
+  api.delete<{ id: number; deleted: boolean }>(`/compliance/report-packs/${id}`)
+// Authenticated blob fetch — the axios `api` instance attaches the Bearer token.
+export const downloadReportPack = (id: number, format: ComplianceReportPackFormat) =>
+  api.get<Blob>(`/compliance/report-packs/${id}/download`, {
+    params: { format },
+    responseType: 'blob',
+  })

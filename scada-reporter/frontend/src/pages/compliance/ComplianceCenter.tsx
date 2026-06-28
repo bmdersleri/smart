@@ -4,6 +4,7 @@ import type { ComplianceTab } from './constants'
 import OverviewTab from './OverviewTab'
 import PermitsTab from './PermitsTab'
 import EventsTab from './EventsTab'
+import ReportPacksTab from './ReportPacksTab'
 
 export default function ComplianceCenter() {
   const { t } = useTranslation(['compliance', 'common'])
@@ -13,6 +14,7 @@ export default function ComplianceCenter() {
     { key: 'overview', label: t('tab_overview') },
     { key: 'permits', label: t('tab_permits') },
     { key: 'events', label: t('tab_events') },
+    { key: 'reportpacks', label: t('tab_report_packs') },
   ]
 
   return (
@@ -43,6 +45,8 @@ export default function ComplianceCenter() {
       {/* PermitsTab hides every write control when role !== 'admin'. */}
       {tab === 'permits' && <PermitsTab />}
       {tab === 'events' && <EventsTab />}
+      {/* ReportPacksTab hides approve for non-admin and write controls for viewers. */}
+      {tab === 'reportpacks' && <ReportPacksTab />}
     </div>
   )
 }

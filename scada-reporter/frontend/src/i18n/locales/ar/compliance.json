@@ -6,6 +6,7 @@
   "tab_overview": "نظرة عامة",
   "tab_permits": "التصاريح",
   "tab_events": "الأحداث",
+  "tab_report_packs": "حزم التقارير",
 
   "active_permits": "التصاريح النشطة",
   "open_events": "الأحداث المفتوحة",
@@ -132,5 +133,32 @@
 
   "severity_info": "معلومة",
   "severity_warning": "تحذير",
-  "severity_critical": "حرج"
+  "severity_critical": "حرج",
+
+  "pack": "حزمة التقرير",
+  "no_packs": "لا توجد حزم تقارير بعد.",
+  "total_packs": "إجمالي حزم التقارير: {{count}}",
+  "pack_select_hint": "اختر حزمة تقرير لعرض تفاصيلها.",
+  "pack_select_permit": "اختر تصريحًا أولاً.",
+  "pack_create": "إنشاء حزمة",
+  "pack_outputs": "المخرجات",
+  "pack_outputs_ready": "تم الإنشاء",
+  "pack_outputs_missing": "لم يتم الإنشاء",
+  "pack_approved_at": "تاريخ الاعتماد",
+  "pack_error": "خطأ في الإنشاء",
+  "pack_readiness": "الجاهزية",
+  "pack_blocking_issues": "الاعتماد محظور بسبب تفسيرات مطلوبة مفتوحة:",
+  "pack_no_blocking_issues": "لا توجد مشكلات معيقة — جاهز للاعتماد.",
+  "pack_download": "تنزيل",
+  "pack_actions": "إجراءات",
+  "pack_generate": "إنشاء",
+  "pack_submit_review": "إرسال للمراجعة",
+  "pack_approve": "اعتماد",
+  "pack_confirm_delete": "حذف حزمة التقرير هذه؟",
+
+  "pack_status_draft": "مسودة",
+  "pack_status_ready_for_review": "جاهز للمراجعة",
+  "pack_status_failed": "فشل",
+  "pack_status_approved": "معتمد",
+  "pack_status_exported": "مُصدَّر"
 }
