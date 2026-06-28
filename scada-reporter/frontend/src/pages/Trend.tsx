@@ -441,7 +441,7 @@ export default function Trend() {
                 <tr key={row.name}>
                   <td className="py-0.5">
                     <span className="flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: row.color }} />
+                      <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: row.color }} />
                       <span className="truncate max-w-[200px]" style={{ color: row.color }}>{row.name}</span>
                     </span>
                   </td>
@@ -460,7 +460,7 @@ export default function Trend() {
           <div className="space-y-1 max-h-40 overflow-y-auto">
             {annotations.map((a) => (
               <div key={a.id} className="flex items-center gap-2 text-xs group">
-                <span className="text-gray-500 font-mono w-28 flex-shrink-0">
+                <span className="text-gray-500 font-mono w-28 shrink-0">
                   {format(parseUtc(a.ts), 'dd.MM HH:mm')}
                 </span>
                 <span className="text-gray-200 flex-1">{a.text}</span>

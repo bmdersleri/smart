@@ -43,7 +43,7 @@ function EditRow({
           value={ip}
           onChange={(e) => setIp(e.target.value)}
           placeholder={t('ip_placeholder')}
-          className="bg-gray-700 text-gray-100 text-sm rounded px-2 py-1 border border-cyan-600 focus:outline-none w-36 font-mono"
+          className="bg-gray-700 text-gray-100 text-sm rounded px-2 py-1 border border-cyan-600 focus:outline-hidden w-36 font-mono"
         />
       </td>
       <td className="px-4 py-2.5">
@@ -51,7 +51,7 @@ function EditRow({
           type="number"
           value={rack}
           onChange={(e) => setRack(Number(e.target.value))}
-          className="bg-gray-700 text-gray-100 text-sm rounded px-2 py-1 border border-gray-600 focus:outline-none w-16"
+          className="bg-gray-700 text-gray-100 text-sm rounded px-2 py-1 border border-gray-600 focus:outline-hidden w-16"
           min={0}
           max={7}
         />
@@ -61,7 +61,7 @@ function EditRow({
           type="number"
           value={slot}
           onChange={(e) => setSlot(Number(e.target.value))}
-          className="bg-gray-700 text-gray-100 text-sm rounded px-2 py-1 border border-gray-600 focus:outline-none w-16"
+          className="bg-gray-700 text-gray-100 text-sm rounded px-2 py-1 border border-gray-600 focus:outline-hidden w-16"
           min={0}
           max={31}
         />
@@ -109,7 +109,7 @@ function AddRow({
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder={t('name_placeholder')}
-          className="bg-gray-700 text-gray-100 text-sm rounded px-2 py-1 border border-cyan-600 focus:outline-none w-32"
+          className="bg-gray-700 text-gray-100 text-sm rounded px-2 py-1 border border-cyan-600 focus:outline-hidden w-32"
         />
       </td>
       <td className="px-4 py-2.5">
@@ -117,7 +117,7 @@ function AddRow({
           value={ip}
           onChange={(e) => setIp(e.target.value)}
           placeholder={t('ip_placeholder')}
-          className="bg-gray-700 text-gray-100 text-sm rounded px-2 py-1 border border-gray-600 focus:outline-none w-36 font-mono"
+          className="bg-gray-700 text-gray-100 text-sm rounded px-2 py-1 border border-gray-600 focus:outline-hidden w-36 font-mono"
         />
       </td>
       <td className="px-4 py-2.5">
@@ -125,7 +125,7 @@ function AddRow({
           type="number"
           value={rack}
           onChange={(e) => setRack(Number(e.target.value))}
-          className="bg-gray-700 text-gray-100 text-sm rounded px-2 py-1 border border-gray-600 focus:outline-none w-16"
+          className="bg-gray-700 text-gray-100 text-sm rounded px-2 py-1 border border-gray-600 focus:outline-hidden w-16"
           min={0} max={7}
         />
       </td>
@@ -134,7 +134,7 @@ function AddRow({
           type="number"
           value={slot}
           onChange={(e) => setSlot(Number(e.target.value))}
-          className="bg-gray-700 text-gray-100 text-sm rounded px-2 py-1 border border-gray-600 focus:outline-none w-16"
+          className="bg-gray-700 text-gray-100 text-sm rounded px-2 py-1 border border-gray-600 focus:outline-hidden w-16"
           min={0} max={31}
         />
       </td>

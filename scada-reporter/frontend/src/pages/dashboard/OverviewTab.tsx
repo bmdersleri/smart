@@ -44,7 +44,7 @@ function StatCard({ label, value, sub, flash, flip, accent }: {
           key={flip ? String(value) : undefined}
           className={`text-3xl font-bold tracking-tight transition-colors duration-300
             ${flash ? 'text-cyan-300 drop-shadow-[0_0_8px_rgba(103,232,249,0.5)]' : (accent ?? 'text-white')}
-            ${flip ? 'animate-[flipIn_0.5s_ease-out]' : ''}`}
+            ${flip ? 'animate-flip-in' : ''}`}
         >
           {value}
         </p>
@@ -228,7 +228,7 @@ function PlcCard({ plc, writeFlash }: { plc: PlcEntry; writeFlash: boolean }) {
         <div className="flex items-center gap-2">
           {isConnected ? (
             <>
-              <span className="relative inline-flex w-2 h-2 flex-shrink-0">
+              <span className="relative inline-flex w-2 h-2 shrink-0">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-50" />
                 <span className="relative inline-flex w-2 h-2 rounded-full bg-green-400" />
               </span>

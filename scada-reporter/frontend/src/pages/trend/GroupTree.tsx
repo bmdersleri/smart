@@ -56,7 +56,7 @@ function TreeNode({ node, tagMap, selected, onToggle, depth }: TreeNodeProps) {
                 }`}
                 style={{ paddingInlineStart: (depth + 1) * 10 + 8 }}
               >
-                <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
+                <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: color }} />
                 <span className="truncate">{tag.name}</span>
               </button>
             )

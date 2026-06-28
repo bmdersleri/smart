@@ -45,7 +45,7 @@ export function TrendTagSelector({
 
   return (
     <div
-      className={`bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl flex-shrink-0 space-y-2 overflow-y-auto transition-all duration-200 ${
+      className={`bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl shrink-0 space-y-2 overflow-y-auto transition-all duration-200 ${
         panelOpen ? 'w-52 p-3' : 'w-0 p-0'
       }`}
     >
@@ -53,7 +53,7 @@ export function TrendTagSelector({
         value={tagSearch}
         onChange={(e) => setTagSearch(e.target.value)}
         placeholder={t('search_placeholder')}
-        className="w-full bg-gray-800 border border-gray-700 rounded-lg px-2 py-1.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50"
+        className="w-full bg-gray-800 border border-gray-700 rounded-lg px-2 py-1.5 text-xs text-white placeholder-gray-600 focus:outline-hidden focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50"
       />
 
       <div className="flex gap-1 bg-gray-800 rounded-lg p-0.5">
@@ -104,7 +104,7 @@ export function TrendTagSelector({
               if (e.key === 'Escape') setSavingName(null)
             }}
             placeholder={t('preset_name_placeholder')}
-            className="w-full bg-gray-800 border border-blue-600 rounded-lg px-2 py-1.5 text-xs text-white placeholder-gray-600 focus:outline-none"
+            className="w-full bg-gray-800 border border-blue-600 rounded-lg px-2 py-1.5 text-xs text-white placeholder-gray-600 focus:outline-hidden"
           />
           <div className="flex gap-1">
             <button
@@ -172,7 +172,7 @@ export function TrendTagSelector({
                 }`}
               >
                 <span
-                  className="w-2 h-2 rounded-full flex-shrink-0 transition-colors"
+                  className="w-2 h-2 rounded-full shrink-0 transition-colors"
                   style={{ backgroundColor: color }}
                 />
                 <span className="truncate">{tag.name}</span>

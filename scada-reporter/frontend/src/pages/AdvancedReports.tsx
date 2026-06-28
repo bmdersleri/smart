@@ -56,7 +56,7 @@ const TIME_RANGE_OPTS = [
   { value: 'custom', labelKey: 'time_custom' },
 ]
 
-const INPUT = 'w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50'
+const INPUT = 'w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-hidden focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50'
 const BTN_PRIMARY = 'px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-medium transition-colors'
 const BTN_GHOST = 'px-4 py-2 rounded-lg border border-gray-700 text-gray-300 hover:bg-white/5 text-sm transition-colors'
 
@@ -306,7 +306,7 @@ function TemplateEditorModal({
                 <label className="text-xs text-gray-400 mb-2 block">{t('grafana_panels')}</label>
                 <div className="flex flex-wrap gap-2 mb-2">
                   <select
-                    className="flex-1 min-w-0 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50"
+                    className="flex-1 min-w-0 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-hidden focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50"
                     value={selectedDashUid}
                     onChange={e => { setSelectedDashUid(e.target.value); setSelectedPanelId('') }}
                   >
@@ -314,7 +314,7 @@ function TemplateEditorModal({
                     {dashboards.map(d => <option key={d.uid} value={d.uid}>{d.title}</option>)}
                   </select>
                   <select
-                    className="flex-1 min-w-0 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50"
+                    className="flex-1 min-w-0 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-hidden focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50"
                     value={selectedPanelId}
                     onChange={e => setSelectedPanelId(e.target.value ? Number(e.target.value) : '')}
                     disabled={!selectedDashUid}
@@ -803,22 +803,22 @@ function ArchiveTab() {
     <div className="space-y-4">
       {/* Filters */}
       <div className="flex flex-wrap gap-3">
-        <select className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-gray-300 focus:outline-none"
+        <select className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-gray-300 focus:outline-hidden"
           value={filterStatus} onChange={e => { setFilterStatus(e.target.value); setPage(1) }}>
           <option value="">{t('filter_all_statuses')}</option>
           {['completed', 'running', 'pending', 'failed'].map(s => (
             <option key={s} value={s}>{s}</option>
           ))}
         </select>
-        <select className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-gray-300 focus:outline-none"
+        <select className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-gray-300 focus:outline-hidden"
           value={filterTemplateId ?? ''} onChange={e => { setFilterTemplateId(e.target.value ? Number(e.target.value) : undefined); setPage(1) }}>
           <option value="">{t('filter_all_templates')}</option>
           {templates.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
         </select>
-        <input type="date" className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-gray-300 focus:outline-none"
+        <input type="date" className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-gray-300 focus:outline-hidden"
           value={dateFrom} onChange={e => { setDateFrom(e.target.value); setPage(1) }} />
         <span className="text-gray-600 self-center">—</span>
-        <input type="date" className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-gray-300 focus:outline-none"
+        <input type="date" className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-gray-300 focus:outline-hidden"
           value={dateTo} onChange={e => { setDateTo(e.target.value); setPage(1) }} />
         {(filterStatus || filterTemplateId || dateFrom || dateTo) && (
           <button onClick={() => { setFilterStatus(''); setFilterTemplateId(undefined); setDateFrom(''); setDateTo(''); setPage(1) }}

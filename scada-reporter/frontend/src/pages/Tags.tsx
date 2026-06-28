@@ -43,7 +43,7 @@ function AddTagModal({ onClose }: { onClose: () => void }) {
     device: form.plc_name, sample_interval: parseInt(form.sample_interval) || 5, long_term: true,
   })
 
-  const inputCls = 'w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50'
+  const inputCls = 'w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-hidden focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50'
   const result = mut.data?.data
 
   return (
@@ -135,7 +135,7 @@ function EditTagModal({ tag, groups, onClose }: { tag: Tag; groups: Group[]; onC
     deadband: deadband === '' ? null : Number(deadband),
   })
 
-  const inputCls = 'w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50'
+  const inputCls = 'w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-hidden focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50'
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
@@ -291,7 +291,7 @@ function FormatGuideModal({ onClose }: { onClose: () => void }) {
         <div className="bg-gray-800 rounded-lg p-4 space-y-2">
           {examples.map(({ addr, desc }) => (
             <div key={addr} className="flex items-baseline gap-3">
-              <span className="text-cyan-400 font-mono text-sm w-32 flex-shrink-0">{addr}</span>
+              <span className="text-cyan-400 font-mono text-sm w-32 shrink-0">{addr}</span>
               <span className="text-gray-500 text-xs">{desc}</span>
             </div>
           ))}
@@ -321,7 +321,7 @@ function GroupsModal({ onClose }: { onClose: () => void }) {
 
   // resolve parent name for single-level indentation
   const nameOf = (id: number | null) => groups.find((g) => g.id === id)?.name ?? null
-  const inputCls = 'w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50'
+  const inputCls = 'w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-hidden focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50'
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
@@ -379,7 +379,7 @@ function TagRow({
   const { t } = useTranslation(['tags', 'common'])
   return (
     <div className="flex items-center gap-2 py-1.5 pe-2 hover:bg-white/5/40 rounded-lg" style={{ paddingInlineStart: indent }}>
-      <span className="w-1.5 h-1.5 rounded-full bg-gray-600 flex-shrink-0" />
+      <span className="w-1.5 h-1.5 rounded-full bg-gray-600 shrink-0" />
       <span className="text-sm text-white truncate flex-1">{tag.name}</span>
       <span className="text-xs font-mono text-gray-600 hidden sm:inline">{tag.s7_address ?? '—'}</span>
       <span className="text-xs text-gray-500 w-10 text-end">{tag.unit}</span>
@@ -418,7 +418,7 @@ function TagTreeNode({
         style={{ paddingInlineStart: depth * 16 + 4 }}
       >
         <span className="text-gray-500 w-3">{open ? '▾' : '▸'}</span>
-        <svg className="w-4 h-4 text-indigo-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" /></svg>
+        <svg className="w-4 h-4 text-indigo-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" /></svg>
         <span className="font-medium truncate">{node.name}</span>
         <span className="text-xs text-gray-600 ms-1">{count(node)}</span>
       </button>
@@ -580,7 +580,7 @@ export default function Tags() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder={t('search_placeholder')}
-          className="flex-1 bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50"
+          className="flex-1 bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-hidden focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50"
         />
         {viewMode === 'table' && (
           <select
@@ -589,7 +589,7 @@ export default function Tags() {
               const v = e.target.value
               setGroupFilter(v === 'all' || v === 'none' ? v : Number(v))
             }}
-            className="bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50"
+            className="bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl px-3 py-2.5 text-sm text-white focus:outline-hidden focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50"
             title={t('filter_by_group')}
           >
             <option value="all">{t('all_groups')}</option>
@@ -728,7 +728,7 @@ export default function Tags() {
               <select
                 value={pageSize}
                 onChange={(e) => setPageSize(Number(e.target.value))}
-                className="bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl px-2 py-1 text-sm text-white focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50"
+                className="bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl px-2 py-1 text-sm text-white focus:outline-hidden focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50"
               >
                 {PAGE_SIZE_OPTIONS.map((n) => <option key={n} value={n}>{n}</option>)}
               </select>
@@ -748,7 +748,7 @@ export default function Tags() {
                   value={pageClamped}
                   onChange={(e) => setPage(Number(e.target.value))}
                   title={t('go_to_page')}
-                  className="bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl px-2 py-1 text-sm text-white focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50"
+                  className="bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl px-2 py-1 text-sm text-white focus:outline-hidden focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50"
                 >
                   {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
                     <option key={p} value={p}>{p}</option>

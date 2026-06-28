@@ -24,7 +24,7 @@ export default function TagDescriptionCell({
     <span className="relative inline-flex min-w-0 max-w-full items-center">
       <button
         type="button"
-        className="min-w-0 max-w-full border-0 bg-transparent p-0 text-left text-inherit font-inherit cursor-help focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/70 focus-visible:ring-offset-0"
+        className="min-w-0 max-w-full border-0 bg-transparent p-0 text-left text-inherit font-inherit cursor-help focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-blue-500/70 focus-visible:ring-offset-0"
         onMouseEnter={() => setOpen(true)}
         onMouseLeave={() => setOpen(false)}
         onFocus={() => setOpen(true)}

@@ -203,7 +203,7 @@ export default function Grafana() {
     <div className="p-6 space-y-5">
       <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
         <div className="flex items-start gap-3">
-          <span className="w-9 h-9 flex items-center justify-center flex-shrink-0">
+          <span className="w-9 h-9 flex items-center justify-center shrink-0">
             <SmartReportIcon className="w-8 h-8" />
           </span>
           <div>

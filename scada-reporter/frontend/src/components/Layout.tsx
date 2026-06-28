@@ -44,7 +44,7 @@ export default function Layout() {
       >
         <div className="p-5 border-b border-white/5">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 shadow-lg shadow-cyan-500/20 flex-shrink-0">
+            <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 shadow-lg shadow-cyan-500/20 shrink-0">
               <SmartReportIcon className="w-6 h-6 text-white" />
             </div>
             <div>
@@ -68,7 +68,7 @@ export default function Layout() {
                 }`
               }
             >
-              <SmartReportIcon className={`w-5 h-5 flex-shrink-0 transition-colors ${
+              <SmartReportIcon className={`w-5 h-5 shrink-0 transition-colors ${
                 // Optional: Make icon match active state color specifically or leave inherited
                 'opacity-80 group-hover:opacity-100'
               }`} />
@@ -87,7 +87,7 @@ export default function Layout() {
                 }`
               }
             >
-              <SmartReportIcon className="w-4 h-4 flex-shrink-0" />
+              <SmartReportIcon className="w-4 h-4 shrink-0" />
               {t('nav_users')}
             </NavLink>
           )}
@@ -127,7 +127,7 @@ export default function Layout() {
             </svg>
           </button>
           <span className="flex items-center gap-2 text-white font-semibold text-sm flex-1">
-            <span className="w-7 h-7 flex items-center justify-center flex-shrink-0">
+            <span className="w-7 h-7 flex items-center justify-center shrink-0">
               <SmartReportIcon className="w-6 h-6" />
             </span>
             EKONT SMART REPORT

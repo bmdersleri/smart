@@ -32,7 +32,7 @@ export default function LicenseBadge() {
       className={`flex items-center gap-2 px-2.5 py-1.5 mb-1 rounded-lg border text-xs ${STYLE[mode]}`}
       title={data.customer ?? undefined}
     >
-      <span className={`w-2 h-2 rounded-full flex-shrink-0 ${DOT[mode]}`} />
+      <span className={`w-2 h-2 rounded-full shrink-0 ${DOT[mode]}`} />
       <span className="font-medium">{label}</span>
       {data.customer && <span className="truncate opacity-80">· {data.customer}</span>}
     </div>

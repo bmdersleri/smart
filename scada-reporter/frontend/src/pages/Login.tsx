@@ -67,7 +67,7 @@ export default function Login() {
           <div>
             <label className="block text-sm text-gray-400 mb-1">{t('username')}</label>
             <input
-              className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all"
+              className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-hidden focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all"
               value={username} onChange={(e) => setUsername(e.target.value)}
               placeholder="admin" autoComplete="username" required
             />
@@ -76,7 +76,7 @@ export default function Login() {
             <label className="block text-sm text-gray-400 mb-1">{t('password')}</label>
             <input
               type="password"
-              className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all"
+              className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-hidden focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all"
               value={password} onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••" autoComplete="current-password" required
             />

@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+/* v4 CSS-first config. Özel animasyonları @theme token'ı olarak kaydeder; böylece
+   `animate-flip-in` gibi gerçek utility'ler üretilir (arbitrary `animate-[...]` yerine).
+   Per-index gecikmeli animasyonlar (packet/blink/flowArrow) dinamik olduğundan
+   inline style ile kalır — bu meşru kullanımdır. */
+@theme {
+  --animate-flip-in: flipIn 0.5s ease-out;
+}
+
 @layer base {
   *, *::before, *::after { box-sizing: border-box; }
   body { margin: 0; font-family: system-ui, sans-serif; }

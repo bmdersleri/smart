@@ -222,7 +222,7 @@ export default function Reports() {
                 onChange={(e) => setSavingName(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') saveReportPreset(); if (e.key === 'Escape') setSavingName(null) }}
                 placeholder={t('selection_name_placeholder')}
-                className="flex-1 bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all"
+                className="flex-1 bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-sm text-white placeholder-gray-500 focus:outline-hidden focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all"
               />
               <button
                 onClick={saveReportPreset}
@@ -330,12 +330,12 @@ export default function Reports() {
           <div>
             <label className="text-xs text-gray-500 mb-1 block">{t('start')}</label>
             <input type="datetime-local" value={start} onChange={(e) => { setStart(e.target.value); setActiveTimePreset('') }}
-              className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all" />
+              className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-hidden focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all" />
           </div>
           <div>
             <label className="text-xs text-gray-500 mb-1 block">{t('end')}</label>
             <input type="datetime-local" value={end} onChange={(e) => { setEnd(e.target.value); setActiveTimePreset('') }}
-              className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all" />
+              className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-hidden focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all" />
           </div>
         </div>
       </div>

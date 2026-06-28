@@ -52,7 +52,7 @@ export default function Dashboard() {
             onClick={() => setActiveTab(tab.id)}
             className={`px-5 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
               activeTab === tab.id
-                ? 'bg-cyan-500/15 text-cyan-300 shadow-sm border border-cyan-500/30'
+                ? 'bg-cyan-500/15 text-cyan-300 shadow-xs border border-cyan-500/30'
                 : 'text-gray-400 hover:text-gray-200 hover:bg-white/5 border border-transparent'
             }`}
           >

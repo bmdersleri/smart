@@ -94,7 +94,7 @@ export default function AllTagsTab({ active }: { active: boolean }) {
         <select
           value={device}
           onChange={(e) => setDevice(e.target.value)}
-          className="bg-gray-800 text-gray-300 text-sm rounded-lg px-3 py-1.5 border border-gray-700 focus:outline-none focus:border-cyan-500"
+          className="bg-gray-800 text-gray-300 text-sm rounded-lg px-3 py-1.5 border border-gray-700 focus:outline-hidden focus:border-cyan-500"
         >
           <option value="">{t('filter_all_devices')}</option>
           {devices.map((d) => <option key={d} value={d}>{d}</option>)}
@@ -105,13 +105,13 @@ export default function AllTagsTab({ active }: { active: boolean }) {
           placeholder={t('search_placeholder')}
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
-          className="bg-gray-800 text-gray-300 text-sm rounded-lg px-3 py-1.5 border border-gray-700 focus:outline-none focus:border-cyan-500 min-w-[160px]"
+          className="bg-gray-800 text-gray-300 text-sm rounded-lg px-3 py-1.5 border border-gray-700 focus:outline-hidden focus:border-cyan-500 min-w-[160px]"
         />
 
         <select
           value={quality}
           onChange={(e) => setQuality(e.target.value as '' | 'good' | 'bad' | 'stale')}
-          className="bg-gray-800 text-gray-300 text-sm rounded-lg px-3 py-1.5 border border-gray-700 focus:outline-none focus:border-cyan-500"
+          className="bg-gray-800 text-gray-300 text-sm rounded-lg px-3 py-1.5 border border-gray-700 focus:outline-hidden focus:border-cyan-500"
         >
           <option value="">{t('filter_all_quality')}</option>
           <option value="good">{t('quality_good')}</option>
