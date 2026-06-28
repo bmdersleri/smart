@@ -3,105 +3,115 @@ import { useQueryClient } from '@tanstack/react-query'
 import { getStreamToken } from '../api/client'
 import type { DashboardTag, DashboardTagsResponse } from '../api/client'
 
-interface LiveReading {
-  tag_id: number
-  value: number | null
-  timestamp: string | null
-  quality_ok: boolean
+/** Backend SSE frame: { "<tagId>": { v, q, t } } (bkz. realtime._format_frame). */
+interface LiveValue {
+  v: number | null
+  q: number
+  t: string
 }
 
-interface WsMessage {
-  type: string
-  data: LiveReading[] | LiveReading
-}
+export type LiveStatus = 'connecting' | 'connected' | 'disconnected'
 
-export function useLiveDashboard(enabled = true) {
+/**
+ * Dashboard geneli canlı son-değer akışı (SSE).
+ *
+ * Backend `/api/dashboard/stream` bir Server-Sent Events endpoint'idir
+ * (StreamingResponse, text/event-stream) — WebSocket DEĞİL. Bu yüzden burada
+ * `EventSource` kullanılır; gelen frame'ler `dashboard-tags` ve
+ * `dashboard-watchlist` TanStack Query cache'lerine yazılır ve bağlantı
+ * durumu badge için döndürülür. Token, EventSource başlık gönderemediği için
+ * her bağlanışta kısa ömürlü stream-token query-param ile iletilir.
+ */
+export function useLiveDashboard(enabled = true): { status: LiveStatus } {
   const qc = useQueryClient()
-  const wsRef = useRef<WebSocket | null>(null)
-  const [status, setStatus] = useState<'connecting' | 'connected' | 'disconnected'>('disconnected')
-  const retryTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [status, setStatus] = useState<LiveStatus>('disconnected')
 
   useEffect(() => {
     if (!enabled) {
-      if (wsRef.current) {
-        wsRef.current.close()
-        wsRef.current = null
-      }
       setStatus('disconnected')
       return
     }
 
-    let isMounted = true
+    let cancelled = false
+    let es: EventSource | null = null
+    let retry: ReturnType<typeof setTimeout> | null = null
+
+    const applyUpdates = (data: Record<string, LiveValue>) => {
+      const entries = Object.entries(data)
+      if (entries.length === 0) return
+
+      // 1. Sayfalı "All Tags" listeleri
+      qc.setQueriesData<DashboardTagsResponse>({ queryKey: ['dashboard-tags'] }, (old) => {
+        if (!old) return old
+        let changed = false
+        const items = old.items.map((item) => {
+          const lv = data[String(item.tag_id)]
+          if (!lv) return item
+          changed = true
+          return { ...item, value: lv.v, timestamp: lv.t, quality_ok: lv.q === 192 }
+        })
+        return changed ? { ...old, items } : old
+      })
+
+      // 2. Watchlist
+      qc.setQueriesData<DashboardTag[]>({ queryKey: ['dashboard-watchlist'] }, (old) => {
+        if (!old) return old
+        let changed = false
+        const next = old.map((item) => {
+          const lv = data[String(item.tag_id)]
+          if (!lv) return item
+          changed = true
+          return { ...item, value: lv.v, timestamp: lv.t, quality_ok: lv.q === 192 }
+        })
+        return changed ? next : old
+      })
+    }
 
     const connect = async () => {
+      setStatus('connecting')
+      let streamToken: string
       try {
-        setStatus('connecting')
-        // Get a short-lived token for WebSocket auth
         const { data } = await getStreamToken()
-        if (!isMounted) return
-
-        // Determine correct WebSocket protocol
-        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-        const wsUrl = `${protocol}//${window.location.host}/api/dashboard/stream?token=${data.stream_token}`
-
-        const ws = new WebSocket(wsUrl)
-        wsRef.current = ws
-
-        ws.onopen = () => {
-          if (isMounted) setStatus('connected')
-        }
-
-        ws.onmessage = (event) => {
-          try {
-            const payload = JSON.parse(event.data) as WsMessage
-            const updates = Array.isArray(payload.data) ? payload.data : [payload.data]
-
-            // 1. Update paginated All Tags lists
-            qc.setQueriesData<DashboardTagsResponse>({ queryKey: ['dashboard-tags'] }, (old) => {
-              if (!old) return old
-              let changed = false
-              const newItems = old.items.map((item) => {
-                const update = updates.find((u) => u.tag_id === item.tag_id)
-                if (update) {
-                  changed = true
-                  return { ...item, ...update }
-                }
-                return item
-              })
-              return changed ? { ...old, items: newItems } : old
-            })
-
-            // 2. Update Watchlist
-            qc.setQueriesData<DashboardTag[]>({ queryKey: ['dashboard-watchlist'] }, (old) => {
-              if (!old) return old
-              let changed = false
-              const newItems = old.map((item) => {
-                const update = updates.find((u) => u.tag_id === item.tag_id)
-                if (update) {
-                  changed = true
-                  return { ...item, ...update }
-                }
-                return item
-              })
-              return changed ? newItems : old
-            })
-
-          } catch (err) {
-            console.error('Failed to parse LiveDashboard WS message', err)
-          }
-        }
-
-        ws.onclose = () => {
-          if (isMounted) {
-            setStatus('disconnected')
-            // Auto-reconnect after 3 seconds
-            retryTimeout.current = setTimeout(connect, 3000)
-          }
-        }
-      } catch (err) {
-        if (isMounted) {
+        streamToken = data.stream_token
+      } catch {
+        // Token alınamadı (backend down/401). 401 ise axios interceptor login'e
+        // yönlendirir (unmount → cancelled); aksi halde kısa gecikmeyle yeniden dene.
+        if (!cancelled) {
           setStatus('disconnected')
-          retryTimeout.current = setTimeout(connect, 3000)
+          retry = setTimeout(() => {
+            if (!cancelled) connect()
+          }, 3000)
+        }
+        return
+      }
+
+      if (cancelled) return
+
+      es = new EventSource(`/api/dashboard/stream?token=${encodeURIComponent(streamToken)}`)
+
+      es.onopen = () => {
+        if (!cancelled) setStatus('connected')
+      }
+
+      es.onmessage = (e) => {
+        if (!cancelled) setStatus('connected')
+        try {
+          applyUpdates(JSON.parse(e.data) as Record<string, LiveValue>)
+        } catch {
+          /* hatalı frame -> atla */
+        }
+      }
+
+      es.onerror = () => {
+        if (es) {
+          es.close()
+          es = null
+        }
+        if (!cancelled) {
+          setStatus('disconnected')
+          retry = setTimeout(() => {
+            if (!cancelled) connect()
+          }, 3000)
         }
       }
     }
@@ -109,11 +119,11 @@ export function useLiveDashboard(enabled = true) {
     connect()
 
     return () => {
-      isMounted = false
-      if (retryTimeout.current) clearTimeout(retryTimeout.current)
-      if (wsRef.current) {
-        wsRef.current.close()
-        wsRef.current = null
+      cancelled = true
+      if (retry) clearTimeout(retry)
+      if (es) {
+        es.close()
+        es = null
       }
     }
   }, [enabled, qc])
