@@ -19,7 +19,9 @@ from sqlalchemy import (
     DateTime,
     Float,
     ForeignKey,
+    Index,
     Integer,
+    LargeBinary,
     String,
     Text,
     UniqueConstraint,
@@ -45,6 +47,7 @@ EVENT_TYPES = (
     "needs_explanation",
 )
 EVENT_STATUSES = ("open", "acknowledged", "resolved", "waived")
+REPORT_PACK_STATUSES = ("draft", "ready_for_review", "failed", "approved", "exported")
 
 
 class CompliancePermit(Base):
@@ -207,12 +210,55 @@ class ComplianceEventNote(Base):
     user: Mapped[User] = relationship()
 
 
+class ComplianceReportPack(Base):
+    """Period-level official compliance report package.
+
+    A legal/regulatory artifact: like the other compliance models it does NOT
+    cascade-delete. The generated PDF/Excel/JSON outputs are stored as blobs on
+    the row; ``events_snapshot_json`` is frozen on approval (evidence
+    immutability). ``archive_id`` is reserved for future ``report_archive``
+    linkage and is NOT used in Phase 3.
+    """
+
+    __tablename__ = "compliance_report_packs"
+    __table_args__ = (
+        Index("ix_compliance_report_packs_permit_period", "permit_id", "period_start"),
+        Index("ix_compliance_report_packs_status", "status"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    permit_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("compliance_permits.id"), nullable=False
+    )
+    period_start: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    period_end: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    status: Mapped[str] = mapped_column(String(32), default="draft")
+    events_snapshot_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    archive_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("report_archive.id"), nullable=True
+    )
+    pdf_blob: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
+    xlsx_blob: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
+    json_blob: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    prepared_by: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id"), nullable=True)
+    approved_by: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id"), nullable=True)
+    approved_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+    )
+
+    permit: Mapped[CompliancePermit] = relationship()
+
+
 __all__ = [
     "AGGREGATIONS",
     "EVENT_STATUSES",
     "EVENT_TYPES",
     "LIMIT_TYPES",
     "REPORT_FREQUENCIES",
+    "REPORT_PACK_STATUSES",
     "SOURCE_TYPES",
     "ComplianceDischargePoint",
     "ComplianceEvent",
@@ -220,4 +266,5 @@ __all__ = [
     "ComplianceLimit",
     "ComplianceParameter",
     "CompliancePermit",
+    "ComplianceReportPack",
 ]
