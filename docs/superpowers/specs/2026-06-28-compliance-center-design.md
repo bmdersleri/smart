@@ -106,6 +106,8 @@ Event-type generation mapping (which engine check produces which type):
 - `bad_quality` — `quality` checks when source PLC readings carry a non-good OPC quality (see threshold below).
 - `needs_explanation` — not produced directly by a numeric rule. It is raised for any `open` `limit_exceeded`/`missing_sample`/`late_sample`/`bad_quality` event on a parameter/limit flagged as explanation-required (a `requires_explanation` flag on `compliance_limits`) that has no `compliance_event_notes` entry. It blocks report-pack approval until an operator note is added. The engine derives it from existing events rather than from raw readings.
 
+`needs_explanation` lifecycle: adding the first note to the source event automatically resolves the related `needs_explanation` event in the same transaction. A later engine re-run may re-open or create a new `needs_explanation` event only if the source event remains open and has no notes after the re-evaluation.
+
 Bad-quality threshold: a reading is bad-quality when `tag_readings.quality < 192` (OPC `Good` = 192). The `quality` limit type may override the threshold per parameter, but 192 is the default cutoff.
 
 Event statuses:
@@ -127,6 +129,7 @@ Report pack statuses:
 
 - `draft`
 - `ready_for_review`
+- `failed`
 - `approved`
 - `exported`
 
@@ -185,9 +188,20 @@ Fields:
 - `valid_from`
 - `valid_to`
 - `report_frequency`
+- `report_cron`
 - `is_active`
 - `created_at`
 - `updated_at`
+
+Allowed `report_frequency` values:
+
+- `daily`
+- `weekly`
+- `monthly`
+- `quarterly`
+- `custom_cron`
+
+`report_cron` is nullable and only valid when `report_frequency = custom_cron`. The first implementation phase may reject `custom_cron` at API validation time if scheduler support is not implemented yet.
 
 ### `compliance_discharge_points`
 
@@ -232,7 +246,7 @@ Constraints:
 - At least one of `tag_id` or `lab_parameter_id` is required.
 - `scada` requires `tag_id`; `lab` requires `lab_parameter_id`; `hybrid` requires both.
 
-Hybrid source resolution: for a `hybrid` parameter the lab measurement is authoritative for the compliance value (regulatory limits are defined against lab methods), and the SCADA tag provides continuous context plus `bad_quality`/`missing_sample` detection between lab samples. When both a lab value and a SCADA aggregate exist for the same window, the engine evaluates the `value_limit` against the lab value and records the SCADA aggregate in `evidence_json` for cross-reference. If the lab value is absent for a required window, the parameter falls back to the SCADA aggregate and the event evidence flags the substitution.
+Hybrid source resolution: for a `hybrid` parameter the lab measurement is authoritative for the compliance value (regulatory limits are defined against lab methods), and the SCADA tag provides continuous context plus `bad_quality`/`missing_sample` detection between lab samples. When both a lab value and a SCADA aggregate exist for the same window, the engine evaluates the `value_limit` against the lab value and records the SCADA aggregate in `evidence_json` for cross-reference. If the required lab value is absent for a window, the engine keeps a `missing_sample` event open and must not mark the parameter compliant from SCADA data alone. The SCADA aggregate may appear only as provisional/context evidence in `evidence_json`.
 
 Note: `permit_id` here is denormalized (reachable via `discharge_point_id -> compliance_discharge_points.permit_id`). It is kept for query convenience but must be validated to match the discharge point's permit at write time to avoid divergence.
 
