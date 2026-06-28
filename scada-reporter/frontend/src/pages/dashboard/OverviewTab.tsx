@@ -31,8 +31,8 @@ function StatCard({ label, value, sub, flash, flip, accent }: {
   accent?: string  // color class for value e.g. 'text-green-400'
 }) {
   return (
-    <div className={`relative bg-gray-900/40 backdrop-blur-xl border rounded-2xl p-5 transition-all duration-300 shadow-xl overflow-hidden group
-      ${flash ? 'border-cyan-500/50 shadow-[0_0_20px_rgba(6,182,212,0.15)] bg-cyan-950/10' : 'border-white/5 hover:border-white/10 hover:bg-gray-900/60'}`}>
+    <div className={`relative bg-surface-raised/40 backdrop-blur-xl border rounded-2xl p-5 transition-all duration-300 shadow-xl overflow-hidden group
+      ${flash ? 'border-cyan-500/50 shadow-[0_0_20px_rgba(6,182,212,0.15)] bg-cyan-950/10' : 'border-white/5 hover:border-white/10 hover:bg-surface-raised/60'}`}>
       {/* Background gradients for premium feel */}
       <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] to-transparent pointer-events-none" />
       <div className={`absolute top-0 right-0 w-32 h-32 rounded-full transition-opacity duration-500 blur-3xl opacity-0 group-hover:opacity-10 pointer-events-none
@@ -167,15 +167,15 @@ function PlcCard({ plc, writeFlash }: { plc: PlcEntry; writeFlash: boolean }) {
 
   return (
     <div
-      className={`relative bg-gray-900/40 backdrop-blur-xl border rounded-2xl p-5 transition-all duration-300 overflow-hidden cursor-default group
+      className={`relative bg-surface-raised/40 backdrop-blur-xl border rounded-2xl p-5 transition-all duration-300 overflow-hidden cursor-default group
         ${isConnected
           ? writeFlash
             ? 'border-cyan-500/40 shadow-[0_0_24px_rgba(6,182,212,0.15)] bg-cyan-950/20'
             : hovered
-              ? 'border-cyan-500/30 shadow-[0_8px_32px_rgba(6,182,212,0.1)] -translate-y-1 bg-gray-900/60'
+              ? 'border-cyan-500/30 shadow-[0_8px_32px_rgba(6,182,212,0.1)] -translate-y-1 bg-surface-raised/60'
               : 'border-white/5 hover:border-white/10'
           : hovered
-            ? 'border-red-500/30 shadow-[0_8px_32px_rgba(239,68,68,0.1)] -translate-y-1 bg-gray-900/60'
+            ? 'border-red-500/30 shadow-[0_8px_32px_rgba(239,68,68,0.1)] -translate-y-1 bg-surface-raised/60'
             : 'border-white/5'
         }`}
       onMouseEnter={() => setHovered(true)}
@@ -385,7 +385,7 @@ export default function OverviewTab({ active }: { active: boolean }) {
 
       {/* PLC section */}
       {plcs.length > 0 && (
-        <div className="bg-gray-900/30 backdrop-blur-xl border border-white/5 rounded-3xl overflow-hidden shadow-2xl ring-1 ring-white/5">
+        <div className="bg-surface-raised/30 backdrop-blur-xl border border-white/5 rounded-3xl overflow-hidden shadow-2xl ring-1 ring-white/5">
           {/* Header */}
           <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between bg-gradient-to-r from-white/[0.02] to-transparent">
             <h2 className="text-sm font-bold tracking-wide text-white uppercase">{t('plc_status')}</h2>

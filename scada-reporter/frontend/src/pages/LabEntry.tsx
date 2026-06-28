@@ -22,12 +22,12 @@ export default function LabEntry() {
         <h1 className="text-xl font-semibold text-white">{t('title')}</h1>
         <p className="text-sm text-gray-500">{t('subtitle')}</p>
       </div>
-      <div className="flex flex-wrap gap-2 border-b border-gray-800 pb-3">
+      <div className="flex flex-wrap gap-2 border-b border-edge pb-3">
         {tabs.map((tb) => (
           <button
             key={tb.key}
             onClick={() => setTab(tb.key)}
-            className={`rounded-lg px-4 py-2 text-sm transition-colors ${tab === tb.key ? 'bg-cyan-500/10 text-cyan-400 ring-1 ring-cyan-500/30' : 'bg-gray-900/40 backdrop-blur-xl text-gray-400 hover:bg-white/5'}`}
+            className={`rounded-lg px-4 py-2 text-sm transition-colors ${tab === tb.key ? 'bg-cyan-500/10 text-cyan-400 ring-1 ring-cyan-500/30' : 'bg-surface-raised/40 backdrop-blur-xl text-gray-400 hover:bg-white/5'}`}
           >
             {tb.label}
           </button>

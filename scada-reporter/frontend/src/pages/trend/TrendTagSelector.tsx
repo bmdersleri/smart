@@ -45,7 +45,7 @@ export function TrendTagSelector({
 
   return (
     <div
-      className={`bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl shrink-0 space-y-2 overflow-y-auto transition-all duration-200 ${
+      className={`bg-surface-raised/40 backdrop-blur-xl border border-white/5 rounded-2xl shrink-0 space-y-2 overflow-y-auto transition-all duration-200 ${
         panelOpen ? 'w-52 p-3' : 'w-0 p-0'
       }`}
     >
@@ -53,10 +53,10 @@ export function TrendTagSelector({
         value={tagSearch}
         onChange={(e) => setTagSearch(e.target.value)}
         placeholder={t('search_placeholder')}
-        className="w-full bg-gray-800 border border-gray-700 rounded-lg px-2 py-1.5 text-xs text-white placeholder-gray-600 focus:outline-hidden focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50"
+        className="w-full bg-surface-sunken border border-edge-strong rounded-lg px-2 py-1.5 text-xs text-white placeholder-gray-600 focus:outline-hidden focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50"
       />
 
-      <div className="flex gap-1 bg-gray-800 rounded-lg p-0.5">
+      <div className="flex gap-1 bg-surface-sunken rounded-lg p-0.5">
         {(
           [
             ['flat', t('mode_flat')],
@@ -86,7 +86,7 @@ export function TrendTagSelector({
           </button>
           <button
             onClick={() => setSelected([])}
-            className="flex-1 px-2 py-1 text-xs bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-red-400 rounded-lg transition-colors"
+            className="flex-1 px-2 py-1 text-xs bg-surface-sunken hover:bg-gray-700 text-gray-400 hover:text-red-400 rounded-lg transition-colors"
           >
             {t('clear_all')}
           </button>
@@ -104,7 +104,7 @@ export function TrendTagSelector({
               if (e.key === 'Escape') setSavingName(null)
             }}
             placeholder={t('preset_name_placeholder')}
-            className="w-full bg-gray-800 border border-blue-600 rounded-lg px-2 py-1.5 text-xs text-white placeholder-gray-600 focus:outline-hidden"
+            className="w-full bg-surface-sunken border border-blue-600 rounded-lg px-2 py-1.5 text-xs text-white placeholder-gray-600 focus:outline-hidden"
           />
           <div className="flex gap-1">
             <button
@@ -116,7 +116,7 @@ export function TrendTagSelector({
             </button>
             <button
               onClick={() => setSavingName(null)}
-              className="px-2 py-1 text-xs bg-gray-800 hover:bg-gray-700 text-gray-400 rounded-lg transition-colors"
+              className="px-2 py-1 text-xs bg-surface-sunken hover:bg-gray-700 text-gray-400 rounded-lg transition-colors"
             >
               {t('common:cancel')}
             </button>
@@ -149,7 +149,7 @@ export function TrendTagSelector({
               </div>
             )
           })}
-          <div className="border-t border-gray-800 pt-1" />
+          <div className="border-t border-edge pt-1" />
         </div>
       )}
 
@@ -167,7 +167,7 @@ export function TrendTagSelector({
                 onClick={() => toggleTag(tag.id)}
                 className={`w-full text-start px-2 py-1.5 rounded-lg text-sm transition-colors flex items-center gap-2 ${
                   selectedIndex >= 0
-                    ? 'bg-gray-800/60 text-white'
+                    ? 'bg-surface-sunken/60 text-white'
                     : 'text-gray-400 hover:bg-white/5 hover:text-white'
                 }`}
               >

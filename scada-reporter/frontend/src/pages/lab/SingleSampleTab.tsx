@@ -135,7 +135,7 @@ export default function SingleSampleTab() {
             <select
               value={pointId}
               onChange={(e) => setPointId(e.target.value === '' ? '' : Number(e.target.value))}
-              className="flex-1 rounded-lg border border-gray-700 bg-gray-900/40 backdrop-blur-xl px-3 py-2 text-sm text-gray-100"
+              className="flex-1 rounded-lg border border-edge-strong bg-surface-raised/40 backdrop-blur-xl px-3 py-2 text-sm text-gray-100"
             >
               <option value="">—</option>
               {points.map((p) => (
@@ -144,24 +144,24 @@ export default function SingleSampleTab() {
             </select>
             <button
               onClick={() => setShowNewPoint((v) => !v)}
-              className="shrink-0 rounded-lg border border-gray-700 bg-gray-800 px-2 py-2 text-xs text-gray-300 hover:bg-gray-700"
+              className="shrink-0 rounded-lg border border-edge-strong bg-surface-sunken px-2 py-2 text-xs text-gray-300 hover:bg-gray-700"
             >
               {t('add_point')}
             </button>
           </div>
           {showNewPoint && (
-            <div className="mt-2 flex flex-wrap items-center gap-2 rounded-lg border border-gray-700 bg-gray-800 p-2">
+            <div className="mt-2 flex flex-wrap items-center gap-2 rounded-lg border border-edge-strong bg-surface-sunken p-2">
               <input
                 value={newPointCode}
                 onChange={(e) => setNewPointCode(e.target.value)}
                 placeholder={t('code')}
-                className="w-24 rounded-lg border border-gray-700 bg-gray-900/40 backdrop-blur-xl px-2 py-1 text-sm text-gray-100"
+                className="w-24 rounded-lg border border-edge-strong bg-surface-raised/40 backdrop-blur-xl px-2 py-1 text-sm text-gray-100"
               />
               <input
                 value={newPointName}
                 onChange={(e) => setNewPointName(e.target.value)}
                 placeholder={t('name')}
-                className="w-36 rounded-lg border border-gray-700 bg-gray-900/40 backdrop-blur-xl px-2 py-1 text-sm text-gray-100"
+                className="w-36 rounded-lg border border-edge-strong bg-surface-raised/40 backdrop-blur-xl px-2 py-1 text-sm text-gray-100"
               />
               <button
                 onClick={handleAddPoint}
@@ -172,7 +172,7 @@ export default function SingleSampleTab() {
               </button>
               <button
                 onClick={() => { setShowNewPoint(false); setNewPointCode(''); setNewPointName('') }}
-                className="rounded-lg border border-gray-700 bg-gray-800 px-3 py-1 text-xs text-gray-400 hover:bg-gray-700"
+                className="rounded-lg border border-edge-strong bg-surface-sunken px-3 py-1 text-xs text-gray-400 hover:bg-gray-700"
               >
                 {t('cancel')}
               </button>
@@ -185,7 +185,7 @@ export default function SingleSampleTab() {
             type="datetime-local"
             value={sampledAt}
             onChange={(e) => { setTouched(true); setSampledAt(e.target.value) }}
-            className="w-full rounded-lg border border-gray-700 bg-gray-900/40 backdrop-blur-xl px-3 py-2 text-sm text-gray-100"
+            className="w-full rounded-lg border border-edge-strong bg-surface-raised/40 backdrop-blur-xl px-3 py-2 text-sm text-gray-100"
           />
         </label>
       </div>
@@ -203,7 +203,7 @@ export default function SingleSampleTab() {
               <input
                 value={raw}
                 onChange={(e) => setValues((v) => ({ ...v, [param.id]: e.target.value }))}
-                className={`w-32 rounded-lg border bg-gray-900/40 backdrop-blur-xl px-3 py-2 text-sm text-gray-100 ${bad ? 'border-red-500' : 'border-gray-700'}`}
+                className={`w-32 rounded-lg border bg-surface-raised/40 backdrop-blur-xl px-3 py-2 text-sm text-gray-100 ${bad ? 'border-red-500' : 'border-edge-strong'}`}
               />
               {bad && <span className="text-xs text-red-400">{t('out_of_range')}</span>}
             </div>
@@ -213,29 +213,29 @@ export default function SingleSampleTab() {
         <div>
           <button
             onClick={() => setShowNewParam((v) => !v)}
-            className="rounded-lg border border-gray-700 bg-gray-800 px-2 py-1 text-xs text-gray-300 hover:bg-gray-700"
+            className="rounded-lg border border-edge-strong bg-surface-sunken px-2 py-1 text-xs text-gray-300 hover:bg-gray-700"
           >
             {t('add_parameter')}
           </button>
           {showNewParam && (
-            <div className="mt-2 flex flex-wrap items-center gap-2 rounded-lg border border-gray-700 bg-gray-800 p-2">
+            <div className="mt-2 flex flex-wrap items-center gap-2 rounded-lg border border-edge-strong bg-surface-sunken p-2">
               <input
                 value={newParamCode}
                 onChange={(e) => setNewParamCode(e.target.value)}
                 placeholder={t('code')}
-                className="w-24 rounded-lg border border-gray-700 bg-gray-900/40 backdrop-blur-xl px-2 py-1 text-sm text-gray-100"
+                className="w-24 rounded-lg border border-edge-strong bg-surface-raised/40 backdrop-blur-xl px-2 py-1 text-sm text-gray-100"
               />
               <input
                 value={newParamName}
                 onChange={(e) => setNewParamName(e.target.value)}
                 placeholder={t('name')}
-                className="w-36 rounded-lg border border-gray-700 bg-gray-900/40 backdrop-blur-xl px-2 py-1 text-sm text-gray-100"
+                className="w-36 rounded-lg border border-edge-strong bg-surface-raised/40 backdrop-blur-xl px-2 py-1 text-sm text-gray-100"
               />
               <input
                 value={newParamUnit}
                 onChange={(e) => setNewParamUnit(e.target.value)}
                 placeholder={t('unit')}
-                className="w-20 rounded-lg border border-gray-700 bg-gray-900/40 backdrop-blur-xl px-2 py-1 text-sm text-gray-100"
+                className="w-20 rounded-lg border border-edge-strong bg-surface-raised/40 backdrop-blur-xl px-2 py-1 text-sm text-gray-100"
               />
               <button
                 onClick={handleAddParam}
@@ -246,7 +246,7 @@ export default function SingleSampleTab() {
               </button>
               <button
                 onClick={() => { setShowNewParam(false); setNewParamCode(''); setNewParamName(''); setNewParamUnit('') }}
-                className="rounded-lg border border-gray-700 bg-gray-800 px-3 py-1 text-xs text-gray-400 hover:bg-gray-700"
+                className="rounded-lg border border-edge-strong bg-surface-sunken px-3 py-1 text-xs text-gray-400 hover:bg-gray-700"
               >
                 {t('cancel')}
               </button>

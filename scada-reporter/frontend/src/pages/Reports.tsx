@@ -66,7 +66,7 @@ function HistoryRow({ entry }: { entry: ReportHistoryEntry }) {
   const rangeEnd = format(parseUtc(entry.end), 'dd.MM', { locale: dateLocale })
 
   return (
-    <div className="flex items-center justify-between py-2.5 border-t border-gray-800">
+    <div className="flex items-center justify-between py-2.5 border-t border-edge">
       <div className="flex items-center gap-3">
         <span className="text-gray-500 text-sm">📄</span>
         <div>
@@ -193,7 +193,7 @@ export default function Reports() {
 
       {/* Saved presets */}
       {(presets.length > 0 || selectedTags.length > 0) && (
-        <div className="bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl p-4 space-y-2">
+        <div className="bg-surface-raised/40 backdrop-blur-xl border border-white/5 rounded-2xl p-4 space-y-2">
           <div className="flex items-center justify-between">
             <p className="text-sm font-medium text-gray-300">{t('saved_selections')}</p>
             {selectedTags.length > 0 && savingName === null && (
@@ -206,7 +206,7 @@ export default function Reports() {
                 </button>
                 <button
                   onClick={() => setSelectedTags([])}
-                  className="px-2.5 py-1 text-xs bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-red-400 rounded-lg transition-colors"
+                  className="px-2.5 py-1 text-xs bg-surface-sunken hover:bg-gray-700 text-gray-400 hover:text-red-400 rounded-lg transition-colors"
                 >
                   {t('clear_all')}
                 </button>
@@ -233,7 +233,7 @@ export default function Reports() {
               </button>
               <button
                 onClick={() => setSavingName(null)}
-                className="px-3 py-1.5 text-xs bg-gray-800 hover:bg-gray-700 text-gray-400 rounded-lg transition-colors"
+                className="px-3 py-1.5 text-xs bg-surface-sunken hover:bg-gray-700 text-gray-400 rounded-lg transition-colors"
               >
                 {t('common:cancel')}
               </button>
@@ -243,7 +243,7 @@ export default function Reports() {
           {presets.length > 0 ? (
             <div className="flex flex-wrap gap-2">
               {presets.map((p) => (
-                <div key={p.name} className="group flex items-center gap-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5">
+                <div key={p.name} className="group flex items-center gap-1 bg-surface-sunken border border-edge-strong rounded-lg px-3 py-1.5">
                   <button
                     onClick={() => loadReportPreset(p)}
                     className="text-sm text-gray-300 hover:text-white transition-colors"
@@ -273,7 +273,7 @@ export default function Reports() {
       )}
 
       {/* Grouped tag selection */}
-      <div className="bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl p-4 space-y-4">
+      <div className="bg-surface-raised/40 backdrop-blur-xl border border-white/5 rounded-2xl p-4 space-y-4">
         <div className="flex items-center justify-between">
           <p className="text-sm font-medium text-gray-300">{t('tag_selection')}</p>
           <span className="text-xs text-gray-500">{t('tags_selected', { value: selectedTags.length })}</span>
@@ -312,7 +312,7 @@ export default function Reports() {
       </div>
 
       {/* Time range */}
-      <div className="bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl p-4 space-y-3">
+      <div className="bg-surface-raised/40 backdrop-blur-xl border border-white/5 rounded-2xl p-4 space-y-3">
         <p className="text-sm font-medium text-gray-300">{t('time_range')}</p>
         <div className="flex gap-2 flex-wrap">
           {PRESETS.map((p) => (
@@ -341,7 +341,7 @@ export default function Reports() {
       </div>
 
       {/* Grouping */}
-      <div className="bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl p-4 space-y-3">
+      <div className="bg-surface-raised/40 backdrop-blur-xl border border-white/5 rounded-2xl p-4 space-y-3">
         <p className="text-sm font-medium text-gray-300">{t('grouping')}</p>
         <div className="flex gap-2">
           {[{ v: 'hourly', l: t('hourly') }, { v: 'daily', l: t('daily') }].map(({ v, l }) => (
@@ -375,7 +375,7 @@ export default function Reports() {
       </div>
 
       {/* Report history */}
-      <div className="bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl p-4">
+      <div className="bg-surface-raised/40 backdrop-blur-xl border border-white/5 rounded-2xl p-4">
         <p className="text-sm font-medium text-gray-300 mb-1">{t('recent_reports')}</p>
         {history.length === 0 ? (
           <p className="text-gray-500 text-sm py-4">{t('no_reports_yet')}</p>

@@ -96,12 +96,12 @@ export default function WatchlistTab({ active }: { active: boolean }) {
     <>
     <WatchlistGroups />
     {items.length === 0 ? (
-      <div className="text-center py-16 bg-gray-900/80 backdrop-blur-md rounded-xl border border-gray-800/50 shadow-xl">
+      <div className="text-center py-16 bg-surface-raised/80 backdrop-blur-md rounded-xl border border-edge/50 shadow-xl">
         <p className="text-gray-400">{t('watchlist_empty')}</p>
         <p className="text-gray-500 text-sm mt-1">{t('watchlist_empty_hint')}</p>
       </div>
     ) : (
-    <div className="bg-gray-900/80 backdrop-blur-md border border-gray-800/50 rounded-xl overflow-hidden shadow-xl">
+    <div className="bg-surface-raised/80 backdrop-blur-md border border-edge/50 rounded-xl overflow-hidden shadow-xl">
       <table className="w-full">
         <thead>
           <tr className="text-xs text-gray-500 uppercase tracking-wide">
@@ -116,7 +116,7 @@ export default function WatchlistTab({ active }: { active: boolean }) {
         </thead>
         <tbody>
           {rows.map((item) => (
-            <tr key={item.tag_id} className="border-t border-gray-800 hover:bg-white/5/40 transition-colors">
+            <tr key={item.tag_id} className="border-t border-edge hover:bg-white/5/40 transition-colors">
               <td className="px-4 py-3 text-sm text-gray-400">{item.device || '—'}</td>
               <td className="px-4 py-3 text-sm text-white font-medium">
                 <TagDescriptionCell name={item.name} description={item.description} />
@@ -136,7 +136,7 @@ export default function WatchlistTab({ active }: { active: boolean }) {
                       <button
                         key={g.id}
                         onClick={() => toggleGroup.mutate({ gid: g.id, tagId: item.tag_id, on })}
-                        className={`text-[10px] px-1.5 py-0.5 rounded-full border ${on ? 'bg-cyan-900/50 border-cyan-600 text-cyan-300' : 'border-gray-700 text-gray-500'}`}
+                        className={`text-[10px] px-1.5 py-0.5 rounded-full border ${on ? 'bg-cyan-900/50 border-cyan-600 text-cyan-300' : 'border-edge-strong text-gray-500'}`}
                       >
                         {g.name}
                       </button>

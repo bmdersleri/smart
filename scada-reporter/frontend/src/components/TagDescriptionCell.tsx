@@ -37,7 +37,7 @@ export default function TagDescriptionCell({
         <span
           id={tooltipId}
           role="tooltip"
-          className="absolute left-0 top-full z-20 mt-1 max-w-xs rounded-lg border border-gray-700 bg-gray-950 px-2 py-1 text-xs text-gray-200 shadow-lg"
+          className="absolute left-0 top-full z-20 mt-1 max-w-xs rounded-lg border border-edge-strong bg-surface px-2 py-1 text-xs text-gray-200 shadow-lg"
         >
           {description}
         </span>

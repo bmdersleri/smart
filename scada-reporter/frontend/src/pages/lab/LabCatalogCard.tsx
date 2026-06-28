@@ -109,7 +109,7 @@ export default function LabCatalogCard() {
   const approvedPoints = points.filter((p) => p.approved)
 
   return (
-    <div className="bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl p-4 sm:p-5 space-y-6">
+    <div className="bg-surface-raised/40 backdrop-blur-xl border border-white/5 rounded-2xl p-4 sm:p-5 space-y-6">
       <h2 className="text-sm font-medium text-gray-400 uppercase tracking-wider">
         {t('catalog_title')}
       </h2>
@@ -164,19 +164,19 @@ export default function LabCatalogCard() {
             value={newParamName}
             onChange={(e) => setNewParamName(e.target.value)}
             placeholder={t('name')}
-            className="w-full min-w-0 rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100"
+            className="w-full min-w-0 rounded-lg border border-edge-strong bg-surface-sunken px-3 py-2 text-sm text-gray-100"
           />
           <input
             value={newParamCode}
             onChange={(e) => setNewParamCode(e.target.value)}
             placeholder={t('code')}
-            className="w-full min-w-0 rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100"
+            className="w-full min-w-0 rounded-lg border border-edge-strong bg-surface-sunken px-3 py-2 text-sm text-gray-100"
           />
           <input
             value={newParamUnit}
             onChange={(e) => setNewParamUnit(e.target.value)}
             placeholder={t('unit')}
-            className="w-full min-w-0 rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100"
+            className="w-full min-w-0 rounded-lg border border-edge-strong bg-surface-sunken px-3 py-2 text-sm text-gray-100"
           />
           <button
             onClick={handleAddParam}
@@ -236,19 +236,19 @@ export default function LabCatalogCard() {
             value={newPointName}
             onChange={(e) => setNewPointName(e.target.value)}
             placeholder={t('name')}
-            className="w-full min-w-0 rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100"
+            className="w-full min-w-0 rounded-lg border border-edge-strong bg-surface-sunken px-3 py-2 text-sm text-gray-100"
           />
           <input
             value={newPointCode}
             onChange={(e) => setNewPointCode(e.target.value)}
             placeholder={t('code')}
-            className="w-full min-w-0 rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100"
+            className="w-full min-w-0 rounded-lg border border-edge-strong bg-surface-sunken px-3 py-2 text-sm text-gray-100"
           />
           <input
             value={newPointDesc}
             onChange={(e) => setNewPointDesc(e.target.value)}
             placeholder={t('description')}
-            className="w-full min-w-0 rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100"
+            className="w-full min-w-0 rounded-lg border border-edge-strong bg-surface-sunken px-3 py-2 text-sm text-gray-100"
           />
           <button
             onClick={handleAddPoint}

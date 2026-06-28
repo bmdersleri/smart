@@ -5,7 +5,7 @@ import { getLicenseStatus, type LicenseMode } from '../api/client'
 const STYLE: Record<LicenseMode, string> = {
   licensed: 'bg-green-900/40 text-green-300 border-green-700/50',
   demo: 'bg-yellow-900/40 text-yellow-300 border-yellow-700/50',
-  unlicensed: 'bg-gray-800 text-gray-400 border-gray-700',
+  unlicensed: 'bg-surface-sunken text-gray-400 border-edge-strong',
 }
 
 const DOT: Record<LicenseMode, string> = {

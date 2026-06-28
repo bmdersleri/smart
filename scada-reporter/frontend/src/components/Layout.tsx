@@ -28,7 +28,7 @@ export default function Layout() {
   const [mobileNav, setMobileNav] = useState(false)
 
   return (
-    <div className="flex h-screen bg-gray-950 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(14,116,144,0.15),rgba(0,0,0,0))] overflow-hidden">
+    <div className="flex h-screen bg-surface bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(14,116,144,0.15),rgba(0,0,0,0))] overflow-hidden">
       {/* Mobile backdrop overlay */}
       {mobileNav && (
         <div
@@ -38,7 +38,7 @@ export default function Layout() {
       )}
       {/* Sidebar */}
       <aside
-        className={`w-64 bg-gray-900/60 backdrop-blur-xl border-e border-white/5 flex flex-col fixed md:static inset-y-0 start-0 z-40 transform transition-transform duration-300 ease-out md:translate-x-0 ${
+        className={`w-64 bg-surface-raised/60 backdrop-blur-xl border-e border-white/5 flex flex-col fixed md:static inset-y-0 start-0 z-40 transform transition-transform duration-300 ease-out md:translate-x-0 ${
           mobileNav ? 'translate-x-0 shadow-2xl' : 'max-md:-translate-x-full max-md:rtl:translate-x-full'
         }`}
       >
@@ -93,7 +93,7 @@ export default function Layout() {
           )}
         </nav>
 
-        <div className="p-4 border-t border-white/5 bg-gray-900/30">
+        <div className="p-4 border-t border-white/5 bg-surface-raised/30">
           <LicenseBadge />
           <div className="flex items-center gap-3 px-2 py-2 mb-2 rounded-lg hover:bg-white/5 transition-colors cursor-pointer">
             <div className="w-8 h-8 bg-gradient-to-br from-gray-700 to-gray-600 rounded-full flex items-center justify-center text-sm text-white font-medium shadow-inner border border-gray-500/30">
@@ -116,7 +116,7 @@ export default function Layout() {
       {/* Main */}
       <main className="flex-1 overflow-auto relative">
         {/* Mobile top bar */}
-        <div className="md:hidden sticky top-0 z-20 flex items-center gap-3 bg-gray-900/80 backdrop-blur-md border-b border-white/5 px-4 py-3">
+        <div className="md:hidden sticky top-0 z-20 flex items-center gap-3 bg-surface-raised/80 backdrop-blur-md border-b border-white/5 px-4 py-3">
           <button
             onClick={() => setMobileNav(true)}
             className="text-gray-300 hover:text-white"

@@ -43,12 +43,12 @@ function AddTagModal({ onClose }: { onClose: () => void }) {
     device: form.plc_name, sample_interval: parseInt(form.sample_interval) || 5, long_term: true,
   })
 
-  const inputCls = 'w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-hidden focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50'
+  const inputCls = 'w-full bg-surface-sunken border border-edge-strong rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-hidden focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50'
   const result = mut.data?.data
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl w-full max-w-lg p-6 space-y-4">
+      <div className="bg-surface-raised/40 backdrop-blur-xl border border-white/5 rounded-2xl w-full max-w-lg p-6 space-y-4">
         <h2 className="text-lg font-semibold text-white">{t('add_modal_title')}</h2>
         {[
           { k: 'name', label: t('field_name'), ph: 'Line Flow' },
@@ -75,7 +75,7 @@ function AddTagModal({ onClose }: { onClose: () => void }) {
         </div>
 
         {result && (
-          <div className="bg-gray-800/60 border border-gray-700 rounded-lg p-3 text-sm">
+          <div className="bg-surface-sunken/60 border border-edge-strong rounded-lg p-3 text-sm">
             <p className="text-gray-300">{t('current_value')}
               <span className="text-white font-mono ms-1">{result.current_value ?? '—'}</span>
               {result.unit ? ` ${result.unit}` : ''}
@@ -89,7 +89,7 @@ function AddTagModal({ onClose }: { onClose: () => void }) {
         )}
 
         <div className="flex gap-3 pt-2">
-          <button onClick={onClose} className="flex-1 py-2 rounded-lg border border-gray-700 text-gray-300 hover:bg-white/5 text-sm transition-colors">
+          <button onClick={onClose} className="flex-1 py-2 rounded-lg border border-edge-strong text-gray-300 hover:bg-white/5 text-sm transition-colors">
             {result ? t('close') : t('common:cancel')}
           </button>
           <button
@@ -135,11 +135,11 @@ function EditTagModal({ tag, groups, onClose }: { tag: Tag; groups: Group[]; onC
     deadband: deadband === '' ? null : Number(deadband),
   })
 
-  const inputCls = 'w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-hidden focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50'
+  const inputCls = 'w-full bg-surface-sunken border border-edge-strong rounded-lg px-3 py-2 text-sm text-white focus:outline-hidden focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50'
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl w-full max-w-lg p-6 space-y-4">
+      <div className="bg-surface-raised/40 backdrop-blur-xl border border-white/5 rounded-2xl w-full max-w-lg p-6 space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-white">{t('edit_modal_title', { name: tag.name })}</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-white">✕</button>
@@ -147,7 +147,7 @@ function EditTagModal({ tag, groups, onClose }: { tag: Tag; groups: Group[]; onC
 
         <div>
           <label className="text-xs text-gray-400 mb-1 block">{t('s7_immutable')}</label>
-          <div className="bg-gray-800/50 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-500 font-mono">
+          <div className="bg-surface-sunken/50 border border-edge-strong rounded-lg px-3 py-2 text-sm text-gray-500 font-mono">
             {tag.s7_address ?? tag.node_id}{tag.plc_ip ? ` @ ${tag.plc_ip}` : ''}
           </div>
         </div>
@@ -197,7 +197,7 @@ function EditTagModal({ tag, groups, onClose }: { tag: Tag; groups: Group[]; onC
         {mut.isError && <p className="text-red-400 text-sm">{t('save_error')}</p>}
 
         <div className="flex gap-3 pt-2">
-          <button onClick={onClose} className="flex-1 py-2 rounded-lg border border-gray-700 text-gray-300 hover:bg-white/5 text-sm transition-colors">{t('common:cancel')}</button>
+          <button onClick={onClose} className="flex-1 py-2 rounded-lg border border-edge-strong text-gray-300 hover:bg-white/5 text-sm transition-colors">{t('common:cancel')}</button>
           <button
             onClick={save} disabled={mut.isPending}
             className="flex-1 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-medium transition-colors"
@@ -223,7 +223,7 @@ function ImportTagModal({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl w-full max-w-lg p-6 space-y-4">
+      <div className="bg-surface-raised/40 backdrop-blur-xl border border-white/5 rounded-2xl w-full max-w-lg p-6 space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-white">{t('import_modal_title')}</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-white">✕</button>
@@ -241,7 +241,7 @@ function ImportTagModal({ onClose }: { onClose: () => void }) {
         />
         <button
           onClick={() => fileRef.current?.click()}
-          className="w-full py-10 border-2 border-dashed border-gray-700 rounded-xl text-gray-500 hover:border-blue-500 hover:text-cyan-400 transition-colors text-sm"
+          className="w-full py-10 border-2 border-dashed border-edge-strong rounded-xl text-gray-500 hover:border-blue-500 hover:text-cyan-400 transition-colors text-sm"
         >
           {file ? `${file.name} ${isCsv ? t('import_csv_label') : t('import_xlsx_label')}` : t('import_pick_file')}
         </button>
@@ -257,7 +257,7 @@ function ImportTagModal({ onClose }: { onClose: () => void }) {
         )}
 
         <div className="flex gap-3 pt-2">
-          <button onClick={onClose} className="flex-1 py-2 rounded-lg border border-gray-700 text-gray-300 hover:bg-white/5 text-sm transition-colors">{t('common:cancel')}</button>
+          <button onClick={onClose} className="flex-1 py-2 rounded-lg border border-edge-strong text-gray-300 hover:bg-white/5 text-sm transition-colors">{t('common:cancel')}</button>
           <button
             onClick={() => file && mut.mutate(file)}
             disabled={!file || mut.isPending}
@@ -282,13 +282,13 @@ function FormatGuideModal({ onClose }: { onClose: () => void }) {
   ]
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl w-full max-w-lg p-6 space-y-4">
+      <div className="bg-surface-raised/40 backdrop-blur-xl border border-white/5 rounded-2xl w-full max-w-lg p-6 space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-white">{t('format_modal_title')}</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-white">✕</button>
         </div>
         <p className="text-gray-400 text-sm">{t('format_intro')}</p>
-        <div className="bg-gray-800 rounded-lg p-4 space-y-2">
+        <div className="bg-surface-sunken rounded-lg p-4 space-y-2">
           {examples.map(({ addr, desc }) => (
             <div key={addr} className="flex items-baseline gap-3">
               <span className="text-cyan-400 font-mono text-sm w-32 shrink-0">{addr}</span>
@@ -321,11 +321,11 @@ function GroupsModal({ onClose }: { onClose: () => void }) {
 
   // resolve parent name for single-level indentation
   const nameOf = (id: number | null) => groups.find((g) => g.id === id)?.name ?? null
-  const inputCls = 'w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-hidden focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50'
+  const inputCls = 'w-full bg-surface-sunken border border-edge-strong rounded-lg px-3 py-2 text-sm text-white focus:outline-hidden focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50'
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl w-full max-w-lg p-6 space-y-4">
+      <div className="bg-surface-raised/40 backdrop-blur-xl border border-white/5 rounded-2xl w-full max-w-lg p-6 space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-white">{t('groups_modal_title')}</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-white">✕</button>
@@ -334,7 +334,7 @@ function GroupsModal({ onClose }: { onClose: () => void }) {
           {t('groups_desc_before')}<strong className="text-gray-300">{t('groups_auto')}</strong>{t('groups_desc_after')}
         </p>
 
-        <div className="bg-gray-800/40 border border-gray-700 rounded-lg p-3 space-y-2">
+        <div className="bg-surface-sunken/40 border border-edge-strong rounded-lg p-3 space-y-2">
           <input className={inputCls} value={name} onChange={(e) => setName(e.target.value)} placeholder={t('groups_new_name')} />
           <select className={inputCls} value={parentId ?? ''} onChange={(e) => setParentId(e.target.value === '' ? null : Number(e.target.value))}>
             <option value="">{t('groups_parent_root')}</option>
@@ -352,7 +352,7 @@ function GroupsModal({ onClose }: { onClose: () => void }) {
         <div className="max-h-64 overflow-y-auto space-y-1">
           {groups.length === 0 && <p className="text-gray-500 text-sm text-center py-4">{t('groups_none')}</p>}
           {groups.map((g) => (
-            <div key={g.id} className="flex items-center justify-between bg-gray-800/40 rounded-lg px-3 py-2">
+            <div key={g.id} className="flex items-center justify-between bg-surface-sunken/40 rounded-lg px-3 py-2">
               <span className="text-sm text-gray-200">
                 {g.parent_id != null && <span className="text-gray-600">{nameOf(g.parent_id)} / </span>}
                 {g.name}
@@ -383,7 +383,7 @@ function TagRow({
       <span className="text-sm text-white truncate flex-1">{tag.name}</span>
       <span className="text-xs font-mono text-gray-600 hidden sm:inline">{tag.s7_address ?? '—'}</span>
       <span className="text-xs text-gray-500 w-10 text-end">{tag.unit}</span>
-      <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${tag.is_active ? 'bg-green-900/50 text-green-400' : 'bg-gray-800 text-gray-500'}`}>
+      <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${tag.is_active ? 'bg-green-900/50 text-green-400' : 'bg-surface-sunken text-gray-500'}`}>
         {tag.is_active ? t('status_active') : t('status_passive')}
       </span>
       {canEdit && (
@@ -462,7 +462,7 @@ function TagTreeView({
         <TagTreeNode key={n.id ?? `root-${i}`} node={n} tagMap={tagMap} canEdit={canEdit} onEdit={onEdit} onDelete={onDelete} depth={0} />
       ))}
       {ungrouped.length > 0 && (
-        <div className="pt-2 mt-2 border-t border-gray-800">
+        <div className="pt-2 mt-2 border-t border-edge">
           <p className="text-xs text-gray-500 uppercase tracking-wide px-2 py-1">{t('ungrouped_count', { value: ungrouped.length })}</p>
           {ungrouped.map((t) => (
             <TagRow key={t.id} tag={t} canEdit={canEdit} onEdit={onEdit} onDelete={onDelete} indent={22} />
@@ -547,22 +547,22 @@ export default function Tags() {
         <h1 className="text-xl font-bold text-white">{t('title')}</h1>
         <div className="flex gap-2 flex-wrap">
           <div className="flex">
-            <button onClick={() => doExport('csv')} className="px-3 py-2 text-sm bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-s-lg border border-gray-700 transition-colors">
+            <button onClick={() => doExport('csv')} className="px-3 py-2 text-sm bg-surface-sunken hover:bg-gray-700 text-gray-300 rounded-s-lg border border-edge-strong transition-colors">
               {t('export_csv')}
             </button>
-            <button onClick={() => doExport('xlsx')} className="px-3 py-2 text-sm bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-e-lg border border-s-0 border-gray-700 transition-colors">
+            <button onClick={() => doExport('xlsx')} className="px-3 py-2 text-sm bg-surface-sunken hover:bg-gray-700 text-gray-300 rounded-e-lg border border-s-0 border-edge-strong transition-colors">
               {t('export_xlsx')}
             </button>
           </div>
           {canEdit && (
             <>
-              <button onClick={() => setShowGroups(true)} className="px-3 py-2 text-sm bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg border border-gray-700 transition-colors">
+              <button onClick={() => setShowGroups(true)} className="px-3 py-2 text-sm bg-surface-sunken hover:bg-gray-700 text-gray-300 rounded-lg border border-edge-strong transition-colors">
                 {t('groups_btn')}
               </button>
               <button onClick={() => setShowImport(true)} className="px-3 py-2 text-sm bg-green-800 hover:bg-green-700 text-green-300 rounded-lg border border-green-700 transition-colors">
                 {t('import_btn')}
               </button>
-              <button onClick={() => setShowFormat(true)} className="px-3 py-2 text-sm bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg border border-gray-700 transition-colors">
+              <button onClick={() => setShowFormat(true)} className="px-3 py-2 text-sm bg-surface-sunken hover:bg-gray-700 text-gray-300 rounded-lg border border-edge-strong transition-colors">
                 {t('format_btn')}
               </button>
               {can('tag:create') && (
@@ -580,7 +580,7 @@ export default function Tags() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder={t('search_placeholder')}
-          className="flex-1 bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-hidden focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50"
+          className="flex-1 bg-surface-raised/40 backdrop-blur-xl border border-white/5 rounded-2xl px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-hidden focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50"
         />
         {viewMode === 'table' && (
           <select
@@ -589,7 +589,7 @@ export default function Tags() {
               const v = e.target.value
               setGroupFilter(v === 'all' || v === 'none' ? v : Number(v))
             }}
-            className="bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl px-3 py-2.5 text-sm text-white focus:outline-hidden focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50"
+            className="bg-surface-raised/40 backdrop-blur-xl border border-white/5 rounded-2xl px-3 py-2.5 text-sm text-white focus:outline-hidden focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50"
             title={t('filter_by_group')}
           >
             <option value="all">{t('all_groups')}</option>
@@ -598,7 +598,7 @@ export default function Tags() {
           </select>
         )}
         {/* Table / Tree view switch */}
-        <div className="flex bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl p-0.5">
+        <div className="flex bg-surface-raised/40 backdrop-blur-xl border border-white/5 rounded-2xl p-0.5">
           <button
             onClick={() => setViewMode('table')}
             className={`px-3 py-2 text-sm rounded-lg transition-colors ${viewMode === 'table' ? 'bg-cyan-500/10 text-cyan-400 ring-1 ring-cyan-500/30' : 'text-gray-400 hover:text-white'}`}
@@ -615,7 +615,7 @@ export default function Tags() {
           </button>
         </div>
         {viewMode === 'tree' && (
-          <div className="flex bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl p-0.5">
+          <div className="flex bg-surface-raised/40 backdrop-blur-xl border border-white/5 rounded-2xl p-0.5">
             {(['manual', 'auto'] as const).map((s) => (
               <button
                 key={s}
@@ -629,7 +629,7 @@ export default function Tags() {
         )}
       </div>
 
-      <div className="bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl overflow-visible">
+      <div className="bg-surface-raised/40 backdrop-blur-xl border border-white/5 rounded-2xl overflow-visible">
         {viewMode === 'tree' ? (
           <TagTreeView source={treeSource} tags={tags} canEdit={canEdit} onEdit={setEditTag} onDelete={handleDelete} />
         ) : isLoading ? (
@@ -640,7 +640,7 @@ export default function Tags() {
           </div>
         ) : (
           <table className="w-full">
-            <thead className="border-b border-gray-800">
+            <thead className="border-b border-edge">
               <tr className="text-xs text-gray-500 uppercase tracking-wide">
                 {[
                   { label: t('col_plc'), key: 'plc' },
@@ -659,7 +659,7 @@ export default function Tags() {
             </thead>
             <tbody>
               {pageRows.map((row: Tag) => (
-                <tr key={row.id} className="border-t border-gray-800 hover:bg-white/5/40">
+                <tr key={row.id} className="border-t border-edge hover:bg-white/5/40">
                   <td className="px-4 py-3 text-sm text-gray-400">{row.plc_name || row.device}</td>
                   <td className="px-4 py-3 text-sm font-medium text-white">
                     <div className="flex min-w-0 items-center gap-1.5">
@@ -678,7 +678,7 @@ export default function Tags() {
                       : <span className="text-gray-600">—</span>}
                   </td>
                   <td className="px-4 py-3">
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${row.is_active ? 'bg-green-900/50 text-green-400' : 'bg-gray-800 text-gray-500'}`}>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${row.is_active ? 'bg-green-900/50 text-green-400' : 'bg-surface-sunken text-gray-500'}`}>
                       {row.is_active ? t('status_active') : t('status_passive')}
                     </span>
                   </td>
@@ -688,7 +688,7 @@ export default function Tags() {
                         <button
                           onClick={() => setEditTag(row)}
                           title={t('common:edit')}
-                          className="p-1.5 rounded-lg text-gray-400 hover:text-cyan-400 hover:bg-blue-500/10 border border-gray-700 hover:border-blue-500/40 transition-colors"
+                          className="p-1.5 rounded-lg text-gray-400 hover:text-cyan-400 hover:bg-blue-500/10 border border-edge-strong hover:border-blue-500/40 transition-colors"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -697,7 +697,7 @@ export default function Tags() {
                         <button
                           onClick={() => { if (confirm(t('confirm_delete', { name: row.name }))) delMut.mutate(row.id) }}
                           title={t('common:delete')}
-                          className="p-1.5 rounded-lg text-gray-400 hover:text-red-400 hover:bg-red-500/10 border border-gray-700 hover:border-red-500/40 transition-colors"
+                          className="p-1.5 rounded-lg text-gray-400 hover:text-red-400 hover:bg-red-500/10 border border-edge-strong hover:border-red-500/40 transition-colors"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -728,7 +728,7 @@ export default function Tags() {
               <select
                 value={pageSize}
                 onChange={(e) => setPageSize(Number(e.target.value))}
-                className="bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl px-2 py-1 text-sm text-white focus:outline-hidden focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50"
+                className="bg-surface-raised/40 backdrop-blur-xl border border-white/5 rounded-2xl px-2 py-1 text-sm text-white focus:outline-hidden focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50"
               >
                 {PAGE_SIZE_OPTIONS.map((n) => <option key={n} value={n}>{n}</option>)}
               </select>
@@ -739,7 +739,7 @@ export default function Tags() {
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={pageClamped === 1}
-                className="px-3 py-1.5 text-sm bg-gray-800 text-gray-300 rounded-lg border border-gray-700 disabled:opacity-40 hover:bg-gray-700 transition-colors"
+                className="px-3 py-1.5 text-sm bg-surface-sunken text-gray-300 rounded-lg border border-edge-strong disabled:opacity-40 hover:bg-gray-700 transition-colors"
               >
                 {t('prev')}
               </button>
@@ -748,7 +748,7 @@ export default function Tags() {
                   value={pageClamped}
                   onChange={(e) => setPage(Number(e.target.value))}
                   title={t('go_to_page')}
-                  className="bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl px-2 py-1 text-sm text-white focus:outline-hidden focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50"
+                  className="bg-surface-raised/40 backdrop-blur-xl border border-white/5 rounded-2xl px-2 py-1 text-sm text-white focus:outline-hidden focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50"
                 >
                   {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
                     <option key={p} value={p}>{p}</option>
@@ -759,7 +759,7 @@ export default function Tags() {
               <button
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={pageClamped === totalPages}
-                className="px-3 py-1.5 text-sm bg-gray-800 text-gray-300 rounded-lg border border-gray-700 disabled:opacity-40 hover:bg-gray-700 transition-colors"
+                className="px-3 py-1.5 text-sm bg-surface-sunken text-gray-300 rounded-lg border border-edge-strong disabled:opacity-40 hover:bg-gray-700 transition-colors"
               >
                 {t('next')}
               </button>

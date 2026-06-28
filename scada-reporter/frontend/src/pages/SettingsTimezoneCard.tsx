@@ -39,7 +39,7 @@ export default function SettingsTimezoneCard() {
   }
 
   return (
-    <div className="bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl p-4 sm:p-5 space-y-3">
+    <div className="bg-surface-raised/40 backdrop-blur-xl border border-white/5 rounded-2xl p-4 sm:p-5 space-y-3">
       <div>
         <h2 className="text-sm font-medium text-gray-400 uppercase tracking-wider">
           {t('tz_title')}
@@ -51,7 +51,7 @@ export default function SettingsTimezoneCard() {
         <select
           value={current}
           onChange={(e) => handleChange(e.target.value)}
-          className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100 sm:w-auto"
+          className="w-full rounded-lg border border-edge-strong bg-surface-sunken px-3 py-2 text-sm text-gray-100 sm:w-auto"
         >
           {TIMEZONES.map((tz) => (
             <option key={tz} value={tz}>

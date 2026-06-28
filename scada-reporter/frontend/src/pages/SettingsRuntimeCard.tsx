@@ -13,7 +13,7 @@ import {
 type RuntimeTarget = 'collector' | 'scheduler'
 
 const REFRESH_MS = 10_000
-const cardCls = 'bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl p-4 sm:p-5 space-y-4'
+const cardCls = 'bg-surface-raised/40 backdrop-blur-xl border border-white/5 rounded-2xl p-4 sm:p-5 space-y-4'
 const btnBase = 'min-h-9 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-50'
 
 function fmtUptime(seconds: number) {

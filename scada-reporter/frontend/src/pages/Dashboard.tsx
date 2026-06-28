@@ -45,7 +45,7 @@ export default function Dashboard() {
       </div>
 
       {/* Tab bar */}
-      <div className="flex gap-2 p-1 bg-gray-900/50 backdrop-blur-sm border border-white/5 rounded-xl w-fit">
+      <div className="flex gap-2 p-1 bg-surface-raised/50 backdrop-blur-sm border border-white/5 rounded-xl w-fit">
         {TABS.map((tab) => (
           <button
             key={tab.id}

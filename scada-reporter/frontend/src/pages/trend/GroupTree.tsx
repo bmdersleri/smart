@@ -51,7 +51,7 @@ function TreeNode({ node, tagMap, selected, onToggle, depth }: TreeNodeProps) {
                 onClick={() => onToggle(tag.id)}
                 className={`w-full text-start py-1 rounded-lg text-sm flex items-center gap-2 ${
                   isSelected
-                    ? 'bg-gray-800/60 text-white'
+                    ? 'bg-surface-sunken/60 text-white'
                     : 'text-gray-400 hover:bg-white/5 hover:text-white'
                 }`}
                 style={{ paddingInlineStart: (depth + 1) * 10 + 8 }}

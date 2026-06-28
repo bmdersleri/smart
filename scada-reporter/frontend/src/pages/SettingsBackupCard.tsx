@@ -13,7 +13,7 @@ import {
 } from '../api/client'
 import { parseUtc } from '../utils/time'
 
-const cardCls = 'bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl p-4 sm:p-5 space-y-4'
+const cardCls = 'bg-surface-raised/40 backdrop-blur-xl border border-white/5 rounded-2xl p-4 sm:p-5 space-y-4'
 const btnBase = 'min-h-9 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-50'
 
 function fmtSize(n: number | null): string {
@@ -185,7 +185,7 @@ export default function SettingsBackupCard() {
             </span>
             <span>{live.percent.toFixed(0)}%</span>
           </div>
-          <div className="h-2 w-full rounded-full bg-gray-800 overflow-hidden">
+          <div className="h-2 w-full rounded-full bg-surface-sunken overflow-hidden">
             <div
               className={`h-full rounded-full transition-all duration-300 ${live.kind === 'restore' ? 'bg-amber-500' : 'bg-blue-500'}`}
               style={{ width: `${live.percent}%` }}
@@ -201,7 +201,7 @@ export default function SettingsBackupCard() {
           {items.map((b) => (
             <li
               key={b.id}
-              className="flex items-center justify-between text-sm border-b border-gray-800 pb-2"
+              className="flex items-center justify-between text-sm border-b border-edge pb-2"
             >
               <div className="min-w-0">
                 <p className="truncate text-gray-200">{b.filename}</p>

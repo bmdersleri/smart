@@ -63,7 +63,7 @@ export default function Login() {
           </div>
         </div>
 
-        <form onSubmit={submit} className="bg-gray-900/40 backdrop-blur-2xl rounded-3xl p-8 space-y-5 border border-white/10 shadow-2xl shadow-black/50">
+        <form onSubmit={submit} className="bg-surface-raised/40 backdrop-blur-2xl rounded-3xl p-8 space-y-5 border border-white/10 shadow-2xl shadow-black/50">
           <div>
             <label className="block text-sm text-gray-400 mb-1">{t('username')}</label>
             <input

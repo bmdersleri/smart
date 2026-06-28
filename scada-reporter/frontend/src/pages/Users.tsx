@@ -53,13 +53,13 @@ export default function Users() {
       <h1 className="text-xl font-semibold mb-4">{t('title')}</h1>
 
       {/* Create form */}
-      <div className="bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl p-4 mb-6 grid gap-2 max-w-xl">
+      <div className="bg-surface-raised/40 backdrop-blur-xl border border-white/5 rounded-2xl p-4 mb-6 grid gap-2 max-w-xl">
         <h2 className="font-medium">{t('new_user')}</h2>
-        <input className="bg-gray-800 px-2 py-1 rounded" placeholder={t('username')} value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} />
-        <input className="bg-gray-800 px-2 py-1 rounded" placeholder={t('email')} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-        <input className="bg-gray-800 px-2 py-1 rounded" placeholder={t('full_name')} value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} />
-        <input className="bg-gray-800 px-2 py-1 rounded" type="password" placeholder={t('password')} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
-        <select className="bg-gray-800 px-2 py-1 rounded" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value as UserRole })}>
+        <input className="bg-surface-sunken px-2 py-1 rounded" placeholder={t('username')} value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} />
+        <input className="bg-surface-sunken px-2 py-1 rounded" placeholder={t('email')} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+        <input className="bg-surface-sunken px-2 py-1 rounded" placeholder={t('full_name')} value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} />
+        <input className="bg-surface-sunken px-2 py-1 rounded" type="password" placeholder={t('password')} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
+        <select className="bg-surface-sunken px-2 py-1 rounded" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value as UserRole })}>
           {ROLES.map((r) => <option key={r} value={r}>{t(`role_${r}`)}</option>)}
         </select>
         <div className="text-sm text-gray-400">{t('overrides')}</div>
@@ -79,7 +79,7 @@ export default function Users() {
         </thead>
         <tbody>
           {users.map((u) => (
-            <tr key={u.id} className="border-t border-gray-800">
+            <tr key={u.id} className="border-t border-edge">
               <td className="py-2">{u.username}</td>
               <td>{u.full_name}</td>
               <td>{t(`role_${u.role}`)}</td>
@@ -98,9 +98,9 @@ export default function Users() {
       {/* Edit modal */}
       {editing && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center" onClick={() => setEditing(null)}>
-          <div className="bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl p-4 grid gap-2 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-surface-raised/40 backdrop-blur-xl border border-white/5 rounded-2xl p-4 grid gap-2 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
             <h2 className="font-medium">{editing.username}</h2>
-            <select className="bg-gray-800 px-2 py-1 rounded" value={editing.role} onChange={(e) => setEditing({ ...editing, role: e.target.value as UserRole })}>
+            <select className="bg-surface-sunken px-2 py-1 rounded" value={editing.role} onChange={(e) => setEditing({ ...editing, role: e.target.value as UserRole })}>
               {ROLES.map((r) => <option key={r} value={r}>{t(`role_${r}`)}</option>)}
             </select>
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={editing.is_active} onChange={(e) => setEditing({ ...editing, is_active: e.target.checked })} />{t('active')}</label>

@@ -90,11 +90,11 @@ export default function AllTagsTab({ active }: { active: boolean }) {
   return (
     <div className="space-y-4">
       {/* Filter bar */}
-      <div className="flex flex-wrap gap-2 items-center bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl p-3">
+      <div className="flex flex-wrap gap-2 items-center bg-surface-raised/40 backdrop-blur-xl border border-white/5 rounded-2xl p-3">
         <select
           value={device}
           onChange={(e) => setDevice(e.target.value)}
-          className="bg-gray-800 text-gray-300 text-sm rounded-lg px-3 py-1.5 border border-gray-700 focus:outline-hidden focus:border-cyan-500"
+          className="bg-surface-sunken text-gray-300 text-sm rounded-lg px-3 py-1.5 border border-edge-strong focus:outline-hidden focus:border-cyan-500"
         >
           <option value="">{t('filter_all_devices')}</option>
           {devices.map((d) => <option key={d} value={d}>{d}</option>)}
@@ -105,13 +105,13 @@ export default function AllTagsTab({ active }: { active: boolean }) {
           placeholder={t('search_placeholder')}
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
-          className="bg-gray-800 text-gray-300 text-sm rounded-lg px-3 py-1.5 border border-gray-700 focus:outline-hidden focus:border-cyan-500 min-w-[160px]"
+          className="bg-surface-sunken text-gray-300 text-sm rounded-lg px-3 py-1.5 border border-edge-strong focus:outline-hidden focus:border-cyan-500 min-w-[160px]"
         />
 
         <select
           value={quality}
           onChange={(e) => setQuality(e.target.value as '' | 'good' | 'bad' | 'stale')}
-          className="bg-gray-800 text-gray-300 text-sm rounded-lg px-3 py-1.5 border border-gray-700 focus:outline-hidden focus:border-cyan-500"
+          className="bg-surface-sunken text-gray-300 text-sm rounded-lg px-3 py-1.5 border border-edge-strong focus:outline-hidden focus:border-cyan-500"
         >
           <option value="">{t('filter_all_quality')}</option>
           <option value="good">{t('quality_good')}</option>
@@ -136,17 +136,17 @@ export default function AllTagsTab({ active }: { active: boolean }) {
       {isLoading ? (
         <div className="text-center py-16 text-gray-500">{t('common:loading')}</div>
       ) : isError ? (
-        <div className="text-center py-16 bg-gray-900/40 backdrop-blur-xl rounded-xl border border-red-900">
+        <div className="text-center py-16 bg-surface-raised/40 backdrop-blur-xl rounded-xl border border-red-900">
           <p className="text-red-400 font-medium">{t('load_failed')}</p>
           <p className="text-gray-500 text-sm mt-1">{String(error)}</p>
           <p className="text-gray-600 text-xs mt-2">{t('backend_hint')}</p>
         </div>
       ) : items.length === 0 ? (
-        <div className="text-center py-16 bg-gray-900/40 backdrop-blur-xl rounded-2xl border border-white/5">
+        <div className="text-center py-16 bg-surface-raised/40 backdrop-blur-xl rounded-2xl border border-white/5">
           <p className="text-gray-400">{t('no_tags_found')}</p>
         </div>
       ) : (
-        <div className="bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl overflow-hidden">
+        <div className="bg-surface-raised/40 backdrop-blur-xl border border-white/5 rounded-2xl overflow-hidden">
           <table className="w-full">
             <thead>
               <tr className="text-xs text-gray-500 uppercase tracking-wide">
@@ -162,7 +162,7 @@ export default function AllTagsTab({ active }: { active: boolean }) {
               {items.map((item) => {
                 const pinned = pinnedIds.has(item.tag_id)
                 return (
-                  <tr key={item.tag_id} className="border-t border-gray-800 hover:bg-white/5/40 transition-colors">
+                  <tr key={item.tag_id} className="border-t border-edge hover:bg-white/5/40 transition-colors">
                     <td className="px-4 py-2.5 text-sm text-white font-medium">
                       <TagDescriptionCell name={item.name} description={item.description} />
                     </td>
@@ -194,7 +194,7 @@ export default function AllTagsTab({ active }: { active: boolean }) {
           <button
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1}
-            className="px-3 py-1.5 text-sm bg-gray-800 text-gray-300 rounded-lg border border-gray-700 disabled:opacity-40 hover:bg-gray-700 transition-colors"
+            className="px-3 py-1.5 text-sm bg-surface-sunken text-gray-300 rounded-lg border border-edge-strong disabled:opacity-40 hover:bg-gray-700 transition-colors"
           >
             {t('prev')}
           </button>
@@ -202,7 +202,7 @@ export default function AllTagsTab({ active }: { active: boolean }) {
           <button
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
-            className="px-3 py-1.5 text-sm bg-gray-800 text-gray-300 rounded-lg border border-gray-700 disabled:opacity-40 hover:bg-gray-700 transition-colors"
+            className="px-3 py-1.5 text-sm bg-surface-sunken text-gray-300 rounded-lg border border-edge-strong disabled:opacity-40 hover:bg-gray-700 transition-colors"
           >
             {t('next')}
           </button>

@@ -21,7 +21,7 @@ export default function LanguageSelector() {
         aria-label={t('language')}
         value={i18n.language}
         onChange={(e) => onChange(e.target.value)}
-        className="bg-gray-800 border border-gray-700 rounded-lg px-2 py-1 text-sm text-white focus:outline-hidden focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50"
+        className="bg-surface-sunken border border-edge-strong rounded-lg px-2 py-1 text-sm text-white focus:outline-hidden focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50"
       >
         {SUPPORTED_LANGS.map((l) => (<option key={l} value={l}>{LABELS[l]}</option>))}
       </select>

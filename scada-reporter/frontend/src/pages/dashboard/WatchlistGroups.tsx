@@ -26,7 +26,7 @@ export default function WatchlistGroups() {
   })
 
   return (
-    <div className="bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl p-4 space-y-3">
+    <div className="bg-surface-raised/40 backdrop-blur-xl border border-white/5 rounded-2xl p-4 space-y-3">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold text-white">{t('title')}</h2>
         <div className="flex items-center gap-2">
@@ -41,13 +41,13 @@ export default function WatchlistGroups() {
       {msg && <p className="text-xs text-gray-400">{msg}</p>}
       <div className="flex gap-2">
         <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder={t('group_name')}
-               className="flex-1 bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-white" />
+               className="flex-1 bg-surface-sunken border border-edge-strong rounded px-2 py-1 text-sm text-white" />
         <button onClick={() => newName.trim() && create.mutate()}
                 className="text-xs px-2 py-1 rounded bg-gray-700 hover:bg-gray-600 text-white">{t('new_group')}</button>
       </div>
       <ul className="space-y-1">
         {(data?.groups ?? []).map((g) => (
-          <li key={g.id} className="flex items-center justify-between text-sm text-gray-200 px-2 py-1 rounded bg-gray-950">
+          <li key={g.id} className="flex items-center justify-between text-sm text-gray-200 px-2 py-1 rounded bg-surface">
             <span>{g.name} <span className="text-gray-500">({g.tag_count})</span></span>
             <span className="flex gap-2">
               <button onClick={() => { const n = prompt(t('rename'), g.name); if (n) rename.mutate({ id: g.id, name: n }) }}

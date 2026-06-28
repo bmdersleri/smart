@@ -56,9 +56,9 @@ const TIME_RANGE_OPTS = [
   { value: 'custom', labelKey: 'time_custom' },
 ]
 
-const INPUT = 'w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-hidden focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50'
+const INPUT = 'w-full bg-surface-sunken border border-edge-strong rounded-lg px-3 py-2 text-sm text-white focus:outline-hidden focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50'
 const BTN_PRIMARY = 'px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-medium transition-colors'
-const BTN_GHOST = 'px-4 py-2 rounded-lg border border-gray-700 text-gray-300 hover:bg-white/5 text-sm transition-colors'
+const BTN_GHOST = 'px-4 py-2 rounded-lg border border-edge-strong text-gray-300 hover:bg-white/5 text-sm transition-colors'
 
 // ---------------------------------------------------------------------------
 // Template Editor Modal (4-step wizard)
@@ -143,9 +143,9 @@ function TemplateEditorModal({
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl w-full max-w-2xl flex flex-col max-h-[90vh]">
+      <div className="bg-surface-raised/40 backdrop-blur-xl border border-white/5 rounded-2xl w-full max-w-2xl flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="p-5 border-b border-gray-800">
+        <div className="p-5 border-b border-edge">
           <h2 className="text-lg font-semibold text-white">{initial ? t('edit_template') : t('new_template')}</h2>
           <div className="flex gap-1 mt-3">
             {STEPS.map((s, i) => (
@@ -172,7 +172,7 @@ function TemplateEditorModal({
                       <button
                         key={t.id}
                         onClick={() => toggleTag(t.id)}
-                        className={`px-3 py-1 rounded-lg text-sm border transition-colors ${form.tag_ids.includes(t.id) ? 'border-blue-500 bg-blue-600/20 text-blue-300' : 'border-gray-700 text-gray-400 hover:border-gray-500'}`}
+                        className={`px-3 py-1 rounded-lg text-sm border transition-colors ${form.tag_ids.includes(t.id) ? 'border-blue-500 bg-blue-600/20 text-blue-300' : 'border-edge-strong text-gray-400 hover:border-gray-500'}`}
                       >
                         {t.name} {t.unit ? `(${t.unit})` : ''}
                       </button>
@@ -182,7 +182,7 @@ function TemplateEditorModal({
               ))}
               {tags.filter(t => !t.device).map(t => (
                 <button key={t.id} onClick={() => toggleTag(t.id)}
-                  className={`px-3 py-1 rounded-lg text-sm border transition-colors ${form.tag_ids.includes(t.id) ? 'border-blue-500 bg-blue-600/20 text-blue-300' : 'border-gray-700 text-gray-400 hover:border-gray-500'}`}>
+                  className={`px-3 py-1 rounded-lg text-sm border transition-colors ${form.tag_ids.includes(t.id) ? 'border-blue-500 bg-blue-600/20 text-blue-300' : 'border-edge-strong text-gray-400 hover:border-gray-500'}`}>
                   {t.name}
                 </button>
               ))}
@@ -198,7 +198,7 @@ function TemplateEditorModal({
                 <div className="flex flex-wrap gap-2">
                   {TIME_RANGE_OPTS.map(o => (
                     <button key={o.value} onClick={() => set('time_range_type', o.value)}
-                      className={`px-3 py-1 rounded-lg text-sm border transition-colors ${form.time_range_type === o.value ? 'border-blue-500 bg-blue-600/20 text-blue-300' : 'border-gray-700 text-gray-400 hover:border-gray-500'}`}>
+                      className={`px-3 py-1 rounded-lg text-sm border transition-colors ${form.time_range_type === o.value ? 'border-blue-500 bg-blue-600/20 text-blue-300' : 'border-edge-strong text-gray-400 hover:border-gray-500'}`}>
                       {t(o.labelKey)}
                     </button>
                   ))}
@@ -225,7 +225,7 @@ function TemplateEditorModal({
                 <div className="flex gap-2">
                   {['hourly', 'daily', 'weekly'].map(v => (
                     <button key={v} onClick={() => set('interval', v)}
-                      className={`px-3 py-1 rounded-lg text-sm border transition-colors capitalize ${form.interval === v ? 'border-blue-500 bg-blue-600/20 text-blue-300' : 'border-gray-700 text-gray-400 hover:border-gray-500'}`}>
+                      className={`px-3 py-1 rounded-lg text-sm border transition-colors capitalize ${form.interval === v ? 'border-blue-500 bg-blue-600/20 text-blue-300' : 'border-edge-strong text-gray-400 hover:border-gray-500'}`}>
                       {v === 'hourly' ? t('interval_hourly') : v === 'daily' ? t('interval_daily') : t('interval_weekly')}
                     </button>
                   ))}
@@ -236,7 +236,7 @@ function TemplateEditorModal({
                 <div className="flex gap-2">
                   {['excel', 'pdf', 'json'].map(v => (
                     <button key={v} onClick={() => set('output_format', v)}
-                      className={`px-3 py-1 rounded-lg text-sm border transition-colors uppercase ${form.output_format === v ? 'border-blue-500 bg-blue-600/20 text-blue-300' : 'border-gray-700 text-gray-400 hover:border-gray-500'}`}>
+                      className={`px-3 py-1 rounded-lg text-sm border transition-colors uppercase ${form.output_format === v ? 'border-blue-500 bg-blue-600/20 text-blue-300' : 'border-edge-strong text-gray-400 hover:border-gray-500'}`}>
                       {v}
                     </button>
                   ))}
@@ -306,7 +306,7 @@ function TemplateEditorModal({
                 <label className="text-xs text-gray-400 mb-2 block">{t('grafana_panels')}</label>
                 <div className="flex flex-wrap gap-2 mb-2">
                   <select
-                    className="flex-1 min-w-0 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-hidden focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50"
+                    className="flex-1 min-w-0 bg-surface-sunken border border-edge-strong rounded-lg px-3 py-2 text-sm text-white focus:outline-hidden focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50"
                     value={selectedDashUid}
                     onChange={e => { setSelectedDashUid(e.target.value); setSelectedPanelId('') }}
                   >
@@ -314,7 +314,7 @@ function TemplateEditorModal({
                     {dashboards.map(d => <option key={d.uid} value={d.uid}>{d.title}</option>)}
                   </select>
                   <select
-                    className="flex-1 min-w-0 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-hidden focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50"
+                    className="flex-1 min-w-0 bg-surface-sunken border border-edge-strong rounded-lg px-3 py-2 text-sm text-white focus:outline-hidden focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50"
                     value={selectedPanelId}
                     onChange={e => setSelectedPanelId(e.target.value ? Number(e.target.value) : '')}
                     disabled={!selectedDashUid}
@@ -334,7 +334,7 @@ function TemplateEditorModal({
                 {grafanaPanels.length > 0 && (
                   <ul className="space-y-1">
                     {grafanaPanels.map((p, i) => (
-                      <li key={i} className="flex items-center justify-between bg-gray-800/60 rounded-lg px-3 py-1.5 text-sm text-gray-300">
+                      <li key={i} className="flex items-center justify-between bg-surface-sunken/60 rounded-lg px-3 py-1.5 text-sm text-gray-300">
                         <span className="truncate">{p.title}</span>
                         <button
                           type="button"
@@ -354,7 +354,7 @@ function TemplateEditorModal({
           {/* Step 3: Preview & Save */}
           {step === 3 && (
             <div className="space-y-4">
-              <div className="bg-gray-800/60 rounded-xl p-4 space-y-2 text-sm">
+              <div className="bg-surface-sunken/60 rounded-xl p-4 space-y-2 text-sm">
                 <div className="flex justify-between"><span className="text-gray-500">{t('preview_tag_count')}</span><span className="text-white">{form.tag_ids.length}</span></div>
                 <div className="flex justify-between"><span className="text-gray-500">{t('preview_time_range')}</span><span className="text-white">{(() => { const o = TIME_RANGE_OPTS.find(o => o.value === form.time_range_type); return o ? t(o.labelKey) : '' })()}</span></div>
                 <div className="flex justify-between"><span className="text-gray-500">{t('preview_interval')}</span><span className="text-white capitalize">{form.interval}</span></div>
@@ -377,7 +377,7 @@ function TemplateEditorModal({
         </div>
 
         {/* Footer */}
-        <div className="p-5 border-t border-gray-800 flex justify-between">
+        <div className="p-5 border-t border-edge flex justify-between">
           <button onClick={onClose} className={BTN_GHOST}>{t('common:cancel')}</button>
           <div className="flex gap-2">
             {step > 0 && <button onClick={() => setStep(s => s - 1)} className={BTN_GHOST}>{t('back')}</button>}
@@ -442,7 +442,7 @@ function ScheduleCreateModal({ templates, onClose }: { templates: ReportTemplate
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl w-full max-w-md p-6 space-y-4">
+      <div className="bg-surface-raised/40 backdrop-blur-xl border border-white/5 rounded-2xl w-full max-w-md p-6 space-y-4">
         <h2 className="text-lg font-semibold text-white">{t('new_schedule')}</h2>
 
         <div>
@@ -458,7 +458,7 @@ function ScheduleCreateModal({ templates, onClose }: { templates: ReportTemplate
           <div className="flex gap-2">
             {PRESETS.map(p => (
               <button key={p.value} onClick={() => setForm(f => ({ ...f, preset: p.value }))}
-                className={`flex-1 py-1.5 rounded-lg text-xs border transition-colors ${form.preset === p.value ? 'border-blue-500 bg-blue-600/20 text-blue-300' : 'border-gray-700 text-gray-400'}`}>
+                className={`flex-1 py-1.5 rounded-lg text-xs border transition-colors ${form.preset === p.value ? 'border-blue-500 bg-blue-600/20 text-blue-300' : 'border-edge-strong text-gray-400'}`}>
                 {p.label}
               </button>
             ))}
@@ -585,7 +585,7 @@ function TemplatesTab({ onRunDone }: { onRunDone: () => void }) {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-800 text-start text-gray-500">
+                <tr className="border-b border-edge text-start text-gray-500">
                   <SortHeader label={t('col_name')} sortKey="name" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
                   <SortHeader label={t('col_format')} sortKey="output_format" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
                   <SortHeader label={t('col_interval')} sortKey="interval" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
@@ -598,7 +598,7 @@ function TemplatesTab({ onRunDone }: { onRunDone: () => void }) {
                 {sortedTemplates.map(tpl => {
                   const dr = dashResult[tpl.id]
                   return (
-                    <tr key={tpl.id} className="border-b border-gray-800/50 hover:bg-white/5/30">
+                    <tr key={tpl.id} className="border-b border-edge/50 hover:bg-white/5/30">
                       <td className="py-3 text-white font-medium">{tpl.name}</td>
                       <td className="py-3 text-gray-300 uppercase">{tpl.output_format}</td>
                       <td className="py-3 text-gray-400 capitalize">{tpl.interval}</td>
@@ -694,7 +694,7 @@ function ScheduledTab() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-800 text-start text-gray-500">
+                <tr className="border-b border-edge text-start text-gray-500">
                   <SortHeader label={t('col_name')} sortKey="name" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
                   <SortHeader label={t('col_template')} sortKey="template" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
                   <SortHeader label={t('col_type')} sortKey="schedule_type" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
@@ -707,7 +707,7 @@ function ScheduledTab() {
               </thead>
               <tbody>
                 {sortedScheduled.map((sr: ScheduledReport) => (
-                  <tr key={sr.id} className="border-b border-gray-800/50 hover:bg-white/5/30">
+                  <tr key={sr.id} className="border-b border-edge/50 hover:bg-white/5/30">
                     <td className="py-3 text-white">{sr.name}</td>
                     <td className="py-3 text-gray-400">{templateName(sr.template_id)}</td>
                     <td className="py-3 text-gray-400 text-xs">
@@ -803,22 +803,22 @@ function ArchiveTab() {
     <div className="space-y-4">
       {/* Filters */}
       <div className="flex flex-wrap gap-3">
-        <select className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-gray-300 focus:outline-hidden"
+        <select className="bg-surface-sunken border border-edge-strong rounded-lg px-3 py-1.5 text-sm text-gray-300 focus:outline-hidden"
           value={filterStatus} onChange={e => { setFilterStatus(e.target.value); setPage(1) }}>
           <option value="">{t('filter_all_statuses')}</option>
           {['completed', 'running', 'pending', 'failed'].map(s => (
             <option key={s} value={s}>{s}</option>
           ))}
         </select>
-        <select className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-gray-300 focus:outline-hidden"
+        <select className="bg-surface-sunken border border-edge-strong rounded-lg px-3 py-1.5 text-sm text-gray-300 focus:outline-hidden"
           value={filterTemplateId ?? ''} onChange={e => { setFilterTemplateId(e.target.value ? Number(e.target.value) : undefined); setPage(1) }}>
           <option value="">{t('filter_all_templates')}</option>
           {templates.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
         </select>
-        <input type="date" className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-gray-300 focus:outline-hidden"
+        <input type="date" className="bg-surface-sunken border border-edge-strong rounded-lg px-3 py-1.5 text-sm text-gray-300 focus:outline-hidden"
           value={dateFrom} onChange={e => { setDateFrom(e.target.value); setPage(1) }} />
         <span className="text-gray-600 self-center">—</span>
-        <input type="date" className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-gray-300 focus:outline-hidden"
+        <input type="date" className="bg-surface-sunken border border-edge-strong rounded-lg px-3 py-1.5 text-sm text-gray-300 focus:outline-hidden"
           value={dateTo} onChange={e => { setDateTo(e.target.value); setPage(1) }} />
         {(filterStatus || filterTemplateId || dateFrom || dateTo) && (
           <button onClick={() => { setFilterStatus(''); setFilterTemplateId(undefined); setDateFrom(''); setDateTo(''); setPage(1) }}
@@ -833,7 +833,7 @@ function ArchiveTab() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-800 text-start text-gray-500">
+                <tr className="border-b border-edge text-start text-gray-500">
                   <SortHeader label={t('col_date')} sortKey="created_at" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
                   <SortHeader label={t('col_template')} sortKey="template" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
                   <SortHeader label={t('col_trigger')} sortKey="trigger" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
@@ -846,7 +846,7 @@ function ArchiveTab() {
               </thead>
               <tbody>
                 {sortedItems.map(e => (
-                  <tr key={e.id} className="border-b border-gray-800/50 hover:bg-white/5/30">
+                  <tr key={e.id} className="border-b border-edge/50 hover:bg-white/5/30">
                     <td className="py-3 text-gray-300 text-xs">{fmtDate(e.created_at, i18n.language)}</td>
                     <td className="py-3 text-gray-400 text-xs">{templateName(e.template_id)}</td>
                     <td className="py-3">
@@ -881,7 +881,7 @@ function ArchiveTab() {
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-2 pt-2">
           <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-            className="px-3 py-1 rounded-lg border border-gray-700 text-gray-400 disabled:opacity-30 hover:bg-white/5 text-sm">←</button>
+            className="px-3 py-1 rounded-lg border border-edge-strong text-gray-400 disabled:opacity-30 hover:bg-white/5 text-sm">←</button>
           {Array.from({ length: Math.min(7, totalPages) }, (_, i) => {
             const p = Math.max(1, Math.min(page - 3, totalPages - 6)) + i
             return (
@@ -892,7 +892,7 @@ function ArchiveTab() {
             )
           })}
           <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
-            className="px-3 py-1 rounded-lg border border-gray-700 text-gray-400 disabled:opacity-30 hover:bg-white/5 text-sm">→</button>
+            className="px-3 py-1 rounded-lg border border-edge-strong text-gray-400 disabled:opacity-30 hover:bg-white/5 text-sm">→</button>
         </div>
       )}
     </div>
@@ -923,7 +923,7 @@ export default function AdvancedReports() {
       </div>
 
       {/* Tab bar */}
-      <div className="flex border-b border-gray-800 mb-6">
+      <div className="flex border-b border-edge mb-6">
         {TABS.map(tb => (
           <button key={tb.id} onClick={() => setTab(tb.id)}
             className={`px-5 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px ${

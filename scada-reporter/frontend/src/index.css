@@ -6,6 +6,16 @@
    inline style ile kalır — bu meşru kullanımdır. */
 @theme {
   --animate-flip-in: flipIn 0.5s ease-out;
+
+  /* Yüzey + kenarlık semantic token'ları (dark = varsayılan). Light değerleri
+     html.light altında override edilir. Component'ler bg-surface/bg-surface-raised/
+     bg-surface-sunken + border-edge/border-edge-strong utility'lerini kullanır;
+     opacity modifier (ör. bg-surface-raised/40) v4'te color-mix ile çalışır. */
+  --color-surface: #030712;          /* eski gray-950 */
+  --color-surface-raised: #111827;   /* eski gray-900 */
+  --color-surface-sunken: #1f2937;   /* eski gray-800 */
+  --color-edge: #1f2937;             /* eski border-gray-800 */
+  --color-edge-strong: #374151;      /* eski border-gray-700 */
 }
 
 @layer base {
@@ -23,19 +33,16 @@ html.light {
 }
 html.light body { background: #f1f5f9; }
 
-/* yüzeyler */
-html.light .bg-gray-950 { background-color: #f1f5f9; }
-html.light .bg-gray-900 { background-color: #ffffff; }
-html.light .bg-gray-800 { background-color: #e2e8f0; }
-html.light .bg-gray-950\/60 { background-color: rgba(241, 245, 249, 0.6); }
-html.light .bg-gray-900\/60 { background-color: rgba(255, 255, 255, 0.6); }
-html.light .bg-gray-800\/40 { background-color: rgba(226, 232, 240, 0.5); }
-html.light .bg-gray-800\/50 { background-color: rgba(226, 232, 240, 0.6); }
-html.light .bg-gray-800\/60 { background-color: rgba(226, 232, 240, 0.7); }
-
-/* kenarlıklar */
-html.light .border-gray-800 { border-color: #e2e8f0; }
-html.light .border-gray-700 { border-color: #cbd5e1; }
+/* yüzeyler + kenarlıklar: artık @theme token'ları üzerinden (bg-surface*,
+   border-edge*). Light değerleri token'ları yeniden bağlar; opacity varyantları
+   (bg-surface-raised/40 vb.) color-mix ile otomatik türetilir. */
+html.light {
+  --color-surface: #f1f5f9;          /* eski bg-gray-950 */
+  --color-surface-raised: #ffffff;   /* eski bg-gray-900 */
+  --color-surface-sunken: #e2e8f0;   /* eski bg-gray-800 */
+  --color-edge: #e2e8f0;             /* eski border-gray-800 */
+  --color-edge-strong: #cbd5e1;      /* eski border-gray-700 */
+}
 
 /* metin */
 html.light .text-white { color: #0f172a; }
@@ -176,17 +183,17 @@ html.light .hover\:bg-green-700:hover { background-color: #bbf7d0; }
    Applies glassmorphism hover and spacing to all standard tables
    inside the new rounded-2xl panels.
    ─────────────────────────────────────────────────────────────────────────── */
-.bg-gray-900\/40 table {
+.bg-surface-raised\/40 table {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
 }
 
-.bg-gray-900\/40 thead tr {
+.bg-surface-raised\/40 thead tr {
   background: linear-gradient(to right, rgba(255,255,255,0.01), rgba(255,255,255,0.03));
 }
 
-.bg-gray-900\/40 th {
+.bg-surface-raised\/40 th {
   padding: 0.875rem 1rem;
   font-size: 0.75rem;
   text-transform: uppercase;
@@ -196,19 +203,19 @@ html.light .hover\:bg-green-700:hover { background-color: #bbf7d0; }
   border-bottom: 1px solid rgba(255,255,255,0.05);
 }
 
-.bg-gray-900\/40 tbody tr {
+.bg-surface-raised\/40 tbody tr {
   transition: all 0.2s ease;
 }
 
-.bg-gray-900\/40 tbody tr:not(:last-child) td {
+.bg-surface-raised\/40 tbody tr:not(:last-child) td {
   border-bottom: 1px solid rgba(255,255,255,0.03);
 }
 
-.bg-gray-900\/40 tbody tr:hover {
+.bg-surface-raised\/40 tbody tr:hover {
   background-color: rgba(255, 255, 255, 0.03);
 }
 
-.bg-gray-900\/40 td {
+.bg-surface-raised\/40 td {
   padding: 0.75rem 1rem;
   font-size: 0.875rem;
   color: #cbd5e1; /* gray-300 */

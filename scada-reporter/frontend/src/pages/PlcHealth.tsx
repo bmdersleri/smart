@@ -79,7 +79,7 @@ export default function PlcHealth() {
                   <span className="ms-2 text-xs opacity-60">{localTime(i.opened_at)}</span>
                 </div>
                 {can('plc:manage') && !i.acknowledged_by && (
-                  <button onClick={() => ack.mutate(i.id)} className="text-xs px-2 py-1 rounded bg-gray-800 hover:bg-gray-700 text-gray-200">
+                  <button onClick={() => ack.mutate(i.id)} className="text-xs px-2 py-1 rounded bg-surface-sunken hover:bg-gray-700 text-gray-200">
                     {t('ack')}
                   </button>
                 )}
@@ -91,7 +91,7 @@ export default function PlcHealth() {
 
       <section>
         <h2 className="text-sm font-semibold text-gray-300 mb-2">{t('per_plc')}</h2>
-        <div className="bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl overflow-hidden">
+        <div className="bg-surface-raised/40 backdrop-blur-xl border border-white/5 rounded-2xl overflow-hidden">
           <table className="w-full text-sm">
             <thead>
               <tr className="text-xs text-gray-500 uppercase">
@@ -105,7 +105,7 @@ export default function PlcHealth() {
             </thead>
             <tbody>
               {health.map((h) => (
-                <tr key={`${h.plc_ip}-${h.rack}-${h.slot}`} className="border-t border-gray-800">
+                <tr key={`${h.plc_ip}-${h.rack}-${h.slot}`} className="border-t border-edge">
                   <td className="px-4 py-2 text-gray-200">
                     <div className="font-medium">{h.plc_name || h.plc_ip}</div>
                     {h.plc_name && <div className="text-xs text-gray-500 font-mono">{h.plc_ip}</div>}

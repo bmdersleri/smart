@@ -122,7 +122,7 @@ export default function ImportTab() {
               <select
                 value={pointId}
                 onChange={(e) => setPointId(e.target.value === '' ? '' : Number(e.target.value))}
-                className="w-full rounded-lg border border-gray-700 bg-gray-900/40 backdrop-blur-xl px-3 py-2 text-sm text-gray-100"
+                className="w-full rounded-lg border border-edge-strong bg-surface-raised/40 backdrop-blur-xl px-3 py-2 text-sm text-gray-100"
               >
                 <option value="">—</option>
                 {points.map((p) => (
@@ -135,7 +135,7 @@ export default function ImportTab() {
               <select
                 value={timeCol}
                 onChange={(e) => setTimeCol(e.target.value)}
-                className="w-full rounded-lg border border-gray-700 bg-gray-900/40 backdrop-blur-xl px-3 py-2 text-sm text-gray-100"
+                className="w-full rounded-lg border border-edge-strong bg-surface-raised/40 backdrop-blur-xl px-3 py-2 text-sm text-gray-100"
               >
                 {preview.headers.map((h, i) => <option key={i} value={h}>{h}</option>)}
               </select>
@@ -152,7 +152,7 @@ export default function ImportTab() {
                 <select
                   value={mapping[String(p.id)] !== undefined ? String(mapping[String(p.id)]) : ''}
                   onChange={(e) => setParamCol(p.id, e.target.value)}
-                  className="rounded-lg border border-gray-700 bg-gray-900/40 backdrop-blur-xl px-2 py-1 text-sm text-gray-100"
+                  className="rounded-lg border border-edge-strong bg-surface-raised/40 backdrop-blur-xl px-2 py-1 text-sm text-gray-100"
                 >
                   <option value="">—</option>
                   {preview.headers.map((h, i) => (

@@ -96,7 +96,7 @@ export default function RecordsTab() {
       {error && <p className="text-sm text-red-400">{error}</p>}
 
       {editing && (
-        <div className="rounded-lg border border-gray-700 bg-gray-900/40 backdrop-blur-xl p-4 space-y-3">
+        <div className="rounded-lg border border-edge-strong bg-surface-raised/40 backdrop-blur-xl p-4 space-y-3">
           <p className="text-sm font-medium text-gray-300">{t('edit_record')}</p>
           <label className="block space-y-1">
             <span className="block text-xs uppercase text-gray-500">{t('sampled_at')}</span>
@@ -104,7 +104,7 @@ export default function RecordsTab() {
               type="datetime-local"
               value={editing.sampled_at}
               onChange={(e) => setEditing((prev) => prev && { ...prev, sampled_at: e.target.value })}
-              className="rounded-lg border border-gray-700 bg-gray-800 px-2 py-1 text-sm text-gray-100"
+              className="rounded-lg border border-edge-strong bg-surface-sunken px-2 py-1 text-sm text-gray-100"
             />
           </label>
           {params.map((p) => (
@@ -120,7 +120,7 @@ export default function RecordsTab() {
                     prev && { ...prev, values: { ...prev.values, [p.id]: e.target.value } },
                   )
                 }
-                className="w-32 rounded-lg border border-gray-700 bg-gray-800 px-2 py-1 text-sm text-gray-100"
+                className="w-32 rounded-lg border border-edge-strong bg-surface-sunken px-2 py-1 text-sm text-gray-100"
               />
             </label>
           ))}
@@ -134,7 +134,7 @@ export default function RecordsTab() {
             </button>
             <button
               onClick={closeEdit}
-              className="rounded-lg border border-gray-700 px-3 py-1.5 text-sm text-gray-400 hover:text-white"
+              className="rounded-lg border border-edge-strong px-3 py-1.5 text-sm text-gray-400 hover:text-white"
             >
               {t('cancel')}
             </button>
@@ -152,7 +152,7 @@ export default function RecordsTab() {
         </thead>
         <tbody>
           {samples.map((s) => (
-            <tr key={s.id} className="border-t border-gray-800">
+            <tr key={s.id} className="border-t border-edge">
               <td>{utcToTzDisplay(s.sampled_at, tz, i18n.language)}</td>
               <td>{s.sample_point_id}</td>
               <td className="text-end space-x-2">

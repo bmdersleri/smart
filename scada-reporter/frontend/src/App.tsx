@@ -25,14 +25,14 @@ const qc = new QueryClient({ defaultOptions: { queries: { staleTime: 10000, retr
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
   const { t } = useTranslation('common')
-  if (loading) return <div className="min-h-screen bg-gray-950 flex items-center justify-center text-gray-400">{t('loading')}</div>
+  if (loading) return <div className="min-h-screen bg-surface flex items-center justify-center text-gray-400">{t('loading')}</div>
   return user ? <>{children}</> : <Navigate to="/login" replace />
 }
 
 export function AdminRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
   const { t } = useTranslation('common')
-  if (loading) return <div className="min-h-screen bg-gray-950 flex items-center justify-center text-gray-400">{t('loading')}</div>
+  if (loading) return <div className="min-h-screen bg-surface flex items-center justify-center text-gray-400">{t('loading')}</div>
   return user?.role === 'admin' ? <>{children}</> : <Navigate to="/" replace />
 }
 

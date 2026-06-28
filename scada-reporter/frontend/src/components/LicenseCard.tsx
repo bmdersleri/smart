@@ -51,7 +51,7 @@ export default function LicenseCard() {
       : t('license_perpetual')
 
   return (
-    <div className="bg-gray-900/40 backdrop-blur-xl border border-white/5 rounded-2xl p-4 sm:p-5 space-y-4">
+    <div className="bg-surface-raised/40 backdrop-blur-xl border border-white/5 rounded-2xl p-4 sm:p-5 space-y-4">
       <h2 className="text-sm font-medium text-gray-400 uppercase tracking-wider">{t('license')}</h2>
 
       {data && (
