@@ -564,7 +564,8 @@ def build_report_template_dashboard(
                 pid,
                 "Tag Trendleri",
                 (
-                    "SELECT $__time(tr.timestamp) AS time, t.name AS metric, tr.value AS value "
+                    "SELECT $__time(tr.timestamp) AS time, "
+                    f"{_TAG_LABEL} AS metric, tr.value AS value "
                     "FROM tag_readings tr JOIN tags t ON t.id = tr.tag_id "
                     f"WHERE $__timeFilter(tr.timestamp) AND tr.tag_id IN ({ids}) ORDER BY 1"
                 ),
@@ -583,7 +584,8 @@ def build_report_template_dashboard(
                 pid,
                 "Son Değerler",
                 (
-                    "SELECT DISTINCT ON (t.id) t.name, tr.value, t.unit, tr.quality, tr.timestamp "
+                    f'SELECT DISTINCT ON (t.id) {_TAG_LABEL} AS "Etiket", '
+                    "tr.value, t.unit, tr.quality, tr.timestamp "
                     "FROM tags t JOIN tag_readings tr ON tr.tag_id = t.id "
                     f"WHERE t.id IN ({ids}) ORDER BY t.id, tr.timestamp DESC"
                 ),
@@ -601,7 +603,7 @@ def build_report_template_dashboard(
                 pid,
                 "Limit Aşımı Özeti",
                 (
-                    "SELECT t.name, "
+                    f'SELECT {_TAG_LABEL} AS "Etiket", '
                     "sum(CASE WHEN t.min_alarm IS NOT NULL "
                     'AND tr.value < t.min_alarm THEN 1 ELSE 0 END) AS "Alt Limit", '
                     "sum(CASE WHEN t.max_alarm IS NOT NULL "

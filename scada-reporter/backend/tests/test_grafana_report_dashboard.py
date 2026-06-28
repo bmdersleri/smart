@@ -74,3 +74,24 @@ def test_no_flags_still_has_trend_panel():
     )
     assert any(p["type"] == "timeseries" for p in d["panels"])
     assert len(d["panels"]) >= 1
+
+
+_LABEL = "COALESCE(NULLIF(t.description, ''), t.name)"
+
+
+def test_report_template_uses_description_label():
+    dash = build_report_template_dashboard(
+        template_id=7,
+        title="R",
+        tag_ids=[1, 2],
+        time_range_type="last_24h",
+        show_trend_charts=True,
+        show_summary_stats=True,
+        anomaly_enabled=True,
+        show_anomaly_table=True,
+    )
+    sql = " ".join(t.get("rawSql", "") for p in dash["panels"] for t in p.get("targets", []))
+    assert f"{_LABEL} AS metric" in sql
+    assert f'SELECT DISTINCT ON (t.id) {_LABEL} AS "Etiket"' in sql
+    assert f'{_LABEL} AS "Etiket"' in sql  # breach
+    assert "t.name AS metric" not in sql
