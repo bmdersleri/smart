@@ -203,6 +203,56 @@ export type BackendStatus = {
 };
 
 /**
+ * BackupOut
+ */
+export type BackupOut = {
+    /**
+     * Completed At
+     */
+    completed_at: string | null;
+    /**
+     * Created At
+     */
+    created_at: string | null;
+    /**
+     * Dialect
+     */
+    dialect: string;
+    /**
+     * Error
+     */
+    error: string | null;
+    /**
+     * Filename
+     */
+    filename: string;
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Kind
+     */
+    kind: string;
+    /**
+     * Sha256
+     */
+    sha256: string | null;
+    /**
+     * Size Bytes
+     */
+    size_bytes: number | null;
+    /**
+     * Status
+     */
+    status: string;
+    /**
+     * Trigger
+     */
+    trigger: string;
+};
+
+/**
  * BatchCreate
  */
 export type BatchCreate = {
@@ -896,6 +946,16 @@ export type QueryRequest = {
      * Sql
      */
     sql: string;
+};
+
+/**
+ * RestoreRequest
+ */
+export type RestoreRequest = {
+    /**
+     * Confirm
+     */
+    confirm: string;
 };
 
 /**
@@ -2668,6 +2728,202 @@ export type LoginApiAuthTokenPostResponses = {
 
 export type LoginApiAuthTokenPostResponse = LoginApiAuthTokenPostResponses[keyof LoginApiAuthTokenPostResponses];
 
+export type ListBackupsApiBackupGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/backup';
+};
+
+export type ListBackupsApiBackupGetResponses = {
+    /**
+     * Response List Backups Api Backup Get
+     *
+     * Successful Response
+     */
+    200: Array<BackupOut>;
+};
+
+export type ListBackupsApiBackupGetResponse = ListBackupsApiBackupGetResponses[keyof ListBackupsApiBackupGetResponses];
+
+export type CreateBackupApiBackupPostData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/backup';
+};
+
+export type CreateBackupApiBackupPostResponses = {
+    /**
+     * Successful Response
+     */
+    202: BackupOut;
+};
+
+export type CreateBackupApiBackupPostResponse = CreateBackupApiBackupPostResponses[keyof CreateBackupApiBackupPostResponses];
+
+export type DeleteBackupApiBackupBackupIdDeleteData = {
+    body?: never;
+    path: {
+        /**
+         * Backup Id
+         */
+        backup_id: number;
+    };
+    query?: never;
+    url: '/api/backup/{backup_id}';
+};
+
+export type DeleteBackupApiBackupBackupIdDeleteErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DeleteBackupApiBackupBackupIdDeleteError = DeleteBackupApiBackupBackupIdDeleteErrors[keyof DeleteBackupApiBackupBackupIdDeleteErrors];
+
+export type DeleteBackupApiBackupBackupIdDeleteResponses = {
+    /**
+     * Response Delete Backup Api Backup  Backup Id  Delete
+     *
+     * Successful Response
+     */
+    200: {
+        [key: string]: unknown;
+    };
+};
+
+export type DeleteBackupApiBackupBackupIdDeleteResponse = DeleteBackupApiBackupBackupIdDeleteResponses[keyof DeleteBackupApiBackupBackupIdDeleteResponses];
+
+export type DownloadBackupApiBackupBackupIdDownloadGetData = {
+    body?: never;
+    path: {
+        /**
+         * Backup Id
+         */
+        backup_id: number;
+    };
+    query?: never;
+    url: '/api/backup/{backup_id}/download';
+};
+
+export type DownloadBackupApiBackupBackupIdDownloadGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DownloadBackupApiBackupBackupIdDownloadGetError = DownloadBackupApiBackupBackupIdDownloadGetErrors[keyof DownloadBackupApiBackupBackupIdDownloadGetErrors];
+
+export type DownloadBackupApiBackupBackupIdDownloadGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type BackupProgressApiBackupBackupIdProgressGetData = {
+    body?: never;
+    path: {
+        /**
+         * Backup Id
+         */
+        backup_id: number;
+    };
+    query: {
+        /**
+         * Token
+         */
+        token: string;
+    };
+    url: '/api/backup/{backup_id}/progress';
+};
+
+export type BackupProgressApiBackupBackupIdProgressGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type BackupProgressApiBackupBackupIdProgressGetError = BackupProgressApiBackupBackupIdProgressGetErrors[keyof BackupProgressApiBackupBackupIdProgressGetErrors];
+
+export type BackupProgressApiBackupBackupIdProgressGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type RestoreBackupApiBackupBackupIdRestorePostData = {
+    body: RestoreRequest;
+    path: {
+        /**
+         * Backup Id
+         */
+        backup_id: number;
+    };
+    query?: never;
+    url: '/api/backup/{backup_id}/restore';
+};
+
+export type RestoreBackupApiBackupBackupIdRestorePostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type RestoreBackupApiBackupBackupIdRestorePostError = RestoreBackupApiBackupBackupIdRestorePostErrors[keyof RestoreBackupApiBackupBackupIdRestorePostErrors];
+
+export type RestoreBackupApiBackupBackupIdRestorePostResponses = {
+    /**
+     * Response Restore Backup Api Backup  Backup Id  Restore Post
+     *
+     * Successful Response
+     */
+    202: {
+        [key: string]: unknown;
+    };
+};
+
+export type RestoreBackupApiBackupBackupIdRestorePostResponse = RestoreBackupApiBackupBackupIdRestorePostResponses[keyof RestoreBackupApiBackupBackupIdRestorePostResponses];
+
+export type RestoreProgressApiBackupBackupIdRestoreProgressGetData = {
+    body?: never;
+    path: {
+        /**
+         * Backup Id
+         */
+        backup_id: number;
+    };
+    query: {
+        /**
+         * Token
+         */
+        token: string;
+    };
+    url: '/api/backup/{backup_id}/restore-progress';
+};
+
+export type RestoreProgressApiBackupBackupIdRestoreProgressGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type RestoreProgressApiBackupBackupIdRestoreProgressGetError = RestoreProgressApiBackupBackupIdRestoreProgressGetErrors[keyof RestoreProgressApiBackupBackupIdRestoreProgressGetErrors];
+
+export type RestoreProgressApiBackupBackupIdRestoreProgressGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
 export type DatabaseStatsApiDashboardDatabaseGetData = {
     body?: never;
     path?: never;
@@ -3507,6 +3763,26 @@ export type GenerateDashboardApiGrafanaDashboardsGeneratePostResponses = {
      */
     200: unknown;
 };
+
+export type RefreshManagedDashboardsApiGrafanaDashboardsRefreshManagedPostData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/grafana/dashboards/refresh-managed';
+};
+
+export type RefreshManagedDashboardsApiGrafanaDashboardsRefreshManagedPostResponses = {
+    /**
+     * Response Refresh Managed Dashboards Api Grafana Dashboards Refresh Managed Post
+     *
+     * Successful Response
+     */
+    200: {
+        [key: string]: unknown;
+    };
+};
+
+export type RefreshManagedDashboardsApiGrafanaDashboardsRefreshManagedPostResponse = RefreshManagedDashboardsApiGrafanaDashboardsRefreshManagedPostResponses[keyof RefreshManagedDashboardsApiGrafanaDashboardsRefreshManagedPostResponses];
 
 export type DeleteDashboardApiGrafanaDashboardsUidDeleteData = {
     body?: never;

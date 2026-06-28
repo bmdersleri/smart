@@ -9,6 +9,7 @@ import {
   listGrafanaTemplates,
   listLabParameters,
   listLabSamplePoints,
+  refreshManagedDashboards,
   type GrafanaDashboardGenerated,
   type GrafanaTemplate,
   type LabParameterOut,
@@ -72,6 +73,8 @@ export default function Grafana() {
   const [labResult, setLabResult] = useState<{ uid: string; title: string; url: string; status: string } | null>(null)
   const [labError, setLabError] = useState<string | null>(null)
   const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [refreshing, setRefreshing] = useState(false)
+  const [refreshResult, setRefreshResult] = useState<string | null>(null)
 
   const loadDashboards = useCallback((signal?: AbortSignal) => {
     // credentials:'omit' KRİTİK: bayat bir grafana_session cookie'si proxy üzerinden
@@ -203,6 +206,20 @@ export default function Grafana() {
     }
   }
 
+  const handleRefreshManaged = async () => {
+    setRefreshing(true)
+    setRefreshResult(null)
+    try {
+      const r = await refreshManagedDashboards()
+      setRefreshResult(`${r.data.updated} güncellendi, ${r.data.skipped.length} atlandı`)
+      loadDashboards()
+    } catch (e) {
+      setRefreshResult(e instanceof Error ? e.message : String(e))
+    } finally {
+      setRefreshing(false)
+    }
+  }
+
   return (
     <div className="p-6 space-y-5">
       <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
@@ -215,15 +232,29 @@ export default function Grafana() {
             <p className="text-sm text-gray-500">{t('subtitle')}</p>
           </div>
         </div>
-        {active && (
-          <a
-            href={buildUrl(active, false, theme)}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center justify-center rounded-lg border border-edge-strong px-3 py-2 text-sm text-gray-200 hover:bg-white/5"
-          >
-            {t('open_grafana')}
-          </a>
+        <div className="flex flex-wrap items-center gap-2">
+          {user?.role === 'admin' && (
+            <button
+              onClick={() => { void handleRefreshManaged() }}
+              disabled={refreshing}
+              className="px-3 py-1.5 text-sm rounded-lg bg-surface-sunken hover:bg-surface-sunken/80 border border-edge text-gray-300 disabled:opacity-50"
+            >
+              {refreshing ? t('refresh_managed_busy') : t('refresh_managed')}
+            </button>
+          )}
+          {active && (
+            <a
+              href={buildUrl(active, false, theme)}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center justify-center rounded-lg border border-edge-strong px-3 py-2 text-sm text-gray-200 hover:bg-white/5"
+            >
+              {t('open_grafana')}
+            </a>
+          )}
+        </div>
+        {refreshResult && (
+          <p className="text-xs text-gray-400 mt-1">{refreshResult}</p>
         )}
       </div>
 

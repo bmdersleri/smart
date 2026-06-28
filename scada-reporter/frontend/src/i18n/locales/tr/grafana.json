@@ -38,5 +38,7 @@
   "delete": "Sil",
   "confirm_delete": "\"{{title}}\" panosunu sil?",
   "deleted": "Silindi",
-  "delete_error": "Silinemedi"
+  "delete_error": "Silinemedi",
+  "refresh_managed": "Panoları güncelle",
+  "refresh_managed_busy": "Güncelleniyor…"
 }

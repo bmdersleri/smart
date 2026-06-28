@@ -352,6 +352,104 @@
         "title": "BackendStatus",
         "type": "object"
       },
+      "BackupOut": {
+        "properties": {
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "dialect": {
+            "title": "Dialect",
+            "type": "string"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "filename": {
+            "title": "Filename",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "sha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sha256"
+          },
+          "size_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Size Bytes"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "trigger": {
+            "title": "Trigger",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "filename",
+          "dialect",
+          "kind",
+          "status",
+          "trigger",
+          "size_bytes",
+          "sha256",
+          "error",
+          "created_at",
+          "completed_at"
+        ],
+        "title": "BackupOut",
+        "type": "object"
+      },
       "BatchCreate": {
         "properties": {
           "rows": {
@@ -1476,6 +1574,19 @@
           "sql"
         ],
         "title": "QueryRequest",
+        "type": "object"
+      },
+      "RestoreRequest": {
+        "properties": {
+          "confirm": {
+            "title": "Confirm",
+            "type": "string"
+          }
+        },
+        "required": [
+          "confirm"
+        ],
+        "title": "RestoreRequest",
         "type": "object"
       },
       "RunRequest": {
@@ -4558,6 +4669,312 @@
         ]
       }
     },
+    "/api/backup": {
+      "get": {
+        "operationId": "list_backups_api_backup_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/BackupOut"
+                  },
+                  "title": "Response List Backups Api Backup Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "List Backups",
+        "tags": [
+          "backup"
+        ]
+      },
+      "post": {
+        "description": "Kick off a backup in the background. Returns the 'running' record\nimmediately; subscribe to GET /backup/{id}/progress for live progress.",
+        "operationId": "create_backup_api_backup_post",
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BackupOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Create Backup",
+        "tags": [
+          "backup"
+        ]
+      }
+    },
+    "/api/backup/{backup_id}": {
+      "delete": {
+        "operationId": "delete_backup_api_backup__backup_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "backup_id",
+            "required": true,
+            "schema": {
+              "title": "Backup Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Delete Backup Api Backup  Backup Id  Delete",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Delete Backup",
+        "tags": [
+          "backup"
+        ]
+      }
+    },
+    "/api/backup/{backup_id}/download": {
+      "get": {
+        "operationId": "download_backup_api_backup__backup_id__download_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "backup_id",
+            "required": true,
+            "schema": {
+              "title": "Backup Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Download Backup",
+        "tags": [
+          "backup"
+        ]
+      }
+    },
+    "/api/backup/{backup_id}/progress": {
+      "get": {
+        "operationId": "backup_progress_api_backup__backup_id__progress_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "backup_id",
+            "required": true,
+            "schema": {
+              "title": "Backup Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "title": "Token",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Backup Progress",
+        "tags": [
+          "backup"
+        ]
+      }
+    },
+    "/api/backup/{backup_id}/restore": {
+      "post": {
+        "operationId": "restore_backup_api_backup__backup_id__restore_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "backup_id",
+            "required": true,
+            "schema": {
+              "title": "Backup Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RestoreRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Restore Backup Api Backup  Backup Id  Restore Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Restore Backup",
+        "tags": [
+          "backup"
+        ]
+      }
+    },
+    "/api/backup/{backup_id}/restore-progress": {
+      "get": {
+        "operationId": "restore_progress_api_backup__backup_id__restore_progress_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "backup_id",
+            "required": true,
+            "schema": {
+              "title": "Backup Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "title": "Token",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Restore Progress",
+        "tags": [
+          "backup"
+        ]
+      }
+    },
     "/api/dashboard/database": {
       "get": {
         "operationId": "database_stats_api_dashboard_database_get",
@@ -5135,7 +5552,7 @@
     },
     "/api/dashboard/trend_range": {
       "get": {
-        "description": "Açık başlangıç/bitiş penceresinde ham seri (dönem karşılaştırması için).",
+        "description": "Açık başlangıç/bitiş penceresi. Geniş pencerede rollup, kısa/yoksa ham.",
         "operationId": "trend_range_api_dashboard_trend_range_get",
         "parameters": [
           {
@@ -6048,6 +6465,35 @@
           }
         ],
         "summary": "Generate Dashboard",
+        "tags": [
+          "grafana"
+        ]
+      }
+    },
+    "/api/grafana/dashboards/refresh-managed": {
+      "post": {
+        "description": "Re-label all managed (sr-*) dashboards with the tag-description label,\nin place. Idempotent: dashboards already using the label are skipped.",
+        "operationId": "refresh_managed_dashboards_api_grafana_dashboards_refresh_managed_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Refresh Managed Dashboards Api Grafana Dashboards Refresh Managed Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Refresh Managed Dashboards",
         "tags": [
           "grafana"
         ]

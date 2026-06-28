@@ -38,5 +38,7 @@
   "delete": "Löschen",
   "confirm_delete": "Dashboard \"{{title}}\" löschen?",
   "deleted": "Gelöscht",
-  "delete_error": "Konnte nicht gelöscht werden"
+  "delete_error": "Konnte nicht gelöscht werden",
+  "refresh_managed": "Verwaltete Dashboards aktualisieren",
+  "refresh_managed_busy": "Wird aktualisiert…"
 }

@@ -38,5 +38,7 @@
   "delete": "Delete",
   "confirm_delete": "Delete dashboard \"{{title}}\"?",
   "deleted": "Deleted",
-  "delete_error": "Could not delete"
+  "delete_error": "Could not delete",
+  "refresh_managed": "Refresh managed dashboards",
+  "refresh_managed_busy": "Refreshing…"
 }

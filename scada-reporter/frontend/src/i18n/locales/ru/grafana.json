@@ -38,5 +38,7 @@
   "delete": "Удалить",
   "confirm_delete": "Удалить дашборд \"{{title}}\"?",
   "deleted": "Удалено",
-  "delete_error": "Не удалось удалить"
+  "delete_error": "Не удалось удалить",
+  "refresh_managed": "Обновить управляемые дашборды",
+  "refresh_managed_busy": "Обновление…"
 }

@@ -320,6 +320,9 @@ export const generateLabDashboard = (data: { sample_point_id: number; parameter_
   )
 export const deleteGrafanaDashboard = (uid: string) =>
   api.delete<{ uid: string; status: string }>(`/grafana/dashboards/${encodeURIComponent(uid)}`)
+export interface RefreshManagedResult { updated: number; skipped: { uid: string; reason: string }[] }
+export const refreshManagedDashboards = () =>
+  api.post<RefreshManagedResult>('/grafana/dashboards/refresh-managed')
 // PLC Yönetimi
 export interface PlcEntry {
   name: string; ip: string; rack: number; slot: number

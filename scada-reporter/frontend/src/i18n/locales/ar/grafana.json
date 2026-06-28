@@ -38,5 +38,7 @@
   "delete": "حذف",
   "confirm_delete": "حذف اللوحة \"{{title}}\"؟",
   "deleted": "تم الحذف",
-  "delete_error": "تعذر الحذف"
+  "delete_error": "تعذر الحذف",
+  "refresh_managed": "تحديث اللوحات المُدارة",
+  "refresh_managed_busy": "جارٍ التحديث…"
 }
