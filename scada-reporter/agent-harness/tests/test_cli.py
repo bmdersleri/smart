@@ -91,6 +91,60 @@ def test_doctor_without_token_reports_warning():
     mock_client.me.assert_not_called()
 
 
+def test_agent_capabilities_json_output():
+    import json
+
+    result = runner.invoke(cli, ["agent", "capabilities", "--json-output"])
+
+    assert result.exit_code == 0
+    data = json.loads(result.output)
+    assert data["schema_version"] == "1.0"
+    assert data["counts"]["total"] == len(data["capabilities"])
+    assert any(cap["name"] == "list_tags" for cap in data["capabilities"])
+
+
+def test_agent_contract_json_output():
+    import json
+
+    result = runner.invoke(cli, ["agent", "contract", "--json-output"])
+
+    assert result.exit_code == 0
+    data = json.loads(result.output)
+    assert data["project"] == "ekont-smart-report"
+    assert "scada://agent/contract" in data["mcp"]["resources"]
+    assert "scada agent bootstrap --json-output" in data["cli"]["recommended_start"]
+
+
+def test_agent_bootstrap_json_output_without_token():
+    import json
+
+    mock_client = MagicMock()
+    mock_client.health.return_value = {"status": "ok"}
+    mock_client.ready.return_value = {"status": "ready", "checks": {}}
+    mock_client.system_health.return_value = {"tag_count": 3, "plc_count": 1}
+
+    with (
+        patch.dict(os.environ, {}, clear=True),
+        patch(
+            "scada_reporter_cli.commands.agent.SyncScadaClient",
+            return_value=mock_client,
+        ),
+        patch(
+            "scada_reporter_cli.commands.agent.token_with_source",
+            return_value=(None, "missing"),
+        ),
+    ):
+        result = runner.invoke(cli, ["agent", "bootstrap", "--json-output"])
+
+    assert result.exit_code == 0
+    data = json.loads(result.output)
+    assert data["status"] == "warning"
+    assert data["token"] == {"present": False, "source": "missing"}
+    assert data["health"]["status"] == "ok"
+    assert data["ready"]["status"] == "ready"
+    assert data["system"]["tag_count"] == 3
+
+
 def test_list_tags_no_auth():
     """Token olmadan tags list auth hatasi vermeli."""
     _clear_token()

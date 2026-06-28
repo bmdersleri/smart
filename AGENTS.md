@@ -21,6 +21,15 @@ MCP server — without needing to parse HTML or scrape a UI.
 4. **Discoverability** — `scada tags list`, `scada dashboard overview`, `scada explore schema`
 5. **SKILL.md** — agents discover CLI capabilities from `scada-reporter/agent-harness/skills/SKILL.md`
 
+### Execution Defaults
+
+Treat these as the repo's standing defaults unless the user says otherwise:
+
+- Use `rtk` for shell commands when practical.
+- Prefer `codegraph` for repo exploration, impact checks, and sync/status before manual search.
+- Use `caveman` only when the user asks for it or invokes a caveman command; default to `lite` if caveman is active.
+- Do not make the user restate these defaults in later sessions; re-read this guide first.
+
 ---
 
 ## Repository Layout (agent-relevant)
@@ -137,6 +146,9 @@ scada dashboard overview --json-output
 
 # Agent triage
 scada doctor --json-output
+scada agent bootstrap --json-output
+scada agent capabilities --json-output
+scada agent contract --json-output
 just doctor-agent
 just agent-check
 
@@ -182,6 +194,32 @@ Most read-oriented commands support `--json-output` for machine-readable output 
 | `users` | User management (admin only) |
 
 `health` is a top-level command (not a group): `scada health`. Use `--json-output` for machine-readable output: `scada health --json-output`.
+
+---
+
+## Agentic Tooling Contract
+
+Use these stable entrypoints when an agent starts work in this repo:
+
+```bash
+scada agent bootstrap --json-output      # health, readiness, token, issues, next commands
+scada agent capabilities --json-output   # shared scada-core capability catalog
+scada agent contract --json-output       # stable CLI/MCP contract
+scada doctor --json-output               # deeper operational triage
+```
+
+The MCP server exposes the same contract through read-only resources:
+
+| Resource | Purpose |
+|----------|---------|
+| `scada://agent/bootstrap` | Session bootstrap data for agents |
+| `scada://agent/capabilities` | Capability catalog with read/write/destructive tiers |
+| `scada://agent/contract` | Stable CLI/MCP contract and safety flags |
+| `scada://health` | API health envelope |
+
+MCP tools are read-only by default. Set `SCADA_MCP_ALLOW_WRITES=1` to expose
+write-tier tools, and also set `SCADA_MCP_ALLOW_DESTRUCTIVE=1` to expose
+destructive tools.
 
 ---
 

@@ -17,6 +17,7 @@ if str(AGENT_SRC) not in sys.path:
     sys.path.insert(0, str(AGENT_SRC))
 
 from mcp_scada import server as srv
+from scada_core.agent_contract import AGENT_RESOURCE_URIS
 from scada_core.prompts import PROMPTS
 from scada_reporter_cli.cli import cli
 
@@ -75,7 +76,9 @@ async def test_agent_contract_surface_stays_in_sync():
 
     resources = await srv.mcp.list_resources()
     resource_uris = {str(resource.uri) for resource in resources}
-    expected_resources = {"scada://tags", "scada://plcs", "scada://schema"}
+    expected_resources = {"scada://tags", "scada://plcs", "scada://schema"} | set(
+        AGENT_RESOURCE_URIS
+    )
     assert resource_uris == expected_resources, (
         f"Resource contract drift detected.\n"
         f"missing from MCP: {sorted(expected_resources - resource_uris)}\n"

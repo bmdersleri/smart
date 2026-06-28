@@ -5,9 +5,14 @@ import os
 from mcp.server.fastmcp import FastMCP
 from mcp.server.fastmcp.prompts.base import Prompt
 
+from scada_core.agent_contract import (
+    build_agent_bootstrap,
+    build_agent_capabilities,
+    build_agent_contract,
+)
 from scada_core.catalog import CATALOG
 from scada_core.client import AsyncScadaClient
-from scada_core.envelope import fail
+from scada_core.envelope import fail, ok
 from scada_core.formatting import to_json
 from scada_core.prompts import PROMPTS
 
@@ -116,6 +121,42 @@ def _allowed_tiers() -> set[str]:
         if os.environ.get("SCADA_MCP_ALLOW_DESTRUCTIVE") == "1":
             tiers.add("destructive")
     return tiers
+
+
+async def agent_contract_resource() -> str:
+    return to_json(ok(build_agent_contract(SCADA_API_URL, _allowed_tiers())))
+
+
+async def agent_capabilities_resource() -> str:
+    return to_json(ok(build_agent_capabilities(_allowed_tiers())))
+
+
+async def health_resource() -> str:
+    client = _make_client()
+    try:
+        return to_json(await client.health())
+    finally:
+        await client.aclose()
+
+
+async def agent_bootstrap_resource() -> str:
+    client = _make_client()
+    try:
+        return to_json(
+            ok(
+                build_agent_bootstrap(
+                    api_url=SCADA_API_URL,
+                    token_present=bool(SCADA_TOKEN),
+                    token_source="env" if SCADA_TOKEN else "missing",
+                    health=(await client.health()).legacy(),
+                    ready=(await client.ready()).legacy(),
+                    system=(await client.system_health()).legacy(),
+                    mcp_allowed_tiers=_allowed_tiers(),
+                )
+            )
+        )
+    finally:
+        await client.aclose()
 
 
 async def update_tag(
@@ -402,6 +443,22 @@ def _register_resources() -> None:
             return to_json(await client.explore_schema())
         finally:
             await client.aclose()
+
+    @mcp.resource("scada://agent/contract")
+    async def _agent_contract() -> str:
+        return await agent_contract_resource()
+
+    @mcp.resource("scada://agent/capabilities")
+    async def _agent_capabilities() -> str:
+        return await agent_capabilities_resource()
+
+    @mcp.resource("scada://agent/bootstrap")
+    async def _agent_bootstrap() -> str:
+        return await agent_bootstrap_resource()
+
+    @mcp.resource("scada://health")
+    async def _health() -> str:
+        return await health_resource()
 
 
 _register_prompts()

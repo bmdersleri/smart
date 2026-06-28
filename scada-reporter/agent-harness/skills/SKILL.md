@@ -35,6 +35,9 @@ commands:
   - scada agent anomalies <tag_name> [--window TEXT] [--threshold N] [--json-output]
   - scada agent forecast <tag_name> [--horizon TEXT] [--json-output]
   - scada agent status [--json-output]
+  - scada agent capabilities [--json-output]
+  - scada agent contract [--json-output]
+  - scada agent bootstrap [--json-output]
   # Operational write helpers (JSON output by default)
   - scada watchlist add <tag_id>
   - scada watchlist remove <tag_id>

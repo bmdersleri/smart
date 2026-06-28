@@ -4,7 +4,14 @@ import time
 from datetime import datetime, timezone
 
 import click
+from scada_core.agent_contract import (
+    build_agent_bootstrap,
+    build_agent_capabilities,
+    build_agent_contract,
+)
+from scada_core.client import SyncScadaClient
 from scada_reporter_cli.utils.client_helper import get_client, unwrap
+from scada_reporter_cli.utils.config import get_api_url, token_with_source
 from scada_reporter_cli.utils.repl_skin import (
     success,
     error,
@@ -28,6 +35,69 @@ def _fmt_dt(dt_str: str | None) -> str:
         return dt.strftime("%Y-%m-%d %H:%M:%S")
     except Exception:
         return dt_str
+
+
+@agent_cmd.command()
+@click.option("--json-output", is_flag=True, help="JSON cikti")
+def capabilities(json_output: bool):
+    """Agent capability katalogunu goster."""
+    data = build_agent_capabilities()
+    if json_output:
+        click.echo(fmt_json(data))
+        return
+    click.echo(success("Agent Capabilities"))
+    click.echo(f"  Total: {data['counts']['total']}")
+    for tier, count in data["counts"]["by_tier"].items():
+        click.echo(f"  {tier}: {count}")
+
+
+@agent_cmd.command()
+@click.option("--json-output", is_flag=True, help="JSON cikti")
+def contract(json_output: bool):
+    """Agentic CLI/MCP sozlesmesini goster."""
+    data = build_agent_contract(api_url=get_api_url())
+    if json_output:
+        click.echo(fmt_json(data))
+        return
+    click.echo(success("Agent Contract"))
+    click.echo(f"  API: {data['api_url']}")
+    click.echo(f"  CLI: {data['cli']['binary']}")
+    click.echo(f"  MCP resources: {len(data['mcp']['resources'])}")
+
+
+@agent_cmd.command()
+@click.option("--json-output", is_flag=True, help="JSON cikti")
+def bootstrap(json_output: bool):
+    """Agent oturumu icin ortam, token, health ve capability ozetini hazirla."""
+    api_url = get_api_url()
+    token, token_source = token_with_source()
+    client = SyncScadaClient(api_url)
+    try:
+        if token:
+            client.set_token(token)
+        data = build_agent_bootstrap(
+            api_url=api_url,
+            token_present=bool(token),
+            token_source=token_source,
+            health=unwrap(client.health()),
+            ready=unwrap(client.ready()),
+            system=unwrap(client.system_health()),
+        )
+    finally:
+        client.close()
+
+    if json_output:
+        click.echo(fmt_json(data))
+        return
+    click.echo(success(f"Agent Bootstrap: {data['status']}"))
+    click.echo(f"  API: {data['api_url']}")
+    click.echo(
+        f"  Token: {'present' if data['token']['present'] else 'missing'} ({data['token']['source']})"
+    )
+    if data["issues"]:
+        click.echo(warn("Issues"))
+        for issue in data["issues"]:
+            click.echo(f"  {issue['severity']}: {issue['kind']} - {issue['message']}")
 
 
 @agent_cmd.command()
