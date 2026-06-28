@@ -54,6 +54,14 @@ class Settings(BaseSettings):
     # Aktif tag kataloğu poller'da bu kadar saniye cache'lenir (her tick DB'den
     # ~3000 satır çekmeyi önler). Tag CRUD sonrası en geç bu süre içinde yansır.
     S7_TAG_CACHE_TTL: float = 30.0
+    # PostgreSQL'de tag_readings yazımı için asyncpg COPY kullan (INSERT yerine,
+    # ~3-10x hızlı bulk ingest). Hata/sürüm uyumsuzluğunda otomatik INSERT'e
+    # düşer. SQLite'ı etkilemez (her zaman INSERT).
+    # Default KAPALI: COPY yolunun otomatik testi yok ve TimescaleDB sürümüne
+    # göre hypertable COPY davranışı değişir. Prod'da gerçek DB'ye karşı doğrula
+    # (temiz batch yazar, çakışan batch 0 döner, zorlanan hata INSERT'e düşer),
+    # fallback uyarısını alarma bağla, sonra S7_PG_COPY_INGEST=true ile aç.
+    S7_PG_COPY_INGEST: bool = False
     # Ham hypertable saklama süresi (gün); rollup'lar daha uzun tutulabilir
     RAW_RETENTION_DAYS: int = 90
 

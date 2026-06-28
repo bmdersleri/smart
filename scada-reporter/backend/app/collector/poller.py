@@ -149,26 +149,65 @@ def should_store(
     return abs(value - prev_value) >= deadband
 
 
+async def _insert_readings(db, rows: list[tuple[int, float | None, int]], ts: datetime) -> int:
+    """Tek bulk INSERT. Çakışmada (PK) tüm batch geri alınır, 0 döner."""
+    payload = [
+        {"tag_id": tag_id, "value": value, "quality": quality, "timestamp": ts}
+        for tag_id, value, quality in rows
+    ]
+    try:
+        await db.execute(insert(TagReading), payload)
+        await db.commit()
+        return len(payload)
+    except IntegrityError:
+        await db.rollback()
+        return 0
+
+
+async def _copy_readings(db, rows: list[tuple[int, float | None, int]], ts: datetime) -> int:
+    """PostgreSQL asyncpg COPY ile bulk ingest (INSERT'ten ~3-10x hızlı).
+
+    Çakışma (unique_violation, sqlstate 23505) → batch geri alınır, 0 döner
+    (INSERT semantiği ile aynı). Başka herhangi bir COPY hatası (sürüm/driver)
+    → veri kaybı olmaması için INSERT'e düşülür.
+    """
+    records = [(tag_id, value, quality, ts) for tag_id, value, quality in rows]
+    try:
+        conn = await db.connection()
+        raw = await conn.get_raw_connection()
+        asyncpg_conn = raw.driver_connection
+        await asyncpg_conn.copy_records_to_table(
+            "tag_readings",
+            records=records,
+            columns=["tag_id", "value", "quality", "timestamp"],
+        )
+        await db.commit()
+        return len(records)
+    except Exception as exc:
+        await db.rollback()
+        if getattr(exc, "sqlstate", None) == "23505":  # unique_violation
+            return 0
+        logger.warning("PG COPY ingest hatasi (%s); INSERT'e dusuluyor", exc.__class__.__name__)
+        return await _insert_readings(db, rows, ts)
+
+
 async def write_readings(
     rows: list[tuple[int, float | None, int]],
     ts: datetime,
     sessionmaker=AsyncSessionLocal,
 ) -> int:
-    """rows'u tek bulk insert ile yaz. Çakışmada tüm batch geri alınır, 0 döner."""
+    """rows'u tek bulk yazımla kaydet. PG'de COPY, değilse INSERT. Çakışmada 0."""
     if not rows:
         return 0
-    payload = [
-        {"tag_id": tag_id, "value": value, "quality": quality, "timestamp": ts}
-        for tag_id, value, quality in rows
-    ]
+    # tag_readings.timestamp = "timestamp without time zone". Hem asyncpg INSERT
+    # hem raw COPY, tz-aware datetime'ı bu kolona reddeder ("can't subtract
+    # offset-naive and offset-aware"). Poller UTC-aware ts geçer → naive UTC'ye
+    # normalize et (gerçek-PG smoke testinde yakalandı; SQLite gizliyordu).
+    ts = ts.replace(tzinfo=None) if ts.tzinfo else ts
     async with sessionmaker() as db:
-        try:
-            await db.execute(insert(TagReading), payload)
-            await db.commit()
-            return len(payload)
-        except IntegrityError:
-            await db.rollback()
-            return 0
+        if settings.S7_PG_COPY_INGEST and db.bind.dialect.name == "postgresql":
+            return await _copy_readings(db, rows, ts)
+        return await _insert_readings(db, rows, ts)
 
 
 async def run_once(
