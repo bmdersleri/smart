@@ -19,7 +19,7 @@ export function useLiveDashboard(enabled = true) {
   const qc = useQueryClient()
   const wsRef = useRef<WebSocket | null>(null)
   const [status, setStatus] = useState<'connecting' | 'connected' | 'disconnected'>('disconnected')
-  const retryTimeout = useRef<NodeJS.Timeout | null>(null)
+  const retryTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     if (!enabled) {
