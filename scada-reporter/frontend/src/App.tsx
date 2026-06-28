@@ -16,6 +16,7 @@ import PlcHealth from './pages/PlcHealth'
 import Metrics from './pages/Metrics'
 import Grafana from './pages/Grafana'
 import LabEntry from './pages/LabEntry'
+import ComplianceCenter from './pages/compliance/ComplianceCenter'
 import Settings from './pages/Settings'
 import Users from './pages/Users'
 import './index.css'
@@ -56,6 +57,7 @@ export default function App() {
               <Route path="metrics" element={<Metrics />} />
               <Route path="grafana" element={<Grafana />} />
               <Route path="lab" element={<LabEntry />} />
+              <Route path="compliance" element={<ComplianceCenter />} />
               <Route path="settings" element={<Settings />} />
               <Route path="users" element={<AdminRoute><Users /></AdminRoute>} />
             </Route>

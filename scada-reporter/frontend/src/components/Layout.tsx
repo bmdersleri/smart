@@ -19,6 +19,7 @@ const nav = [
   { to: '/metrics', labelKey: 'nav_metrics' },
   { to: '/grafana', labelKey: 'nav_grafana' },
   { to: '/lab', labelKey: 'nav_lab' },
+  { to: '/compliance', labelKey: 'nav_compliance' },
   { to: '/settings', labelKey: 'nav_settings' },
 ]
 

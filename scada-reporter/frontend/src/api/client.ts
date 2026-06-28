@@ -555,3 +555,245 @@ export const backupProgressUrl = (id: number, token: string) =>
   `${api.defaults.baseURL}/backup/${id}/progress?token=${encodeURIComponent(token)}`
 export const restoreProgressUrl = (id: number, token: string) =>
   `${api.defaults.baseURL}/backup/${id}/restore-progress?token=${encodeURIComponent(token)}`
+
+// ── Compliance Center ─────────────────────────────────────────────────────────
+// Mirrors backend app/api/compliance.py shapes exactly. Enum unions match the
+// constants in app/models/compliance.py.
+export type ComplianceSourceType = 'scada' | 'lab' | 'hybrid'
+export type ComplianceLimitType = 'value_limit' | 'sample_count' | 'sample_frequency' | 'quality'
+export type ComplianceAggregation = 'instant' | 'daily_avg' | 'monthly_avg' | 'count'
+export type ComplianceReportFrequency = 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'custom_cron'
+export type ComplianceEventType =
+  | 'limit_exceeded'
+  | 'missing_sample'
+  | 'late_sample'
+  | 'bad_quality'
+  | 'needs_explanation'
+export type ComplianceEventStatus = 'open' | 'acknowledged' | 'resolved' | 'waived'
+
+export interface ComplianceOverview {
+  active_permits: number
+  open_events: number
+  by_event_type: Record<string, number>
+  missing_samples: number
+  unresolved_explanations: number
+  packs_waiting: number
+}
+
+export interface CompliancePermit {
+  id: number
+  name: string
+  facility_name: string
+  authority: string
+  permit_number: string
+  valid_from: string | null
+  valid_to: string | null
+  report_frequency: string
+  report_cron: string | null
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface CompliancePermitPayload {
+  name: string
+  facility_name?: string
+  authority?: string
+  permit_number?: string
+  valid_from?: string | null
+  valid_to?: string | null
+  report_frequency?: string
+  report_cron?: string | null
+  is_active?: boolean
+}
+
+export interface CompliancePoint {
+  id: number
+  permit_id: number
+  code: string
+  name: string
+  description: string
+  lab_sample_point_id: number | null
+  created_at: string
+  updated_at: string
+}
+
+export interface CompliancePointPayload {
+  code: string
+  name: string
+  description?: string
+  lab_sample_point_id?: number | null
+}
+
+export interface ComplianceLimit {
+  id: number
+  parameter_id: number
+  limit_type: string
+  min_value: number | null
+  max_value: number | null
+  aggregation: string
+  window: string | null
+  sample_frequency: string | null
+  severity: string
+  requires_explanation: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface ComplianceLimitPayload {
+  limit_type: string
+  min_value?: number | null
+  max_value?: number | null
+  aggregation: string
+  window?: string | null
+  sample_frequency?: string | null
+  severity?: string
+  requires_explanation?: boolean
+}
+
+export interface ComplianceParameter {
+  id: number
+  permit_id: number
+  discharge_point_id: number
+  parameter_name: string
+  unit: string
+  source_type: string
+  tag_id: number | null
+  lab_parameter_id: number | null
+  created_at: string
+  updated_at: string
+}
+
+export interface ComplianceParameterWithLimits extends ComplianceParameter {
+  limits: ComplianceLimit[]
+}
+
+export interface ComplianceParameterPayload {
+  discharge_point_id: number
+  parameter_name: string
+  unit?: string
+  source_type: string
+  tag_id?: number | null
+  lab_parameter_id?: number | null
+}
+
+export interface CompliancePermitDetail extends CompliancePermit {
+  discharge_points: CompliancePoint[]
+  parameters: ComplianceParameterWithLimits[]
+}
+
+export interface ComplianceEvent {
+  id: number
+  permit_id: number
+  parameter_id: number
+  limit_id: number
+  event_type: string
+  severity: string
+  period_start: string
+  period_end: string
+  observed_value: number | null
+  limit_value: number | null
+  status: string
+  event_key: string
+  evidence: Record<string, unknown> | null
+  created_at: string
+  updated_at: string
+  acknowledged_at: string | null
+  acknowledged_by: number | null
+  resolved_at: string | null
+  resolved_by: number | null
+  waived_at: string | null
+  waived_by: number | null
+  waive_reason: string | null
+  note_count: number
+}
+
+export interface ComplianceEventList {
+  total: number
+  items: ComplianceEvent[]
+}
+
+export interface ComplianceNote {
+  id: number
+  event_id: number
+  user_id: number
+  note: string
+  created_at: string
+}
+
+export interface ComplianceEventFilters {
+  permit_id?: number
+  status?: string
+  start?: string
+  end?: string
+  limit?: number
+  offset?: number
+}
+
+export interface ComplianceEvaluateResult {
+  created?: number
+  updated?: number
+  [k: string]: unknown
+}
+
+// Overview
+export const getComplianceOverview = () => api.get<ComplianceOverview>('/compliance/overview')
+
+// Permits
+export const listPermits = (isActive?: boolean) =>
+  api.get<CompliancePermit[]>('/compliance/permits', {
+    params: isActive === undefined ? undefined : { is_active: isActive },
+  })
+export const getPermit = (id: number) =>
+  api.get<CompliancePermitDetail>(`/compliance/permits/${id}`)
+export const createPermit = (data: CompliancePermitPayload) =>
+  api.post<CompliancePermit>('/compliance/permits', data)
+export const updatePermit = (id: number, data: CompliancePermitPayload) =>
+  api.put<CompliancePermit>(`/compliance/permits/${id}`, data)
+export const deletePermit = (id: number) =>
+  api.delete<{ id: number; is_active: boolean }>(`/compliance/permits/${id}`)
+
+// Discharge / sample points
+export const listPoints = (permitId: number) =>
+  api.get<CompliancePoint[]>(`/compliance/permits/${permitId}/points`)
+export const createPoint = (permitId: number, data: CompliancePointPayload) =>
+  api.post<CompliancePoint>(`/compliance/permits/${permitId}/points`, data)
+export const updatePoint = (pointId: number, data: CompliancePointPayload) =>
+  api.put<CompliancePoint>(`/compliance/points/${pointId}`, data)
+export const deletePoint = (pointId: number) =>
+  api.delete<{ id: number; deleted: boolean }>(`/compliance/points/${pointId}`)
+
+// Parameters
+export const listParameters = (permitId: number) =>
+  api.get<ComplianceParameter[]>(`/compliance/permits/${permitId}/parameters`)
+export const createParameterCompliance = (permitId: number, data: ComplianceParameterPayload) =>
+  api.post<ComplianceParameter>(`/compliance/permits/${permitId}/parameters`, data)
+export const updateParameterCompliance = (paramId: number, data: ComplianceParameterPayload) =>
+  api.put<ComplianceParameter>(`/compliance/parameters/${paramId}`, data)
+export const deleteParameterCompliance = (paramId: number) =>
+  api.delete<{ id: number; deleted: boolean }>(`/compliance/parameters/${paramId}`)
+
+// Limits
+export const listLimits = (paramId: number) =>
+  api.get<ComplianceLimit[]>(`/compliance/parameters/${paramId}/limits`)
+export const createLimit = (paramId: number, data: ComplianceLimitPayload) =>
+  api.post<ComplianceLimit>(`/compliance/parameters/${paramId}/limits`, data)
+export const updateLimit = (limitId: number, data: ComplianceLimitPayload) =>
+  api.put<ComplianceLimit>(`/compliance/limits/${limitId}`, data)
+export const deleteLimit = (limitId: number) =>
+  api.delete<{ id: number; deleted: boolean }>(`/compliance/limits/${limitId}`)
+
+// Events
+export const listEvents = (filters: ComplianceEventFilters = {}) =>
+  api.get<ComplianceEventList>('/compliance/events', { params: filters })
+export const getEvent = (id: number) => api.get<ComplianceEvent>(`/compliance/events/${id}`)
+export const addEventNote = (id: number, note: string) =>
+  api.post<ComplianceNote>(`/compliance/events/${id}/notes`, { note })
+export const setEventStatus = (
+  id: number,
+  data: { status: string; waive_reason?: string },
+) => api.patch<ComplianceEvent>(`/compliance/events/${id}/status`, data)
+
+// Evaluation
+export const runEvaluation = (data: { permit_id: number; start: string; end: string }) =>
+  api.post<ComplianceEvaluateResult>('/compliance/evaluate', data)
