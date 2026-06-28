@@ -28,7 +28,7 @@ Collects data directly from Siemens S7-1500 PLCs, stores it in a time-series dat
 | **PLC Config** | Add/remove PLCs, manage IP/rack/slot/connection status |
 | **PLC Health** | Per-PLC health, incident summary, acknowledgement workflow |
 | **Lab Data Entry** | Manual entry of lab analysis results (single-sample, batch grid, Excel/CSV import, records); hybrid parameter + sample-point catalog; mirrors values into SCADA tag readings |
-| **Compliance Center** | Permit-driven compliance: Overview (readiness counters + 30-day event trend + run-evaluation), Permit Profiles (admin config of discharge points, parameter source mapping, limit rules), Events work queue (filter, evidence, notes, status transitions with mandatory waive reason) |
+| **Compliance Center** | Permit-driven compliance: Overview (readiness counters + 30-day event trend + run-evaluation), Permit Profiles (admin config of discharge points, parameter source mapping, limit rules), Events work queue (filter, evidence, notes, status transitions with mandatory waive reason), Report Packs (create/generate official PDF/Excel/JSON, readiness/blocking, review→admin approval with evidence freeze, download) |
 | **Live Metrics** | Poller throughput + deadband savings; **Database** section (size, total/earliest readings, last 24h/7d/30d counts, tag count, per-table rows, daily rate, est. growth) with a manual refresh button |
 | **Monitoring & Analytics** | Prometheus metrics view + embedded Grafana dashboards; generate a Grafana dashboard from a lab sample point or a project template (`facility_overview` / `water_quality`); admin delete of managed dashboards. Generators emit frser-sqlite panels |
 | **Settings** | User preferences (theme, language, trend chart height); License status + admin license upload; Lab Catalog (admin) |
@@ -54,7 +54,7 @@ Collects data directly from Siemens S7-1500 PLCs, stores it in a time-series dat
 | Explore | `/api/explore` | Schema and tag catalog discovery |
 | Lab | `/api/lab` | Lab parameters, sample points, samples, batch entry, Excel/CSV import (16 endpoints) |
 | Grafana Dashboards | `/api/grafana/dashboards` | Generate from lab sample point or project template (POST); delete by uid (DELETE — admin) |
-| Compliance | `/api/compliance` | Permit profiles, deterministic rule evaluation, compliance events, notes, status transitions, overview |
+| Compliance | `/api/compliance` | Permit profiles + nested config CRUD, deterministic rule evaluation, compliance events, notes, status transitions, overview, official report packs (generate/review/approve/download PDF/Excel/JSON) |
 | License | `/api/license` | License status (GET); admin upload/replace (POST) and revert-to-demo (DELETE) |
 | Health | `/live`, `/ready`, `/health`, `/metrics` | Liveness, readiness, system health, Prometheus metrics |
 
