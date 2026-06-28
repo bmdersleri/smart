@@ -35,7 +35,7 @@ from app.models.compliance import (
     ComplianceReportPack,
 )
 from app.models.user import User
-from app.services import compliance_engine, compliance_report
+from app.services import compliance_assistant, compliance_engine, compliance_report
 
 router = APIRouter(prefix="/compliance", tags=["compliance"])
 
@@ -236,6 +236,13 @@ class ReportPackCreate(BaseModel):
     permit_id: int
     start: datetime
     end: datetime
+
+
+class AssistantRequest(BaseModel):
+    question: str = Field(min_length=1, description="Compliance question (en/tr)")
+    permit_id: int | None = None
+    start: datetime | None = None
+    end: datetime | None = None
 
 
 class ReportPackResponse(BaseModel):
@@ -441,6 +448,32 @@ async def overview(
         "unresolved_explanations": int(by_event_type.get("needs_explanation", 0)),
         "packs_waiting": 0,
     }
+
+
+# --------------------------------------------------------------------------
+# AI Compliance Assistant (READ + DRAFT only — no writes, no audit row)
+# --------------------------------------------------------------------------
+
+
+@router.post("/assistant")
+async def assistant(
+    data: AssistantRequest,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_user),
+) -> dict:
+    """Deterministic compliance assistant.
+
+    READ + DRAFT only: surfaces compliance data and links real event/pack/permit
+    IDs, drafts templated explanation text, and *proposes* (never executes)
+    report-pack creation. No server-side LLM and no writes (no audit row).
+    """
+    return await compliance_assistant.answer_compliance_question(
+        db,
+        data.question,
+        permit_id=data.permit_id,
+        period_start=data.start,
+        period_end=data.end,
+    )
 
 
 # --------------------------------------------------------------------------
