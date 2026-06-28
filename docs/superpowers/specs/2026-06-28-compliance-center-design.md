@@ -77,6 +77,15 @@ The engine must support:
 - bad PLC quality checks
 - repeated event upsert to avoid duplicate rows on re-evaluation
 
+#### Time Zone Semantics
+
+Compliance periods are calendar-based (a daily average, a "May" monthly report), so day and month boundaries must be computed in the facility's local time, not raw UTC. Rules:
+
+- Readings are stored as naive UTC (consistent with the existing poller normalization). The engine resolves the facility time zone from the application IANA time-zone setting and converts window boundaries before aggregating.
+- `daily_avg` buckets run from local midnight to local midnight; `monthly_avg` buckets run from the first to the last local day of the month. The engine converts these local boundaries to UTC for the actual `tag_readings`/lab queries.
+- `period_start` and `period_end` on permits, events, and report packs are stored as naive UTC instants marking the resolved boundaries, but are derived from local calendar units so a "May report pack" covers May in facility-local time.
+- Scheduled and manual runs use the same time zone resolution, so a manual re-run of a period produces identical bucket boundaries (supports the deterministic/idempotent requirement).
+
 ### Compliance Events
 
 Compliance events record the output of the engine. They are the main operational queue for operators and environmental staff.
@@ -89,12 +98,24 @@ Event types:
 - `bad_quality`
 - `needs_explanation`
 
+Event-type generation mapping (which engine check produces which type):
+
+- `limit_exceeded` — instant min/max, daily-average, and monthly-average checks when an aggregated value violates a `value_limit`.
+- `missing_sample` — `sample_count` checks when fewer samples exist in the period than the rule requires (including the zero-data case from Error Handling).
+- `late_sample` — `sample_frequency` checks when the gap between consecutive samples exceeds the configured `sample_frequency` interval (a sample arrived, but later than the required cadence).
+- `bad_quality` — `quality` checks when source PLC readings carry a non-good OPC quality (see threshold below).
+- `needs_explanation` — not produced directly by a numeric rule. It is raised for any `open` `limit_exceeded`/`missing_sample`/`late_sample`/`bad_quality` event on a parameter/limit flagged as explanation-required (a `requires_explanation` flag on `compliance_limits`) that has no `compliance_event_notes` entry. It blocks report-pack approval until an operator note is added. The engine derives it from existing events rather than from raw readings.
+
+Bad-quality threshold: a reading is bad-quality when `tag_readings.quality < 192` (OPC `Good` = 192). The `quality` limit type may override the threshold per parameter, but 192 is the default cutoff.
+
 Event statuses:
 
 - `open`
 - `acknowledged`
 - `resolved`
 - `waived`
+
+Status transitions stamp who/when: `acknowledged` sets `acknowledged_by`/`acknowledged_at`, `resolved` sets `resolved_by`/`resolved_at`, `waived` sets `waived_by`/`waived_at` and requires a non-empty `waive_reason` (waiving a breach is legally sensitive — the reason is mandatory and audited). Every transition also writes an audit row.
 
 Each event stores evidence JSON with the values, timestamps, limit rule, source records, and aggregation details that produced the event.
 
@@ -114,6 +135,14 @@ Outputs:
 - JSON for agent/API use
 - Excel for operational review
 - PDF for official sharing and audit archive
+
+#### Evidence Immutability
+
+An approved or exported report pack is a legal record and must not silently change when the underlying period is re-evaluated. Rules:
+
+- On `approve`, the pack captures an immutable snapshot of the compliance events and evidence it covers (an `events_snapshot_json`, or a row-level freeze that copies the relevant `compliance_events` evidence into the pack). The generated PDF/Excel/JSON archive is the canonical frozen artifact.
+- After a pack reaches `approved` or `exported`, re-evaluating the same permit and period is still allowed (events keep updating live), but it does not mutate the approved pack. Any post-approval divergence between live events and the frozen snapshot is surfaced as a new event/flag, not an in-place edit of the approved pack.
+- A period that already has an `approved` pack is reported as such; producing a new official artifact for that period requires creating a new pack (revision), leaving the original approved pack and its archive intact for audit.
 
 ### Agent Surface
 
@@ -201,6 +230,11 @@ Constraints:
 
 - `source_type` is one of `scada`, `lab`, `hybrid`.
 - At least one of `tag_id` or `lab_parameter_id` is required.
+- `scada` requires `tag_id`; `lab` requires `lab_parameter_id`; `hybrid` requires both.
+
+Hybrid source resolution: for a `hybrid` parameter the lab measurement is authoritative for the compliance value (regulatory limits are defined against lab methods), and the SCADA tag provides continuous context plus `bad_quality`/`missing_sample` detection between lab samples. When both a lab value and a SCADA aggregate exist for the same window, the engine evaluates the `value_limit` against the lab value and records the SCADA aggregate in `evidence_json` for cross-reference. If the lab value is absent for a required window, the parameter falls back to the SCADA aggregate and the event evidence flags the substitution.
+
+Note: `permit_id` here is denormalized (reachable via `discharge_point_id -> compliance_discharge_points.permit_id`). It is kept for query convenience but must be validated to match the discharge point's permit at write time to avoid divergence.
 
 Foreign keys:
 
@@ -224,8 +258,13 @@ Fields:
 - `window`
 - `sample_frequency`
 - `severity`
+- `requires_explanation`
 - `created_at`
 - `updated_at`
+
+`requires_explanation` (bool, default false): when true, an `open` event from this limit also raises a `needs_explanation` event until an operator note exists, and blocks report-pack approval.
+
+`window` qualifies the `aggregation` bucket when the aggregation alone is ambiguous (e.g. a rolling window distinct from the calendar `daily_avg`/`monthly_avg` buckets). For the standard calendar aggregations it is redundant and may be left null; the engine prefers `aggregation` and only consults `window` for rolling/custom windows.
 
 Allowed `limit_type` values:
 
@@ -258,15 +297,21 @@ Fields:
 - `observed_value`
 - `limit_value`
 - `status`
+- `event_key`
 - `evidence_json`
 - `created_at`
 - `updated_at`
+- `acknowledged_at`
+- `acknowledged_by`
 - `resolved_at`
 - `resolved_by`
+- `waived_at`
+- `waived_by`
+- `waive_reason`
 
 Uniqueness:
 
-- A deterministic event key should prevent duplicate rows for the same permit, parameter, limit, event type, and period.
+- `event_key` is a deterministic hash of `(permit_id, parameter_id, limit_id, event_type, period_start, period_end)`, stored on the row and backed by a `UNIQUE` constraint/index. The engine upserts on `event_key`, so re-evaluating the same permit and period updates the existing row instead of inserting a duplicate. This column makes the "repeated event upsert" requirement in the Compliance Engine section enforceable at the database level rather than only in application code.
 
 ### `compliance_event_notes`
 
@@ -280,6 +325,13 @@ Fields:
 - `note`
 - `created_at`
 
+Foreign keys:
+
+- `event_id -> compliance_events.id`
+- `user_id -> users.id`
+
+Notes are append-only (no `updated_at`); corrections are added as new notes so the explanation history stays auditable.
+
 ### `compliance_report_packs`
 
 Period-level official report package.
@@ -292,15 +344,18 @@ Fields:
 - `period_end`
 - `status`
 - `archive_id`
+- `events_snapshot_json`
 - `prepared_by`
 - `approved_by`
 - `approved_at`
 - `created_at`
 - `updated_at`
 
+`events_snapshot_json` is null until approval; on `approve` it is frozen with the covered events and their evidence (see Evidence Immutability under Official Report Pack).
+
 Foreign keys:
 
-- `archive_id -> report_archives.id`, nullable until output generation completes.
+- `archive_id -> report_archive.id`, nullable until output generation completes. (Table name is singular `report_archive`, matching `app/models/report_archive.py`.)
 
 ## API Design
 
@@ -312,7 +367,7 @@ Permit profile endpoints:
 - `POST /permits`
 - `GET /permits/{permit_id}`
 - `PUT /permits/{permit_id}`
-- `DELETE /permits/{permit_id}`
+- `DELETE /permits/{permit_id}` — soft delete. A permit is a legal record with attached events and report packs; `DELETE` sets `is_active = false` (deactivate) rather than removing rows. Hard delete is rejected when the permit has any compliance events or report packs, to avoid orphaning audit history.
 
 Discharge point endpoints:
 
@@ -327,6 +382,7 @@ Parameter and limit endpoints:
 - `POST /permits/{permit_id}/parameters`
 - `PUT /parameters/{parameter_id}`
 - `DELETE /parameters/{parameter_id}`
+- `GET /parameters/{parameter_id}/limits`
 - `POST /parameters/{parameter_id}/limits`
 - `PUT /limits/{limit_id}`
 - `DELETE /limits/{limit_id}`
@@ -336,6 +392,7 @@ Evaluation endpoints:
 - `POST /evaluate`
 - `GET /overview`
 - `GET /events`
+- `GET /events/{event_id}`
 - `POST /events/{event_id}/notes`
 - `PATCH /events/{event_id}/status`
 
@@ -344,10 +401,13 @@ Report pack endpoints:
 - `GET /report-packs`
 - `POST /report-packs`
 - `GET /report-packs/{pack_id}`
+- `DELETE /report-packs/{pack_id}` — allowed only while status is `draft` or `failed`; approved/exported packs are immutable and cannot be deleted.
 - `POST /report-packs/{pack_id}/generate`
 - `POST /report-packs/{pack_id}/submit-review`
 - `POST /report-packs/{pack_id}/approve`
 - `GET /report-packs/{pack_id}/download`
+
+Pagination: list endpoints that can grow unbounded (`GET /events`, `GET /report-packs`) accept `limit` and `offset` (or cursor) query params and return a total count, so the events work queue and pack history stay bounded per request.
 
 ## Frontend Design
 
@@ -480,6 +540,7 @@ Period-close job:
 
 - create draft report packs for permits whose reporting period closed
 - mark packs as blocked if unresolved required events remain
+- skip periods that already have an `approved` or `exported` pack (do not overwrite a frozen pack; a revision is created explicitly, see Evidence Immutability)
 
 Manual runs:
 
