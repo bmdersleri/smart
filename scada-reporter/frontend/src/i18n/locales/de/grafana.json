@@ -40,5 +40,6 @@
   "deleted": "Gelöscht",
   "delete_error": "Konnte nicht gelöscht werden",
   "refresh_managed": "Verwaltete Dashboards aktualisieren",
-  "refresh_managed_busy": "Wird aktualisiert…"
+  "refresh_managed_busy": "Wird aktualisiert…",
+  "refresh_result": "{{updated}} aktualisiert, {{skipped}} übersprungen"
 }

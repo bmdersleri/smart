@@ -40,5 +40,6 @@
   "deleted": "تم الحذف",
   "delete_error": "تعذر الحذف",
   "refresh_managed": "تحديث اللوحات المُدارة",
-  "refresh_managed_busy": "جارٍ التحديث…"
+  "refresh_managed_busy": "جارٍ التحديث…",
+  "refresh_result": "{{updated}} تم تحديثها، {{skipped}} تم تخطيها"
 }

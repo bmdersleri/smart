@@ -211,7 +211,7 @@ export default function Grafana() {
     setRefreshResult(null)
     try {
       const r = await refreshManagedDashboards()
-      setRefreshResult(`${r.data.updated} güncellendi, ${r.data.skipped.length} atlandı`)
+      setRefreshResult(t('refresh_result', { updated: r.data.updated, skipped: r.data.skipped.length }))
       loadDashboards()
     } catch (e) {
       setRefreshResult(e instanceof Error ? e.message : String(e))

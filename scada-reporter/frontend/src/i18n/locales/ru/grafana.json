@@ -40,5 +40,6 @@
   "deleted": "Удалено",
   "delete_error": "Не удалось удалить",
   "refresh_managed": "Обновить управляемые дашборды",
-  "refresh_managed_busy": "Обновление…"
+  "refresh_managed_busy": "Обновление…",
+  "refresh_result": "{{updated}} обновлено, {{skipped}} пропущено"
 }

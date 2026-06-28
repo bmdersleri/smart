@@ -40,5 +40,6 @@
   "deleted": "Deleted",
   "delete_error": "Could not delete",
   "refresh_managed": "Refresh managed dashboards",
-  "refresh_managed_busy": "Refreshing…"
+  "refresh_managed_busy": "Refreshing…",
+  "refresh_result": "{{updated}} updated, {{skipped}} skipped"
 }

@@ -40,5 +40,6 @@
   "deleted": "Silindi",
   "delete_error": "Silinemedi",
   "refresh_managed": "Panoları güncelle",
-  "refresh_managed_busy": "Güncelleniyor…"
+  "refresh_managed_busy": "Güncelleniyor…",
+  "refresh_result": "{{updated}} güncellendi, {{skipped}} atlandı"
 }
