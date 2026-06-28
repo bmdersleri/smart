@@ -203,6 +203,8 @@ class PLCConnection:
     """Tek bir PLC'ye snap7 bağlantısı. Bloklayan çağrılar lock ile serileştirilir."""
 
     RECONNECT_BACKOFF = 10.0  # saniye
+    CIRCUIT_BREAKER_FAILURES = 3
+    CIRCUIT_BREAKER_BACKOFF = 30.0
 
     def __init__(self, ip: str, rack: int = 0, slot: int = 1, name: str = ""):
         self.ip = ip
@@ -214,16 +216,25 @@ class PLCConnection:
         self._connected = False
         self._last_attempt = 0.0
 
+        # Circuit Breaker state
+        self._consecutive_failures = 0
+        self._circuit_open_until = 0.0
+
     @property
     def connected(self) -> bool:
         return self._connected
 
     def _ensure_connected_sync(self) -> bool:
+        now = time.monotonic()
+        if now < self._circuit_open_until:
+            return False
+
         if self._connected and self._client is not None:
             return True
-        now = time.monotonic()
+
         if now - self._last_attempt < self.RECONNECT_BACKOFF:
             return False
+
         self._last_attempt = now
         try:
             client = snap7.client.Client()
@@ -239,13 +250,26 @@ class PLCConnection:
             client.connect(self.ip, self.rack, self.slot)
             self._client = client
             self._connected = True
+            self._consecutive_failures = 0  # reset circuit breaker
             logger.info("PLC baglandi: %s (%s)", self.ip, self.name or "?")
             return True
         except Exception as e:
             self._connected = False
             self._client = None
             logger.warning("PLC baglanamadi %s (%s): %s", self.ip, self.name, e)
+            self._record_failure(now)
             return False
+
+    def _record_failure(self, now: float) -> None:
+        self._consecutive_failures += 1
+        if self._consecutive_failures >= self.CIRCUIT_BREAKER_FAILURES:
+            self._circuit_open_until = now + self.CIRCUIT_BREAKER_BACKOFF
+            logger.warning(
+                "PLC %s (%s) icin devre kesici acildi (Backoff: %ss)",
+                self.ip,
+                self.name,
+                self.CIRCUIT_BREAKER_BACKOFF,
+            )
 
     def read_batch_sync(self, specs: list[ReadSpec]) -> list[tuple[float | None, int]]:
         """specs sırasına göre (value, quality) döner.
@@ -254,8 +278,13 @@ class PLCConnection:
         round-trip azaltma); DB-dışı alanlar (Q/I/M) tek tek okunur.
         """
         with self._lock:
+            now = time.monotonic()
+            if now < self._circuit_open_until:
+                return [(None, BAD)] * len(specs)
+
             if not self._ensure_connected_sync():
                 return [(None, BAD)] * len(specs)
+
             client = self._client
             assert client is not None
 
@@ -271,6 +300,7 @@ class PLCConnection:
                         logger.warning("PLC baglanti koptu %s: %s", self.ip, e)
                         self._connected = False
                         self._client = None
+                        self._record_failure(time.monotonic())
                         return results
                     logger.warning(
                         "Blok okuma hatasi %s DB%d @%d+%d: %s",
@@ -280,7 +310,9 @@ class PLCConnection:
                         block.size,
                         e,
                     )
+                    self._record_failure(time.monotonic())
                     continue
+                self._consecutive_failures = 0
                 for idx, sp in block.members:
                     rel = sp.byte_offset - block.start
                     results[idx] = (_decode(sp, data[rel : rel + sp.size]), GOOD)
@@ -289,13 +321,16 @@ class PLCConnection:
                 try:
                     data = client.read_area(_AREA_ENUM[sp.area], 0, sp.byte_offset, sp.size)
                     results[idx] = (_decode(sp, data), GOOD)
+                    self._consecutive_failures = 0
                 except Exception as e:
                     if not self._is_still_connected(client):
                         logger.warning("PLC baglanti koptu %s: %s", self.ip, e)
                         self._connected = False
                         self._client = None
+                        self._record_failure(time.monotonic())
                         return results
                     logger.warning("Tag okuma hatasi %s @%s: %s", self.ip, sp, e)
+                    self._record_failure(time.monotonic())
             return results
 
     @staticmethod

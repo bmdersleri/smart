@@ -128,6 +128,7 @@ def should_store(
     last_stored: dict[int, tuple[float | None, int, float]],
     deadband: float | None,
     heartbeat: float,
+    is_bool: bool = False,
 ) -> bool:
     """Report-by-exception: deadband içinde kalan değişmemiş değeri DB'ye yazma.
 
@@ -142,10 +143,16 @@ def should_store(
         return True
     if now - prev_ts >= heartbeat:
         return True
-    if not deadband:
-        return True
+
     if value is None or prev_value is None:
         return True
+
+    if is_bool:
+        return value != prev_value
+
+    if not deadband:
+        return True
+
     return abs(value - prev_value) >= deadband
 
 
@@ -242,6 +249,7 @@ async def run_once(
 
     min_interval = settings.S7_POLL_INTERVAL
     deadband_by_tag: dict[int, float | None] = {}
+    is_bool_by_tag: dict[int, bool] = {}
     groups: dict[tuple[str, int, int], list[tuple[int, ReadSpec]]] = defaultdict(list)
     group_name: dict[tuple[str, int, int], str] = {}
     for t in tags:
@@ -257,6 +265,7 @@ async def run_once(
             logger.warning("Tag %s adres hatasi: %s", t.id, e)
             continue
         deadband_by_tag[t.id] = t.deadband
+        is_bool_by_tag[t.id] = spec.decoder == "BOOL"
         key = (t.plc_ip, t.plc_rack, t.plc_slot)
         groups[key].append((t.id, spec))
         if t.plc_name:
@@ -298,6 +307,7 @@ async def run_once(
                 last_stored=last_stored,
                 deadband=deadband_by_tag.get(tag_id),
                 heartbeat=heartbeat,
+                is_bool=is_bool_by_tag.get(tag_id, False),
             )
         ]
         for tag_id, value, quality in store_rows:
