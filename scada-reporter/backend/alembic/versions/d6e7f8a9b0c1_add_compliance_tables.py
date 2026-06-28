@@ -54,6 +54,11 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(["lab_sample_point_id"], ["lab_sample_points.id"]),
         sa.ForeignKeyConstraint(["permit_id"], ["compliance_permits.id"]),
         sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint(
+            "id",
+            "permit_id",
+            name="uq_compliance_discharge_points_id_permit_id",
+        ),
     )
     op.create_index(
         "ix_compliance_discharge_points_permit_id",
@@ -73,11 +78,16 @@ def upgrade() -> None:
         sa.Column("lab_parameter_id", sa.Integer(), nullable=True),
         sa.Column("created_at", sa.DateTime(), nullable=True),
         sa.Column("updated_at", sa.DateTime(), nullable=True),
-        sa.ForeignKeyConstraint(["discharge_point_id"], ["compliance_discharge_points.id"]),
+        sa.ForeignKeyConstraint(
+            ["discharge_point_id", "permit_id"],
+            ["compliance_discharge_points.id", "compliance_discharge_points.permit_id"],
+            name="fk_compliance_parameters_discharge_point_permit",
+        ),
         sa.ForeignKeyConstraint(["lab_parameter_id"], ["lab_parameters.id"]),
         sa.ForeignKeyConstraint(["permit_id"], ["compliance_permits.id"]),
         sa.ForeignKeyConstraint(["tag_id"], ["tags.id"]),
         sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("id", "permit_id", name="uq_compliance_parameters_id_permit_id"),
     )
     op.create_index(
         "ix_compliance_parameters_discharge_point_id",
@@ -102,6 +112,11 @@ def upgrade() -> None:
         sa.Column("updated_at", sa.DateTime(), nullable=True),
         sa.ForeignKeyConstraint(["compliance_parameter_id"], ["compliance_parameters.id"]),
         sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint(
+            "id",
+            "compliance_parameter_id",
+            name="uq_compliance_limits_id_parameter_id",
+        ),
     )
     op.create_index(
         "ix_compliance_limits_compliance_parameter_id",
@@ -134,15 +149,22 @@ def upgrade() -> None:
         sa.Column("waived_by", sa.Integer(), nullable=True),
         sa.Column("waive_reason", sa.Text(), nullable=True),
         sa.ForeignKeyConstraint(["acknowledged_by"], ["users.id"]),
-        sa.ForeignKeyConstraint(["limit_id"], ["compliance_limits.id"]),
-        sa.ForeignKeyConstraint(["parameter_id"], ["compliance_parameters.id"]),
+        sa.ForeignKeyConstraint(
+            ["limit_id", "parameter_id"],
+            ["compliance_limits.id", "compliance_limits.compliance_parameter_id"],
+            name="fk_compliance_events_limit_parameter",
+        ),
+        sa.ForeignKeyConstraint(
+            ["parameter_id", "permit_id"],
+            ["compliance_parameters.id", "compliance_parameters.permit_id"],
+            name="fk_compliance_events_parameter_permit",
+        ),
         sa.ForeignKeyConstraint(["permit_id"], ["compliance_permits.id"]),
         sa.ForeignKeyConstraint(["resolved_by"], ["users.id"]),
         sa.ForeignKeyConstraint(["waived_by"], ["users.id"]),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("event_key", name="uq_compliance_events_event_key"),
     )
-    op.create_index("ix_compliance_events_event_key", "compliance_events", ["event_key"])
     op.create_index("ix_compliance_events_limit_id", "compliance_events", ["limit_id"])
     op.create_index("ix_compliance_events_parameter_id", "compliance_events", ["parameter_id"])
     op.create_index("ix_compliance_events_period_start", "compliance_events", ["period_start"])
@@ -171,7 +193,6 @@ def downgrade() -> None:
     op.drop_index("ix_compliance_events_period_start", table_name="compliance_events")
     op.drop_index("ix_compliance_events_parameter_id", table_name="compliance_events")
     op.drop_index("ix_compliance_events_limit_id", table_name="compliance_events")
-    op.drop_index("ix_compliance_events_event_key", table_name="compliance_events")
     op.drop_table("compliance_events")
     op.drop_index("ix_compliance_limits_compliance_parameter_id", table_name="compliance_limits")
     op.drop_table("compliance_limits")

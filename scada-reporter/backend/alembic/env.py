@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 import app.models.annotation  # noqa: F401 — registers Annotation with Base.metadata
 import app.models.audit_log  # noqa: F401 — registers AuditLog with Base.metadata
 import app.models.backup  # noqa: F401
+import app.models.compliance  # noqa: F401 — registers Compliance models with Base.metadata
 import app.models.excel_template  # noqa: F401 — registers ExcelTemplate + ExcelTemplateColumn
 import app.models.plc_config  # noqa: F401 — registers PlcConfig with Base.metadata
 import app.models.plc_health  # noqa: F401 — registers PlcHealth with Base.metadata
