@@ -153,6 +153,8 @@ Required model details:
 - `ComplianceLimit.requires_explanation` is boolean default false.
 - `CompliancePermit.report_cron` is nullable string.
 - `ComplianceParameter` keeps `permit_id` and `discharge_point_id`; API must later validate they match.
+- DB-level composite constraints enforce that `ComplianceParameter.permit_id` matches its discharge point permit, and that `ComplianceEvent.permit_id`, `parameter_id`, and `limit_id` refer to one consistent graph.
+- Parent records use explicit restrict semantics for Phase 1; do not cascade-delete legal compliance records when deleting permits, points, parameters, or limits.
 - Event transition columns include `acknowledged_by/at`, `resolved_by/at`, `waived_by/at`, `waive_reason`.
 
 - [ ] Import models into app startup.
@@ -172,12 +174,17 @@ Do not import the compliance router in Task 1. Task 1 only imports models so met
 
 Use Alembic conventions already in `scada-reporter/backend/alembic/versions/`. The migration must create all six tables and indexes for:
 
-- `compliance_events.event_key`
 - `compliance_events.status`
 - `compliance_events.period_start`
 - `compliance_events.permit_id`
 - `compliance_parameters.permit_id`
 - `compliance_limits.compliance_parameter_id`
+
+Do not add a separate non-unique index on `compliance_events.event_key`; the unique constraint already backs lookup.
+
+- [ ] Ensure Alembic autogenerate sees the models.
+
+Modify `scada-reporter/backend/alembic/env.py` to import `app.models.compliance` near the other model imports.
 
 - [ ] Run green tests.
 
