@@ -92,6 +92,66 @@ async def test_write_readings_empty():
     assert await poller.write_readings([], datetime.now(UTC)) == 0
 
 
+@pytest.mark.asyncio
+async def test_write_readings_sqlite_uses_insert_not_copy(db_engine, monkeypatch):
+    """SQLite asla COPY yoluna girmez (dialect guard); INSERT ile yazar."""
+
+    async def _boom(*a, **k):
+        raise AssertionError("_copy_readings must not run on sqlite")
+
+    monkeypatch.setattr(poller, "_copy_readings", _boom)
+    sm = async_sessionmaker(db_engine, expire_on_commit=False)
+    async with sm() as s:
+        t = Tag(node_id="ns=2;s=WR_SL", name="WRSL", long_term=True)
+        s.add(t)
+        await s.commit()
+        await s.refresh(t)
+        tid = t.id
+    n = await poller.write_readings([(tid, 1.0, 192)], datetime.now(UTC), sessionmaker=sm)
+    assert n == 1
+
+
+class _FakePgSession:
+    def __init__(self) -> None:
+        self.bind = type("B", (), {"dialect": type("D", (), {"name": "postgresql"})()})()
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *a):
+        return False
+
+
+@pytest.mark.asyncio
+async def test_write_readings_routes_to_copy_on_postgresql(monkeypatch):
+    """PG + flag açık → _copy_readings'e yönlenir."""
+    monkeypatch.setattr(settings, "S7_PG_COPY_INGEST", True)
+
+    async def _fake_copy(db, rows, ts):
+        return 7
+
+    monkeypatch.setattr(poller, "_copy_readings", _fake_copy)
+    n = await poller.write_readings([(1, 1.0, 192)], datetime.now(UTC), sessionmaker=_FakePgSession)
+    assert n == 7
+
+
+@pytest.mark.asyncio
+async def test_write_readings_flag_off_uses_insert_on_postgresql(monkeypatch):
+    """Kill-switch: flag kapalı → PG'de bile INSERT (COPY çağrılmaz)."""
+    monkeypatch.setattr(settings, "S7_PG_COPY_INGEST", False)
+
+    async def _boom(*a, **k):
+        raise AssertionError("_copy_readings must not run when flag off")
+
+    async def _fake_insert(db, rows, ts):
+        return 3
+
+    monkeypatch.setattr(poller, "_copy_readings", _boom)
+    monkeypatch.setattr(poller, "_insert_readings", _fake_insert)
+    n = await poller.write_readings([(1, 1.0, 192)], datetime.now(UTC), sessionmaker=_FakePgSession)
+    assert n == 3
+
+
 def test_write_buffer_add_and_drain():
     ts = datetime.now(UTC)
     buf = poller.WriteBuffer(maxlen=5)
