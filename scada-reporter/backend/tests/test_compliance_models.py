@@ -185,3 +185,19 @@ async def test_deleting_permit_with_children_is_restricted(db_session):
 
     with pytest.raises((IntegrityError, DBAPIError)):
         await db_session.commit()
+
+
+@pytest.mark.asyncio
+async def test_deleting_event_with_note_is_restricted(db_session):
+    await _enable_foreign_keys(db_session)
+    _, _, _, _, event, note = await _persist_graph(db_session)
+    note_id = note.id
+
+    await db_session.delete(event)
+
+    with pytest.raises((IntegrityError, DBAPIError)):
+        await db_session.commit()
+
+    await db_session.rollback()
+    persisted_note = await db_session.get(ComplianceEventNote, note_id)
+    assert persisted_note is not None

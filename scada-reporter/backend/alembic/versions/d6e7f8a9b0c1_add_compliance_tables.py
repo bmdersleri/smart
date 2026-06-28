@@ -178,7 +178,7 @@ def upgrade() -> None:
         sa.Column("user_id", sa.Integer(), nullable=False),
         sa.Column("note", sa.Text(), nullable=False),
         sa.Column("created_at", sa.DateTime(), nullable=True),
-        sa.ForeignKeyConstraint(["event_id"], ["compliance_events.id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(["event_id"], ["compliance_events.id"]),
         sa.ForeignKeyConstraint(["user_id"], ["users.id"]),
         sa.PrimaryKeyConstraint("id"),
     )

@@ -244,7 +244,7 @@ class ComplianceEvent(Base):
         overlaps="events,parameter",
     )
     notes: Mapped[list[ComplianceEventNote]] = relationship(
-        back_populates="event", cascade="all, delete-orphan"
+        back_populates="event", passive_deletes=True
     )
 
 
@@ -253,7 +253,7 @@ class ComplianceEventNote(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     event_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("compliance_events.id", ondelete="CASCADE"), nullable=False, index=True
+        Integer, ForeignKey("compliance_events.id"), nullable=False, index=True
     )
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
     note: Mapped[str] = mapped_column(Text, nullable=False)
