@@ -31,8 +31,8 @@ function StatCard({ label, value, sub, flash, flip, accent }: {
   accent?: string  // color class for value e.g. 'text-green-400'
 }) {
   return (
-    <div className={`bg-gray-900 border rounded-xl p-4 transition-all duration-300
-      ${flash ? 'border-cyan-500 shadow-[0_0_12px_rgba(6,182,212,0.25)]' : 'border-gray-800'}`}>
+    <div className={`bg-gray-900/80 backdrop-blur-md border rounded-xl p-4 transition-all duration-300 shadow-lg
+      ${flash ? 'border-cyan-500 shadow-[0_0_12px_rgba(6,182,212,0.25)]' : 'border-gray-800/60'}`}>
       <p className="text-gray-400 text-xs uppercase tracking-wide mb-1">{label}</p>
       <div className="overflow-hidden h-8">
         <p
@@ -103,7 +103,7 @@ function TopologyBar({ connectedCount, total, writeFlash }: {
 }) {
   if (total === 0) return null
   return (
-    <div className="flex items-center justify-center gap-3 py-3 px-4 bg-gray-950/60 border-b border-gray-800">
+    <div className="flex items-center justify-center gap-3 py-3 px-4 bg-gray-950/60 backdrop-blur-md border-b border-gray-800/50">
       {/* PLC side */}
       <div className="flex items-center gap-1.5">
         <span className="text-gray-500 text-xs font-mono">PLC</span>
@@ -161,7 +161,7 @@ function PlcCard({ plc, writeFlash }: { plc: PlcEntry; writeFlash: boolean }) {
 
   return (
     <div
-      className={`relative bg-gray-950 border rounded-xl p-4 transition-all duration-200 overflow-hidden cursor-default
+      className={`relative bg-gray-950/80 backdrop-blur-sm border rounded-xl p-4 transition-all duration-200 overflow-hidden cursor-default
         ${isConnected
           ? writeFlash
             ? 'border-cyan-600 shadow-[0_0_16px_rgba(6,182,212,0.2)]'
@@ -379,7 +379,7 @@ export default function OverviewTab({ active }: { active: boolean }) {
 
       {/* PLC section */}
       {plcs.length > 0 && (
-        <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+        <div className="bg-gray-900/80 backdrop-blur-md border border-gray-800/60 rounded-xl overflow-hidden shadow-2xl">
           {/* Header */}
           <div className="px-4 py-3 border-b border-gray-800 flex items-center justify-between">
             <h2 className="text-sm font-semibold text-white">{t('plc_status')}</h2>

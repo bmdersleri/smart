@@ -339,7 +339,7 @@ function TemplateEditorModal({
                         <button
                           type="button"
                           onClick={() => removeGrafanaPanel(i)}
-                          className="ml-2 text-xs text-red-500 hover:text-red-400 shrink-0"
+                          className="ms-2 text-xs text-red-500 hover:text-red-400 shrink-0"
                         >
                           {t('grafana_remove')}
                         </button>

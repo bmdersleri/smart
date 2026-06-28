@@ -26,7 +26,7 @@ function TreeNode({ node, tagMap, selected, onToggle, depth }: TreeNodeProps) {
       >
         <span className="text-gray-500 w-3">{hasContent ? (open ? '▾' : '▸') : '·'}</span>
         <span className="truncate font-medium">{node.name}</span>
-        <span className="text-gray-600 ml-auto">{node.tag_ids.length || ''}</span>
+        <span className="text-gray-600 ms-auto">{node.tag_ids.length || ''}</span>
       </button>
       {open && (
         <div>

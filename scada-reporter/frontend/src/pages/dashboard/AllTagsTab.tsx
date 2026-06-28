@@ -129,7 +129,7 @@ export default function AllTagsTab({ active }: { active: boolean }) {
           {t('daily_tracking')}
         </label>
 
-        <span className="ml-auto text-xs text-gray-500">{t('tag_count', { value: total.toLocaleString(i18n.language) })}</span>
+        <span className="ms-auto text-xs text-gray-500">{t('tag_count', { value: total.toLocaleString(i18n.language) })}</span>
       </div>
 
       {/* Table */}

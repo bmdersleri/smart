@@ -12,7 +12,12 @@ import WatchlistGroups from './WatchlistGroups'
 import { tagInGroup } from '../../utils/watchlistGroups'
 
 function QualityDot({ ok }: { ok: boolean }) {
-  return <span className={`inline-block w-2 h-2 rounded-full ${ok ? 'bg-green-400' : 'bg-red-400'}`} />
+  return (
+    <span className="relative flex h-2 w-2 mx-auto">
+      {!ok && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>}
+      <span className={`relative inline-flex rounded-full h-2 w-2 ${ok ? 'bg-green-400' : 'bg-red-500 animate-pulse'}`}></span>
+    </span>
+  )
 }
 
 function FlipCell({ value, className }: { value: string; className?: string }) {
@@ -45,23 +50,29 @@ export default function WatchlistTab({ active }: { active: boolean }) {
   const { data: items = [], isLoading } = useQuery({
     queryKey: ['watchlist'],
     queryFn: () => getWatchlist().then((r) => r.data),
-    // SSE push carries live values; REST is only a fallback for structure (pin/unpin)
-    refetchInterval: 30000,
+    staleTime: Infinity,
     enabled: active,
   })
 
-  const live = useLatestStream(
+  useLatestStream(
     items.map((i) => i.tag_id),
+    (data) => {
+      qc.setQueryData(['watchlist'], (old: WatchlistItem[] | undefined) => {
+        if (!old) return old
+        let changed = false
+        const next = old.map((it) => {
+          const lv = data[it.tag_id]
+          if (!lv) return it
+          changed = true
+          return { ...it, value: lv.v, timestamp: lv.t, quality_ok: lv.q === 192 }
+        })
+        return changed ? next : old
+      })
+    },
     active
   )
 
-  // Bind live SSE values onto watchlist rows
-  const merged: WatchlistItem[] = items.map((it) => {
-    const lv = live[it.tag_id]
-    if (!lv) return it
-    return { ...it, value: lv.v, timestamp: lv.t, quality_ok: lv.q === 192 }
-  })
-  const { sorted: rows, sort, toggle } = useSortable(merged)
+  const { sorted: rows, sort, toggle } = useSortable(items)
 
   const { data: wg } = useQuery({
     queryKey: ['watchlist-groups'],
@@ -85,12 +96,12 @@ export default function WatchlistTab({ active }: { active: boolean }) {
     <>
     <WatchlistGroups />
     {items.length === 0 ? (
-      <div className="text-center py-16 bg-gray-900 rounded-xl border border-gray-800">
+      <div className="text-center py-16 bg-gray-900/80 backdrop-blur-md rounded-xl border border-gray-800/50 shadow-xl">
         <p className="text-gray-400">{t('watchlist_empty')}</p>
         <p className="text-gray-500 text-sm mt-1">{t('watchlist_empty_hint')}</p>
       </div>
     ) : (
-    <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+    <div className="bg-gray-900/80 backdrop-blur-md border border-gray-800/50 rounded-xl overflow-hidden shadow-xl">
       <table className="w-full">
         <thead>
           <tr className="text-xs text-gray-500 uppercase tracking-wide">

@@ -14,8 +14,7 @@ export interface LiveValue {
  * Token, EventSource açılmadan önce (ve her yeniden bağlanmada) POST /auth/stream-token
  * ile alınır — böylece uzun ömürlü JWT asla URL'de görünmez.
  */
-export function useLatestStream(tagIds: number[], enabled = true): Record<number, LiveValue> {
-  const [values, setValues] = useState<Record<number, LiveValue>>({})
+export function useLatestStream(tagIds: number[], onData: (data: Record<string, LiveValue>) => void, enabled = true): void {
   const key = tagIds.slice().sort((a, b) => a - b).join(',')
 
   useEffect(() => {
@@ -52,11 +51,7 @@ export function useLatestStream(tagIds: number[], enabled = true): Record<number
       es.onmessage = (e) => {
         try {
           const data = JSON.parse(e.data) as Record<string, LiveValue>
-          setValues((prev) => {
-            const next = { ...prev }
-            for (const [k, val] of Object.entries(data)) next[Number(k)] = val
-            return next
-          })
+          onData(data)
         } catch {
           /* hatalı frame -> atla */
         }
@@ -89,5 +84,4 @@ export function useLatestStream(tagIds: number[], enabled = true): Record<number
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key, enabled])
 
-  return values
 }

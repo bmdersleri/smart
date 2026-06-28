@@ -262,7 +262,7 @@ export default function SingleSampleTab() {
       >
         {saving ? '…' : t('save')}
       </button>
-      {saved && <span className="ml-3 text-sm text-green-400">{t('saved')}</span>}
+      {saved && <span className="ms-3 text-sm text-green-400">{t('saved')}</span>}
       {error && <p className="text-sm text-red-400">{error}</p>}
     </div>
   )

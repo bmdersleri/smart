@@ -209,7 +209,7 @@ export default function SettingsBackupCard() {
                   {parseUtc(b.created_at).toLocaleString()} · {fmtSize(b.size_bytes)} · {b.status}
                 </p>
               </div>
-              <div className="flex gap-2 shrink-0 ml-3">
+              <div className="flex gap-2 shrink-0 ms-3">
                 <button
                   type="button"
                   onClick={() => void onDownload(b.id, b.filename)}

@@ -100,9 +100,9 @@ export default function BatchTab() {
         <table className="text-sm text-gray-200 w-full">
           <thead className="text-gray-500">
             <tr>
-              <th className="text-start pr-2">{t('sampled_at')}</th>
+              <th className="text-start pe-2">{t('sampled_at')}</th>
               {params.map((p) => (
-                <th key={p.id} className="text-start pr-2">
+                <th key={p.id} className="text-start pe-2">
                   {p.name}{p.unit ? ` (${p.unit})` : ''}
                 </th>
               ))}
@@ -112,7 +112,7 @@ export default function BatchTab() {
           <tbody>
             {rows.map((row, ri) => (
               <tr key={ri} className="border-t border-gray-800">
-                <td className="pr-2 py-1">
+                <td className="pe-2 py-1">
                   <input
                     type="datetime-local"
                     value={row.sampled_at}
@@ -121,7 +121,7 @@ export default function BatchTab() {
                   />
                 </td>
                 {params.map((p) => (
-                  <td key={p.id} className="pr-2 py-1">
+                  <td key={p.id} className="pe-2 py-1">
                     <input
                       type="number"
                       value={row.values[p.id] ?? ''}

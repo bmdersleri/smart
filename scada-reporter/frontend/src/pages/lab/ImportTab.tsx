@@ -168,7 +168,7 @@ export default function ImportTab() {
               <thead>
                 <tr>
                   {preview.headers.map((h, i) => (
-                    <th key={i} className="text-start pr-3 pb-1">{h}</th>
+                    <th key={i} className="text-start pe-3 pb-1">{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -176,7 +176,7 @@ export default function ImportTab() {
                 {preview.rows.slice(0, 5).map((row, ri) => (
                   <tr key={ri}>
                     {row.map((cell, ci) => (
-                      <td key={ci} className="pr-3">{cell}</td>
+                      <td key={ci} className="pe-3">{cell}</td>
                     ))}
                   </tr>
                 ))}
