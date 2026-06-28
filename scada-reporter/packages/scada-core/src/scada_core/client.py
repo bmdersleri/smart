@@ -479,6 +479,35 @@ class AsyncScadaClient:
     async def user_delete(self, user_id: int) -> Result:
         return await self._request("DELETE", ep.USER_ITEM.format(user_id=user_id))
 
+    # -- Compliance read surface --------------------------------------------
+    async def compliance_overview(self) -> Result:
+        return await self._request("GET", ep.COMPLIANCE_OVERVIEW)
+
+    async def compliance_events(
+        self,
+        permit_id: int | None = None,
+        start: str | None = None,
+        end: str | None = None,
+        status: str | None = None,
+    ) -> Result:
+        params: dict[str, Any] = {}
+        if permit_id is not None:
+            params["permit_id"] = permit_id
+        if start is not None:
+            params["start"] = start
+        if end is not None:
+            params["end"] = end
+        if status is not None:
+            params["status"] = status
+        return await self._request("GET", ep.COMPLIANCE_EVENTS, params=params)
+
+    async def compliance_evaluate(self, permit_id: int, start: str, end: str) -> Result:
+        return await self._request(
+            "POST",
+            ep.COMPLIANCE_EVALUATE,
+            json={"permit_id": permit_id, "start": start, "end": end},
+        )
+
     async def aclose(self) -> None:
         await self._client.aclose()
 

@@ -434,6 +434,45 @@ CAPABILITIES: list[Capability] = [
         lambda c, a: c.user_delete(a["user_id"]),
         tier="destructive",
     ),
+    Capability(
+        "compliance_overview",
+        "Uyumluluk merkezi özeti: izinler, açık olay sayıları ve durum dağılımı.",
+        _obj({}),
+        lambda c, a: c.compliance_overview(),
+        tier="read",
+    ),
+    Capability(
+        "compliance_list_events",
+        "Uyumluluk olaylarını listele (opsiyonel filtreler: izin, durum, "
+        "başlangıç/bitiş zamanı). {total, items} döner.",
+        _obj(
+            {
+                "permit_id": {"type": "integer"},
+                "start": {"type": "string", "description": "ISO 8601 başlangıç"},
+                "end": {"type": "string", "description": "ISO 8601 bitiş"},
+                "status": {"type": "string"},
+            }
+        ),
+        lambda c, a: c.compliance_events(
+            a.get("permit_id"), a.get("start"), a.get("end"), a.get("status")
+        ),
+        tier="read",
+    ),
+    Capability(
+        "compliance_evaluate",
+        "Bir izin için verilen dönemde uyumluluk değerlendirmesini çalıştır "
+        "(olayları oluşturur/günceller).",
+        _obj(
+            {
+                "permit_id": {"type": "integer"},
+                "start": {"type": "string", "description": "ISO 8601 başlangıç"},
+                "end": {"type": "string", "description": "ISO 8601 bitiş"},
+            },
+            ["permit_id", "start", "end"],
+        ),
+        lambda c, a: c.compliance_evaluate(a["permit_id"], a["start"], a["end"]),
+        tier="write",
+    ),
 ]
 
 CATALOG: dict[str, Capability] = {c.name: c for c in CAPABILITIES}

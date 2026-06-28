@@ -1,30 +1,31 @@
 from __future__ import annotations
 
-import sys
 import shlex
+import sys
 
 import click
-
 from scada_core.client import SyncScadaClient
-from scada_reporter_cli.utils.client_helper import unwrap
-from scada_reporter_cli.utils.config import get_api_url, get_token
-from scada_reporter_cli.utils.repl_skin import banner, success, error, info, fmt_json
-from scada_reporter_cli.commands.auth import auth_cmd
-from scada_reporter_cli.commands.tags import tags_cmd
-from scada_reporter_cli.commands.dashboard import dashboard_cmd
-from scada_reporter_cli.commands.reports import reports_cmd
-from scada_reporter_cli.commands.query import query_cmd
-from scada_reporter_cli.commands.explore import explore_cmd
-from scada_reporter_cli.commands.doctor import doctor
-from scada_reporter_cli.commands.shell import shell
+
 from scada_reporter_cli.commands.agent import agent_cmd
-from scada_reporter_cli.commands.watchlist import watchlist_cmd
 from scada_reporter_cli.commands.annotations import annotations_cmd
-from scada_reporter_cli.commands.templates import templates_cmd
-from scada_reporter_cli.commands.scheduled import scheduled_cmd
+from scada_reporter_cli.commands.auth import auth_cmd
+from scada_reporter_cli.commands.compliance import compliance_cmd
+from scada_reporter_cli.commands.dashboard import dashboard_cmd
+from scada_reporter_cli.commands.doctor import doctor
+from scada_reporter_cli.commands.explore import explore_cmd
 from scada_reporter_cli.commands.groups import groups_cmd
 from scada_reporter_cli.commands.plc import plc_cmd
+from scada_reporter_cli.commands.query import query_cmd
+from scada_reporter_cli.commands.reports import reports_cmd
+from scada_reporter_cli.commands.scheduled import scheduled_cmd
+from scada_reporter_cli.commands.shell import shell
+from scada_reporter_cli.commands.tags import tags_cmd
+from scada_reporter_cli.commands.templates import templates_cmd
 from scada_reporter_cli.commands.users import users_cmd
+from scada_reporter_cli.commands.watchlist import watchlist_cmd
+from scada_reporter_cli.utils.client_helper import unwrap
+from scada_reporter_cli.utils.config import get_api_url, get_token
+from scada_reporter_cli.utils.repl_skin import banner, error, fmt_json, info, success
 
 
 @click.group(invoke_without_command=True)
@@ -64,13 +65,14 @@ cli.add_command(scheduled_cmd)
 cli.add_command(groups_cmd)
 cli.add_command(plc_cmd)
 cli.add_command(users_cmd)
+cli.add_command(compliance_cmd)
 
 
 def repl(ctx: click.Context) -> None:
     """Interaktif REPL modu."""
     api_url = ctx.obj["API_URL"]
     print(banner())
-    print(info("API: {} | Cikmak icin: exit, quit".format(api_url)))
+    print(info(f"API: {api_url} | Cikmak icin: exit, quit"))
     print()
 
     client = SyncScadaClient(api_url)
@@ -85,7 +87,7 @@ def repl(ctx: click.Context) -> None:
     while True:
         try:
             line = input("scada> ").strip()
-        except (EOFError, KeyboardInterrupt):
+        except EOFError, KeyboardInterrupt:
             print()
             break
 
@@ -100,7 +102,7 @@ def repl(ctx: click.Context) -> None:
         try:
             args = shlex.split(line)
         except ValueError as e:
-            print(error("Hatali giris: {}".format(e)))
+            print(error(f"Hatali giris: {e}"))
             continue
 
         try:
@@ -109,11 +111,11 @@ def repl(ctx: click.Context) -> None:
             runner = CliRunner()
             result = runner.invoke(cli, args, obj=ctx.obj, standalone_mode=False)
             if result.exception:
-                print(error("Hata: {}".format(result.exception)))
+                print(error(f"Hata: {result.exception}"))
             elif result.output:
                 print(result.output.rstrip())
         except Exception as e:
-            print(error("Beklenmeyen hata: {}".format(e)))
+            print(error(f"Beklenmeyen hata: {e}"))
 
     client.close()
     print(info("Gorusmek uzere."))
@@ -165,7 +167,7 @@ def health(ctx: click.Context, json_output: bool):
         click.echo(fmt_json(result))
     else:
         opc_status = "✓" if result.get("opc_connected") else "✗"
-        click.echo(success("API saglikli — OPC baglantisi: {}".format(opc_status)))
+        click.echo(success(f"API saglikli — OPC baglantisi: {opc_status}"))
     client.close()
 
 

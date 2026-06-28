@@ -4,7 +4,6 @@ import os
 
 from mcp.server.fastmcp import FastMCP
 from mcp.server.fastmcp.prompts.base import Prompt
-
 from scada_core.agent_contract import (
     build_agent_bootstrap,
     build_agent_capabilities,
@@ -107,6 +106,22 @@ async def get_system_health() -> str:
 
 async def resolve_tag(query: str) -> str:
     return await call_capability("resolve_tag", {"query": query})
+
+
+async def compliance_overview() -> str:
+    return await call_capability("compliance_overview", {})
+
+
+async def compliance_list_events(
+    permit_id: int | None = None,
+    start: str | None = None,
+    end: str | None = None,
+    status: str | None = None,
+) -> str:
+    return await call_capability(
+        "compliance_list_events",
+        {"permit_id": permit_id, "start": start, "end": end, "status": status},
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -351,6 +366,13 @@ async def user_delete(user_id: int) -> str:
     return await call_capability("user_delete", {"user_id": user_id})
 
 
+async def compliance_evaluate(permit_id: int, start: str, end: str) -> str:
+    return await call_capability(
+        "compliance_evaluate",
+        {"permit_id": permit_id, "start": start, "end": end},
+    )
+
+
 # Register each tool with its capability name and description from the catalog.
 _TOOL_REGISTRY = [
     (query_current_values, "query_current_values"),
@@ -363,6 +385,9 @@ _TOOL_REGISTRY = [
     (predict_trend, "predict_trend"),
     (get_system_health, "get_system_health"),
     (resolve_tag, "resolve_tag"),
+    (compliance_overview, "compliance_overview"),
+    (compliance_list_events, "compliance_list_events"),
+    (compliance_evaluate, "compliance_evaluate"),
     (update_tag, "update_tag"),
     (delete_tag, "delete_tag"),
     (watchlist_add, "watchlist_add"),

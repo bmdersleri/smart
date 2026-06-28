@@ -57,3 +57,8 @@ PLC_ITEM = "api/plc/{name}"
 USERS = "api/users/"
 USER_ITEM = "api/users/{user_id}"
 USER_PASSWORD = "api/users/{user_id}/password"
+
+# --- Compliance read surface ---
+COMPLIANCE_OVERVIEW = "/api/compliance/overview"
+COMPLIANCE_EVENTS = "/api/compliance/events"
+COMPLIANCE_EVALUATE = "/api/compliance/evaluate"

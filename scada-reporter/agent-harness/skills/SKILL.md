@@ -63,6 +63,10 @@ commands:
   - scada users update <user_id> [--email EMAIL] [--full-name TEXT] [--role ROLE] [--is-active / --no-is-active]
   - scada users set-password <user_id> --password PASSWORD
   - scada users delete <user_id>
+  # Compliance (read surface + write-gated evaluate)
+  - scada compliance overview [--json-output]
+  - scada compliance events [--permit-id N] [--start ISO] [--end ISO] [--status TEXT] [--json-output]
+  - scada compliance evaluate --permit-id N --start ISO --end ISO [--json-output]
   # Health
   - scada health [--json-output]
 environment:

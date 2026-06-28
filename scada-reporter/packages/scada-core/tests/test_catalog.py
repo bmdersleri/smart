@@ -40,6 +40,9 @@ EXPECTED = {
     "user_update",
     "user_set_password",
     "user_delete",
+    "compliance_overview",
+    "compliance_list_events",
+    "compliance_evaluate",
 }
 
 
