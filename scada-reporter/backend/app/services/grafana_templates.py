@@ -21,6 +21,42 @@ class GrafanaDashboardTemplate:
 # Tag'in görünen etiketi: açıklama varsa onu, boşsa teknik ada düş.
 _TAG_LABEL = "COALESCE(NULLIF(t.description, ''), t.name)"
 
+# (old emitted substring, new substring) — exact, order matters. More specific
+# patterns first so prefixes (e.g. breach "SELECT t.name, sum") are not shadowed
+# by the generic subquery "SELECT t.name, t.device" replacement.
+_LABEL_SWAPS: tuple[tuple[str, str], ...] = (
+    ("t.name AS metric", f"{_TAG_LABEL} AS metric"),
+    (
+        "SELECT DISTINCT ON (t.id) t.name,",
+        f'SELECT DISTINCT ON (t.id) {_TAG_LABEL} AS "Etiket",',
+    ),
+    ("SELECT t.name, sum(CASE", f'SELECT {_TAG_LABEL} AS "Etiket", sum(CASE'),
+    # subquery tables: inner label first, then outer readable header
+    ("SELECT t.id AS tid, t.name,", f"SELECT t.id AS tid, {_TAG_LABEL} AS name,"),
+    ("SELECT t.name, t.device,", f"SELECT {_TAG_LABEL} AS name, t.device,"),
+    (
+        "SELECT name, value, unit, quality, timestamp FROM (",
+        'SELECT name AS "Etiket", value, unit, quality, timestamp FROM (',
+    ),
+    (
+        "SELECT name, device, value, unit, quality, timestamp FROM (",
+        'SELECT name AS "Etiket", device, value, unit, quality, timestamp FROM (',
+    ),
+)
+
+
+def apply_tag_label(sql: str) -> str:
+    """Rewrite the technical-name label substrings older generators emitted to
+    use _TAG_LABEL. Pure + idempotent: if the SQL already references the label
+    expression, or contains no known pattern, it is returned unchanged."""
+    if "COALESCE(NULLIF(t.description" in sql:
+        return sql
+    out = sql
+    for old, new in _LABEL_SWAPS:
+        out = out.replace(old, new)
+    return out
+
+
 TEMPLATES: tuple[GrafanaDashboardTemplate, ...] = (
     GrafanaDashboardTemplate(
         key="facility_overview",
