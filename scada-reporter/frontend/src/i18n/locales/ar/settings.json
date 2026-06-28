@@ -60,5 +60,18 @@
   "backup_load_failed": "تعذر تحميل النسخ الاحتياطية",
   "backup_create_failed": "تعذر إنشاء نسخة احتياطية",
   "backup_delete_failed": "تعذر حذف النسخة الاحتياطية",
-  "backup_restore_failed": "فشلت الاستعادة"
+  "backup_restore_failed": "فشلت الاستعادة",
+  "backup_creating": "جارٍ إنشاء النسخة الاحتياطية",
+  "backup_restoring": "جارٍ الاستعادة",
+  "backup_restore_done_note": "اكتملت الاستعادة. أعد تشغيل الخادم لكي تستخدم جميع الاتصالات قاعدة البيانات المستعادة.",
+  "backup_phase_queued": "في قائمة الانتظار",
+  "backup_phase_vacuum": "جارٍ التقاط نسخة",
+  "backup_phase_verify": "جارٍ التحقق",
+  "backup_phase_compress": "جارٍ الضغط",
+  "backup_phase_hash": "حساب المجموع الاختباري",
+  "backup_phase_done": "تم",
+  "backup_phase_safety": "نسخة أمان",
+  "backup_phase_decompress": "جارٍ فك الضغط",
+  "backup_phase_restore": "جارٍ كتابة قاعدة البيانات",
+  "backup_phase_dump": "جارٍ التفريغ"
 }

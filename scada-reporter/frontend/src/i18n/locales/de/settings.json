@@ -60,5 +60,18 @@
   "backup_load_failed": "Sicherungen konnten nicht geladen werden",
   "backup_create_failed": "Sicherung konnte nicht erstellt werden",
   "backup_delete_failed": "Sicherung konnte nicht gelöscht werden",
-  "backup_restore_failed": "Wiederherstellung fehlgeschlagen"
+  "backup_restore_failed": "Wiederherstellung fehlgeschlagen",
+  "backup_creating": "Backup wird erstellt",
+  "backup_restoring": "Wird wiederhergestellt",
+  "backup_restore_done_note": "Wiederherstellung abgeschlossen. Starten Sie das Backend neu, damit alle Verbindungen die wiederhergestellte Datenbank verwenden.",
+  "backup_phase_queued": "In Warteschlange",
+  "backup_phase_vacuum": "Snapshot wird erstellt",
+  "backup_phase_verify": "Wird überprüft",
+  "backup_phase_compress": "Wird komprimiert",
+  "backup_phase_hash": "Prüfsumme",
+  "backup_phase_done": "Fertig",
+  "backup_phase_safety": "Sicherheits-Snapshot",
+  "backup_phase_decompress": "Wird entpackt",
+  "backup_phase_restore": "Datenbank wird geschrieben",
+  "backup_phase_dump": "Dump wird erstellt"
 }

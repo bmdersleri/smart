@@ -526,11 +526,29 @@ export interface BackupItem {
   completed_at: string | null
 }
 
+export interface BackupProgress {
+  phase: string
+  percent: number
+  status: string // running | done | failed | unknown
+  error?: string | null
+}
+
 export const listBackups = () => api.get<BackupItem[]>('/backup')
+// POST returns 202 with a 'running' record; the snapshot runs in the background.
 export const createBackup = () => api.post<BackupItem>('/backup')
 export const deleteBackup = (id: number) => api.delete<{ deleted: number }>(`/backup/${id}`)
+// Restore also runs in the background (202); watch the restore-progress SSE.
 export const restoreBackup = (id: number) =>
-  api.post<{ restored: number }>(`/backup/${id}/restore`, { confirm: 'RESTORE' })
+  api.post<{ restoring: number; progress_key: string; note: string }>(`/backup/${id}/restore`, {
+    confirm: 'RESTORE',
+  })
 export const backupDownloadUrl = (id: number) => `${api.defaults.baseURL}/backup/${id}/download`
 export const downloadBackup = (id: number) =>
   api.get<Blob>(`/backup/${id}/download`, { responseType: 'blob' })
+
+// SSE progress streams. EventSource can't send headers, so a short-lived
+// stream-scoped token (getStreamToken) is passed as a query param.
+export const backupProgressUrl = (id: number, token: string) =>
+  `${api.defaults.baseURL}/backup/${id}/progress?token=${encodeURIComponent(token)}`
+export const restoreProgressUrl = (id: number, token: string) =>
+  `${api.defaults.baseURL}/backup/${id}/restore-progress?token=${encodeURIComponent(token)}`

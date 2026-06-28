@@ -54,20 +54,67 @@ async def test_create_snapshot_sqlite(tmp_path):
     src = tmp_path / "live.db"
     _make_sqlite(str(src))
     dest = tmp_path / "backups"
+    phases: list[str] = []
     res = await be.create_snapshot(
         dest_dir=str(dest),
         db_url=f"sqlite+aiosqlite:///{src}",
         timestamp="20260627-031500",
+        progress_cb=lambda phase, frac: phases.append(phase),
     )
     assert res["dialect"] == "sqlite"
+    # SQLite snapshots are zstd-compressed artifacts.
+    assert res["filename"].endswith(".db.zst")
     assert os.path.exists(res["path"])
     assert res["size_bytes"] > 0
     assert len(res["sha256"]) == 64
-    # snapshot is a valid, queryable sqlite db with the same rows
-    con = sqlite3.connect(res["path"])
+    # progress callback fired through the expected phases
+    assert {"vacuum", "compress", "hash", "done"} <= set(phases)
+    # the temp uncompressed file is cleaned up
+    assert not any(p.name.startswith(".tmp-") for p in dest.iterdir())
+    # decompresses back into a valid, queryable sqlite db with the same rows
+    restored = tmp_path / "restored.db"
+    be._zstd_decompress(res["path"], str(restored))
+    con = sqlite3.connect(str(restored))
     assert con.execute("SELECT count(*) FROM t").fetchone()[0] == 3
     con.close()
-    assert be.verify_snapshot(res["path"], "sqlite") is True
+    assert be.verify_snapshot(str(restored), "sqlite") is True
+
+
+@pytest.mark.asyncio
+async def test_zstd_compresses_below_raw(tmp_path):
+    """A defragmented snapshot must be meaningfully smaller compressed than raw."""
+    src = tmp_path / "live.db"
+    con = sqlite3.connect(str(src))
+    con.execute("CREATE TABLE big (id INTEGER PRIMARY KEY, v TEXT)")
+    # Highly compressible repetitive payload.
+    con.executemany("INSERT INTO big (v) VALUES (?)", [("x" * 200,) for _ in range(5000)])
+    con.commit()
+    con.close()
+    raw = os.path.getsize(src)
+    res = await be.create_snapshot(
+        dest_dir=str(tmp_path / "bk"),
+        db_url=f"sqlite+aiosqlite:///{src}",
+        timestamp="20260627-031500",
+    )
+    assert res["size_bytes"] < raw * 0.5, f"compressed {res['size_bytes']} not < 50% of raw {raw}"
+
+
+@pytest.mark.asyncio
+async def test_restore_reports_progress(tmp_path):
+    live = tmp_path / "live.db"
+    _make_sqlite(str(live))
+    res = await be.create_snapshot(
+        dest_dir=str(tmp_path / "bk"),
+        db_url=f"sqlite+aiosqlite:///{live}",
+        timestamp="20260627-031500",
+    )
+    phases: list[str] = []
+    be.restore_snapshot(
+        backup_path=res["path"],
+        db_url=f"sqlite+aiosqlite:///{live}",
+        progress_cb=lambda phase, frac: phases.append(phase),
+    )
+    assert {"decompress", "restore", "done"} <= set(phases)
 
 
 @pytest.mark.asyncio

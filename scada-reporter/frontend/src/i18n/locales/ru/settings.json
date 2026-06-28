@@ -60,5 +60,18 @@
   "backup_load_failed": "Не удалось загрузить резервные копии",
   "backup_create_failed": "Не удалось создать резервную копию",
   "backup_delete_failed": "Не удалось удалить резервную копию",
-  "backup_restore_failed": "Восстановление не выполнено"
+  "backup_restore_failed": "Восстановление не выполнено",
+  "backup_creating": "Создание резервной копии",
+  "backup_restoring": "Восстановление",
+  "backup_restore_done_note": "Восстановление завершено. Перезапустите бэкенд, чтобы все соединения использовали восстановленную базу данных.",
+  "backup_phase_queued": "В очереди",
+  "backup_phase_vacuum": "Создание снимка",
+  "backup_phase_verify": "Проверка",
+  "backup_phase_compress": "Сжатие",
+  "backup_phase_hash": "Контрольная сумма",
+  "backup_phase_done": "Готово",
+  "backup_phase_safety": "Резервный снимок",
+  "backup_phase_decompress": "Распаковка",
+  "backup_phase_restore": "Запись базы данных",
+  "backup_phase_dump": "Дамп"
 }

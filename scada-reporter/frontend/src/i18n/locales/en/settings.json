@@ -60,5 +60,18 @@
   "backup_load_failed": "Failed to load backups",
   "backup_create_failed": "Failed to create backup",
   "backup_delete_failed": "Failed to delete backup",
-  "backup_restore_failed": "Restore failed"
+  "backup_restore_failed": "Restore failed",
+  "backup_creating": "Creating backup",
+  "backup_restoring": "Restoring",
+  "backup_restore_done_note": "Restore complete. Restart the backend so all connections use the restored database.",
+  "backup_phase_queued": "Queued",
+  "backup_phase_vacuum": "Snapshotting",
+  "backup_phase_verify": "Verifying",
+  "backup_phase_compress": "Compressing",
+  "backup_phase_hash": "Checksumming",
+  "backup_phase_done": "Done",
+  "backup_phase_safety": "Safety snapshot",
+  "backup_phase_decompress": "Decompressing",
+  "backup_phase_restore": "Writing database",
+  "backup_phase_dump": "Dumping"
 }

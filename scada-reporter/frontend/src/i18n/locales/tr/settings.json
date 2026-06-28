@@ -60,5 +60,18 @@
   "backup_load_failed": "Yedekler yüklenemedi",
   "backup_create_failed": "Yedek alınamadı",
   "backup_delete_failed": "Yedek silinemedi",
-  "backup_restore_failed": "Geri yükleme başarısız"
+  "backup_restore_failed": "Geri yükleme başarısız",
+  "backup_creating": "Yedek alınıyor",
+  "backup_restoring": "Geri yükleniyor",
+  "backup_restore_done_note": "Geri yükleme tamamlandı. Tüm bağlantıların geri yüklenen veritabanını kullanması için backend'i yeniden başlatın.",
+  "backup_phase_queued": "Sırada",
+  "backup_phase_vacuum": "Anlık görüntü alınıyor",
+  "backup_phase_verify": "Doğrulanıyor",
+  "backup_phase_compress": "Sıkıştırılıyor",
+  "backup_phase_hash": "Sağlama hesaplanıyor",
+  "backup_phase_done": "Tamamlandı",
+  "backup_phase_safety": "Güvenlik yedeği",
+  "backup_phase_decompress": "Açılıyor",
+  "backup_phase_restore": "Veritabanı yazılıyor",
+  "backup_phase_dump": "Döküm alınıyor"
 }

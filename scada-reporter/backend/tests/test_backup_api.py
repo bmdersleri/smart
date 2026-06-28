@@ -12,15 +12,32 @@ Monkeypatching: each test that calls POST /api/backup must monkeypatch BOTH
 The Backup metadata row still goes into the in-memory test session (correct).
 """
 
+import asyncio
 import sqlite3
 
 import pytest
 from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+import app.api.backup as backup_mod
+import app.core.database as database_mod
 from app.core.config import settings
 from app.core.security import hash_password
 from app.models.user import User
+
+
+def _patch_bg(monkeypatch, db_engine) -> None:
+    """Redirect the background job's own session factory to the test engine so its
+    writes land in the same in-memory DB the test session reads."""
+    factory = async_sessionmaker(db_engine, expire_on_commit=False)
+    monkeypatch.setattr(database_mod, "AsyncSessionLocal", factory)
+
+
+async def _drain() -> None:
+    """Await all in-flight backup/restore background tasks."""
+    while backup_mod._tasks:
+        await asyncio.gather(*list(backup_mod._tasks), return_exceptions=True)
+
 
 # ---------------------------------------------------------------------------
 # Helpers (same pattern as test_api.py / test_license_api.py)
@@ -65,26 +82,35 @@ def _seed_live_db(path) -> str:
 
 @pytest.mark.asyncio
 async def test_create_and_list_backup(
-    client: AsyncClient, db_session: AsyncSession, tmp_path, monkeypatch
+    client: AsyncClient, db_session: AsyncSession, db_engine, tmp_path, monkeypatch
 ):
     live = tmp_path / "live.db"
     monkeypatch.setattr(settings, "DATABASE_URL", _seed_live_db(live))
     monkeypatch.setattr(settings, "BACKUP_DIR", str(tmp_path / "bk"))
+    _patch_bg(monkeypatch, db_engine)
 
     await _make_user(db_session, "bk_admin1", "admin")
     tok = await _login(client, "bk_admin1")
 
+    # POST returns 202 immediately with a 'running' record; work runs in background.
     r = await client.post("/api/backup", headers=_auth(tok))
-    assert r.status_code == 200, r.text
+    assert r.status_code == 202, r.text
     body = r.json()
-    assert body["status"] == "verified"
-    assert body["sha256"]
+    assert body["status"] == "running"
     assert body["trigger"] == "manual"
     assert body["kind"] == "full"
 
+    await _drain()
+
     lst = await client.get("/api/backup", headers=_auth(tok))
     assert lst.status_code == 200
-    assert len(lst.json()) == 1
+    rows = lst.json()
+    assert len(rows) == 1
+    assert rows[0]["status"] == "verified"
+    assert rows[0]["sha256"]
+    assert rows[0]["filename"].endswith(".db.zst")
+    # created_at must carry an explicit UTC offset (frontend renders local time)
+    assert rows[0]["created_at"].endswith("+00:00")
 
 
 @pytest.mark.asyncio
@@ -97,16 +123,20 @@ async def test_create_backup_requires_admin(client: AsyncClient, db_session: Asy
 
 
 @pytest.mark.asyncio
-async def test_delete_backup(client: AsyncClient, db_session: AsyncSession, tmp_path, monkeypatch):
+async def test_delete_backup(
+    client: AsyncClient, db_session: AsyncSession, db_engine, tmp_path, monkeypatch
+):
     live = tmp_path / "live.db"
     monkeypatch.setattr(settings, "DATABASE_URL", _seed_live_db(live))
     monkeypatch.setattr(settings, "BACKUP_DIR", str(tmp_path / "bk"))
+    _patch_bg(monkeypatch, db_engine)
 
     await _make_user(db_session, "bk_admin2", "admin")
     tok = await _login(client, "bk_admin2")
 
     created = (await client.post("/api/backup", headers=_auth(tok))).json()
-    assert created["status"] == "verified"
+    assert created["status"] == "running"
+    await _drain()
 
     d = await client.delete(f"/api/backup/{created['id']}", headers=_auth(tok))
     assert d.status_code == 200
@@ -145,17 +175,19 @@ async def test_delete_not_found(client: AsyncClient, db_session: AsyncSession):
 
 @pytest.mark.asyncio
 async def test_restore_requires_confirm(
-    client: AsyncClient, db_session: AsyncSession, tmp_path, monkeypatch
+    client: AsyncClient, db_session: AsyncSession, db_engine, tmp_path, monkeypatch
 ):
     live = tmp_path / "live.db"
     monkeypatch.setattr(settings, "DATABASE_URL", _seed_live_db(live))
     monkeypatch.setattr(settings, "BACKUP_DIR", str(tmp_path / "bk"))
+    _patch_bg(monkeypatch, db_engine)
 
     await _make_user(db_session, "bk_admin5", "admin")
     tok = await _login(client, "bk_admin5")
     admin_headers = _auth(tok)
 
     created = (await client.post("/api/backup", headers=admin_headers)).json()
+    await _drain()
     bad = await client.post(
         f"/api/backup/{created['id']}/restore",
         json={"confirm": "nope"},
@@ -179,36 +211,44 @@ async def test_restore_requires_admin(client: AsyncClient, db_session: AsyncSess
 
 @pytest.mark.asyncio
 async def test_backup_filenames_unique(
-    client: AsyncClient, db_session: AsyncSession, tmp_path, monkeypatch
+    client: AsyncClient, db_session: AsyncSession, db_engine, tmp_path, monkeypatch
 ):
     """I3: two backups created in the same second must produce different filenames."""
     live = tmp_path / "live.db"
     monkeypatch.setattr(settings, "DATABASE_URL", _seed_live_db(live))
     monkeypatch.setattr(settings, "BACKUP_DIR", str(tmp_path / "bk"))
+    _patch_bg(monkeypatch, db_engine)
 
     await _make_user(db_session, "bk_uniq_admin", "admin")
     tok = await _login(client, "bk_uniq_admin")
 
     r1 = await client.post("/api/backup", headers=_auth(tok))
-    assert r1.status_code == 200, r1.text
+    assert r1.status_code == 202, r1.text
     r2 = await client.post("/api/backup", headers=_auth(tok))
-    assert r2.status_code == 200, r2.text
+    assert r2.status_code == 202, r2.text
+    await _drain()
 
-    assert r1.json()["filename"] != r2.json()["filename"], (
-        "Two backup filenames must differ (id suffix missing?)"
-    )
+    from sqlalchemy import select
+
+    from app.models.backup import Backup
+
+    rows = (await db_session.execute(select(Backup))).scalars().all()
+    names = {r.filename for r in rows}
+    assert len(names) == 2, f"Two backup filenames must differ (id suffix missing?): {names}"
 
 
 @pytest.mark.asyncio
-async def test_restore_failure_surfaces_safety_snapshot(
-    client: AsyncClient, db_session: AsyncSession, tmp_path, monkeypatch
+async def test_restore_failure_records_failed_progress_and_safety_snapshot(
+    client: AsyncClient, db_session: AsyncSession, db_engine, tmp_path, monkeypatch
 ):
-    """C1/I1/I2: on restore RuntimeError, response is 500 with safety snapshot id in detail."""
-    import app.api.backup as backup_mod
+    """On a background restore RuntimeError: progress key reaches status 'failed'
+    and a safety snapshot row was still created beforehand."""
+    from app.services import backup_progress as bp
 
     live = tmp_path / "live.db"
     monkeypatch.setattr(settings, "DATABASE_URL", _seed_live_db(live))
     monkeypatch.setattr(settings, "BACKUP_DIR", str(tmp_path / "bk"))
+    _patch_bg(monkeypatch, db_engine)
 
     await _make_user(db_session, "bk_restore_fail_admin", "admin")
     tok = await _login(client, "bk_restore_fail_admin")
@@ -216,7 +256,7 @@ async def test_restore_failure_surfaces_safety_snapshot(
 
     # Create the backup to restore
     created = (await client.post("/api/backup", headers=headers)).json()
-    assert created["status"] == "verified"
+    await _drain()
     backup_id = created["id"]
 
     # Monkeypatch restore_snapshot to simulate a catastrophic failure
@@ -230,17 +270,51 @@ async def test_restore_failure_surfaces_safety_snapshot(
         json={"confirm": "RESTORE"},
         headers=headers,
     )
-    assert r.status_code == 500, r.text
-    detail = r.json().get("detail", "")
-    assert "safety snapshot" in detail.lower(), f"Expected 'safety snapshot' in detail: {detail!r}"
+    assert r.status_code == 202, r.text
+    await _drain()
 
-    # A second (safety) backup row must have been created
+    prog = bp.get(f"restore-{backup_id}")
+    assert prog is not None and prog["status"] == "failed"
+    assert "boom" in (prog["error"] or "")
+
+    # A second (safety) backup row must have been created before the failure
     from sqlalchemy import select
 
     from app.models.backup import Backup
 
     rows = (await db_session.execute(select(Backup))).scalars().all()
     assert len(rows) >= 2, f"Expected at least 2 backup rows (original + safety), got {len(rows)}"
+
+
+@pytest.mark.asyncio
+async def test_progress_endpoint_streams_terminal_frame(
+    client: AsyncClient, db_session: AsyncSession, db_engine, tmp_path, monkeypatch
+):
+    live = tmp_path / "live.db"
+    monkeypatch.setattr(settings, "DATABASE_URL", _seed_live_db(live))
+    monkeypatch.setattr(settings, "BACKUP_DIR", str(tmp_path / "bk"))
+    _patch_bg(monkeypatch, db_engine)
+
+    await _make_user(db_session, "bk_prog_admin", "admin")
+    tok = await _login(client, "bk_prog_admin")
+    headers = _auth(tok)
+
+    created = (await client.post("/api/backup", headers=headers)).json()
+    await _drain()
+
+    stream_tok = (await client.post("/api/auth/stream-token", headers=headers)).json()[
+        "stream_token"
+    ]
+    r = await client.get(f"/api/backup/{created['id']}/progress?token={stream_tok}")
+    assert r.status_code == 200
+    assert "text/event-stream" in r.headers["content-type"]
+    assert '"status": "done"' in r.text
+
+
+@pytest.mark.asyncio
+async def test_progress_endpoint_rejects_bad_token(client: AsyncClient, db_session: AsyncSession):
+    r = await client.get("/api/backup/1/progress?token=garbage")
+    assert r.status_code == 401
 
 
 @pytest.mark.asyncio

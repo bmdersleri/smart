@@ -37,6 +37,9 @@ class Settings(BaseSettings):
     BACKUP_RETENTION_DAYS: int = 365
     BACKUP_SCHEDULE_CRON: str = "0 3 * * *"  # daily 03:00, 5-field cron (m h dom mon dow)
     RUN_BACKUP_SCHEDULER: bool = True
+    # zstd compression level for SQLite snapshots (1=fast .. 22=max ratio; 19 is a
+    # strong ratio at reasonable speed, multithreaded). PG dumps are already -Fc.
+    BACKUP_ZSTD_LEVEL: int = 19
 
     # Başlangıçta Base.metadata.create_all() çağrılsın mı? Dev'de True (varsayılan)
     # yeterli; production'da False yapın — şema Alembic migration'larıyla yönetilir.
