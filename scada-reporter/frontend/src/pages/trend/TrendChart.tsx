@@ -140,6 +140,7 @@ export function TrendChart({
                   key={item.tag_id}
                   type="monotone"
                   dataKey={item.name}
+                  name={item.label ?? item.name}
                   stroke={COLORS[i % COLORS.length]}
                   strokeWidth={2}
                   dot={false}
@@ -153,6 +154,7 @@ export function TrendChart({
                     key={`prev_${item.tag_id}`}
                     type="monotone"
                     dataKey={`${item.name} ${t('previous_suffix')}`}
+                    name={`${item.label ?? item.name} ${t('previous_suffix')}`}
                     stroke={COLORS[i % COLORS.length]}
                     strokeWidth={1.5}
                     strokeDasharray="5 4"

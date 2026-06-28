@@ -29,6 +29,9 @@ export interface TrendSeries {
   name: string
   unit: string
   data: { t: string; v: number }[]
+  // Görünen etiket (legend/tooltip): tag açıklaması, boşsa teknik ada düşer.
+  // Veri yine benzersiz `name` ile anahtarlanır (açıklamalar benzersiz değildir).
+  label?: string
 }
 
 export type ChartDataPoint = Record<string, number | string>
@@ -38,4 +41,5 @@ export interface ActivePayloadRow {
   value: number
   color: string
   unit: string
+  label?: string
 }

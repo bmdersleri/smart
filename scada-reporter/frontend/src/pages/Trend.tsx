@@ -87,6 +87,12 @@ export default function Trend() {
     refetchInterval: 30000,
   })
 
+  // Görünen seri etiketi: tag açıklaması varsa onu, yoksa teknik ada düş.
+  const descOf = (tagId: number, fallback: string) =>
+    tags.find((tg) => tg.id === tagId)?.description?.trim() || fallback
+  // Grafiğe/legend'a açıklamalı seri ver; veri anahtarı (timeline) yine `name`.
+  const labeledSeries = series.map((s) => ({ ...s, label: descOf(s.tag_id, s.name) }))
+
   const filteredTags = tagSearch
     ? tags.filter(
         (t) =>
@@ -250,6 +256,7 @@ export default function Trend() {
       if (point) {
         const mapped = series.map((s, i) => ({
           name: s.name,
+          label: descOf(s.tag_id, s.name),
           value: Number(point[s.name] ?? NaN),
           color: COLORS[i % COLORS.length],
           unit: s.unit ?? '',
@@ -409,7 +416,7 @@ export default function Trend() {
           selectedCount={selected.length}
           isLoading={isLoading}
           chartData={chartData}
-          series={series}
+          series={labeledSeries}
           compareMode={compareMode}
           annotateMode={annotateMode}
           axisLeftMargin={axisLeftMargin}
@@ -442,7 +449,7 @@ export default function Trend() {
                   <td className="py-0.5">
                     <span className="flex items-center gap-1.5">
                       <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: row.color }} />
-                      <span className="truncate max-w-[200px]" style={{ color: row.color }}>{row.name}</span>
+                      <span className="truncate max-w-[200px]" style={{ color: row.color }}>{row.label ?? row.name}</span>
                     </span>
                   </td>
                   <td className="py-0.5 text-end pe-4 font-mono text-white">{row.value.toFixed(2)}</td>
