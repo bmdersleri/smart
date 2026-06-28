@@ -28,6 +28,7 @@ Collects data directly from Siemens S7-1500 PLCs, stores it in a time-series dat
 | **PLC Config** | Add/remove PLCs, manage IP/rack/slot/connection status |
 | **PLC Health** | Per-PLC health, incident summary, acknowledgement workflow |
 | **Lab Data Entry** | Manual entry of lab analysis results (single-sample, batch grid, Excel/CSV import, records); hybrid parameter + sample-point catalog; mirrors values into SCADA tag readings |
+| **Compliance Center** | Permit-driven compliance: Overview (readiness counters + 30-day event trend + run-evaluation), Permit Profiles (admin config of discharge points, parameter source mapping, limit rules), Events work queue (filter, evidence, notes, status transitions with mandatory waive reason) |
 | **Live Metrics** | Poller throughput + deadband savings; **Database** section (size, total/earliest readings, last 24h/7d/30d counts, tag count, per-table rows, daily rate, est. growth) with a manual refresh button |
 | **Monitoring & Analytics** | Prometheus metrics view + embedded Grafana dashboards; generate a Grafana dashboard from a lab sample point or a project template (`facility_overview` / `water_quality`); admin delete of managed dashboards. Generators emit frser-sqlite panels |
 | **Settings** | User preferences (theme, language, trend chart height); License status + admin license upload; Lab Catalog (admin) |
