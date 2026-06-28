@@ -21,10 +21,16 @@ from app.api.license_guard import require_writable
 from app.core.audit import record_audit
 from app.core.database import get_db
 from app.models.compliance import (
+    AGGREGATIONS,
     EVENT_STATUSES,
+    LIMIT_TYPES,
     REPORT_FREQUENCIES,
+    SOURCE_TYPES,
+    ComplianceDischargePoint,
     ComplianceEvent,
     ComplianceEventNote,
+    ComplianceLimit,
+    ComplianceParameter,
     CompliancePermit,
 )
 from app.models.user import User
@@ -65,6 +71,108 @@ class PermitResponse(BaseModel):
     updated_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class PermitUpdate(BaseModel):
+    name: str = Field(min_length=1, max_length=255)
+    facility_name: str = ""
+    authority: str = ""
+    permit_number: str = ""
+    valid_from: datetime | None = None
+    valid_to: datetime | None = None
+    report_frequency: str = "monthly"
+    report_cron: str | None = None
+    is_active: bool = True
+
+
+class PointCreate(BaseModel):
+    code: str = Field(min_length=1, max_length=64)
+    name: str = Field(min_length=1, max_length=255)
+    description: str = ""
+    lab_sample_point_id: int | None = None
+
+
+class PointResponse(BaseModel):
+    id: int
+    permit_id: int
+    code: str
+    name: str
+    description: str
+    lab_sample_point_id: int | None
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class ParameterCreate(BaseModel):
+    discharge_point_id: int
+    parameter_name: str = Field(min_length=1, max_length=255)
+    unit: str = ""
+    source_type: str
+    tag_id: int | None = None
+    lab_parameter_id: int | None = None
+
+
+class ParameterUpdate(BaseModel):
+    discharge_point_id: int
+    parameter_name: str = Field(min_length=1, max_length=255)
+    unit: str = ""
+    source_type: str
+    tag_id: int | None = None
+    lab_parameter_id: int | None = None
+
+
+class ParameterResponse(BaseModel):
+    id: int
+    permit_id: int
+    discharge_point_id: int
+    parameter_name: str
+    unit: str
+    source_type: str
+    tag_id: int | None
+    lab_parameter_id: int | None
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class LimitCreate(BaseModel):
+    limit_type: str
+    min_value: float | None = None
+    max_value: float | None = None
+    aggregation: str
+    window: str | None = None
+    sample_frequency: str | None = None
+    severity: str = "warning"
+    requires_explanation: bool = False
+
+
+class LimitResponse(BaseModel):
+    id: int
+    parameter_id: int
+    limit_type: str
+    min_value: float | None
+    max_value: float | None
+    aggregation: str
+    window: str | None
+    sample_frequency: str | None
+    severity: str
+    requires_explanation: bool
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class ParameterWithLimitsResponse(ParameterResponse):
+    limits: list[LimitResponse] = []
+
+
+class PermitDetailResponse(PermitResponse):
+    discharge_points: list[PointResponse] = []
+    parameters: list[ParameterWithLimitsResponse] = []
 
 
 class EventResponse(BaseModel):
@@ -177,6 +285,42 @@ async def _note_counts(db: AsyncSession, event_ids: list[int]) -> dict[int, int]
     return {event_id: count for event_id, count in rows}
 
 
+def _validate_report_frequency(report_frequency: str, report_cron: str | None) -> None:
+    if report_frequency not in REPORT_FREQUENCIES:
+        raise HTTPException(
+            status_code=422,
+            detail=f"report_frequency must be one of {REPORT_FREQUENCIES}",
+        )
+    if report_frequency == "custom_cron" and not report_cron:
+        raise HTTPException(
+            status_code=422,
+            detail="report_cron is required when report_frequency is custom_cron",
+        )
+
+
+def _validate_source_mapping(
+    source_type: str, tag_id: int | None, lab_parameter_id: int | None
+) -> None:
+    if source_type not in SOURCE_TYPES:
+        raise HTTPException(status_code=422, detail=f"source_type must be one of {SOURCE_TYPES}")
+    if source_type == "scada" and tag_id is None:
+        raise HTTPException(status_code=422, detail="scada source_type requires tag_id")
+    if source_type == "lab" and lab_parameter_id is None:
+        raise HTTPException(status_code=422, detail="lab source_type requires lab_parameter_id")
+    if source_type == "hybrid" and (tag_id is None or lab_parameter_id is None):
+        raise HTTPException(
+            status_code=422,
+            detail="hybrid source_type requires both tag_id and lab_parameter_id",
+        )
+
+
+def _validate_limit(limit_type: str, aggregation: str) -> None:
+    if limit_type not in LIMIT_TYPES:
+        raise HTTPException(status_code=422, detail=f"limit_type must be one of {LIMIT_TYPES}")
+    if aggregation not in AGGREGATIONS:
+        raise HTTPException(status_code=422, detail=f"aggregation must be one of {AGGREGATIONS}")
+
+
 # --------------------------------------------------------------------------
 # Overview
 # --------------------------------------------------------------------------
@@ -242,16 +386,7 @@ async def create_permit(
     user: User = Depends(require_role("admin")),
     _w=Depends(require_writable),
 ) -> CompliancePermit:
-    if data.report_frequency not in REPORT_FREQUENCIES:
-        raise HTTPException(
-            status_code=422,
-            detail=f"report_frequency must be one of {REPORT_FREQUENCIES}",
-        )
-    if data.report_frequency == "custom_cron" and not data.report_cron:
-        raise HTTPException(
-            status_code=422,
-            detail="report_cron is required when report_frequency is custom_cron",
-        )
+    _validate_report_frequency(data.report_frequency, data.report_cron)
 
     permit = CompliancePermit(
         name=data.name,
@@ -278,6 +413,539 @@ async def create_permit(
     await db.commit()
     await db.refresh(permit)
     return permit
+
+
+@router.get("/permits/{permit_id}", response_model=PermitDetailResponse)
+async def get_permit(
+    permit_id: int,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_user),
+) -> PermitDetailResponse:
+    permit = await db.get(CompliancePermit, permit_id)
+    if permit is None:
+        raise HTTPException(status_code=404, detail="Permit bulunamadı")
+
+    points = list(
+        (
+            await db.execute(
+                select(ComplianceDischargePoint)
+                .where(ComplianceDischargePoint.permit_id == permit_id)
+                .order_by(ComplianceDischargePoint.id)
+            )
+        )
+        .scalars()
+        .all()
+    )
+    parameters = list(
+        (
+            await db.execute(
+                select(ComplianceParameter)
+                .where(ComplianceParameter.permit_id == permit_id)
+                .order_by(ComplianceParameter.id)
+            )
+        )
+        .scalars()
+        .all()
+    )
+    param_ids = [p.id for p in parameters]
+    limits_by_param: dict[int, list[ComplianceLimit]] = {pid: [] for pid in param_ids}
+    if param_ids:
+        limit_rows = list(
+            (
+                await db.execute(
+                    select(ComplianceLimit)
+                    .where(ComplianceLimit.parameter_id.in_(param_ids))
+                    .order_by(ComplianceLimit.id)
+                )
+            )
+            .scalars()
+            .all()
+        )
+        for limit in limit_rows:
+            limits_by_param[limit.parameter_id].append(limit)
+
+    return PermitDetailResponse(
+        **PermitResponse.model_validate(permit).model_dump(),
+        discharge_points=[PointResponse.model_validate(p) for p in points],
+        parameters=[
+            ParameterWithLimitsResponse(
+                **ParameterResponse.model_validate(param).model_dump(),
+                limits=[LimitResponse.model_validate(limit) for limit in limits_by_param[param.id]],
+            )
+            for param in parameters
+        ],
+    )
+
+
+@router.put("/permits/{permit_id}", response_model=PermitResponse)
+async def update_permit(
+    permit_id: int,
+    data: PermitUpdate,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role("admin")),
+    _w=Depends(require_writable),
+) -> CompliancePermit:
+    permit = await db.get(CompliancePermit, permit_id)
+    if permit is None:
+        raise HTTPException(status_code=404, detail="Permit bulunamadı")
+
+    _validate_report_frequency(data.report_frequency, data.report_cron)
+
+    permit.name = data.name
+    permit.facility_name = data.facility_name
+    permit.authority = data.authority
+    permit.permit_number = data.permit_number
+    permit.valid_from = data.valid_from.replace(tzinfo=None) if data.valid_from else None
+    permit.valid_to = data.valid_to.replace(tzinfo=None) if data.valid_to else None
+    permit.report_frequency = data.report_frequency
+    permit.report_cron = data.report_cron
+    permit.is_active = data.is_active
+    permit.updated_at = datetime.utcnow()
+
+    await record_audit(
+        db,
+        actor=user,
+        action="compliance.permit.update",
+        target_type="compliance_permit",
+        target_id=permit.id,
+        detail={"name": permit.name, "report_frequency": permit.report_frequency},
+        ip=_client_ip(request),
+    )
+    await db.commit()
+    await db.refresh(permit)
+    return permit
+
+
+@router.delete("/permits/{permit_id}")
+async def delete_permit(
+    permit_id: int,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role("admin")),
+    _w=Depends(require_writable),
+) -> dict:
+    permit = await db.get(CompliancePermit, permit_id)
+    if permit is None:
+        raise HTTPException(status_code=404, detail="Permit bulunamadı")
+
+    # Soft delete only — permits are legal records with attached events/packs.
+    # We never physically remove the row; deactivate it instead.
+    permit.is_active = False
+    permit.updated_at = datetime.utcnow()
+
+    await record_audit(
+        db,
+        actor=user,
+        action="compliance.permit.delete",
+        target_type="compliance_permit",
+        target_id=permit.id,
+        detail={"soft_delete": True},
+        ip=_client_ip(request),
+    )
+    await db.commit()
+    return {"id": permit_id, "is_active": False}
+
+
+# --------------------------------------------------------------------------
+# Discharge points
+# --------------------------------------------------------------------------
+
+
+@router.get("/permits/{permit_id}/points", response_model=list[PointResponse])
+async def list_points(
+    permit_id: int,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_user),
+) -> list[ComplianceDischargePoint]:
+    permit = await db.get(CompliancePermit, permit_id)
+    if permit is None:
+        raise HTTPException(status_code=404, detail="Permit bulunamadı")
+    return list(
+        (
+            await db.execute(
+                select(ComplianceDischargePoint)
+                .where(ComplianceDischargePoint.permit_id == permit_id)
+                .order_by(ComplianceDischargePoint.id)
+            )
+        )
+        .scalars()
+        .all()
+    )
+
+
+@router.post("/permits/{permit_id}/points", response_model=PointResponse, status_code=201)
+async def create_point(
+    permit_id: int,
+    data: PointCreate,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role("admin")),
+    _w=Depends(require_writable),
+) -> ComplianceDischargePoint:
+    permit = await db.get(CompliancePermit, permit_id)
+    if permit is None:
+        raise HTTPException(status_code=404, detail="Permit bulunamadı")
+
+    point = ComplianceDischargePoint(
+        permit_id=permit_id,
+        code=data.code,
+        name=data.name,
+        description=data.description,
+        lab_sample_point_id=data.lab_sample_point_id,
+    )
+    db.add(point)
+    await db.flush()
+    await record_audit(
+        db,
+        actor=user,
+        action="compliance.point.create",
+        target_type="compliance_discharge_point",
+        target_id=point.id,
+        detail={"permit_id": permit_id, "code": point.code},
+        ip=_client_ip(request),
+    )
+    await db.commit()
+    await db.refresh(point)
+    return point
+
+
+@router.put("/points/{point_id}", response_model=PointResponse)
+async def update_point(
+    point_id: int,
+    data: PointCreate,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role("admin")),
+    _w=Depends(require_writable),
+) -> ComplianceDischargePoint:
+    point = await db.get(ComplianceDischargePoint, point_id)
+    if point is None:
+        raise HTTPException(status_code=404, detail="Deşarj noktası bulunamadı")
+
+    point.code = data.code
+    point.name = data.name
+    point.description = data.description
+    point.lab_sample_point_id = data.lab_sample_point_id
+    point.updated_at = datetime.utcnow()
+
+    await record_audit(
+        db,
+        actor=user,
+        action="compliance.point.update",
+        target_type="compliance_discharge_point",
+        target_id=point.id,
+        detail={"code": point.code},
+        ip=_client_ip(request),
+    )
+    await db.commit()
+    await db.refresh(point)
+    return point
+
+
+@router.delete("/points/{point_id}")
+async def delete_point(
+    point_id: int,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role("admin")),
+    _w=Depends(require_writable),
+) -> dict:
+    point = await db.get(ComplianceDischargePoint, point_id)
+    if point is None:
+        raise HTTPException(status_code=404, detail="Deşarj noktası bulunamadı")
+    await db.delete(point)
+    await record_audit(
+        db,
+        actor=user,
+        action="compliance.point.delete",
+        target_type="compliance_discharge_point",
+        target_id=point_id,
+        detail={"permit_id": point.permit_id},
+        ip=_client_ip(request),
+    )
+    await db.commit()
+    return {"id": point_id, "deleted": True}
+
+
+# --------------------------------------------------------------------------
+# Parameters
+# --------------------------------------------------------------------------
+
+
+@router.get("/permits/{permit_id}/parameters", response_model=list[ParameterResponse])
+async def list_parameters(
+    permit_id: int,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_user),
+) -> list[ComplianceParameter]:
+    permit = await db.get(CompliancePermit, permit_id)
+    if permit is None:
+        raise HTTPException(status_code=404, detail="Permit bulunamadı")
+    return list(
+        (
+            await db.execute(
+                select(ComplianceParameter)
+                .where(ComplianceParameter.permit_id == permit_id)
+                .order_by(ComplianceParameter.id)
+            )
+        )
+        .scalars()
+        .all()
+    )
+
+
+@router.post("/permits/{permit_id}/parameters", response_model=ParameterResponse, status_code=201)
+async def create_parameter(
+    permit_id: int,
+    data: ParameterCreate,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role("admin")),
+    _w=Depends(require_writable),
+) -> ComplianceParameter:
+    permit = await db.get(CompliancePermit, permit_id)
+    if permit is None:
+        raise HTTPException(status_code=404, detail="Permit bulunamadı")
+
+    _validate_source_mapping(data.source_type, data.tag_id, data.lab_parameter_id)
+
+    point = await db.get(ComplianceDischargePoint, data.discharge_point_id)
+    if point is None:
+        raise HTTPException(status_code=404, detail="Deşarj noktası bulunamadı")
+    if point.permit_id != permit_id:
+        raise HTTPException(
+            status_code=400,
+            detail="discharge_point_id must belong to the given permit",
+        )
+
+    parameter = ComplianceParameter(
+        permit_id=permit_id,
+        discharge_point_id=data.discharge_point_id,
+        parameter_name=data.parameter_name,
+        unit=data.unit,
+        source_type=data.source_type,
+        tag_id=data.tag_id,
+        lab_parameter_id=data.lab_parameter_id,
+    )
+    db.add(parameter)
+    await db.flush()
+    await record_audit(
+        db,
+        actor=user,
+        action="compliance.parameter.create",
+        target_type="compliance_parameter",
+        target_id=parameter.id,
+        detail={"permit_id": permit_id, "parameter_name": parameter.parameter_name},
+        ip=_client_ip(request),
+    )
+    await db.commit()
+    await db.refresh(parameter)
+    return parameter
+
+
+@router.put("/parameters/{parameter_id}", response_model=ParameterResponse)
+async def update_parameter(
+    parameter_id: int,
+    data: ParameterUpdate,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role("admin")),
+    _w=Depends(require_writable),
+) -> ComplianceParameter:
+    parameter = await db.get(ComplianceParameter, parameter_id)
+    if parameter is None:
+        raise HTTPException(status_code=404, detail="Parametre bulunamadı")
+
+    _validate_source_mapping(data.source_type, data.tag_id, data.lab_parameter_id)
+
+    point = await db.get(ComplianceDischargePoint, data.discharge_point_id)
+    if point is None:
+        raise HTTPException(status_code=404, detail="Deşarj noktası bulunamadı")
+    if point.permit_id != parameter.permit_id:
+        raise HTTPException(
+            status_code=400,
+            detail="discharge_point_id must belong to the parameter's permit",
+        )
+
+    parameter.discharge_point_id = data.discharge_point_id
+    parameter.parameter_name = data.parameter_name
+    parameter.unit = data.unit
+    parameter.source_type = data.source_type
+    parameter.tag_id = data.tag_id
+    parameter.lab_parameter_id = data.lab_parameter_id
+    parameter.updated_at = datetime.utcnow()
+
+    await record_audit(
+        db,
+        actor=user,
+        action="compliance.parameter.update",
+        target_type="compliance_parameter",
+        target_id=parameter.id,
+        detail={"parameter_name": parameter.parameter_name},
+        ip=_client_ip(request),
+    )
+    await db.commit()
+    await db.refresh(parameter)
+    return parameter
+
+
+@router.delete("/parameters/{parameter_id}")
+async def delete_parameter(
+    parameter_id: int,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role("admin")),
+    _w=Depends(require_writable),
+) -> dict:
+    parameter = await db.get(ComplianceParameter, parameter_id)
+    if parameter is None:
+        raise HTTPException(status_code=404, detail="Parametre bulunamadı")
+    await db.delete(parameter)
+    await record_audit(
+        db,
+        actor=user,
+        action="compliance.parameter.delete",
+        target_type="compliance_parameter",
+        target_id=parameter_id,
+        detail={"permit_id": parameter.permit_id},
+        ip=_client_ip(request),
+    )
+    await db.commit()
+    return {"id": parameter_id, "deleted": True}
+
+
+# --------------------------------------------------------------------------
+# Limits
+# --------------------------------------------------------------------------
+
+
+@router.get("/parameters/{parameter_id}/limits", response_model=list[LimitResponse])
+async def list_limits(
+    parameter_id: int,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_user),
+) -> list[ComplianceLimit]:
+    parameter = await db.get(ComplianceParameter, parameter_id)
+    if parameter is None:
+        raise HTTPException(status_code=404, detail="Parametre bulunamadı")
+    return list(
+        (
+            await db.execute(
+                select(ComplianceLimit)
+                .where(ComplianceLimit.parameter_id == parameter_id)
+                .order_by(ComplianceLimit.id)
+            )
+        )
+        .scalars()
+        .all()
+    )
+
+
+@router.post("/parameters/{parameter_id}/limits", response_model=LimitResponse, status_code=201)
+async def create_limit(
+    parameter_id: int,
+    data: LimitCreate,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role("admin")),
+    _w=Depends(require_writable),
+) -> ComplianceLimit:
+    parameter = await db.get(ComplianceParameter, parameter_id)
+    if parameter is None:
+        raise HTTPException(status_code=404, detail="Parametre bulunamadı")
+
+    _validate_limit(data.limit_type, data.aggregation)
+
+    limit = ComplianceLimit(
+        parameter_id=parameter_id,
+        limit_type=data.limit_type,
+        min_value=data.min_value,
+        max_value=data.max_value,
+        aggregation=data.aggregation,
+        window=data.window,
+        sample_frequency=data.sample_frequency,
+        severity=data.severity,
+        requires_explanation=data.requires_explanation,
+    )
+    db.add(limit)
+    await db.flush()
+    await record_audit(
+        db,
+        actor=user,
+        action="compliance.limit.create",
+        target_type="compliance_limit",
+        target_id=limit.id,
+        detail={"parameter_id": parameter_id, "limit_type": limit.limit_type},
+        ip=_client_ip(request),
+    )
+    await db.commit()
+    await db.refresh(limit)
+    return limit
+
+
+@router.put("/limits/{limit_id}", response_model=LimitResponse)
+async def update_limit(
+    limit_id: int,
+    data: LimitCreate,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role("admin")),
+    _w=Depends(require_writable),
+) -> ComplianceLimit:
+    limit = await db.get(ComplianceLimit, limit_id)
+    if limit is None:
+        raise HTTPException(status_code=404, detail="Limit bulunamadı")
+
+    _validate_limit(data.limit_type, data.aggregation)
+
+    limit.limit_type = data.limit_type
+    limit.min_value = data.min_value
+    limit.max_value = data.max_value
+    limit.aggregation = data.aggregation
+    limit.window = data.window
+    limit.sample_frequency = data.sample_frequency
+    limit.severity = data.severity
+    limit.requires_explanation = data.requires_explanation
+    limit.updated_at = datetime.utcnow()
+
+    await record_audit(
+        db,
+        actor=user,
+        action="compliance.limit.update",
+        target_type="compliance_limit",
+        target_id=limit.id,
+        detail={"limit_type": limit.limit_type},
+        ip=_client_ip(request),
+    )
+    await db.commit()
+    await db.refresh(limit)
+    return limit
+
+
+@router.delete("/limits/{limit_id}")
+async def delete_limit(
+    limit_id: int,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role("admin")),
+    _w=Depends(require_writable),
+) -> dict:
+    limit = await db.get(ComplianceLimit, limit_id)
+    if limit is None:
+        raise HTTPException(status_code=404, detail="Limit bulunamadı")
+    await db.delete(limit)
+    await record_audit(
+        db,
+        actor=user,
+        action="compliance.limit.delete",
+        target_type="compliance_limit",
+        target_id=limit_id,
+        detail={"parameter_id": limit.parameter_id},
+        ip=_client_ip(request),
+    )
+    await db.commit()
+    return {"id": limit_id, "deleted": True}
 
 
 # --------------------------------------------------------------------------
