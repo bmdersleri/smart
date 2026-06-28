@@ -16,6 +16,7 @@ from app.api import (
     audit,
     auth,
     backup,
+    compliance,
     dashboard,
     excel_templates,
     explore,
@@ -210,6 +211,7 @@ app.include_router(app_settings.router, prefix="/api")
 app.include_router(license_api.router, prefix="/api")
 app.include_router(runtime.router, prefix="/api")
 app.include_router(backup.router, prefix="/api")
+app.include_router(compliance.router, prefix="/api")
 
 
 @app.get("/metrics")
