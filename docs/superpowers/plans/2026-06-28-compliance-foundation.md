@@ -154,7 +154,7 @@ Required model details:
 - `CompliancePermit.report_cron` is nullable string.
 - `ComplianceParameter` keeps `permit_id` and `discharge_point_id`; API must later validate they match.
 - DB-level composite constraints enforce that `ComplianceParameter.permit_id` matches its discharge point permit, and that `ComplianceEvent.permit_id`, `parameter_id`, and `limit_id` refer to one consistent graph.
-- Parent records use explicit restrict semantics for Phase 1; do not cascade-delete legal compliance records when deleting permits, points, parameters, or limits.
+- Parent records use explicit restrict semantics for Phase 1; do not cascade-delete legal compliance records when deleting permits, points, parameters, limits, events, or event notes.
 - Event transition columns include `acknowledged_by/at`, `resolved_by/at`, `waived_by/at`, `waive_reason`.
 
 - [ ] Import models into app startup.
