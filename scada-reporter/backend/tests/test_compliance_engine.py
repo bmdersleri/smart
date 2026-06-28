@@ -28,7 +28,12 @@ def _ts(
     return datetime(year, month, day, hour, minute)
 
 
-async def _seed_scada_value_limit(db_session, *, requires_explanation: bool = False):
+async def _seed_scada_value_limit(
+    db_session,
+    *,
+    requires_explanation: bool = False,
+    reading_value: float = 12.0,
+):
     permit = CompliancePermit(name="Permit A")
     point = ComplianceDischargePoint(permit=permit, code="OUT", name="Outfall")
     tag = Tag(node_id="ns=1;s=COD", name="COD")
@@ -58,7 +63,7 @@ async def _seed_scada_value_limit(db_session, *, requires_explanation: bool = Fa
     db_session.add(
         TagReading(
             tag_id=tag.id,
-            value=12.0,
+            value=reading_value,
             quality=192,
             timestamp=_ts(2026, 6, 1, 12),
         )
@@ -213,6 +218,82 @@ async def test_bad_quality_creates_event(db_session):
     assert event is not None
     assert event.event_type == "bad_quality"
     assert event.status == "open"
+
+
+@pytest.mark.asyncio
+async def test_quality_threshold_stays_at_192(db_session):
+    permit = CompliancePermit(name="Permit Q")
+    point = ComplianceDischargePoint(permit=permit, code="OUT", name="Outfall")
+    tag = Tag(node_id="ns=1;s=QTH", name="QTH")
+    db_session.add_all([permit, point, tag])
+    await db_session.flush()
+
+    parameter = ComplianceParameter(
+        permit_id=permit.id,
+        discharge_point_id=point.id,
+        parameter_name="QTH",
+        source_type="scada",
+        tag_id=tag.id,
+    )
+    db_session.add(parameter)
+    await db_session.flush()
+
+    limit = ComplianceLimit(
+        compliance_parameter_id=parameter.id,
+        limit_type="quality",
+        aggregation="instant",
+        max_value=0.0,
+    )
+    db_session.add(limit)
+    await db_session.flush()
+
+    db_session.add(
+        TagReading(
+            tag_id=tag.id,
+            value=7.0,
+            quality=0,
+            timestamp=_ts(2026, 6, 1, 14),
+        )
+    )
+    await db_session.flush()
+
+    start = _ts(2026, 6, 1)
+    end = _ts(2026, 6, 2)
+    await evaluate_permit(db_session, permit.id, start, end)
+    event = (
+        (
+            await db_session.execute(
+                select(ComplianceEvent).where(ComplianceEvent.permit_id == permit.id)
+            )
+        )
+        .scalars()
+        .first()
+    )
+
+    assert event is not None
+    assert event.event_type == "bad_quality"
+    assert event.limit_value == 192.0
+
+
+@pytest.mark.asyncio
+async def test_resolved_source_event_gets_resolved_at(db_session):
+    permit, _, _ = await _seed_scada_value_limit(db_session, reading_value=8.0)
+    start = _ts(2026, 6, 1)
+    end = _ts(2026, 6, 2)
+
+    await evaluate_permit(db_session, permit.id, start, end)
+    event = (
+        (
+            await db_session.execute(
+                select(ComplianceEvent).where(ComplianceEvent.permit_id == permit.id)
+            )
+        )
+        .scalars()
+        .one()
+    )
+
+    assert event.status == "resolved"
+    assert event.resolved_at is not None
 
 
 @pytest.mark.asyncio

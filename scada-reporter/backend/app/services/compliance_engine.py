@@ -163,9 +163,7 @@ def _sample_threshold(limit: ComplianceLimit) -> float:
     return 1.0
 
 
-def _quality_threshold(limit: ComplianceLimit) -> int:
-    if limit.max_value is not None:
-        return int(limit.max_value)
+def _quality_threshold() -> int:
     return 192
 
 
@@ -301,7 +299,7 @@ async def evaluate_permit(
                 observed_value = float(observed_count)
 
         elif limit.limit_type == "quality":
-            threshold = _quality_threshold(limit)
+            threshold = _quality_threshold()
             bad_readings = [row for row in scada_rows if row[2] < threshold or row[1] is None]
             evidence["rule"] = {
                 "event_type": "bad_quality" if bad_readings else "quality_ok",
@@ -377,6 +375,7 @@ async def evaluate_permit(
             observed_value=observed_value,
             limit_value=limit_value,
             evidence=evidence,
+            resolved_at=datetime.now(UTC) if status == "resolved" else None,
         )
         counters["created" if created else "updated"] += 1
         if source_event.status == "resolved":
