@@ -36,6 +36,9 @@ class ReportArchive(Base):
     result_json: Mapped[bytes | None] = mapped_column(
         LargeBinary, nullable=True
     )  # gzip-compressed summary
+    variable_refs_json: Mapped[str | None] = mapped_column(
+        Text, nullable=True
+    )  # JSON: çözülen (variable_id, code, version, window) — denetim/sürüm damgası
     triggered_by: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
 
     __table_args__ = (
