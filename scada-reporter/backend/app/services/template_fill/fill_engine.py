@@ -6,6 +6,7 @@ Hücre stili/format korunur — yalnız değer yazılır.
 """
 
 import calendar
+import logging
 from datetime import datetime
 from io import BytesIO
 
@@ -16,7 +17,9 @@ from sqlalchemy.orm import selectinload
 
 from app.core.config import settings
 from app.models.excel_template import ExcelTemplate
-from app.services.template_fill.daily_rollup import daily_values
+from app.services.facility_variables.binding import resolve_column
+
+logger = logging.getLogger(__name__)
 
 # write modunda boş tarih hücresine yazılan varsayılan biçim (TR).
 # Şablon hücreyi önceden biçimlendirmişse (General değilse) dokunulmaz.
@@ -61,10 +64,22 @@ async def fill_template(db: AsyncSession, template_id: int, year: int, month: in
                 cell.number_format = _DATE_FMT
 
     for col in tpl.columns:
-        if not col.enabled or col.tag_id is None:
+        if not col.enabled:
             continue
-        vals = await daily_values(db, col.tag_id, year, month, col.agg, tz_offset_hours=offset)
-        for day, value in vals.items():
+        source_type = getattr(col, "source_type", "tag")
+        if source_type != "variable" and col.tag_id is None:
+            continue
+
+        binding = await resolve_column(db, col, year, month, tz_offset_hours=offset)
+        for w in binding.warnings:
+            logger.warning("Excel fill binding uyarısı: %s", w)
+
+        if binding.kind == "cell":
+            if col.target_cell and binding.scalar is not None:
+                ws[col.target_cell] = binding.scalar
+            continue
+
+        for day, value in binding.days.items():
             row = day_to_row.get(day)
             if row is not None:
                 ws[f"{col.col_letter}{row}"] = value

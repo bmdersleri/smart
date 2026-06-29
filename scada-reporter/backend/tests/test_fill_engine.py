@@ -157,3 +157,165 @@ async def test_null_tag_column_skipped(db_session, saved_template):
 async def test_missing_template_raises(db_session):
     with pytest.raises(ValueError):
         await fill_template(db_session, 9999, 2026, 1)
+
+
+@pytest.mark.asyncio
+async def test_fill_variable_series_column(db_session):
+    from io import BytesIO
+
+    from openpyxl import load_workbook
+
+    from app.models.excel_template import ExcelTemplate, ExcelTemplateColumn
+    from app.models.tag import Tag, TagReading
+    from app.services.facility_variables.service import create_variable
+    from app.services.template_fill.fill_engine import fill_template
+
+    tag = Tag(node_id="n", name="T", unit="m3")
+    db_session.add(tag)
+    await db_session.commit()
+    await db_session.refresh(tag)
+    # UTC 06:00 ve 18:00 → UTC+3 yerel saatte 09:00 ve 21:00, aynı gün bucketı
+    db_session.add(TagReading(tag_id=tag.id, timestamp=datetime(2026, 6, 1, 6), value=0.0))
+    db_session.add(TagReading(tag_id=tag.id, timestamp=datetime(2026, 6, 1, 18), value=40.0))
+    await db_session.commit()
+
+    var = await create_variable(
+        db_session,
+        code="v_fill",
+        name="v",
+        description="",
+        kind="series",
+        unit="m3/gun",
+        expression={
+            "op": "series",
+            "source": {"type": "tag", "tag_id": tag.id},
+            "agg": "delta",
+            "grain": "day",
+            "window": "month",
+        },
+        null_policy="skip",
+        quality_policy="good_only",
+        default_time_grain="day",
+        value_type="number",
+        created_by=1,
+    )
+
+    wb = Workbook()  # Workbook üst seviyede import edilmiş
+    ws = wb.active
+    ws.title = "S"
+    buf = BytesIO()
+    wb.save(buf)
+
+    tpl = ExcelTemplate(
+        name="vf",
+        description="",
+        file_blob=buf.getvalue(),
+        sheet_name="S",
+        header_row=1,
+        date_col="A",
+        data_start_row=2,
+        date_mode="write",
+    )
+    tpl.columns = [
+        ExcelTemplateColumn(
+            col_letter="K",
+            source_type="variable",
+            variable_id=var.id,
+            write_mode="series",
+            target_mode="column",
+            enabled=True,
+        )
+    ]
+    db_session.add(tpl)
+    await db_session.commit()
+    await db_session.refresh(tpl)
+
+    out = await fill_template(db_session, tpl.id, 2026, 6)
+    rwb = load_workbook(BytesIO(out))
+    rws = rwb["S"]
+    # gün 1 → data_start_row (2): K2 == 40.0
+    assert rws["K2"].value == 40.0
+
+
+@pytest.mark.asyncio
+async def test_fill_variable_reduce_cell(db_session):
+    from io import BytesIO
+
+    from openpyxl import load_workbook
+
+    from app.models.excel_template import ExcelTemplate, ExcelTemplateColumn
+    from app.models.tag import Tag, TagReading
+    from app.services.facility_variables.service import create_variable
+    from app.services.template_fill.fill_engine import fill_template
+
+    tag = Tag(node_id="n", name="T", unit="m3")
+    db_session.add(tag)
+    await db_session.commit()
+    await db_session.refresh(tag)
+    # UTC 06:00 ve 18:00 → UTC+3 yerel saatte 09:00 ve 21:00, aynı gün bucketı
+    for ts, v in (
+        (datetime(2026, 6, 1, 6), 0.0),
+        (datetime(2026, 6, 1, 18), 40.0),
+        (datetime(2026, 6, 2, 6), 40.0),
+        (datetime(2026, 6, 2, 18), 80.0),
+    ):
+        db_session.add(TagReading(tag_id=tag.id, timestamp=ts, value=v))
+    await db_session.commit()
+
+    var = await create_variable(
+        db_session,
+        code="v_red",
+        name="v",
+        description="",
+        kind="series",
+        unit="m3/gun",
+        expression={
+            "op": "series",
+            "source": {"type": "tag", "tag_id": tag.id},
+            "agg": "delta",
+            "grain": "day",
+            "window": "month",
+        },
+        null_policy="skip",
+        quality_policy="good_only",
+        default_time_grain="day",
+        value_type="number",
+        created_by=1,
+    )
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "S"
+    buf = BytesIO()
+    wb.save(buf)
+
+    tpl = ExcelTemplate(
+        name="vr",
+        description="",
+        file_blob=buf.getvalue(),
+        sheet_name="S",
+        header_row=1,
+        date_col="A",
+        data_start_row=2,
+        date_mode="write",
+    )
+    tpl.columns = [
+        ExcelTemplateColumn(
+            col_letter="K",
+            source_type="variable",
+            variable_id=var.id,
+            write_mode="reduce",
+            reduce_op="avg",
+            target_mode="cell",
+            target_cell="M5",
+            enabled=True,
+        )
+    ]
+    db_session.add(tpl)
+    await db_session.commit()
+    await db_session.refresh(tpl)
+
+    out = await fill_template(db_session, tpl.id, 2026, 6)
+    rwb = load_workbook(BytesIO(out))
+    rws = rwb["S"]
+    assert rws["M5"].value == 40.0  # avg(40, 40)
