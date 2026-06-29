@@ -77,6 +77,12 @@ async def fill_template(db: AsyncSession, template_id: int, year: int, month: in
         if binding.kind == "cell":
             if col.target_cell and binding.scalar is not None:
                 ws[col.target_cell] = binding.scalar
+            elif binding.scalar is not None and not col.target_cell:
+                logger.warning(
+                    "Excel fill: %s hücre-hedefli değer üretti ama"
+                    " target_cell tanımsız — yazılamadı",
+                    col.col_letter,
+                )
             continue
 
         for day, value in binding.days.items():

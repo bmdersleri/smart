@@ -319,3 +319,78 @@ async def test_fill_variable_reduce_cell(db_session):
     rwb = load_workbook(BytesIO(out))
     rws = rwb["S"]
     assert rws["M5"].value == 40.0  # avg(40, 40)
+
+
+@pytest.mark.asyncio
+async def test_variable_scalar_no_target_cell_logs_warning(db_session, caplog):
+    """FIX 1 regresyon: target_cell=None olan hücre-hedefli değer sessizce düşürülmemeli,
+    uyarı loglanmalı ve çalışma kitabına stray değer yazılmamalı."""
+    import logging
+
+    from app.models.excel_template import ExcelTemplate, ExcelTemplateColumn
+    from app.services.facility_variables.service import create_variable
+    from app.services.template_fill.fill_engine import fill_template
+
+    # Sabit 42.0 üreten scalar değişken (const op → kind="scalar")
+    var = await create_variable(
+        db_session,
+        code="v_notarget",
+        name="notarget",
+        description="",
+        kind="scalar",
+        unit="",
+        expression={"op": "const", "value": 42.0},
+        null_policy="skip",
+        quality_policy="good_only",
+        default_time_grain="day",
+        value_type="number",
+        created_by=1,
+    )
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "S"
+    buf = BytesIO()
+    wb.save(buf)
+
+    tpl = ExcelTemplate(
+        name="vnt",
+        description="",
+        file_blob=buf.getvalue(),
+        sheet_name="S",
+        header_row=1,
+        date_col="A",
+        data_start_row=2,
+        date_mode="write",
+    )
+    # target_cell=None ile target_mode="column": scalar değer üretilir ama nereye yazılacağı yok
+    tpl.columns = [
+        ExcelTemplateColumn(
+            col_letter="Z",
+            source_type="variable",
+            variable_id=var.id,
+            write_mode="reduce",
+            reduce_op="avg",
+            target_mode="column",
+            target_cell=None,
+            enabled=True,
+        )
+    ]
+    db_session.add(tpl)
+    await db_session.commit()
+    await db_session.refresh(tpl)
+
+    with caplog.at_level(logging.WARNING, logger="app.services.template_fill.fill_engine"):
+        out = await fill_template(db_session, tpl.id, 2026, 1)
+
+    # Uyarı loglanmış olmalı ve kolon harfini içermeli
+    warning_msgs = [r.message for r in caplog.records if r.levelno == logging.WARNING]
+    assert any("Z" in m for m in warning_msgs), (
+        f"'Z' sütunu için uyarı logu bekleniyor ama bulunamadı. Loglar: {warning_msgs}"
+    )
+
+    # Çalışma kitabında Z sütununa stray değer yazılmamış olmalı
+    rws = load_workbook(BytesIO(out)).active
+    for row in range(1, rws.max_row + 1):
+        cell_val = rws[f"Z{row}"].value
+        assert cell_val is None, f"Z{row} beklenmedik değer içeriyor: {cell_val}"
