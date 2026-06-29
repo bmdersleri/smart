@@ -20,6 +20,7 @@ from app.api import (
     dashboard,
     excel_templates,
     explore,
+    facility_variables,
     grafana,
     grafana_dashboards,
     groups,
@@ -198,6 +199,7 @@ app.include_router(query.router, prefix="/api")
 app.include_router(explore.router, prefix="/api")
 app.include_router(advanced_reports.router, prefix="/api")
 app.include_router(excel_templates.router, prefix="/api")
+app.include_router(facility_variables.router, prefix="/api")
 app.include_router(plc.router, prefix="/api")
 app.include_router(groups.router, prefix="/api")
 app.include_router(annotations.router, prefix="/api")
