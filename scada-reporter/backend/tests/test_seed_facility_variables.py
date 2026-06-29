@@ -74,3 +74,50 @@ async def test_seed_optional_skipped_without_env(db_session, monkeypatch):
     assert "baat_giris_debi_gunluk" not in code_to_id
     assert "kapasite_fazlasi_gunluk" not in code_to_id
     assert "tesis_toplam_debi_hesaplanan_gunluk" not in code_to_id
+
+
+@pytest.mark.asyncio
+async def test_seed_is_idempotent(db_session):
+    db_session.add_all(
+        [
+            Tag(node_id="gtuTP02DB01.GUNLUK", name="gtuTP02DB01.GUNLUK", unit=""),
+            Tag(node_id="gtuTP01DB01.GUNLUK", name="gtuTP01DB01.GUNLUK", unit=""),
+            Tag(node_id="GENEL_TOPLAM_DEBI", name="GENEL_TOPLAM_DEBI", unit=""),
+        ]
+    )
+    await db_session.commit()
+    from app.seed_facility_variables import seed_variables
+
+    first = await seed_variables(db_session)
+    second = await seed_variables(db_session)
+    assert first == second  # same code→id map, no new rows
+    from sqlalchemy import func, select
+
+    from app.models.facility_variable import FacilityVariable
+
+    count = (await db_session.execute(select(func.count(FacilityVariable.id)))).scalar_one()
+    assert count == len(first)  # no duplicates created on the second run
+
+
+@pytest.mark.asyncio
+async def test_seeded_expressions_pass_validator(db_session):
+    db_session.add_all(
+        [
+            Tag(node_id="gtuTP02DB01.GUNLUK", name="gtuTP02DB01.GUNLUK", unit=""),
+            Tag(node_id="gtuTP01DB01.GUNLUK", name="gtuTP01DB01.GUNLUK", unit=""),
+            Tag(node_id="GENEL_TOPLAM_DEBI", name="GENEL_TOPLAM_DEBI", unit=""),
+        ]
+    )
+    await db_session.commit()
+    import json
+
+    from sqlalchemy import select
+
+    from app.models.facility_variable import FacilityVariable
+    from app.seed_facility_variables import seed_variables
+    from app.services.facility_variables.expression import validate_expression
+
+    await seed_variables(db_session)
+    for v in (await db_session.execute(select(FacilityVariable))).scalars().all():
+        # round-trips through the real validator against its stored kind
+        validate_expression(json.loads(v.expression_json), v.kind)
