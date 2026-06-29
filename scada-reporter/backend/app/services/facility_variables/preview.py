@@ -71,7 +71,7 @@ async def preview_variable(
             start=start,
             end=end,
             grain=grain,
-            tz_offset_hours=0,
+            tz_offset_hours=tz_offset_hours,
             resolve_ref=resolve_ref,
         )
 
@@ -81,7 +81,7 @@ async def preview_variable(
         start=start,
         end=end,
         grain=grain,
-        tz_offset_hours=0,
+        tz_offset_hours=tz_offset_hours,
         resolve_ref=resolve_ref,
     )
 

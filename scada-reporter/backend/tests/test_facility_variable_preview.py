@@ -63,7 +63,7 @@ async def test_preview_series_emits_offset_ts(db_session):
     await db_session.commit()
     await db_session.refresh(tag)
     db_session.add(TagReading(tag_id=tag.id, timestamp=datetime(2026, 6, 1, 0), value=0.0))
-    db_session.add(TagReading(tag_id=tag.id, timestamp=datetime(2026, 6, 1, 23), value=40.0))
+    db_session.add(TagReading(tag_id=tag.id, timestamp=datetime(2026, 6, 1, 18), value=40.0))
     await db_session.commit()
 
     var = await create_variable(
