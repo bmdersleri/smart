@@ -133,6 +133,7 @@ async def update_variable(
     except ExpressionError as e:
         raise VariableError(str(e)) from e
 
+    # Compute bump using OLD field values BEFORE any mutation.
     new_expr = json.dumps(expression)
     bump = (
         new_expr != var.expression_json
@@ -140,6 +141,10 @@ async def update_variable(
         or quality_policy != var.quality_policy
         or default_time_grain != var.default_time_grain
     )
+    # Cycle check runs inside _store_dependencies BEFORE it mutates var.dependencies.
+    # Call it now so that a VariableError raised here leaves all scalar fields untouched.
+    await _store_dependencies(db, var, expression)
+    # Only mutate scalar fields after the cycle check has passed.
     var.name = name
     var.description = description
     var.unit = unit
@@ -150,7 +155,6 @@ async def update_variable(
     var.updated_by = updated_by
     if bump:
         var.version += 1
-    await _store_dependencies(db, var, expression)
     await db.commit()
     await db.refresh(var)
     return var
