@@ -62,6 +62,7 @@ class TemplateCreate(BaseModel):
     name: str
     description: str = ""
     tag_ids: list[int]
+    variable_ids: list[int] = []
     time_range_type: str = "last_24h"
     custom_start: datetime | None = None
     custom_end: datetime | None = None
@@ -85,6 +86,7 @@ class TemplateResponse(BaseModel):
     name: str
     description: str
     tag_ids: list[int]
+    variable_ids: list[int]
     time_range_type: str
     custom_start: datetime | None
     custom_end: datetime | None
@@ -110,6 +112,7 @@ class TemplateResponse(BaseModel):
     def from_orm(cls, obj: ReportTemplate) -> TemplateResponse:
         data = {c.name: getattr(obj, c.name) for c in obj.__table__.columns}
         data["tag_ids"] = json.loads(obj.tag_ids)
+        data["variable_ids"] = json.loads(obj.variable_ids)
         data["percentile_levels"] = json.loads(obj.percentile_levels)
         data["grafana_panels"] = json.loads(obj.grafana_panels)
         return cls(**data)
@@ -212,6 +215,7 @@ async def create_template(
         name=body.name,
         description=body.description,
         tag_ids=json.dumps(body.tag_ids),
+        variable_ids=json.dumps(body.variable_ids),
         time_range_type=body.time_range_type,
         custom_start=body.custom_start,
         custom_end=body.custom_end,
@@ -261,6 +265,7 @@ async def update_template(
     tmpl.name = body.name
     tmpl.description = body.description
     tmpl.tag_ids = json.dumps(body.tag_ids)
+    tmpl.variable_ids = json.dumps(body.variable_ids)
     tmpl.time_range_type = body.time_range_type
     tmpl.custom_start = body.custom_start
     tmpl.custom_end = body.custom_end

@@ -13,6 +13,9 @@ class ReportTemplate(Base):
     name: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
     description: Mapped[str] = mapped_column(Text, default="")
     tag_ids: Mapped[str] = mapped_column(Text)  # JSON "[1,2,3]"
+    variable_ids: Mapped[str] = mapped_column(
+        Text, default="[]", server_default="[]"
+    )  # JSON "[11,22]" — seçili tesis değişkeni id'leri
     time_range_type: Mapped[str] = mapped_column(String(20), default="last_24h")
     # last_1h|last_24h|last_7d|last_30d|custom
     custom_start: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
