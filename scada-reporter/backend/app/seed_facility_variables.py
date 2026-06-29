@@ -15,6 +15,7 @@ import asyncio
 
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import AsyncSessionLocal
 from app.models.facility_variable import FacilityVariable
@@ -22,7 +23,7 @@ from app.models.tag import Tag
 from app.services.facility_variables.service import VariableError, create_variable
 
 
-async def resolve_tag_id(db, node_id: str) -> int:
+async def resolve_tag_id(db: AsyncSession, node_id: str) -> int:
     """node_id'den Tag.id döndürür; yoksa anlaşılır hata verir."""
     row = await db.execute(select(Tag.id).where(Tag.node_id == node_id))
     tag_id = row.scalar_one_or_none()
@@ -35,7 +36,7 @@ def _agg(tag_id: int, agg: str, window: str = "day") -> dict:
     return {"op": "agg", "source": {"type": "tag", "tag_id": tag_id}, "agg": agg, "window": window}
 
 
-async def seed_variables(db) -> dict[str, int]:
+async def seed_variables(db: AsyncSession) -> dict[str, int]:
     """Çekirdek + (env varsa) BAAT/kapasite/kompozit değişkenleri ekler.
 
     Döner: {code: variable_id} — tüm oluşturulan VEYA zaten var olan değişkenler.
@@ -77,7 +78,10 @@ async def seed_variables(db) -> dict[str, int]:
             )
             code_to_id[code] = var.id
             print(f"  + {code} (id={var.id})")
-        except (VariableError, IntegrityError) as exc:
+        except IntegrityError as exc:
+            await db.rollback()
+            print(f"  HATA {code}: {exc}")
+        except VariableError as exc:
             print(f"  HATA {code}: {exc}")
 
     # --- Çekirdek (her zaman, gerçek tag'ler) ---
