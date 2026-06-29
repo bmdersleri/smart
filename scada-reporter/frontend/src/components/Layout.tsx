@@ -84,7 +84,7 @@ export default function Layout() {
               end={to === '/'}
               onClick={() => setMobileNav(false)}
               className={({ isActive }) =>
-                `group flex items-center gap-3 px-3 py-2.5 rounded-xl text-base font-medium transition-all duration-200 ${
+                `group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
                   isActive
                     ? 'bg-cyan-500/10 text-cyan-400 ring-1 ring-cyan-500/30 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]'
                     : 'text-gray-400 hover:bg-white/5 hover:text-gray-200'
@@ -104,7 +104,7 @@ export default function Layout() {
               to="/users"
               onClick={() => setMobileNav(false)}
               className={({ isActive }) =>
-                `group flex items-center gap-3 px-3 py-2.5 rounded-xl text-base font-medium transition-all duration-200 ${
+                `group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
                   isActive
                     ? 'bg-cyan-500/10 text-cyan-400 ring-1 ring-cyan-500/30 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]'
                     : 'text-gray-400 hover:bg-white/5 hover:text-gray-200'

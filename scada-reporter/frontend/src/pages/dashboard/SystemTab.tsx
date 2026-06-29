@@ -184,7 +184,7 @@ export default function SystemTab({ active }: { active: boolean }) {
                     const pct = maxAvg > 0 ? ((p.avg_seconds ?? 0) / maxAvg) * 100 : 0
                     const slow = (p.avg_seconds ?? 0) > 0.5
                     return (
-                      <tr key={p.plc} className="border-t border-edge hover:bg-white/5/40">
+                      <tr key={p.plc} className="border-t border-edge hover:bg-white/5">
                         <td className="px-4 py-2 text-sm text-white">{p.name || '—'}</td>
                         <td className="px-4 py-2 text-sm font-mono text-gray-400">{p.plc}</td>
                         <td className="px-4 py-2 text-sm text-end text-gray-300 font-mono">{p.tag_count.toLocaleString(i18n.language)}</td>
