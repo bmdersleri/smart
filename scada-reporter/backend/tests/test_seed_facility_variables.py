@@ -73,3 +73,4 @@ async def test_seed_optional_skipped_without_env(db_session, monkeypatch):
     code_to_id = await seed_variables(db_session)
     assert "baat_giris_debi_gunluk" not in code_to_id
     assert "kapasite_fazlasi_gunluk" not in code_to_id
+    assert "tesis_toplam_debi_hesaplanan_gunluk" not in code_to_id
