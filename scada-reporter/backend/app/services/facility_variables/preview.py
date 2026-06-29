@@ -47,6 +47,17 @@ def _iso_offset(dt: datetime, tz_offset_hours: int) -> str:
     return dt.replace(tzinfo=tz).isoformat()
 
 
+def serialize_eval_result(result, unit: str, tz_offset_hours: int) -> dict:
+    """EvalResult -> önizleme/rapor için ortak JSON şekli (tek serileştirme yolu)."""
+    if result.kind == "scalar":
+        return {"kind": "scalar", "value": result.scalar, "unit": unit}
+    points = [
+        {"ts": _iso_offset(k, tz_offset_hours), "value": v}
+        for k, v in sorted((result.series or {}).items())
+    ]
+    return {"kind": "series", "points": points, "unit": unit}
+
+
 async def preview_variable(
     db: AsyncSession,
     var: FacilityVariable,
@@ -62,10 +73,4 @@ async def preview_variable(
         db, var, start=start, end=end, grain=grain, tz_offset_hours=tz_offset_hours
     )
 
-    if result.kind == "scalar":
-        return {"kind": "scalar", "value": result.scalar, "unit": var.unit}
-    points = [
-        {"ts": _iso_offset(k, tz_offset_hours), "value": v}
-        for k, v in sorted((result.series or {}).items())
-    ]
-    return {"kind": "series", "points": points, "unit": var.unit}
+    return serialize_eval_result(result, var.unit, tz_offset_hours)
