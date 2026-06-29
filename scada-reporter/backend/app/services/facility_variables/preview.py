@@ -5,13 +5,12 @@ Cache yok (v1) → pencere sert sınırlanır, aksi halde UI tetikli DB DoS.
 
 from __future__ import annotations
 
-import json
 from datetime import datetime, timedelta, timezone
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.facility_variable import FacilityVariable
-from app.services.facility_variables.engine import EvalResult, evaluate
+from app.services.facility_variables.resolver import evaluate_variable
 
 MAX_PREVIEW_POINTS = 5000
 
@@ -58,31 +57,9 @@ async def preview_variable(
     tz_offset_hours: int,
 ) -> dict:
     check_preview_bounds(start, end, grain)
-    expression = json.loads(var.expression_json)
 
-    async def resolve_ref(variable_id: int) -> EvalResult:
-        ref_var = await db.get(FacilityVariable, variable_id)
-        if ref_var is None or not ref_var.is_active:
-            return EvalResult(kind="scalar", scalar=None)
-        ref_expr = json.loads(ref_var.expression_json)
-        return await evaluate(
-            db,
-            ref_expr,
-            start=start,
-            end=end,
-            grain=grain,
-            tz_offset_hours=tz_offset_hours,
-            resolve_ref=resolve_ref,
-        )
-
-    result = await evaluate(
-        db,
-        expression,
-        start=start,
-        end=end,
-        grain=grain,
-        tz_offset_hours=tz_offset_hours,
-        resolve_ref=resolve_ref,
+    result = await evaluate_variable(
+        db, var, start=start, end=end, grain=grain, tz_offset_hours=tz_offset_hours
     )
 
     if result.kind == "scalar":
