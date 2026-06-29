@@ -12,6 +12,7 @@ Totalizer semantiği AÇIKTIR:
 from __future__ import annotations
 
 import asyncio
+import os
 
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -140,8 +141,59 @@ async def seed_variables(db: AsyncSession) -> dict[str, int]:
 
 
 async def _seed_optional(db, ensure, code_to_id: dict[str, int]) -> None:
-    """BAAT / kapasite / kompozit — env yoksa atlanır. Task 2'de doldurulacak."""
-    return  # Task 2'de doldurulacak
+    """BAAT girişi + kapasite fazlası + hesaplanan tesis toplamı (ref kompoziti).
+
+    Hepsi deployment config'e bağlıdır; ortam değişkeni yoksa sessizce atlanır."""
+    baat_node = os.environ.get("SEED_BAAT_GIRIS_NODE_ID", "").strip()
+    capacity_raw = os.environ.get("SEED_AOT_DESIGN_CAPACITY_M3", "").strip()
+
+    if baat_node:
+        baat_id = await resolve_tag_id(db, baat_node)
+        await ensure(
+            code="baat_giris_debi_gunluk",
+            kind="scalar",
+            name="BAAT Tesise Alınan Debi (Günlük)",
+            description=f"BAAT giriş debisi ({baat_node}) günlük son değeri",
+            expression=_agg(baat_id, "last"),
+        )
+
+    if capacity_raw and "aot_giris_debi_gunluk" in code_to_id:
+        try:
+            capacity = float(capacity_raw)
+        except ValueError:
+            print(f"  HATA: SEED_AOT_DESIGN_CAPACITY_M3 sayı değil: {capacity_raw!r}")
+            return
+        await ensure(
+            code="kapasite_fazlasi_gunluk",
+            kind="scalar",
+            name="Kapasite Fazlası (Günlük)",
+            description=f"Tasarım kapasitesi ({capacity:g} m3/gün) − AÖT giriş debisi",
+            expression={
+                "op": "sub",
+                "args": [
+                    {"op": "const", "value": capacity},
+                    {"op": "ref", "variable_id": code_to_id["aot_giris_debi_gunluk"]},
+                ],
+            },
+        )
+
+    # Hesaplanan tesis toplamı = AÖT + BAAT + kapasite fazlası (workbook formülünün taşınmışı)
+    needed = ("aot_giris_debi_gunluk", "baat_giris_debi_gunluk", "kapasite_fazlasi_gunluk")
+    if all(c in code_to_id for c in needed):
+        await ensure(
+            code="tesis_toplam_debi_hesaplanan_gunluk",
+            kind="scalar",
+            name="Tesis Toplam Debi — Hesaplanan (Günlük)",
+            description="AÖT + BAAT + kapasite fazlası (taşınan çalışma sayfası formülü)",
+            expression={
+                "op": "add",
+                "args": [
+                    {"op": "ref", "variable_id": code_to_id["aot_giris_debi_gunluk"]},
+                    {"op": "ref", "variable_id": code_to_id["baat_giris_debi_gunluk"]},
+                    {"op": "ref", "variable_id": code_to_id["kapasite_fazlasi_gunluk"]},
+                ],
+            },
+        )
 
 
 async def main() -> None:
