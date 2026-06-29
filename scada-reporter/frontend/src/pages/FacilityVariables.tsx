@@ -3,13 +3,129 @@ import { useTranslation } from 'react-i18next'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import type { AxiosError } from 'axios'
 import { Variable } from 'lucide-react'
-import { listFacilityVariables, deleteFacilityVariable } from '../api/client'
-import type { FacilityVariable } from '../api/client'
+import {
+  listFacilityVariables,
+  deleteFacilityVariable,
+  createFacilityVariable,
+  updateFacilityVariable,
+  getTags,
+} from '../api/client'
+import type { FacilityVariable, ExprNode } from '../api/client'
 import { useAuth } from '../context/AuthContext'
+import ExpressionBuilder, { emptyNode } from './facilityVariables/ExpressionBuilder'
 
-// Replaced by the real editor in Task 5. Stub keeps the page compiling.
-function VariableEditorModal(_props: { initial?: FacilityVariable; onClose: () => void }) {
-  return null
+// PreviewPanel stub — replaced by Task 6
+function PreviewPanel(_: { variableId: number; kind: 'scalar' | 'series' }) { return null }
+
+export function VariableEditorModal({ initial, onClose }: { initial?: FacilityVariable; onClose: () => void }) {
+  const { t } = useTranslation(['facilityVariables', 'common'])
+  const qc = useQueryClient()
+  const [code, setCode] = useState(initial?.code ?? '')
+  const [name, setName] = useState(initial?.name ?? '')
+  const [description, setDescription] = useState(initial?.description ?? '')
+  const [kind, setKind] = useState<'scalar' | 'series'>(initial?.kind ?? 'scalar')
+  const [unit, setUnit] = useState(initial?.unit ?? '')
+  const [grain, setGrain] = useState(initial?.default_time_grain ?? 'day')
+  const [expression, setExpression] = useState<ExprNode>(initial?.expression ?? emptyNode('const'))
+
+  const { data: tags = [] } = useQuery({ queryKey: ['tags'], queryFn: () => getTags().then((r) => r.data) })
+  const { data: variables = [] } = useQuery({
+    queryKey: ['facility-variables'],
+    queryFn: () => listFacilityVariables().then((r) => r.data),
+  })
+
+  const mut = useMutation({
+    mutationFn: () => {
+      if (initial) {
+        return updateFacilityVariable(initial.id, {
+          name, description, unit, expression, default_time_grain: grain,
+        }).then((r) => r.data)
+      }
+      return createFacilityVariable({
+        code, name, description, kind, unit, expression, default_time_grain: grain,
+      }).then((r) => r.data)
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['facility-variables'] }); onClose() },
+  })
+
+  const errDetail = (mut.error as AxiosError<{ detail: string }>)?.response?.data?.detail
+  const status = (mut.error as AxiosError)?.response?.status
+  const inputCls = 'w-full bg-surface-sunken border border-edge-strong rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-hidden focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50'
+
+  return (
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 overflow-y-auto">
+      <div className="bg-surface-raised/40 backdrop-blur-xl border border-white/5 rounded-2xl w-full max-w-2xl p-6 space-y-4 my-8">
+        <h2 className="text-lg font-semibold text-white">{t(initial ? 'edit_title' : 'create_title')}</h2>
+
+        <section className="space-y-2">
+          <h3 className="text-xs uppercase text-gray-500">{t('step_basic')}</h3>
+          <div className="grid grid-cols-2 gap-3">
+            <label className="text-xs text-gray-400 space-y-1">
+              <span>{t('field_code')}</span>
+              <input aria-label={t('field_code')} className={inputCls} value={code} disabled={!!initial}
+                onChange={(e) => setCode(e.target.value)} />
+            </label>
+            <label className="text-xs text-gray-400 space-y-1">
+              <span>{t('field_name')}</span>
+              <input aria-label={t('field_name')} className={inputCls} value={name}
+                onChange={(e) => setName(e.target.value)} />
+            </label>
+            <label className="text-xs text-gray-400 space-y-1">
+              <span>{t('field_kind')}</span>
+              <select className={inputCls} value={kind} disabled={!!initial}
+                onChange={(e) => setKind(e.target.value as 'scalar' | 'series')}>
+                <option value="scalar">{t('kind_scalar')}</option>
+                <option value="series">{t('kind_series')}</option>
+              </select>
+            </label>
+            <label className="text-xs text-gray-400 space-y-1">
+              <span>{t('field_unit')}</span>
+              <input className={inputCls} value={unit} onChange={(e) => setUnit(e.target.value)} />
+            </label>
+            <label className="text-xs text-gray-400 space-y-1 col-span-2">
+              <span>{t('field_description')}</span>
+              <input className={inputCls} value={description} onChange={(e) => setDescription(e.target.value)} />
+            </label>
+            <label className="text-xs text-gray-400 space-y-1">
+              <span>{t('field_grain')}</span>
+              <select className={inputCls} value={grain ?? 'day'} onChange={(e) => setGrain(e.target.value)}>
+                {['hour', 'day', 'week', 'month'].map((g) => <option key={g} value={g}>{g}</option>)}
+              </select>
+            </label>
+          </div>
+        </section>
+
+        <section className="space-y-2">
+          <h3 className="text-xs uppercase text-gray-500">{t('step_expression')}</h3>
+          <ExpressionBuilder value={expression} onChange={setExpression}
+            tags={tags} variables={variables.map((v) => ({ id: v.id, code: v.code }))} />
+        </section>
+
+        {initial && (
+          <section className="space-y-2">
+            <h3 className="text-xs uppercase text-gray-500">{t('step_preview')}</h3>
+            <PreviewPanel variableId={initial.id} kind={kind} />
+          </section>
+        )}
+
+        {mut.isError && (
+          <p className="text-red-400 text-sm">
+            {status === 409 ? t('error_duplicate_code') : errDetail || t('error_generic')}
+          </p>
+        )}
+
+        <div className="flex justify-end gap-2 pt-2">
+          <button onClick={onClose} className="px-4 py-2 text-sm text-gray-400 hover:text-white">
+            {t('common:cancel')}
+          </button>
+          <button onClick={() => mut.mutate()} disabled={mut.isPending || !code || !name}
+            className="px-4 py-2 rounded-lg bg-cyan-600/30 border border-cyan-500/40 text-cyan-200 text-sm disabled:opacity-40">
+            {mut.isPending ? t('saving') : t('save')}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 export default function FacilityVariables() {
