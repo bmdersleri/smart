@@ -204,14 +204,18 @@ async def update(
 @router.delete("/{var_id}", status_code=204)
 async def soft_delete(
     var_id: int,
+    force: bool = False,
     db: AsyncSession = Depends(get_db),
     _: User = Depends(require_perm(PERM_FACILITY_VARIABLE_DELETE)),
     _w: None = Depends(require_writable),
 ):
     try:
-        await deactivate_variable(db, var_id)
+        await deactivate_variable(db, var_id, force=force)
     except VariableError as e:
-        raise HTTPException(404, str(e)) from e
+        msg = str(e)
+        if "bulunamadı" in msg:
+            raise HTTPException(404, msg) from e
+        raise HTTPException(409, msg) from e
 
 
 @router.post("/validate")

@@ -7,6 +7,7 @@ import json
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.excel_template import ExcelTemplateColumn
 from app.models.facility_variable import FacilityVariable, FacilityVariableDependency
 from app.services.facility_variables.expression import (
     ExpressionError,
@@ -160,10 +161,32 @@ async def update_variable(
     return var
 
 
-async def deactivate_variable(db: AsyncSession, var_id: int) -> FacilityVariable:
+async def columns_referencing_variable(db: AsyncSession, var_id: int) -> list[ExcelTemplateColumn]:
+    """var_id'ye bağlı, etkin Excel sütunları."""
+    rows = await db.execute(
+        select(ExcelTemplateColumn).where(
+            ExcelTemplateColumn.source_type == "variable",
+            ExcelTemplateColumn.variable_id == var_id,
+            ExcelTemplateColumn.enabled.is_(True),
+        )
+    )
+    return list(rows.scalars().all())
+
+
+async def deactivate_variable(
+    db: AsyncSession, var_id: int, *, force: bool = False
+) -> FacilityVariable:
     var = await db.get(FacilityVariable, var_id)
     if var is None:
         raise VariableError("Değişken bulunamadı")
+    if not force:
+        refs = await columns_referencing_variable(db, var_id)
+        if refs:
+            tpl_ids = sorted({c.template_id for c in refs})
+            raise VariableError(
+                f"Değişken Excel şablonlarınca kullanılıyor (template {tpl_ids}); "
+                "önce bağlamayı kaldırın veya force kullanın"
+            )
     var.is_active = False
     await db.commit()
     await db.refresh(var)
