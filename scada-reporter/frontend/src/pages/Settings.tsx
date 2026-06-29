@@ -3,7 +3,6 @@ import { useSettings } from '../context/SettingsContext'
 import { useAuth } from '../context/AuthContext'
 import LanguageSelector from '../components/LanguageSelector'
 import LicenseCard from '../components/LicenseCard'
-import LabCatalogCard from './lab/LabCatalogCard'
 import SettingsTimezoneCard from './SettingsTimezoneCard'
 import SettingsRuntimeCard from './SettingsRuntimeCard'
 import SettingsBackupCard from './SettingsBackupCard'
@@ -60,7 +59,6 @@ export default function Settings() {
 
           {user?.role === 'admin' && <SettingsRuntimeCard />}
           {user?.role === 'admin' && <SettingsBackupCard />}
-          {user?.role === 'admin' && <LabCatalogCard />}
         </div>
 
         <div className="space-y-5">
