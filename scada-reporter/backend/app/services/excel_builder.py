@@ -32,6 +32,7 @@ def build_advanced_excel(
     summary_chart_png: bytes,
     lang: str = "en",
     grafana_charts: list[dict] | None = None,
+    variables: list[dict] | None = None,
 ) -> bytes:
     L = get_labels(lang)  # noqa: N806 — short alias for the label dict, used pervasively below
     wb = Workbook()

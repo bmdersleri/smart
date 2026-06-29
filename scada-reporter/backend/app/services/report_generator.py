@@ -16,6 +16,7 @@ from app.services.chart_generator import generate_summary_bar_chart, generate_ti
 from app.services.excel_builder import build_advanced_excel
 from app.services.grafana_render import render_auth, render_headers, render_panel
 from app.services.pdf_builder import build_pdf
+from app.services.report_variables import resolve_report_variables
 from app.services.stats_engine import compute_tag_stats, detect_anomalies
 
 
@@ -140,6 +141,15 @@ async def generate_report_from_template(
                 }
             )
 
+        # --- Tesis değişkenleri (rapor penceresinde değerlendir) ---
+        variable_ids: list[int] = json.loads(getattr(template, "variable_ids", None) or "[]")
+        tz_offset = settings.REPORT_TZ_OFFSET_HOURS
+        win_start = start.replace(tzinfo=None)
+        win_end = end.replace(tzinfo=None)
+        per_variable_data, variable_refs = await resolve_report_variables(
+            db, variable_ids, start=win_start, end=win_end, tz_offset_hours=tz_offset
+        )
+
         # Summary bar chart
         avgs = [td["stats"].avg or 0.0 for td in per_tag_data]
         names = [td["tag"].name for td in per_tag_data]
@@ -188,6 +198,7 @@ async def generate_report_from_template(
                 summary_chart,
                 lang=lang,
                 grafana_charts=grafana_charts,
+                variables=per_variable_data,
             )
             ext = "xlsx"
         elif template.output_format == "pdf":
@@ -200,6 +211,7 @@ async def generate_report_from_template(
                 generated_at,
                 lang=lang,
                 grafana_charts=grafana_charts,
+                variables=per_variable_data,
             )
             ext = "pdf"
         else:
@@ -217,6 +229,7 @@ async def generate_report_from_template(
                     }
                     for td in per_tag_data
                 ],
+                "variables": per_variable_data,
             }
             content = json.dumps(serialized, default=str).encode()
             ext = "json"
@@ -235,9 +248,11 @@ async def generate_report_from_template(
                 }
                 for td in per_tag_data
             ],
+            "variables": per_variable_data,
             "generated_at": datetime.now(UTC).isoformat(),
         }
         archive.result_json = gzip.compress(json.dumps(summary, default=str).encode())
+        archive.variable_refs_json = json.dumps(variable_refs) if variable_refs else None
         archive.file_path = file_path
         archive.file_size_bytes = len(content)
         archive.status = "completed"

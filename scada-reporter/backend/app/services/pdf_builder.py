@@ -19,6 +19,7 @@ def build_pdf(
     generated_at: datetime,
     lang: str = "en",
     grafana_charts: list[dict] | None = None,
+    variables: list[dict] | None = None,
 ) -> bytes:
     L = get_labels(lang)  # noqa: N806 — short alias for label dict, used pervasively
 
