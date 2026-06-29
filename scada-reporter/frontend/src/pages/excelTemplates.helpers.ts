@@ -10,6 +10,13 @@ export interface MappingRow {
   tag_id: number | null;
   agg: Agg;
   enabled: boolean;
+  source_type: "tag" | "variable";
+  variable_id: number | null;
+  write_mode: "series" | "reduce" | null;
+  reduce_op: "sum" | "avg" | "min" | "max" | "last" | null;
+  target_mode: "column" | "cell";
+  target_cell: string | null;
+  variable_code_snapshot: string | null;
 }
 
 export interface TemplateMeta {
@@ -33,13 +40,19 @@ export function toSavePayload(meta: TemplateMeta, rows: MappingRow[]) {
   return {
     ...meta,
     columns: rows
-      .filter((r) => r.enabled && r.tag_id != null)
+      .filter((r) => r.enabled && (r.tag_id != null || (r.source_type === "variable" && r.variable_id != null)))
       .map((r) => ({
         col_letter: r.col_letter,
-        tag_id: r.tag_id,
+        tag_id: r.source_type === "tag" ? r.tag_id : null,
         agg: r.agg,
         source_code: r.source_code,
         enabled: r.enabled,
+        source_type: r.source_type,
+        variable_id: r.source_type === "variable" ? r.variable_id : null,
+        write_mode: r.write_mode ?? null,
+        reduce_op: r.reduce_op ?? null,
+        target_mode: r.target_mode,
+        target_cell: r.target_cell ?? null,
       })),
   };
 }
