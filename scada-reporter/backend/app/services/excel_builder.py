@@ -220,6 +220,25 @@ def build_advanced_excel(
                 ws_gf.cell(row=row, column=1, value=gc.get("error") or "render edilemedi")
                 row += 2
 
+    # --- Tesis Değişkenleri sayfası (yalnızca değişken varsa eklenir) ---
+    if variables:
+        vws = wb.create_sheet("Tesis Değişkenleri")
+        _header_row(vws, ["Kod", "Ad", "Birim", "Tür", "Değer / Seri", "Uyarı"], row=1)
+        r = 2
+        for v in variables:
+            if v["kind"] == "scalar":
+                val_str = "" if v["value"] is None else f"{v['value']}"
+            else:
+                pts = v.get("points") or []
+                val_str = f"{len(pts)} nokta"
+            vws.cell(row=r, column=1, value=v["code"])
+            vws.cell(row=r, column=2, value=v["name"])
+            vws.cell(row=r, column=3, value=v["unit"])
+            vws.cell(row=r, column=4, value=v["kind"])
+            vws.cell(row=r, column=5, value=val_str)
+            vws.cell(row=r, column=6, value=v.get("warning") or "")
+            r += 1
+
     buf = BytesIO()
     wb.save(buf)
     buf.seek(0)

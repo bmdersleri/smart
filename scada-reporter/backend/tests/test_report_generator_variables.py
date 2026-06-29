@@ -154,3 +154,38 @@ async def test_archive_has_variable_refs_column(db_session):
     await db_session.commit()
     await db_session.refresh(arch)
     assert json.loads(arch.variable_refs_json)[0]["code"] == "x"
+
+
+@pytest.mark.asyncio
+async def test_excel_output_has_variables_sheet(db_session, tmp_path, monkeypatch):
+    from io import BytesIO
+
+    from openpyxl import load_workbook
+
+    from app.services.report_generator import generate_report_from_template
+
+    monkeypatch.chdir(tmp_path)
+    var = await _make_scalar_var(db_session)
+    arch = ReportArchive(
+        status="pending",
+        trigger="manual",
+        tag_ids="[]",
+        start=datetime(2026, 6, 1, tzinfo=UTC),
+        end=datetime(2026, 6, 2, tzinfo=UTC),
+        interval="daily",
+        output_format="excel",
+    )
+    db_session.add(arch)
+    await db_session.commit()
+    await db_session.refresh(arch)
+    tmpl = _VarTemplate(output_format="excel", variable_ids=json.dumps([var.id]))
+    await generate_report_from_template(
+        tmpl, datetime(2026, 6, 1), datetime(2026, 6, 2), db_session, arch.id
+    )
+    await db_session.refresh(arch)
+    with open(arch.file_path, "rb") as f:
+        wb = load_workbook(BytesIO(f.read()))
+    assert "Tesis Değişkenleri" in wb.sheetnames
+    ws = wb["Tesis Değişkenleri"]
+    codes = [row[0] for row in ws.iter_rows(min_row=2, values_only=True)]
+    assert "var_orch" in codes
