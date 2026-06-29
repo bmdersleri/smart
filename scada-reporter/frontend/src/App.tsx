@@ -12,7 +12,6 @@ import Reports from './pages/Reports'
 import AdvancedReports from './pages/AdvancedReports'
 import ExcelTemplates from './pages/ExcelTemplates'
 import Plc from './pages/Plc'
-import Metrics from './pages/Metrics'
 import Grafana from './pages/Grafana'
 import LabEntry from './pages/LabEntry'
 import ComplianceCenter from './pages/compliance/ComplianceCenter'
@@ -53,7 +52,7 @@ export default function App() {
               <Route path="excel-templates" element={<ExcelTemplates />} />
               <Route path="plc" element={<Plc />} />
               <Route path="plc-health" element={<Plc />} />
-              <Route path="metrics" element={<Metrics />} />
+              <Route path="metrics" element={<Navigate to="/" replace />} />
               <Route path="grafana" element={<Grafana />} />
               <Route path="lab" element={<LabEntry />} />
               <Route path="compliance" element={<ComplianceCenter />} />

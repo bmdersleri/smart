@@ -3,6 +3,8 @@
   "tab_overview": "Обзор",
   "tab_watchlist": "Список наблюдения",
   "tab_tags": "Все теги",
+  "tab_system": "Система",
+  "tab_database": "База данных",
   "stat_active_tags": "Активные теги",
   "stat_devices": "{{value}} устройств",
   "stat_readings_24h": "Чтения за 24 часа",

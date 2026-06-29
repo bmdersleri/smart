@@ -3,7 +3,6 @@ import { NavLink, Outlet } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
   Activity,
-  BarChart3,
   Database,
   FileBarChart2,
   FileSearch,
@@ -38,7 +37,6 @@ const nav: NavItem[] = [
   { to: '/reports', labelKey: 'nav_reports', icon: FileBarChart2, iconColor: 'text-rose-400', iconActiveColor: 'text-rose-300' },
   { to: '/advanced-reports', labelKey: 'nav_advanced_reports', icon: FileSearch, iconColor: 'text-violet-400', iconActiveColor: 'text-violet-300' },
   { to: '/excel-templates', labelKey: 'nav_excel_templates', icon: FileSpreadsheet, iconColor: 'text-emerald-400', iconActiveColor: 'text-emerald-300' },
-  { to: '/metrics', labelKey: 'nav_metrics', icon: BarChart3, iconColor: 'text-orange-400', iconActiveColor: 'text-orange-300' },
   { to: '/grafana', labelKey: 'nav_grafana', icon: Gauge, iconColor: 'text-sky-400', iconActiveColor: 'text-sky-300' },
   { to: '/lab', labelKey: 'nav_lab', icon: FlaskConical, iconColor: 'text-pink-400', iconActiveColor: 'text-pink-300' },
   { to: '/compliance', labelKey: 'nav_compliance', icon: ShieldCheck, iconColor: 'text-teal-400', iconActiveColor: 'text-teal-300' },
@@ -86,7 +84,7 @@ export default function Layout() {
               end={to === '/'}
               onClick={() => setMobileNav(false)}
               className={({ isActive }) =>
-                `group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+                `group flex items-center gap-3 px-3 py-2.5 rounded-xl text-base font-medium transition-all duration-200 ${
                   isActive
                     ? 'bg-cyan-500/10 text-cyan-400 ring-1 ring-cyan-500/30 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]'
                     : 'text-gray-400 hover:bg-white/5 hover:text-gray-200'
@@ -106,7 +104,7 @@ export default function Layout() {
               to="/users"
               onClick={() => setMobileNav(false)}
               className={({ isActive }) =>
-                `group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+                `group flex items-center gap-3 px-3 py-2.5 rounded-xl text-base font-medium transition-all duration-200 ${
                   isActive
                     ? 'bg-cyan-500/10 text-cyan-400 ring-1 ring-cyan-500/30 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]'
                     : 'text-gray-400 hover:bg-white/5 hover:text-gray-200'

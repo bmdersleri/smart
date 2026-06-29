@@ -3,6 +3,8 @@
   "tab_overview": "Özet",
   "tab_watchlist": "İzleme Listesi",
   "tab_tags": "Tüm Tag'ler",
+  "tab_system": "Sistem",
+  "tab_database": "Veritabanı",
   "stat_active_tags": "Aktif Tag",
   "stat_devices": "{{value}} cihaz",
   "stat_readings_24h": "24 Saat Okuma",

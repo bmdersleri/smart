@@ -3,6 +3,8 @@
   "tab_overview": "Overview",
   "tab_watchlist": "Watchlist",
   "tab_tags": "All Tags",
+  "tab_system": "System",
+  "tab_database": "Database",
   "stat_active_tags": "Active Tags",
   "stat_devices": "{{value}} devices",
   "stat_readings_24h": "24-Hour Readings",

@@ -7,6 +7,8 @@ import Dashboard from '../Dashboard'
 vi.mock('../dashboard/OverviewTab', () => ({ default: () => null }))
 vi.mock('../dashboard/WatchlistTab', () => ({ default: () => null }))
 vi.mock('../dashboard/AllTagsTab', () => ({ default: () => null }))
+vi.mock('../dashboard/SystemTab', () => ({ default: () => null }))
+vi.mock('../dashboard/DatabaseTab', () => ({ default: () => null }))
 // Dashboard reads live connection status via a TanStack-Query hook; stub it so the
 // test needs no QueryClientProvider (it only asserts the static tab labels).
 vi.mock('../../hooks/useLiveDashboard', () => ({ useLiveDashboard: () => ({ status: 'connected' }) }))
@@ -14,15 +16,18 @@ vi.mock('../../hooks/useLiveDashboard', () => ({ useLiveDashboard: () => ({ stat
 describe('Dashboard i18n', () => {
   beforeEach(async () => { await i18n.changeLanguage('en') })
 
-  it('renders the English tab label', () => {
+  it('renders the English tab labels', () => {
     render(<Dashboard />)
     expect(screen.getByRole('button', { name: 'Overview' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'System' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Database' })).toBeTruthy()
   })
 
   it('renders the Turkish tab label after switch', async () => {
     await i18n.changeLanguage('tr')
     render(<Dashboard />)
     expect(screen.getByRole('button', { name: 'Özet' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Sistem' })).toBeTruthy()
   })
 
   it('shows no raw translation keys', () => {

@@ -4,14 +4,18 @@ import { useLiveDashboard } from '../hooks/useLiveDashboard'
 import AllTagsTab from './dashboard/AllTagsTab'
 import OverviewTab from './dashboard/OverviewTab'
 import WatchlistTab from './dashboard/WatchlistTab'
+import SystemTab from './dashboard/SystemTab'
+import DatabaseTab from './dashboard/DatabaseTab'
 import SmartReportIcon from '../components/SmartReportIcon'
 
-type Tab = 'overview' | 'watchlist' | 'tags'
+type Tab = 'overview' | 'watchlist' | 'tags' | 'system' | 'database'
 
 const TABS: { id: Tab; labelKey: string }[] = [
   { id: 'overview', labelKey: 'tab_overview' },
   { id: 'watchlist', labelKey: 'tab_watchlist' },
   { id: 'tags', labelKey: 'tab_tags' },
+  { id: 'system', labelKey: 'tab_system' },
+  { id: 'database', labelKey: 'tab_database' },
 ]
 
 export default function Dashboard() {
@@ -65,6 +69,8 @@ export default function Dashboard() {
       {activeTab === 'overview' && <OverviewTab active={activeTab === 'overview'} />}
       {activeTab === 'watchlist' && <WatchlistTab active={activeTab === 'watchlist'} />}
       {activeTab === 'tags' && <AllTagsTab active={activeTab === 'tags'} />}
+      {activeTab === 'system' && <SystemTab active={activeTab === 'system'} />}
+      {activeTab === 'database' && <DatabaseTab active={activeTab === 'database'} />}
     </div>
   )
 }

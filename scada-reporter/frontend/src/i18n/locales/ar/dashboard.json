@@ -3,6 +3,8 @@
   "tab_overview": "نظرة عامة",
   "tab_watchlist": "قائمة المراقبة",
   "tab_tags": "جميع العلامات",
+  "tab_system": "النظام",
+  "tab_database": "قاعدة البيانات",
   "stat_active_tags": "العلامات النشطة",
   "stat_devices": "{{value}} أجهزة",
   "stat_readings_24h": "قراءات 24 ساعة",

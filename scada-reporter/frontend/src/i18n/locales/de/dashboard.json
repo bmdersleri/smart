@@ -3,6 +3,8 @@
   "tab_overview": "Übersicht",
   "tab_watchlist": "Beobachtungsliste",
   "tab_tags": "Alle Tags",
+  "tab_system": "System",
+  "tab_database": "Datenbank",
   "stat_active_tags": "Aktive Tags",
   "stat_devices": "{{value}} Geräte",
   "stat_readings_24h": "Messungen (24 Stunden)",
