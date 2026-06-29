@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { getStreamToken } from '../api/client'
 import type { DashboardTag, DashboardTagsResponse } from '../api/client'

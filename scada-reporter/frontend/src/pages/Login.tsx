@@ -46,12 +46,12 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-cyan-950/20 via-gray-950 to-gray-950 flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="login-page min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-cyan-950/20 via-gray-950 to-gray-950 flex items-center justify-center p-4 relative overflow-hidden">
       {/* Decorative background glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] bg-cyan-500/10 rounded-full blur-[120px] pointer-events-none" />
 
       <div className="w-full max-w-sm relative z-10">
-        <div className="text-center mb-8">
+        <div className="login-heading text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 mb-4 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-blue-600/20 border border-cyan-500/20 shadow-lg shadow-cyan-500/10">
             <SmartReportIcon className="w-10 h-10 text-cyan-400" />
           </div>
@@ -63,7 +63,7 @@ export default function Login() {
           </div>
         </div>
 
-        <form onSubmit={submit} className="bg-surface-raised/40 backdrop-blur-2xl rounded-3xl p-8 space-y-5 border border-white/10 shadow-2xl shadow-black/50">
+        <form onSubmit={submit} className="login-card bg-surface-raised/40 backdrop-blur-2xl rounded-3xl p-8 space-y-5 border border-white/10 shadow-2xl shadow-black/50">
           <div>
             <label className="block text-sm text-gray-400 mb-1">{t('username')}</label>
             <input

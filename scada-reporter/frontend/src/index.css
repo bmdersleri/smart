@@ -33,15 +33,43 @@ html.light {
 }
 html.light body { background: #f1f5f9; }
 
+html.dark {
+  color-scheme: dark;
+}
+
+:root {
+  --control-bg: #1f2937;
+  --control-option-bg: #111827;
+  --control-text: #f8fafc;
+  --control-muted: #94a3b8;
+  --control-border: #374151;
+  --control-focus: #22d3ee;
+}
+
 /* yüzeyler + kenarlıklar: artık @theme token'ları üzerinden (bg-surface*,
    border-edge*). Light değerleri token'ları yeniden bağlar; opacity varyantları
    (bg-surface-raised/40 vb.) color-mix ile otomatik türetilir. */
+html.dark {
+  --control-bg: #1f2937;
+  --control-option-bg: #111827;
+  --control-text: #f8fafc;
+  --control-muted: #94a3b8;
+  --control-border: #374151;
+  --control-focus: #22d3ee;
+}
+
 html.light {
   --color-surface: #f1f5f9;          /* eski bg-gray-950 */
   --color-surface-raised: #ffffff;   /* eski bg-gray-900 */
   --color-surface-sunken: #e2e8f0;   /* eski bg-gray-800 */
   --color-edge: #e2e8f0;             /* eski border-gray-800 */
   --color-edge-strong: #cbd5e1;      /* eski border-gray-700 */
+  --control-bg: #ffffff;
+  --control-option-bg: #ffffff;
+  --control-text: #0f172a;
+  --control-muted: #64748b;
+  --control-border: #cbd5e1;
+  --control-focus: #0891b2;
 }
 
 /* metin */
@@ -59,8 +87,40 @@ html.light .hover\:bg-gray-700:hover { background-color: #cbd5e1; }
 html.light .hover\:text-white:hover { color: #0f172a; }
 html.light .hover\:bg-gray-800\/40:hover { background-color: rgba(226, 232, 240, 0.6); }
 
-/* girdiler */
-html.light input, html.light select, html.light textarea { color: #0f172a; }
+/* girdiler: native dropdown popup dahil tema başına açık kontrast */
+html :is(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+  select,
+  textarea
+) {
+  background-color: var(--control-bg);
+  border-color: var(--control-border);
+  color: var(--control-text);
+  caret-color: var(--control-text);
+}
+
+html :is(input, textarea)::placeholder {
+  color: var(--control-muted);
+}
+
+html select :is(option, optgroup) {
+  background-color: var(--control-option-bg);
+  color: var(--control-text);
+}
+
+html :is(input, select, textarea):focus {
+  border-color: color-mix(in srgb, var(--control-focus) 70%, transparent);
+}
+
+html input[type="file"] {
+  color: var(--control-text);
+}
+
+html input[type="file"]::file-selector-button {
+  background-color: var(--control-bg);
+  border: 1px solid var(--control-border);
+  color: var(--control-text);
+}
 
 /* ── renkli rozetler / durum metinleri: light modda okunur kontrast ──────────
    Koyu-tint pill arka planları (bg-*-900/xx) açık tona; açık metin (text-*-300/
@@ -219,4 +279,73 @@ html.light .hover\:bg-green-700:hover { background-color: #bbf7d0; }
   padding: 0.75rem 1rem;
   font-size: 0.875rem;
   color: #cbd5e1; /* gray-300 */
+}
+
+html.light .bg-surface-raised\/40 thead tr {
+  background: linear-gradient(to right, rgba(15,23,42,0.02), rgba(15,23,42,0.04));
+}
+
+html.light .bg-surface-raised\/40 th {
+  color: #475569; /* slate-600 */
+  border-bottom-color: rgba(15,23,42,0.08);
+}
+
+html.light .bg-surface-raised\/40 tbody tr:not(:last-child) td {
+  border-bottom-color: rgba(15,23,42,0.06);
+}
+
+html.light .bg-surface-raised\/40 tbody tr:hover {
+  background-color: rgba(15,23,42,0.04);
+}
+
+html.light .bg-surface-raised\/40 td {
+  color: #334155; /* slate-700 */
+}
+
+/* Login ekranı her tema ayarında koyu hero olarak kalır; light utility
+   remap'leri bu yüzeyde kontrastı düşürmemeli. */
+html.light .login-page .login-heading .text-white {
+  color: #0f172a;
+}
+
+html.light .login-page .login-heading .text-gray-400 {
+  color: #64748b;
+}
+
+html.light .login-page .login-card .text-gray-400 {
+  color: #cbd5e1;
+}
+
+html.light .login-page .login-card .text-gray-500 {
+  color: #94a3b8;
+}
+
+html.light .login-page .text-green-400 {
+  color: #4ade80;
+}
+
+html.light .login-page .text-red-400 {
+  color: #f87171;
+}
+
+html.light .login-page .login-card {
+  background-color: rgba(15, 23, 42, 0.72);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+html.light .login-page .login-card :is(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+  textarea
+) {
+  background-color: rgba(15, 23, 42, 0.75);
+  border-color: rgba(255, 255, 255, 0.16);
+  color: #f8fafc;
+}
+
+html.light .login-page .login-card :is(input, textarea)::placeholder {
+  color: #94a3b8;
+}
+
+html.light .login-page .login-card button[type="submit"] {
+  color: #ffffff;
 }
