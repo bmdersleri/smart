@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext'
-import LanguageSelector from './LanguageSelector'
 import LicenseBadge from './LicenseBadge'
 import PlcAlertBadge from './PlcAlertBadge'
 import SmartReportIcon from './SmartReportIcon'
@@ -103,9 +102,6 @@ export default function Layout() {
               <p className="text-sm font-medium text-white truncate">{user?.full_name || user?.username}</p>
               <p className="text-xs text-gray-500 capitalize">{user?.role}</p>
             </div>
-          </div>
-          <div className="px-2 py-1 mb-2">
-            <LanguageSelector />
           </div>
           <button onClick={logout} className="w-full text-start px-3 py-2 text-sm font-medium text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-colors">
             {t('logout')}
