@@ -22,19 +22,27 @@ import LicenseBadge from './LicenseBadge'
 import PlcAlertBadge from './PlcAlertBadge'
 import SmartReportIcon from './SmartReportIcon'
 
-const nav: Array<{ to: string; labelKey: string; icon: LucideIcon }> = [
-  { to: '/', labelKey: 'nav_dashboard', icon: LayoutDashboard },
-  { to: '/tags', labelKey: 'nav_tags', icon: Database },
-  { to: '/plc', labelKey: 'nav_plc', icon: Network },
-  { to: '/trend', labelKey: 'nav_trend', icon: Activity },
-  { to: '/reports', labelKey: 'nav_reports', icon: FileBarChart2 },
-  { to: '/advanced-reports', labelKey: 'nav_advanced_reports', icon: FileSearch },
-  { to: '/excel-templates', labelKey: 'nav_excel_templates', icon: FileSpreadsheet },
-  { to: '/metrics', labelKey: 'nav_metrics', icon: BarChart3 },
-  { to: '/grafana', labelKey: 'nav_grafana', icon: Gauge },
-  { to: '/lab', labelKey: 'nav_lab', icon: FlaskConical },
-  { to: '/compliance', labelKey: 'nav_compliance', icon: ShieldCheck },
-  { to: '/settings', labelKey: 'nav_settings', icon: Settings },
+type NavItem = {
+  to: string
+  labelKey: string
+  icon: LucideIcon
+  iconColor: string
+  iconActiveColor: string
+}
+
+const nav: NavItem[] = [
+  { to: '/', labelKey: 'nav_dashboard', icon: LayoutDashboard, iconColor: 'text-blue-400', iconActiveColor: 'text-blue-300' },
+  { to: '/tags', labelKey: 'nav_tags', icon: Database, iconColor: 'text-amber-400', iconActiveColor: 'text-amber-300' },
+  { to: '/plc', labelKey: 'nav_plc', icon: Network, iconColor: 'text-cyan-400', iconActiveColor: 'text-cyan-300' },
+  { to: '/trend', labelKey: 'nav_trend', icon: Activity, iconColor: 'text-lime-400', iconActiveColor: 'text-lime-300' },
+  { to: '/reports', labelKey: 'nav_reports', icon: FileBarChart2, iconColor: 'text-rose-400', iconActiveColor: 'text-rose-300' },
+  { to: '/advanced-reports', labelKey: 'nav_advanced_reports', icon: FileSearch, iconColor: 'text-violet-400', iconActiveColor: 'text-violet-300' },
+  { to: '/excel-templates', labelKey: 'nav_excel_templates', icon: FileSpreadsheet, iconColor: 'text-emerald-400', iconActiveColor: 'text-emerald-300' },
+  { to: '/metrics', labelKey: 'nav_metrics', icon: BarChart3, iconColor: 'text-orange-400', iconActiveColor: 'text-orange-300' },
+  { to: '/grafana', labelKey: 'nav_grafana', icon: Gauge, iconColor: 'text-sky-400', iconActiveColor: 'text-sky-300' },
+  { to: '/lab', labelKey: 'nav_lab', icon: FlaskConical, iconColor: 'text-pink-400', iconActiveColor: 'text-pink-300' },
+  { to: '/compliance', labelKey: 'nav_compliance', icon: ShieldCheck, iconColor: 'text-teal-400', iconActiveColor: 'text-teal-300' },
+  { to: '/settings', labelKey: 'nav_settings', icon: Settings, iconColor: 'text-slate-400', iconActiveColor: 'text-slate-200' },
 ]
 
 export default function Layout() {
@@ -71,9 +79,11 @@ export default function Layout() {
         </div>
 
         <nav className="flex-1 p-3 space-y-1.5 overflow-y-auto custom-scrollbar">
-          {nav.map(({ to, labelKey, icon: Icon }) => (
+          {nav.map(({ to, labelKey, icon: Icon, iconColor, iconActiveColor }) => (
             <NavLink
-              key={to} to={to} end={to === '/'}
+              key={to}
+              to={to}
+              end={to === '/'}
               onClick={() => setMobileNav(false)}
               className={({ isActive }) =>
                 `group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
@@ -83,11 +93,12 @@ export default function Layout() {
                 }`
               }
             >
-              <Icon className={`w-5 h-5 shrink-0 transition-colors ${
-                // Optional: Make icon match active state color specifically or leave inherited
-                'opacity-80 group-hover:opacity-100'
-              }`} />
-              {t(labelKey)}
+              {({ isActive }) => (
+                <>
+                  <Icon className={`w-5 h-5 shrink-0 transition-colors ${isActive ? `${iconActiveColor} opacity-100` : `${iconColor} opacity-80 group-hover:opacity-100`}`} />
+                  {t(labelKey)}
+                </>
+              )}
             </NavLink>
           ))}
           {user?.role === 'admin' && (
@@ -102,8 +113,12 @@ export default function Layout() {
                 }`
               }
             >
-              <Users className="w-4 h-4 shrink-0" />
-              {t('nav_users')}
+              {({ isActive }) => (
+                <>
+                  <Users className={`w-4 h-4 shrink-0 transition-colors ${isActive ? 'text-indigo-300 opacity-100' : 'text-indigo-400 opacity-80 group-hover:opacity-100'}`} />
+                  {t('nav_users')}
+                </>
+              )}
             </NavLink>
           )}
         </nav>
