@@ -16,6 +16,9 @@ def test_catalog_keys_exact():
         "report_template:create",
         "report_template:edit",
         "report_template:delete",
+        "facility_variable:create",
+        "facility_variable:edit",
+        "facility_variable:delete",
     }
 
 
@@ -61,3 +64,29 @@ def test_unknown_override_key_ignored():
 def test_unknown_role_has_no_permissions():
     u = _user("ghost")
     assert p.effective_permissions(u) == set()
+
+
+def test_facility_variable_perms_registered():
+    for perm in (
+        p.PERM_FACILITY_VARIABLE_CREATE,
+        p.PERM_FACILITY_VARIABLE_EDIT,
+        p.PERM_FACILITY_VARIABLE_DELETE,
+    ):
+        assert perm in p.ALL_PERMISSIONS
+
+
+def test_facility_variable_role_defaults():
+    admin = p.effective_permissions(_user("admin"))
+    assert {
+        p.PERM_FACILITY_VARIABLE_CREATE,
+        p.PERM_FACILITY_VARIABLE_EDIT,
+        p.PERM_FACILITY_VARIABLE_DELETE,
+    } <= admin
+
+    operator = p.effective_permissions(_user("operator"))
+    assert p.PERM_FACILITY_VARIABLE_CREATE in operator
+    assert p.PERM_FACILITY_VARIABLE_EDIT in operator
+    assert p.PERM_FACILITY_VARIABLE_DELETE not in operator
+
+    viewer = p.effective_permissions(_user("viewer"))
+    assert p.PERM_FACILITY_VARIABLE_CREATE not in viewer

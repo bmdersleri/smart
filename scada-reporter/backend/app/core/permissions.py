@@ -18,6 +18,9 @@ PERM_PLC_MANAGE = "plc:manage"
 PERM_REPORT_CREATE = "report_template:create"
 PERM_REPORT_EDIT = "report_template:edit"
 PERM_REPORT_DELETE = "report_template:delete"
+PERM_FACILITY_VARIABLE_CREATE = "facility_variable:create"
+PERM_FACILITY_VARIABLE_EDIT = "facility_variable:edit"
+PERM_FACILITY_VARIABLE_DELETE = "facility_variable:delete"
 
 ALL_PERMISSIONS: tuple[str, ...] = (
     PERM_TAG_CREATE,
@@ -25,6 +28,9 @@ ALL_PERMISSIONS: tuple[str, ...] = (
     PERM_REPORT_CREATE,
     PERM_REPORT_EDIT,
     PERM_REPORT_DELETE,
+    PERM_FACILITY_VARIABLE_CREATE,
+    PERM_FACILITY_VARIABLE_EDIT,
+    PERM_FACILITY_VARIABLE_DELETE,
 )
 
 ROLE_DEFAULTS: dict[str, dict[str, bool]] = {
@@ -35,6 +41,9 @@ ROLE_DEFAULTS: dict[str, dict[str, bool]] = {
         PERM_REPORT_CREATE: True,
         PERM_REPORT_EDIT: True,
         PERM_REPORT_DELETE: False,
+        PERM_FACILITY_VARIABLE_CREATE: True,
+        PERM_FACILITY_VARIABLE_EDIT: True,
+        PERM_FACILITY_VARIABLE_DELETE: False,
     },
     "viewer": {p: False for p in ALL_PERMISSIONS},
 }
