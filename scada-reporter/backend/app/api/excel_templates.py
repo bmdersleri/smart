@@ -25,6 +25,35 @@ class ColumnIn(BaseModel):
     agg: str = "avg"
     source_code: str = ""
     enabled: bool = True
+    source_type: str = "tag"
+    variable_id: int | None = None
+    write_mode: str | None = None
+    reduce_op: str | None = None
+    target_mode: str = "column"
+    target_cell: str | None = None
+    variable_code_snapshot: str | None = None
+
+
+def _validate_columns(columns: list[ColumnIn]) -> None:
+    """Sütun kaynak/hedef tutarlılığını doğrular; ihlalde HTTP 422 fırlatır."""
+    for c in columns:
+        if c.source_type == "variable":
+            if c.variable_id is None or c.tag_id is not None:
+                raise HTTPException(
+                    422, f"{c.col_letter}: variable sütunu yalnız variable_id ister (tag_id boş)"
+                )
+            if c.write_mode == "series" and c.target_mode != "column":
+                raise HTTPException(
+                    422,
+                    f"{c.col_letter}: write_mode=series yalnız target_mode=column ile geçerli",
+                )
+            if c.target_mode == "cell" and not c.target_cell:
+                raise HTTPException(
+                    422,
+                    f"{c.col_letter}: target_mode=cell için target_cell gerekir",
+                )
+        elif c.variable_id is not None:
+            raise HTTPException(422, f"{c.col_letter}: tag sütununda variable_id olamaz")
 
 
 class TemplateIn(BaseModel):
@@ -73,6 +102,13 @@ def _to_out(tpl: ExcelTemplate) -> TemplateOut:
                 agg=c.agg,
                 source_code=c.source_code,
                 enabled=c.enabled,
+                source_type=c.source_type,
+                variable_id=c.variable_id,
+                write_mode=c.write_mode,
+                reduce_op=c.reduce_op,
+                target_mode=c.target_mode,
+                target_cell=c.target_cell,
+                variable_code_snapshot=c.variable_code_snapshot,
             )
             for c in tpl.columns
         ],
@@ -98,6 +134,7 @@ async def create_template(
     db: AsyncSession = Depends(get_db),
     user=Depends(require_perm("report_template:create")),
 ):
+    _validate_columns(payload.columns)
     try:
         blob = base64.b64decode(payload.file_b64)
     except Exception as e:
@@ -120,6 +157,13 @@ async def create_template(
             agg=c.agg,
             source_code=c.source_code,
             enabled=c.enabled,
+            source_type=c.source_type,
+            variable_id=c.variable_id,
+            write_mode=c.write_mode,
+            reduce_op=c.reduce_op,
+            target_mode=c.target_mode,
+            target_cell=c.target_cell,
+            variable_code_snapshot=c.variable_code_snapshot,
         )
         for c in payload.columns
     ]

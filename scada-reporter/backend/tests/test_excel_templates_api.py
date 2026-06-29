@@ -131,6 +131,84 @@ async def test_duplicate_name_returns_409(client, seeded_tag):
 
 
 @pytest.mark.asyncio
+async def test_variable_binding_roundtrip(client, db_session):
+    import base64
+
+    from app.services.facility_variables.service import create_variable
+
+    var = await create_variable(
+        db_session,
+        code="v_api",
+        name="v",
+        description="",
+        kind="scalar",
+        unit="m3/gun",
+        expression={"op": "const", "value": 1.0},
+        null_policy="skip",
+        quality_policy="good_only",
+        default_time_grain="day",
+        value_type="number",
+        created_by=1,
+    )
+    payload = {
+        "name": "vbind-api",
+        "description": "",
+        "file_b64": base64.b64encode(_template_bytes()).decode(),
+        "sheet_name": "OCAK 2026",
+        "header_row": 2,
+        "date_col": "D",
+        "data_start_row": 3,
+        "date_mode": "write",
+        "columns": [
+            {
+                "col_letter": "K",
+                "source_type": "variable",
+                "variable_id": var.id,
+                "write_mode": "reduce",
+                "reduce_op": "sum",
+                "target_mode": "cell",
+                "target_cell": "K5",
+                "variable_code_snapshot": "v_api",
+                "enabled": True,
+            }
+        ],
+    }
+    resp = await client.post("/api/excel-templates", json=payload)
+    assert resp.status_code == 201
+    col = resp.json()["columns"][0]
+    assert col["source_type"] == "variable"
+    assert col["variable_id"] == var.id
+    assert col["target_cell"] == "K5"
+
+
+@pytest.mark.asyncio
+async def test_variable_column_rejects_both_sources(client):
+    import base64
+
+    payload = {
+        "name": "bad-both",
+        "description": "",
+        "file_b64": base64.b64encode(_template_bytes()).decode(),
+        "sheet_name": "OCAK 2026",
+        "header_row": 2,
+        "date_col": "D",
+        "data_start_row": 3,
+        "date_mode": "write",
+        "columns": [
+            {
+                "col_letter": "K",
+                "source_type": "variable",
+                "variable_id": 1,
+                "tag_id": 9,
+                "enabled": True,
+            }
+        ],
+    }
+    resp = await client.post("/api/excel-templates", json=payload)
+    assert resp.status_code == 422
+
+
+@pytest.mark.asyncio
 async def test_generate_blocks_on_drift(client, seeded_tag):
     import base64
 
