@@ -56,6 +56,7 @@ from app.models import audit_log as _audit_log  # noqa: F401
 from app.models import backup as _backup  # noqa: F401
 from app.models import compliance as _compliance  # noqa: F401
 from app.models import excel_template as _excel_template  # noqa: F401
+from app.models import facility_variable as _facility_variable  # noqa: F401
 from app.models import lab as _lab  # noqa: F401
 from app.models import plc_health as _plc_health  # noqa: F401
 from app.models import plc_incident as _plc_incident  # noqa: F401
