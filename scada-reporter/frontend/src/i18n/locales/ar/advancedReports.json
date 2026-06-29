@@ -112,5 +112,10 @@
   "gen_dashboard_loading": "جارٍ الإنشاء...",
   "gen_dashboard_open": "فتح في Grafana",
   "gen_dashboard_no_tags": "يجب أن يحتوي القالب على علامة واحدة على الأقل",
-  "gen_dashboard_error": "فشل إنشاء لوحة التحكم"
+  "gen_dashboard_error": "فشل إنشاء لوحة التحكم",
+  "variables_help": "أضف متغيرات المنشأة بشكل اختياري",
+  "variables_selected": "{{value}} متغيرات محددة",
+  "preview_variable_count": "المتغيرات",
+  "archive_vars": "{{count}} متغ.",
+  "archive_vars_col": "متغ."
 }

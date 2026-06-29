@@ -11,6 +11,7 @@ import {
   getArchive, downloadArchiveReport,
   getTags, listGrafanaDashboards, listGrafanaPanels,
   generateDashboardFromTemplate,
+  listFacilityVariables,
 } from '../api/client'
 import type { ReportTemplate, TemplateCreate, ScheduledReport, ArchiveEntry, GrafanaPanelRef } from '../api/client'
 import { useSortable } from '../hooks/useSortable'
@@ -66,7 +67,7 @@ const BTN_GHOST = 'px-4 py-2 rounded-lg border border-edge-strong text-gray-300 
 
 const DEFAULT_FORM: TemplateCreate = {
   name: '', description: '',
-  tag_ids: [],
+  tag_ids: [], variable_ids: [],
   time_range_type: 'last_24h', custom_start: null, custom_end: null,
   interval: 'hourly', output_format: 'excel',
   include_std_dev: true, include_percentiles: true, percentile_levels: [10, 25, 50, 75, 90, 95],
@@ -75,7 +76,7 @@ const DEFAULT_FORM: TemplateCreate = {
   show_summary_stats: true, show_trend_charts: true, show_anomaly_table: true, show_raw_data: false,
 }
 
-function TemplateEditorModal({
+export function TemplateEditorModal({
   initial, onClose,
 }: { initial?: ReportTemplate; onClose: () => void }) {
   const { t } = useTranslation(['advancedReports', 'common'])
@@ -105,6 +106,11 @@ function TemplateEditorModal({
     queryFn: () => listGrafanaPanels(selectedDashUid).then(r => r.data),
     enabled: !!selectedDashUid,
     retry: false,
+  })
+
+  const { data: facilityVars = [] } = useQuery({
+    queryKey: ['facility-variables'],
+    queryFn: () => listFacilityVariables().then((r) => r.data),
   })
 
   const addGrafanaPanel = () => {
@@ -138,6 +144,11 @@ function TemplateEditorModal({
     set('tag_ids', form.tag_ids.includes(id)
       ? form.tag_ids.filter(x => x !== id)
       : [...form.tag_ids, id])
+
+  const toggleVariable = (id: number) =>
+    set('variable_ids', (form.variable_ids ?? []).includes(id)
+      ? (form.variable_ids ?? []).filter((x) => x !== id)
+      : [...(form.variable_ids ?? []), id])
 
   const STEPS = [t('step_tags'), t('step_options'), t('step_anomaly'), t('step_preview')]
 
@@ -187,6 +198,21 @@ function TemplateEditorModal({
                 </button>
               ))}
               <p className="text-xs text-gray-500">{t('tags_selected', { value: form.tag_ids.length })}</p>
+              <div className="pt-3 border-t border-edge/50">
+                <p className="text-sm text-gray-400">{t('variables_help')}</p>
+                <div className="flex flex-wrap gap-2 mt-1">
+                  {facilityVars.filter((v) => v.is_active).map((v) => (
+                    <button key={v.id} type="button" onClick={() => toggleVariable(v.id)}
+                      className={`px-3 py-1 rounded-lg text-sm border transition-colors ${
+                        (form.variable_ids ?? []).includes(v.id)
+                          ? 'border-emerald-500 bg-emerald-600/20 text-emerald-300'
+                          : 'border-edge-strong text-gray-400 hover:border-gray-500'}`}>
+                      {v.code}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-gray-500 mt-1">{t('variables_selected', { value: (form.variable_ids ?? []).length })}</p>
+              </div>
             </div>
           )}
 
@@ -356,6 +382,7 @@ function TemplateEditorModal({
             <div className="space-y-4">
               <div className="bg-surface-sunken/60 rounded-xl p-4 space-y-2 text-sm">
                 <div className="flex justify-between"><span className="text-gray-500">{t('preview_tag_count')}</span><span className="text-white">{form.tag_ids.length}</span></div>
+                <div className="flex justify-between"><span className="text-gray-500">{t('preview_variable_count')}</span><span className="text-white">{(form.variable_ids ?? []).length}</span></div>
                 <div className="flex justify-between"><span className="text-gray-500">{t('preview_time_range')}</span><span className="text-white">{(() => { const o = TIME_RANGE_OPTS.find(o => o.value === form.time_range_type); return o ? t(o.labelKey) : '' })()}</span></div>
                 <div className="flex justify-between"><span className="text-gray-500">{t('preview_interval')}</span><span className="text-white capitalize">{form.interval}</span></div>
                 <div className="flex justify-between"><span className="text-gray-500">{t('preview_format')}</span><span className="text-white uppercase">{form.output_format}</span></div>
@@ -841,6 +868,7 @@ function ArchiveTab() {
                   <SortHeader label={t('col_format')} sortKey="output_format" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
                   <SortHeader label={t('col_status')} sortKey="status" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
                   <SortHeader label={t('col_size')} sortKey="file_size_bytes" sort={sort} onToggle={toggle} className="pb-2 font-medium" />
+                  <th className="pb-2 text-gray-500 font-medium">{t('archive_vars_col')}</th>
                   <th className="pb-2 text-end text-gray-500 font-medium">{t('col_download')}</th>
                 </tr>
               </thead>
@@ -860,6 +888,11 @@ function ArchiveTab() {
                     <td className="py-3 text-gray-400 text-xs uppercase">{e.output_format}</td>
                     <td className="py-3"><StatusBadge status={e.status} /></td>
                     <td className="py-3 text-gray-500 text-xs">{fmtBytes(e.file_size_bytes)}</td>
+                    <td className="py-3 text-gray-400 text-xs">
+                      {Array.isArray((e as { variable_refs?: unknown[] }).variable_refs) && (e as { variable_refs?: unknown[] }).variable_refs!.length > 0
+                        ? t('archive_vars', { count: (e as { variable_refs?: unknown[] }).variable_refs!.length })
+                        : '—'}
+                    </td>
                     <td className="py-3 text-end">
                       {e.status === 'completed'
                         ? <button onClick={() => download(e)} disabled={downloading === e.id}

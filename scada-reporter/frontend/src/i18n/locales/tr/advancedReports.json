@@ -112,5 +112,10 @@
   "gen_dashboard_loading": "Oluşturuluyor...",
   "gen_dashboard_open": "Grafana'da Aç",
   "gen_dashboard_no_tags": "Tag'li şablon gerekir",
-  "gen_dashboard_error": "Dashboard oluşturulamadı"
+  "gen_dashboard_error": "Dashboard oluşturulamadı",
+  "variables_help": "İsteğe bağlı tesis değişkenleri ekleyin",
+  "variables_selected": "{{value}} değişken seçildi",
+  "preview_variable_count": "Değişkenler",
+  "archive_vars": "{{count}} değişken",
+  "archive_vars_col": "Değişken"
 }

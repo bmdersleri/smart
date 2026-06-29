@@ -112,5 +112,10 @@
   "gen_dashboard_loading": "Генерация...",
   "gen_dashboard_open": "Открыть в Grafana",
   "gen_dashboard_no_tags": "Шаблон должен содержать хотя бы один тег",
-  "gen_dashboard_error": "Не удалось создать дашборд"
+  "gen_dashboard_error": "Не удалось создать дашборд",
+  "variables_help": "Дополнительно укажите переменные объекта",
+  "variables_selected": "Выбрано переменных: {{value}}",
+  "preview_variable_count": "Переменные",
+  "archive_vars": "{{count}} пер.",
+  "archive_vars_col": "Перем."
 }

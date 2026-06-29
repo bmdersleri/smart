@@ -112,5 +112,10 @@
   "gen_dashboard_loading": "Wird generiert...",
   "gen_dashboard_open": "In Grafana öffnen",
   "gen_dashboard_no_tags": "Vorlage benötigt mindestens einen Tag",
-  "gen_dashboard_error": "Dashboard-Generierung fehlgeschlagen"
+  "gen_dashboard_error": "Dashboard-Generierung fehlgeschlagen",
+  "variables_help": "Anlagenvariablen optional hinzufügen",
+  "variables_selected": "{{value}} Variablen ausgewählt",
+  "preview_variable_count": "Variablen",
+  "archive_vars": "{{count}} Var.",
+  "archive_vars_col": "Var."
 }

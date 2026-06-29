@@ -112,5 +112,10 @@
   "gen_dashboard_loading": "Generating...",
   "gen_dashboard_open": "Open in Grafana",
   "gen_dashboard_no_tags": "Template needs at least one tag",
-  "gen_dashboard_error": "Dashboard generation failed"
+  "gen_dashboard_error": "Dashboard generation failed",
+  "variables_help": "Optionally include facility variables",
+  "variables_selected": "{{value}} variables selected",
+  "preview_variable_count": "Variables",
+  "archive_vars": "{{count}} vars",
+  "archive_vars_col": "Vars"
 }

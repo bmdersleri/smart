@@ -390,7 +390,7 @@ export const downloadHistoryReport = (id: number) => api.get(`/reports/history/$
 // Advanced Reports
 // ReportTemplate is re-exported from generated (TemplateResponse).
 export interface TemplateCreate {
-  name: string; description?: string; tag_ids: number[]
+  name: string; description?: string; tag_ids: number[]; variable_ids?: number[]
   time_range_type?: string; custom_start?: string | null; custom_end?: string | null
   interval?: string; output_format?: string
   include_std_dev?: boolean; include_percentiles?: boolean; percentile_levels?: number[]
