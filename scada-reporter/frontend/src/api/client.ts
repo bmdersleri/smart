@@ -914,3 +914,84 @@ export const downloadReportPack = (id: number, format: ComplianceReportPackForma
     params: { format },
     responseType: 'blob',
   })
+
+// --- Facility variables -----------------------------------------------------
+export type ExprNode = Record<string, unknown>
+
+export interface FacilityVariable {
+  id: number
+  code: string
+  name: string
+  description: string
+  kind: 'scalar' | 'series'
+  value_type: string
+  unit: string
+  expression: ExprNode
+  null_policy: string
+  quality_policy: string
+  default_time_grain: string | null
+  is_active: boolean
+  version: number
+  dependency_count: number
+  warnings: string[]
+}
+
+export interface FacilityVariableCreate {
+  code: string
+  name: string
+  description?: string
+  kind: 'scalar' | 'series'
+  unit?: string
+  value_type?: string
+  expression: ExprNode
+  null_policy?: string
+  quality_policy?: string
+  default_time_grain?: string | null
+}
+
+export interface FacilityVariableUpdate {
+  name: string
+  description?: string
+  unit?: string
+  expression: ExprNode
+  null_policy?: string
+  quality_policy?: string
+  default_time_grain?: string | null
+}
+
+export interface PreviewWindow {
+  type: 'month' | 'custom'
+  year?: number
+  month?: number
+  start?: string
+  end?: string
+}
+export interface PreviewRequestBody {
+  window: PreviewWindow
+  grain?: string | null
+  tz_offset_hours?: number | null
+}
+export type PreviewResult =
+  | { kind: 'scalar'; value: number | null; unit: string }
+  | { kind: 'series'; points: { ts: string; value: number | null }[]; unit: string }
+
+export interface VariableDependency {
+  depends_on_type: 'tag' | 'variable'
+  depends_on_tag_id: number | null
+  depends_on_variable_id: number | null
+}
+
+export const listFacilityVariables = () => api.get<FacilityVariable[]>('/facility-variables/')
+export const getFacilityVariable = (id: number) => api.get<FacilityVariable>(`/facility-variables/${id}`)
+export const createFacilityVariable = (data: FacilityVariableCreate) =>
+  api.post<FacilityVariable>('/facility-variables/', data)
+export const updateFacilityVariable = (id: number, data: FacilityVariableUpdate) =>
+  api.put<FacilityVariable>(`/facility-variables/${id}`, data)
+export const deleteFacilityVariable = (id: number, force = false) =>
+  api.delete(`/facility-variables/${id}${force ? '?force=true' : ''}`)
+export const validateExpression = (body: { expression: ExprNode; kind: 'scalar' | 'series' }) =>
+  api.post<{ valid: boolean }>('/facility-variables/validate', body)
+export const previewVariable = (id: number, body: PreviewRequestBody) =>
+  api.post<PreviewResult>(`/facility-variables/${id}/preview`, body)
+export const getVariableDependencies = (id: number) =>
+  api.get<VariableDependency[]>(`/facility-variables/${id}/dependencies`)
