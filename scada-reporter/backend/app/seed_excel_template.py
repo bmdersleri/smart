@@ -11,6 +11,7 @@ import asyncio
 from pathlib import Path
 
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import AsyncSessionLocal
 from app.models.excel_template import ExcelTemplate, ExcelTemplateColumn
@@ -33,8 +34,11 @@ COLUMN_BINDINGS: list[tuple[str, str]] = [
 ]
 
 
-async def seed_excel_template(db, *, code_to_id: dict[str, int]) -> int | None:
-    """Şablon + bağlamaları ekler. Zaten varsa (ada göre) atlar, mevcut id döner."""
+async def seed_excel_template(db: AsyncSession, *, code_to_id: dict[str, int]) -> int | None:
+    """Şablon + bağlamaları ekler. Zaten varsa (ada göre) atlar, mevcut id döner.
+
+    Çalışma kitabı yoksa da None döner.
+    """
     if not WORKBOOK_PATH.exists():
         print(
             f"  ATLA: çalışma kitabı yok: {WORKBOOK_PATH}"
