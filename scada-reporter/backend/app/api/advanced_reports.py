@@ -167,6 +167,7 @@ class ArchiveEntryResponse(BaseModel):
     output_format: str
     file_path: str | None
     file_size_bytes: int | None
+    variable_refs: list[dict] | None  # çözülen değişken referansları — sürüm damgası denetimi
 
     model_config = {"from_attributes": True}
 
@@ -175,6 +176,9 @@ class ArchiveEntryResponse(BaseModel):
         data = {c.name: getattr(obj, c.name) for c in obj.__table__.columns}
         data["tag_ids"] = json.loads(obj.tag_ids)
         data.pop("result_json", None)
+        # variable_refs_json → variable_refs: NULL arşivler None döner (geriye uyumluluk)
+        raw_refs = data.pop("variable_refs_json", None)
+        data["variable_refs"] = json.loads(raw_refs) if raw_refs else None
         return cls(**data)
 
 
