@@ -276,7 +276,7 @@ export default function PlcConfig() {
   const total = plcs.length
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold text-white">{t('title')}</h1>

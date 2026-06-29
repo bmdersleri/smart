@@ -1,4 +1,6 @@
 {
+  "tab_config": "Yönetim",
+  "tab_health": "Sağlık",
   "title": "PLC Yönetimi",
   "subtitle": "IP adresi ve bağlantı noktası yapılandırması",
   "connected": "Bağlı",

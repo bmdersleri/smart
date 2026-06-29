@@ -1,4 +1,6 @@
 {
+  "tab_config": "Verwaltung",
+  "tab_health": "Zustand",
   "title": "SPS-Verwaltung",
   "subtitle": "Konfiguration von IP-Adresse und Verbindungsport",
   "connected": "Verbunden",

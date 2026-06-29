@@ -1,4 +1,6 @@
 {
+  "tab_config": "إدارة",
+  "tab_health": "الصحة",
   "title": "إدارة PLC",
   "subtitle": "تكوين عنوان IP ومنفذ الاتصال",
   "connected": "متصل",

@@ -1,4 +1,6 @@
 {
+  "tab_config": "Management",
+  "tab_health": "Health",
   "title": "PLC Management",
   "subtitle": "IP address and connection port configuration",
   "connected": "Connected",

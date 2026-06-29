@@ -11,7 +11,6 @@ const nav = [
   { to: '/', labelKey: 'nav_dashboard' },
   { to: '/tags', labelKey: 'nav_tags' },
   { to: '/plc', labelKey: 'nav_plc' },
-  { to: '/plc-health', labelKey: 'nav_plc_health' },
   { to: '/trend', labelKey: 'nav_trend' },
   { to: '/reports', labelKey: 'nav_reports' },
   { to: '/advanced-reports', labelKey: 'nav_advanced_reports' },
