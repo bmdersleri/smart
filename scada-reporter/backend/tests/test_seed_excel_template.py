@@ -37,14 +37,17 @@ async def test_seed_excel_template_binds_columns(db_session, tmp_path, monkeypat
     cols = (
         (
             await db_session.execute(
-                select(ExcelTemplateColumn).where(ExcelTemplateColumn.col_letter == "E")
+                select(ExcelTemplateColumn)
+                .where(ExcelTemplateColumn.col_letter == "E")
+                .where(ExcelTemplateColumn.template_id == tid)
             )
         )
         .scalars()
         .all()
     )
     # column E binds to the aot variable (always seeded)
-    e_col = next(c for c in cols)
+    assert cols, "column E binding not found for the created template"
+    e_col = cols[0]
     assert e_col.source_type == "variable"
     assert e_col.variable_code_snapshot == "aot_giris_debi_gunluk"
 

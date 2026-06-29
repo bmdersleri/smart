@@ -49,10 +49,9 @@ Aşağıdaki değişkenler `seed-facility-variables` tarafından oluşturulur.
 | `terfi2_debi_gunluk` | Terfi 2 Çıkış Debi (Günlük) | `tag` — `gtuTP01DB01.GUNLUK` | `last` — günlük sıfırlamalı sayaç |
 | `aot_giris_debi_gunluk` | AOT günlük giriş debisi (terfi1 + terfi2 toplamı) | `expression` — `terfi1 + terfi2` | toplama (`last` bileşenlerden) |
 | `baat_giris_debi_gunluk` | BAAT günlük giriş debisi (ölçülen) | `tag` — `SEED_BAAT_GIRIS_NODE_ID` ile belirlenir | `last` — günlük sıfırlamalı sayaç |
-| `tesis_toplam_debi_olculen_gunluk` | Ölçülen toplam tesis debisi (AOT + BAAT) | `expression` — `aot + baat` | toplama |
+| `tesis_toplam_debi_olculen_gunluk` | Ölçülen toplam tesis debisi (GENEL_TOPLAM_DEBI günlük delta'sı) | `tag` — `GENEL_TOPLAM_DEBI` | `delta` — kümülatif sayaç |
 | `tesis_toplam_debi_hesaplanan_gunluk` | Hesaplanan toplam tesis debisi (AOT + BAAT + kapasite) | `ref` — bileşik | toplama |
 | `giris_7gun_ort_debi` | Son 7 günlük ortalama giriş debisi | `expression` — kayan pencere | ortalama |
-| `genel_toplam_debi_gunluk` | Genel toplam debi (kümülatif sayaç, günlük delta) | `tag` — `GENEL_TOPLAM_DEBI` | `delta` — kümülatif sayaç varsayımı |
 
 ### Toplam sayaç semantiği
 
@@ -108,19 +107,20 @@ göre ayarlanmalıdır:
 ```python
 # app/seed_excel_template.py — düzenlenecek bölümler
 
-SHEET_META = {
-    "sheet_name": "Günlük Rapor",   # ← gerçek sekme adı
-    "header_row": 3,                # ← başlık satırı (1-tabanlı)
-    "data_start_row": 4,            # ← veri başlangıç satırı
-    "date_column": "A",             # ← tarih sütunu
-}
+SHEET_META = dict(
+    sheet_name="Günlük Rapor",   # ← gerçek sekme adı
+    header_row=3,                # ← başlık satırı (1-tabanlı)
+    date_col="A",                # ← tarih sütunu (date_col, date_column değil)
+    data_start_row=4,            # ← veri başlangıç satırı
+    date_mode="write",           # ← "write" veya "read"
+)
 
-COLUMN_BINDINGS = [
+COLUMN_BINDINGS: list[tuple[str, str]] = [
     # (excel_sütunu, değişken_kodu)
     ("E", "aot_giris_debi_gunluk"),
-    ("F", "baat_giris_debi_gunluk"),
-    ("K", "tesis_toplam_debi_olculen_gunluk"),
-    ("M", "genel_toplam_debi_gunluk"),
+    ("F", "kapasite_fazlasi_gunluk"),
+    ("K", "baat_giris_debi_gunluk"),
+    ("M", "tesis_toplam_debi_hesaplanan_gunluk"),
 ]
 ```
 
@@ -169,14 +169,15 @@ Plan-4 önizleme arayüzü aktif ve erişilebilir olmalıdır (geliştirme sunuc
    | `terfi2_debi_gunluk` | > 0 m³/gün, AÖT/BAAT transfer kapasitesi içinde makul | 0 → `gtuTP01DB01.GUNLUK` tag'i okunmuyor |
    | `aot_giris_debi_gunluk` | > 0 m³/gün, tesisin kapasitesine göre | 0 veya çok büyük değer |
    | `baat_giris_debi_gunluk` | > 0 m³/gün | `SEED_BAAT_GIRIS_NODE_ID` ayarlanmadıysa boş |
-   | `tesis_toplam_debi_olculen_gunluk` | AOT + BAAT toplamı | Bileşenlerden farklıysa formül yanlış |
+   | `tesis_toplam_debi_olculen_gunluk` | > 0 m³/gün, günlük üretimle uyumlu | Ölçülen toplam debi, GENEL_TOPLAM_DEBI sayacının günlük delta'sı; pozitif ve günlük üretimle uyumlu olmalı. Negatif → gün başı/sonu sıralamasını kontrol edin |
    | `tesis_toplam_debi_hesaplanan_gunluk` | ≈ aot + baat + kapasite fazlası; işaret pozitif, büyüklük makul olmalı | Yalnızca `SEED_BAAT_GIRIS_NODE_ID` + `SEED_AOT_DESIGN_CAPACITY_M3` ayarlıysa oluşur; yoksa değişken yoktur |
-   | `genel_toplam_debi_gunluk` | Günlük anlamlı değer | Çok büyük → `delta` yerine `last` gerekiyor |
    | `giris_7gun_ort_debi` | 7 günlük ortalama, yaklaşık günlük değerlere yakın | Tuhaf sapma → pencere hesabı kontrol |
 
 ### 6.3 Toplam sayaç semantiği anormallik tespiti
 
-**`genel_toplam_debi_gunluk` için en sık yapılan ayarlama:**
+**`tesis_toplam_debi_olculen_gunluk` için en sık yapılan ayarlama:**
+
+`tesis_toplam_debi_olculen_gunluk`, `GENEL_TOPLAM_DEBI` kümülatif totalizerinin günlük delta'sıdır.
 
 - Değer tesisin toplam günlük üretiminden büyük büyüklük sırasıyla **fazla** ise:
   tag kümülatif değil günlük sıfırlanıyor demektir — `delta` yerine `last` kullanın.
@@ -184,9 +185,9 @@ Plan-4 önizleme arayüzü aktif ve erişilebilir olmalıdır (geliştirme sunuc
   `app/seed_facility_variables.py` içinde:
   ```python
   # Şu an:
-  "aggregation": "delta"
+  _agg(genel, "delta")
   # Değiştir:
-  "aggregation": "last"
+  _agg(genel, "last")
   ```
   Sonra `just seed-facility-variables` tekrar çalıştırın.
 
@@ -210,4 +211,4 @@ Plan-4 önizleme arayüzü aktif ve erişilebilir olmalıdır (geliştirme sunuc
 | `baat_giris_debi_gunluk` değişkeni oluşturulmadı | `SEED_BAAT_GIRIS_NODE_ID` eksik | `.env` dosyasına ekleyin |
 | `seed-excel-template` — dosya bulunamadı | `gunluk_rapor.xlsx` depoya eklenmemiş | §4.1 adımını takip edin |
 | Önizlemede tüm değerler 0 | Tarih aralığında veri yok | Farklı tarih seçin veya poller çalışıyor mu kontrol edin |
-| `genel_toplam_debi_gunluk` beklenmedik büyük | `delta` vs `last` semantiği | §6.3 talimatlarını izleyin |
+| `tesis_toplam_debi_olculen_gunluk` beklenmedik büyük | `delta` vs `last` semantiği | §6.3 talimatlarını izleyin |

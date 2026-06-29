@@ -118,6 +118,8 @@ async def test_seeded_expressions_pass_validator(db_session):
     from app.services.facility_variables.expression import validate_expression
 
     await seed_variables(db_session)
-    for v in (await db_session.execute(select(FacilityVariable))).scalars().all():
+    rows = (await db_session.execute(select(FacilityVariable))).scalars().all()
+    assert len(rows) >= 5, f"seed produced only {len(rows)} rows — guard against vacuous pass"
+    for v in rows:
         # round-trips through the real validator against its stored kind
         validate_expression(json.loads(v.expression_json), v.kind)
