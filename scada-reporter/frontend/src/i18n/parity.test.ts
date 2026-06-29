@@ -78,6 +78,12 @@ import ruCompliance from './locales/ru/compliance.json'
 import deCompliance from './locales/de/compliance.json'
 import arCompliance from './locales/ar/compliance.json'
 
+import enFacilityVariables from './locales/en/facilityVariables.json'
+import trFacilityVariables from './locales/tr/facilityVariables.json'
+import ruFacilityVariables from './locales/ru/facilityVariables.json'
+import deFacilityVariables from './locales/de/facilityVariables.json'
+import arFacilityVariables from './locales/ar/facilityVariables.json'
+
 type Dict = Record<string, unknown>
 
 const NAMESPACES: Record<string, Record<string, Dict>> = {
@@ -100,6 +106,7 @@ const NAMESPACES: Record<string, Record<string, Dict>> = {
   users: { en: enUsers, tr: trUsers, ru: ruUsers, de: deUsers, ar: arUsers },
   plcHealth: { en: enPlcHealth, tr: trPlcHealth, ru: ruPlcHealth, de: dePlcHealth, ar: arPlcHealth },
   compliance: { en: enCompliance, tr: trCompliance, ru: ruCompliance, de: deCompliance, ar: arCompliance },
+  facilityVariables: { en: enFacilityVariables, tr: trFacilityVariables, ru: ruFacilityVariables, de: deFacilityVariables, ar: arFacilityVariables },
 }
 
 const TARGET_LANGS = ['tr', 'ru', 'de', 'ar'] as const
