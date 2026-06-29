@@ -22,8 +22,8 @@ def _month_bounds(year: int, month: int) -> tuple[datetime, datetime]:
     return start, end
 
 
-def _reduce(values: list[float], agg: str) -> float | None:
-    """values: günün okumaları, zaman sırasına göre. agg uygula."""
+def reduce_values(values: list[float], agg: str) -> float | None:
+    """values: bir bucket'ın okumaları, zaman sırasına göre. agg uygula."""
     vals = [v for v in values if v is not None]
     if not vals:
         return None
@@ -40,6 +40,10 @@ def _reduce(values: list[float], agg: str) -> float | None:
     if agg == "delta":
         return vals[-1] - vals[0] if len(vals) >= 2 else None
     raise ValueError(f"Bilinmeyen agg: {agg}")
+
+
+# Geriye dönük uyumluluk: eski iç ad.
+_reduce = reduce_values
 
 
 async def _daily_sqlite(
