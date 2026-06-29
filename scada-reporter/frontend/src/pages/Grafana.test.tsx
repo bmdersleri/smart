@@ -6,6 +6,12 @@ import Grafana from './Grafana'
 
 const generateGrafanaDashboard = vi.fn()
 
+// Grafana gates admin-only controls via useAuth; provide an admin user so the
+// page renders without a full AuthProvider.
+vi.mock('../context/AuthContext', () => ({
+  useAuth: () => ({ user: { id: 1, username: 'admin', role: 'admin' } }),
+}))
+
 vi.mock('../api/client', () => ({
   listGrafanaTemplates: () =>
     Promise.resolve({
@@ -31,6 +37,11 @@ vi.mock('../api/client', () => ({
       data: [{ id: 1, name: 'pH', unit: 'pH', node_id: 'N1', device: '', channel: '' }],
     }),
   generateGrafanaDashboard: (...args: unknown[]) => generateGrafanaDashboard(...args),
+  listLabSamplePoints: () => Promise.resolve({ data: [] }),
+  listLabParameters: () => Promise.resolve({ data: [] }),
+  generateLabDashboard: () => Promise.resolve({ data: {} }),
+  deleteGrafanaDashboard: () => Promise.resolve({ data: {} }),
+  refreshManagedDashboards: () => Promise.resolve({ data: { updated: 0, skipped: [] } }),
 }))
 
 function renderPage() {

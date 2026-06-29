@@ -7,6 +7,9 @@ import Dashboard from '../Dashboard'
 vi.mock('../dashboard/OverviewTab', () => ({ default: () => null }))
 vi.mock('../dashboard/WatchlistTab', () => ({ default: () => null }))
 vi.mock('../dashboard/AllTagsTab', () => ({ default: () => null }))
+// Dashboard reads live connection status via a TanStack-Query hook; stub it so the
+// test needs no QueryClientProvider (it only asserts the static tab labels).
+vi.mock('../../hooks/useLiveDashboard', () => ({ useLiveDashboard: () => ({ status: 'connected' }) }))
 
 describe('Dashboard i18n', () => {
   beforeEach(async () => { await i18n.changeLanguage('en') })
