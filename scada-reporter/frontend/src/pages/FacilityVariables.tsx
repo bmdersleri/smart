@@ -13,9 +13,7 @@ import {
 import type { FacilityVariable, ExprNode } from '../api/client'
 import { useAuth } from '../context/AuthContext'
 import ExpressionBuilder, { emptyNode } from './facilityVariables/ExpressionBuilder'
-
-// PreviewPanel stub — replaced by Task 6
-function PreviewPanel(_: { variableId: number; kind: 'scalar' | 'series' }) { return null }
+import PreviewPanel from './facilityVariables/PreviewPanel'
 
 export function VariableEditorModal({ initial, onClose }: { initial?: FacilityVariable; onClose: () => void }) {
   const { t } = useTranslation(['facilityVariables', 'common'])
