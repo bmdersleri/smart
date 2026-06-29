@@ -13,6 +13,12 @@
   "map_tag_id": "ID тега",
   "map_agg": "Агрегация",
   "map_enabled": "Активно",
+  "map_source_type": "Тип источника",
+  "map_variable": "Переменная",
+  "map_write_mode": "Режим записи",
+  "map_reduce_op": "Агрегирование",
+  "map_target_mode": "Цель",
+  "map_target_cell": "Ячейка",
   "save": "Сохранить",
   "cancel": "Отмена"
 }

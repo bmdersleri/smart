@@ -13,6 +13,12 @@
   "map_tag_id": "Tag ID",
   "map_agg": "Toplama",
   "map_enabled": "Aktif",
+  "map_source_type": "Kaynak türü",
+  "map_variable": "Değişken",
+  "map_write_mode": "Yazma modu",
+  "map_reduce_op": "İndirgeme",
+  "map_target_mode": "Hedef",
+  "map_target_cell": "Hücre",
   "save": "Kaydet",
   "cancel": "İptal"
 }

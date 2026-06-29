@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
+import { listFacilityVariables } from "../api/client";
 import {
   AGGS,
   applyAggChange,
@@ -60,6 +61,11 @@ export default function ExcelTemplates() {
 
   const templates = useQuery({ queryKey: ["excel-templates"], queryFn: apiList });
 
+  const { data: facilityVars = [] } = useQuery({
+    queryKey: ["facility-variables"],
+    queryFn: () => listFacilityVariables().then((r) => r.data),
+  });
+
   const saveMut = useMutation({
     mutationFn: () => apiSave(toSavePayload(meta!, rows)),
     onSuccess: () => {
@@ -67,6 +73,10 @@ export default function ExcelTemplates() {
       setView("list");
     },
   });
+
+  // Generic per-row patcher — mirrors the inline setRows updaters for tag_id/agg/enabled.
+  const update = (col: string, patch: Partial<MappingRow>) =>
+    setRows((rs) => rs.map((r) => (r.col_letter === col ? { ...r, ...patch } : r)));
 
   async function onUpload(file: File) {
     const proposal = await apiInspect(file);
@@ -81,7 +91,21 @@ export default function ExcelTemplates() {
       data_start_row: proposal.data_start_row,
       date_mode: proposal.date_mode,
     });
-    setRows(proposal.columns);
+    // Carry-forward 1: inject defaults for variable-binding fields that
+    // inspect_template does not return, so the controlled selects are never
+    // left with undefined values.
+    setRows(
+      proposal.columns.map((c) => ({
+        ...c,
+        source_type: c.source_type ?? "tag",
+        variable_id: c.variable_id ?? null,
+        write_mode: c.write_mode ?? null,
+        reduce_op: c.reduce_op ?? null,
+        target_mode: c.target_mode ?? "column",
+        target_cell: c.target_cell ?? null,
+        variable_code_snapshot: c.variable_code_snapshot ?? null,
+      })),
+    );
     setView("map");
   }
 
@@ -118,7 +142,17 @@ export default function ExcelTemplates() {
         <table className="w-full text-sm text-gray-300">
           <thead>
             <tr className="text-start border-b border-edge text-gray-400">
-              <th>{t("map_col")}</th><th>{t("map_label")}</th><th>{t("map_sensor")}</th><th>{t("map_tag_id")}</th><th>{t("map_agg")}</th><th>{t("map_enabled")}</th>
+              <th>{t("map_col")}</th>
+              <th>{t("map_label")}</th>
+              <th>{t("map_sensor")}</th>
+              <th>{t("map_tag_id")}</th>
+              <th>{t("map_agg")}</th>
+              <th>{t("map_enabled")}</th>
+              <th>{t("map_source_type")}</th>
+              <th>{t("map_variable")}</th>
+              <th>{t("map_write_mode")}</th>
+              <th>{t("map_reduce_op")}</th>
+              <th>{t("map_target_cell")}</th>
             </tr>
           </thead>
           <tbody>
@@ -154,6 +188,82 @@ export default function ExcelTemplates() {
                       ? { ...x, enabled: e.target.checked } : x))}
                   />
                 </td>
+                <td>
+                  <select
+                    aria-label={t("map_source_type")}
+                    className="bg-transparent border border-edge-strong rounded px-1"
+                    value={r.source_type}
+                    onChange={(e) => update(r.col_letter, { source_type: e.target.value as "tag" | "variable" })}
+                  >
+                    <option value="tag">tag</option>
+                    <option value="variable">variable</option>
+                  </select>
+                </td>
+                <td>
+                  {r.source_type === "variable" ? (
+                    <select
+                      aria-label={t("map_variable")}
+                      className="bg-transparent border border-edge-strong rounded px-1"
+                      value={r.variable_id ?? 0}
+                      onChange={(e) => update(r.col_letter, { variable_id: Number(e.target.value) || null })}
+                    >
+                      <option value={0}>—</option>
+                      {facilityVars.filter((v) => v.is_active).map((v) => (
+                        <option key={v.id} value={v.id}>{v.code}</option>
+                      ))}
+                    </select>
+                  ) : <span className="text-gray-600">—</span>}
+                </td>
+                <td>
+                  {r.source_type === "variable" ? (
+                    <select
+                      aria-label={t("map_write_mode")}
+                      className="bg-transparent border border-edge-strong rounded px-1"
+                      value={r.write_mode ?? "series"}
+                      onChange={(e) => update(r.col_letter, { write_mode: e.target.value as "series" | "reduce" })}
+                    >
+                      <option value="series">series</option>
+                      <option value="reduce">reduce</option>
+                    </select>
+                  ) : <span className="text-gray-600">—</span>}
+                </td>
+                <td>
+                  {r.source_type === "variable" && r.write_mode === "reduce" ? (
+                    <select
+                      aria-label={t("map_reduce_op")}
+                      className="bg-transparent border border-edge-strong rounded px-1"
+                      value={r.reduce_op ?? "sum"}
+                      onChange={(e) => update(r.col_letter, { reduce_op: e.target.value as MappingRow["reduce_op"] })}
+                    >
+                      {(["sum", "avg", "min", "max", "last"] as const).map((o) => (
+                        <option key={o} value={o}>{o}</option>
+                      ))}
+                    </select>
+                  ) : <span className="text-gray-600">—</span>}
+                </td>
+                <td>
+                  {r.source_type === "variable" ? (
+                    <div className="flex items-center gap-1">
+                      <select
+                        aria-label={t("map_target_mode")}
+                        className="bg-transparent border border-edge-strong rounded px-1"
+                        value={r.target_mode}
+                        onChange={(e) => update(r.col_letter, { target_mode: e.target.value as "column" | "cell" })}
+                      >
+                        <option value="column">column</option>
+                        <option value="cell">cell</option>
+                      </select>
+                      {r.target_mode === "cell" && (
+                        <input
+                          aria-label={t("map_target_cell")}
+                          className="w-16 bg-transparent border border-edge-strong rounded px-1"
+                          value={r.target_cell ?? ""}
+                          onChange={(e) => update(r.col_letter, { target_cell: e.target.value || null })}
+                        />
+                      )}
+                    </div>
+                  ) : <span className="text-gray-600">—</span>}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -169,7 +279,7 @@ export default function ExcelTemplates() {
   return (
     <div className="p-6">
       <h1 className="text-xl font-semibold mb-4 text-white">{t("title")}</h1>
-      {can('report_template:create') && (
+      {can("report_template:create") && (
         <label className="inline-block mb-4 px-3 py-1 rounded bg-cyan-500/10 text-cyan-400 ring-1 ring-cyan-500/30 cursor-pointer">
           {t("upload")}
           <input

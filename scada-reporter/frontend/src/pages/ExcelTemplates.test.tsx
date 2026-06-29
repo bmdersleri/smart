@@ -1,9 +1,20 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { applyAggChange, authHeaders, toSavePayload, type MappingRow } from "./excelTemplates.helpers";
 
+// Defaults for the variable-binding fields added in Task 8 (not set by legacy rows).
+const rowDefaults = {
+  source_type: "tag" as const,
+  variable_id: null,
+  write_mode: null,
+  reduce_op: null,
+  target_mode: "column" as const,
+  target_cell: null,
+  variable_code_snapshot: null,
+};
+
 const rows: MappingRow[] = [
-  { col_letter: "E", source_code: "410BF103", label: "DEBİ m3/gün", tag_id: 1, agg: "sum", enabled: true },
-  { col_letter: "B", source_code: "", label: "HAVA DURUMU", tag_id: null, agg: "avg", enabled: false },
+  { ...rowDefaults, col_letter: "E", source_code: "410BF103", label: "DEBİ m3/gün", tag_id: 1, agg: "sum", enabled: true },
+  { ...rowDefaults, col_letter: "B", source_code: "", label: "HAVA DURUMU", tag_id: null, agg: "avg", enabled: false },
 ];
 
 describe("mapping grid state", () => {

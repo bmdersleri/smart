@@ -13,6 +13,12 @@
   "map_tag_id": "Tag ID",
   "map_agg": "Aggregation",
   "map_enabled": "Active",
+  "map_source_type": "Source type",
+  "map_variable": "Variable",
+  "map_write_mode": "Write mode",
+  "map_reduce_op": "Reduce",
+  "map_target_mode": "Target",
+  "map_target_cell": "Cell",
   "save": "Save",
   "cancel": "Cancel"
 }

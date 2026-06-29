@@ -13,6 +13,12 @@
   "map_tag_id": "معرّف العلامة",
   "map_agg": "التجميع",
   "map_enabled": "مفعّل",
+  "map_source_type": "نوع المصدر",
+  "map_variable": "المتغيّر",
+  "map_write_mode": "وضع الكتابة",
+  "map_reduce_op": "التخفيض",
+  "map_target_mode": "الهدف",
+  "map_target_cell": "الخلية",
   "save": "حفظ",
   "cancel": "إلغاء"
 }

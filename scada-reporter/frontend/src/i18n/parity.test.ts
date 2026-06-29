@@ -84,6 +84,12 @@ import ruFacilityVariables from './locales/ru/facilityVariables.json'
 import deFacilityVariables from './locales/de/facilityVariables.json'
 import arFacilityVariables from './locales/ar/facilityVariables.json'
 
+import enExcelTemplates from './locales/en/excelTemplates.json'
+import trExcelTemplates from './locales/tr/excelTemplates.json'
+import ruExcelTemplates from './locales/ru/excelTemplates.json'
+import deExcelTemplates from './locales/de/excelTemplates.json'
+import arExcelTemplates from './locales/ar/excelTemplates.json'
+
 type Dict = Record<string, unknown>
 
 const NAMESPACES: Record<string, Record<string, Dict>> = {
@@ -107,6 +113,7 @@ const NAMESPACES: Record<string, Record<string, Dict>> = {
   plcHealth: { en: enPlcHealth, tr: trPlcHealth, ru: ruPlcHealth, de: dePlcHealth, ar: arPlcHealth },
   compliance: { en: enCompliance, tr: trCompliance, ru: ruCompliance, de: deCompliance, ar: arCompliance },
   facilityVariables: { en: enFacilityVariables, tr: trFacilityVariables, ru: ruFacilityVariables, de: deFacilityVariables, ar: arFacilityVariables },
+  excelTemplates: { en: enExcelTemplates, tr: trExcelTemplates, ru: ruExcelTemplates, de: deExcelTemplates, ar: arExcelTemplates },
 }
 
 const TARGET_LANGS = ['tr', 'ru', 'de', 'ar'] as const
