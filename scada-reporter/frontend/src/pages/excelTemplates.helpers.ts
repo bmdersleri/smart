@@ -43,7 +43,7 @@ export function toSavePayload(meta: TemplateMeta, rows: MappingRow[]) {
       .filter((r) => r.enabled && (r.tag_id != null || (r.source_type === "variable" && r.variable_id != null)))
       .map((r) => ({
         col_letter: r.col_letter,
-        tag_id: r.source_type === "tag" ? r.tag_id : null,
+        tag_id: r.source_type !== "variable" ? r.tag_id : null,
         agg: r.agg,
         source_code: r.source_code,
         enabled: r.enabled,

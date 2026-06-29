@@ -26,4 +26,10 @@ describe('toSavePayload — variable binding', () => {
     const out = toSavePayload({ name: 't', sheet: 'S' } as never, [{ ...base, enabled: false }])
     expect(out.columns).toHaveLength(0)
   })
+  it('keeps tag_id when source_type is undefined (legacy inspect_template row)', () => {
+    const legacy = { col_letter: 'C', source_code: '', label: '', tag_id: 5, agg: 'last', enabled: true } as unknown as MappingRow
+    const out = toSavePayload({ name: 't', sheet: 'S' } as never, [legacy])
+    expect(out.columns).toHaveLength(1)
+    expect(out.columns[0]).toMatchObject({ tag_id: 5, variable_id: null })
+  })
 })
