@@ -1,4 +1,5 @@
 import base64
+import html as _html
 import os
 from datetime import datetime
 
@@ -46,4 +47,33 @@ def build_pdf(
         lang=lang,
         grafana_charts=gf_charts,
     )
+
+    # Tesis değişkenleri bölümü — etiket içeriğinden sonra ekleniyor
+    variables_html = ""
+    if variables:
+        rows = ""
+        for v in variables:
+            if v["kind"] == "scalar":
+                val = "" if v["value"] is None else str(v["value"])
+            else:
+                val = f"{len(v.get('points') or [])} nokta"
+            warn = v.get("warning") or ""
+            rows += (
+                f"<tr><td>{_html.escape(str(v['code']))}</td>"
+                f"<td>{_html.escape(str(v['name']))}</td>"
+                f"<td>{_html.escape(str(v['unit']))}</td>"
+                f"<td>{_html.escape(str(v['kind']))}</td>"
+                f"<td>{_html.escape(val)}</td>"
+                f"<td>{_html.escape(str(warn))}</td></tr>"
+            )
+        variables_html = (
+            "<h2>Tesis Değişkenleri</h2>"
+            "<table><thead><tr>"
+            "<th>Kod</th><th>Ad</th><th>Birim</th>"
+            "<th>Tür</th><th>Değer / Seri</th><th>Uyarı</th>"
+            "</tr></thead>"
+            f"<tbody>{rows}</tbody></table>"
+        )
+        html_str = html_str.replace("</body>", variables_html + "\n</body>", 1)
+
     return HTML(string=html_str).write_pdf()

@@ -189,3 +189,92 @@ async def test_excel_output_has_variables_sheet(db_session, tmp_path, monkeypatc
     ws = wb["Tesis Değişkenleri"]
     codes = [row[0] for row in ws.iter_rows(min_row=2, values_only=True)]
     assert "var_orch" in codes
+
+
+@pytest.mark.asyncio
+async def test_pdf_output_renders_with_variables(db_session, tmp_path, monkeypatch):
+    """PDF çıktısında tesis değişkenleri bölümü üretilmeli (duman testi)."""
+    from app.services.report_generator import generate_report_from_template
+
+    monkeypatch.chdir(tmp_path)
+    var = await _make_scalar_var(db_session)
+    arch = ReportArchive(
+        status="pending",
+        trigger="manual",
+        tag_ids="[]",
+        start=datetime(2026, 6, 1, tzinfo=UTC),
+        end=datetime(2026, 6, 2, tzinfo=UTC),
+        interval="daily",
+        output_format="pdf",
+    )
+    db_session.add(arch)
+    await db_session.commit()
+    await db_session.refresh(arch)
+    tmpl = _VarTemplate(output_format="pdf", variable_ids=json.dumps([var.id]))
+    await generate_report_from_template(
+        tmpl, datetime(2026, 6, 1), datetime(2026, 6, 2), db_session, arch.id
+    )
+    await db_session.refresh(arch)
+    assert arch.status == "completed"
+    assert arch.file_size_bytes and arch.file_size_bytes > 0
+    assert arch.file_path.endswith(".pdf")
+    # WeasyPrint içerik akışlarını sıkıştırdığından (FlateDecode) ham bayt denetimi
+    # yapılmıyor; bölüm varlığı test_build_pdf_variables_section_in_html ile doğrulanıyor.
+
+
+def test_build_pdf_variables_section_in_html(monkeypatch):
+    """build_pdf değişkenler varken HTML'e Tesis Değişkenleri bölümü eklemeli."""
+    from datetime import datetime as dt
+    from unittest.mock import MagicMock
+
+    import app.services.pdf_builder as _mod
+
+    # WeasyPrint'i monkeypatch ile yakalıyoruz; gerçek render yok
+    captured: list[str] = []
+
+    class _FakeHTML:
+        def __init__(self, *, string: str):
+            captured.append(string)
+
+        def write_pdf(self) -> bytes:
+            return b"%PDF-fake"
+
+    monkeypatch.setattr(_mod, "HTML", _FakeHTML)
+
+    archive = MagicMock()
+    archive.start = dt(2026, 6, 1)
+    archive.end = dt(2026, 6, 2)
+    template = MagicMock()
+    template.name = "Test"
+    template.interval = "daily"
+    template.show_summary_stats = False
+    template.show_trend_charts = False
+    template.show_anomaly_table = False
+
+    variables = [
+        {
+            "code": "V1",
+            "name": "Debi",
+            "unit": "m3",
+            "kind": "scalar",
+            "value": 99.0,
+            "points": None,
+            "warning": "",
+        }
+    ]
+
+    _mod.build_pdf(
+        archive,
+        [],
+        template,
+        "Test Tesisi",
+        dt(2026, 6, 1),
+        variables=variables,
+    )
+
+    assert captured, "HTML nesnesi oluşturulmadı"
+    html = captured[0]
+    # Bölüm başlığı HTML'de bulunmalı
+    assert "Tesis Değişkenleri" in html
+    # Değişken kodu HTML'de bulunmalı
+    assert "V1" in html
