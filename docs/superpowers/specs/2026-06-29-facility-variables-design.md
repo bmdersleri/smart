@@ -153,10 +153,45 @@ This choice is intentional:
 - `sub`
 - `mul`
 - `div`
+- `const`
+- `round`
+- `abs`
+- `coalesce`
 - `series`
 - `moving_avg`
 - `reduce`
 - `ref`
+
+### Scalar / shape helpers
+
+- `const` — a numeric literal: `{ "op": "const", "value": 3.14 }`. Required in v1; fixed multipliers and unit conversions (e.g. `(tag * 3.6)`, `+ offset`) are everywhere in plant reports and there is no other way to inject a constant. Constants are dimensionless unless a future unit-aware extension explicitly adds `unit`.
+- `round` — `{ "op": "round", "source": {…}, "ndigits": 2, "mode": "excel" }`. Report cells round; doing it in the engine keeps Excel a pure presentation layer. `mode="excel"` is the v1 default and must match Excel `ROUND` half-away-from-zero behavior. Do not use bare Python `round()` for persisted report values because it uses bankers rounding.
+- `abs` — absolute value (e.g. net flow magnitude). `pow`/`sqrt` are **deferred** — not needed by the current workbook.
+- `coalesce` — `{ "op": "coalesce", "args": [a, b, …] }` returns the first non-null argument. See operand-null semantics below.
+
+### Operand-null semantics
+
+`null_policy` is a **variable-level** policy (what the final result does about missing buckets). It does **not** define what happens mid-expression when one operand of an `add`/`sub`/`mul`/`div` is null. That must be explicit, or the same formula yields different numbers depending on data gaps:
+
+- v1 rule: arithmetic ops are **SQL-like** — if any operand is null, the result is null (null propagates up the tree)
+- to override locally, wrap an operand in `coalesce` (e.g. `add(a, coalesce(b, const 0))` to treat a missing `b` as zero)
+- the variable-level `null_policy` then applies once, to the final scalar/series, after the tree has evaluated
+
+This keeps "ignore the gap" an explicit, visible choice in the expression rather than a hidden engine default.
+
+### Shape algebra and alignment
+
+Every expression node resolves to either `scalar` or `series`. V1 must keep the shape rules small and deterministic:
+
+- scalar + scalar arithmetic returns scalar
+- series + series arithmetic aligns by bucket key (`day_no` for Excel-month evaluation, timestamp for API preview); a missing bucket on either side is null, then arithmetic null propagation applies
+- series + scalar arithmetic broadcasts the scalar across the series buckets
+- `coalesce` follows the same shape rules: a scalar fallback such as `{ "op": "const", "value": 0 }` can fill missing buckets in a series expression, while two series args are aligned by bucket key
+- `moving_avg` accepts only a series source and returns a series
+- `reduce` accepts only a series source and returns a scalar
+- validation rejects ambiguous shape combinations instead of guessing
+
+These rules are required before implementation; otherwise Excel fill, preview, and advanced reports can each make different alignment choices for the same expression.
 
 ### Aggregation functions
 
@@ -230,6 +265,17 @@ Not included in v1:
 - user-defined functions
 - free-text expression DSL
 - caching or materialized variable snapshots
+- extra math ops `pow` / `sqrt` (not needed by the current workbook; add when a report requires them)
+
+### Future enhancements (post-v1)
+
+Evaluated and intentionally deferred — captured so they are not re-discovered later:
+
+- **Draft / Published workflow** — a formula-editing state so an in-progress edit can't be consumed by a concurrently-running scheduled report. *v1 mitigation*: saves are atomic and validate-gated, so a persisted `version` is always internally consistent (never half-finished). The remaining gap — re-pointing a binding to a *new* logic — is acceptable for v1's manual workflow; revisit if scheduled reports + live editing collide in practice.
+- **Bulk dependency replace (tag swap)** — when a sensor/PLC is replaced its `tag_id` changes, potentially breaking many variables. A "replace all references `old_tag_id` → `new_tag_id`" admin tool is straightforward on top of `facility_variable_dependencies` (already the normalized index for this). Defer the tooling; the dependency table makes it cheap to add later.
+- **Dependency DAG view** — a visual node graph of tag→variable→variable edges. The `/dependencies` endpoint + dependency table already expose the data; v1 ships a flat dependency list, the graph is a UI upgrade.
+- **Preview mock / dry-run** — inject synthetic operand values to exercise edge cases (divide-by-zero, null propagation) without hunting a historical date. Useful for validating `on_zero` / `coalesce` logic; defer because it needs a synthetic-source path in the engine.
+- **Unit strict mode / auto-conversion** — beyond v1's conservative warn-on-incompatible: enforce dimensional correctness or auto-convert compatible units (`m3`↔`liters`), forcing an explicit `const` multiplier otherwise. Natural follow-up to `facility_variable_units.py`.
 
 ## Backend Architecture
 
@@ -255,6 +301,15 @@ Recommended service split:
 5. Evaluate operation tree
 6. Normalize to scalar or series result
 7. Apply null and quality policies
+
+### Quality policy propagation (`ref`)
+
+When variable B references variable A via `ref`, two `quality_policy` values meet and the resolution must be deterministic:
+
+- `quality_policy` is applied **at the leaf** — it filters readings when an `agg`/`series` pulls from a *tag*. So each variable's policy governs only the tag reads inside its own expression.
+- a `ref` to another variable consumes that variable's **already-computed result**; the referrer does **not** re-apply its own quality policy over the referenced output (the bad readings are already gone or kept per A's policy)
+- net effect: each leaf tag read uses the policy of the variable whose expression contains that leaf — there is no hierarchical override, no surprise re-filtering
+- document this on the variable form so a user setting B=`good_only` while A=`allow_bad` understands A's bad data still flows through B
 
 ### Output shape contract (bridge to existing Excel fill)
 
@@ -302,6 +357,14 @@ Mirror the app-wide gating pattern (same as backup, compliance config, Grafana w
 - write (`POST` / `PUT` / `DELETE`, validate-then-save) — permission-gated with `require_perm("facility_variable:create|edit|delete")` plus `require_writable` (blocked in demo mode)
 - preview is read-only compute; allow any authenticated user, but it must respect the same license feature gate as reports if one applies
 
+**Registering the new permissions is not optional — `require_perm("...")` only *checks* a string; the catalog must *define* it.** `require_perm` resolves through `user_can` → `effective_permissions` → the catalog in `app/core/permissions.py`. A perm string that is not in `ALL_PERMISSIONS` is never granted to any non-admin (admin auto-gets the full set), so the endpoint would 403 for every operator. Each new perm must be added in three places:
+
+1. `app/core/permissions.py` — declare constants (`PERM_FACILITY_VARIABLE_CREATE = "facility_variable:create"`, `…_EDIT`, `…_DELETE`), append them to `ALL_PERMISSIONS`, and set per-role grants in `ROLE_DEFAULTS`: admin `True` for all via the catalog, operator `create=True`, `edit=True`, `delete=False`, viewer `False` for all
+2. backend endpoints — `Depends(require_perm(PERM_FACILITY_VARIABLE_*))` using the constants, not raw strings
+3. frontend — gate the create/edit/delete UI with explicit checks (`can("facility_variable:create")`, `can("facility_variable:edit")`, `can("facility_variable:delete")`), and add the human labels wherever permissions are listed (Users page permission editor + i18n ×5). `useAuth().can` does exact string matching, not wildcard matching.
+
+Cover the new perms in `tests/test_permissions.py` (role-default matrix + override behavior) so a missing catalog entry fails loudly instead of silently 403-ing in production.
+
 ### CRUD
 
 - `GET /api/facility-variables`
@@ -332,6 +395,13 @@ Both `validate` and `preview` take a **request body**, not just a path id:
 ```
 
 `window.type` also accepts `last_24h|last_7d|last_30d|custom` (custom → `start`/`end`), matching the existing report time-range vocabulary. `grain`/`tz_offset_hours` default from the variable's `default_time_grain` and `REPORT_TZ_OFFSET_HOURS` when omitted. For Excel-bound preview, callers pass `{type: "month", ...}` + `grain: "day"` to get exactly what the fill will write.
+
+**Preview must be bounded — it is a UI-triggered query and caching is deferred.** A `series` preview over a 1-year window at 1-minute grain scans millions of raw rows on SQLite (and is uncached everywhere in v1), so a careless preview is a self-inflicted DB DoS. The endpoint enforces hard guards, returning `422` rather than running an unbounded scan:
+
+- a cap on `range / grain` = **max output points** (e.g. reject if the window would yield more than a few thousand points)
+- a max custom-range span per grain (1-minute grain limited to a short window; coarser grains allow longer)
+- a query timeout / row-fetch ceiling on the underlying scan
+- these limits apply to **preview only** — Excel fill is already bounded to one month at daily grain
 
 Preview response shapes:
 
@@ -365,6 +435,7 @@ Series:
 - `tz_offset` must be applied on every bucket boundary (engine and Excel fill share one offset)
 - quality policy must be explicit
 - null policy must be explicit
+- **output-shape lock while bound**: changing a variable's `kind` (`scalar`↔`series`) is **rejected** while any enabled Excel column binds it, because a `write_mode=series`/`target_mode=column` binding silently breaks if the variable starts returning a scalar (and vice-versa). Same impact-view surfacing as the dangling-binding guard — unbind or fix the columns first. Formula edits that keep `kind` are always allowed.
 
 Unit compatibility should be enforced conservatively in v1:
 
@@ -493,12 +564,15 @@ Gradually eliminate workbook-side business formulas in favor of backend variable
 - series preview tests
 - null and quality policy tests
 - `div` `on_zero` policy tests (`null`/`zero`/`fail`)
+- `round` mode tests matching Excel `ROUND`, especially `.5` edge cases
+- shape-alignment tests for scalar/scalar, series/series, series/scalar, and `coalesce` scalar fallback broadcast
 - unit compatibility tests
 - Excel binding mode tests
 - **`delta` totalizer tests** — daily `delta` matches `daily_rollup`; coarse-grain `delta` = window last−first, not sum of daily deltas
 - **tz boundary tests** — engine and `daily_rollup` agree at day edges for nonzero `REPORT_TZ_OFFSET_HOURS`
 - **permission tests** — write endpoints require the facility-variable permission plus `require_writable`; demo mode blocks writes
 - **dangling-binding tests** — deactivating a referenced variable is blocked; fill-time broken binding warns, not blanks
+- **preview guard tests** — too many output points, too-wide custom ranges, or raw row ceilings return `422`
 
 ### Integration
 
