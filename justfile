@@ -107,12 +107,22 @@ seed-users:
 seed-catalog *args:
     cd {{be}} && .venv/Scripts/python -m app.seed_catalog {{args}}
 
-# Tam seed (belgeli sıra): önce kullanıcılar, sonra uzun-süre tag kataloğu
-seed: seed-users seed-catalog
+# Tam seed (belgeli sıra): önce kullanıcılar, sonra uzun-süre tag kataloğu, sonra tesis değişkenleri
+seed: seed-users seed-catalog seed-facility-variables
 
 # Tag tiplerine göre toplu deadband ayarla (--dry-run / --reset)
 seed-deadband *args:
     cd {{be}} && .venv/Scripts/python -m app.seed_deadband {{args}}
+
+# Tesis değişkenlerini ekle (Plan 5: günlük debi / ortalama / kompozit formüller)
+# Önkoşul: seed-catalog çalışmış olmalı (tag'lar DB'de mevcut olmalı)
+seed-facility-variables:
+    cd {{be}} && .venv/Scripts/python -m app.seed_facility_variables
+
+# Günlük rapor Excel şablonunu değişken bağlamalarıyla eşleştir (Plan 5)
+# Önkoşul: seed-facility-variables çalışmış + app/seed_data/gunluk_rapor.xlsx commit'lenmiş olmalı
+seed-excel-template:
+    cd {{be}} && .venv/Scripts/python -m app.seed_excel_template
 
 # ── Kalite ───────────────────────────────────────────────────────────────────
 
