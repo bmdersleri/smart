@@ -14,6 +14,7 @@ import {
   Settings,
   ShieldCheck,
   Users,
+  Variable,
   type LucideIcon,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
@@ -40,6 +41,7 @@ const nav: NavItem[] = [
   { to: '/grafana', labelKey: 'nav_grafana', icon: Gauge, iconColor: 'text-sky-400', iconActiveColor: 'text-sky-300' },
   { to: '/lab', labelKey: 'nav_lab', icon: FlaskConical, iconColor: 'text-pink-400', iconActiveColor: 'text-pink-300' },
   { to: '/compliance', labelKey: 'nav_compliance', icon: ShieldCheck, iconColor: 'text-teal-400', iconActiveColor: 'text-teal-300' },
+  { to: '/facility-variables', labelKey: 'nav_facility_variables', icon: Variable, iconColor: 'text-emerald-400', iconActiveColor: 'text-emerald-300' },
   { to: '/settings', labelKey: 'nav_settings', icon: Settings, iconColor: 'text-slate-400', iconActiveColor: 'text-slate-200' },
 ]
 

@@ -12,6 +12,9 @@ const PERM_KEYS = [
   ['report_template:create', 'perm_report_create'],
   ['report_template:edit', 'perm_report_edit'],
   ['report_template:delete', 'perm_report_delete'],
+  ['facility_variable:create', 'perm_fv_create'],
+  ['facility_variable:edit', 'perm_fv_edit'],
+  ['facility_variable:delete', 'perm_fv_delete'],
 ] as const
 
 const ROLES = ['admin', 'operator', 'viewer'] as const

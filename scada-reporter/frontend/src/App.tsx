@@ -17,6 +17,7 @@ import LabEntry from './pages/LabEntry'
 import ComplianceCenter from './pages/compliance/ComplianceCenter'
 import Settings from './pages/Settings'
 import Users from './pages/Users'
+import FacilityVariables from './pages/FacilityVariables'
 import './index.css'
 
 const qc = new QueryClient({ defaultOptions: { queries: { staleTime: 10000, retry: 1 } } })
@@ -46,6 +47,7 @@ export default function App() {
             <Route path="/" element={<PrivateRoute><Layout /></PrivateRoute>}>
               <Route index element={<Dashboard />} />
               <Route path="tags" element={<Tags />} />
+              <Route path="facility-variables" element={<FacilityVariables />} />
               <Route path="trend" element={<Trend />} />
               <Route path="reports" element={<Reports />} />
               <Route path="advanced-reports" element={<AdvancedReports />} />
