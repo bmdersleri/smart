@@ -45,7 +45,9 @@ Aşağıdaki değişkenler `seed-facility-variables` tarafından oluşturulur.
 
 | Kod | Anlamı | Kaynak tip | Toplam sayaç yöntemi |
 |-----|--------|------------|---------------------|
-| `aot_giris_debi_gunluk` | AOT günlük giriş debisi (ölçülen) | `tag` — `*.GUNLUK` tag | `last` — günlük sıfırlamalı sayaç |
+| `terfi1_debi_gunluk` | Terfi 1 Çıkış Debi (Günlük) | `tag` — `gtuTP02DB01.GUNLUK` | `last` — günlük sıfırlamalı sayaç |
+| `terfi2_debi_gunluk` | Terfi 2 Çıkış Debi (Günlük) | `tag` — `gtuTP01DB01.GUNLUK` | `last` — günlük sıfırlamalı sayaç |
+| `aot_giris_debi_gunluk` | AOT günlük giriş debisi (terfi1 + terfi2 toplamı) | `expression` — `terfi1 + terfi2` | toplama (`last` bileşenlerden) |
 | `baat_giris_debi_gunluk` | BAAT günlük giriş debisi (ölçülen) | `tag` — `SEED_BAAT_GIRIS_NODE_ID` ile belirlenir | `last` — günlük sıfırlamalı sayaç |
 | `tesis_toplam_debi_olculen_gunluk` | Ölçülen toplam tesis debisi (AOT + BAAT) | `expression` — `aot + baat` | toplama |
 | `tesis_toplam_debi_hesaplanan_gunluk` | Hesaplanan toplam tesis debisi (AOT + BAAT + kapasite) | `ref` — bileşik | toplama |
@@ -163,9 +165,12 @@ Plan-4 önizleme arayüzü aktif ve erişilebilir olmalıdır (geliştirme sunuc
 
    | Değişken | Beklenen aralık | Anormallik işareti |
    |----------|----------------|-------------------|
+   | `terfi1_debi_gunluk` | > 0 m³/gün, AÖT/BAAT transfer kapasitesi içinde makul | 0 → `gtuTP02DB01.GUNLUK` tag'i okunmuyor |
+   | `terfi2_debi_gunluk` | > 0 m³/gün, AÖT/BAAT transfer kapasitesi içinde makul | 0 → `gtuTP01DB01.GUNLUK` tag'i okunmuyor |
    | `aot_giris_debi_gunluk` | > 0 m³/gün, tesisin kapasitesine göre | 0 veya çok büyük değer |
    | `baat_giris_debi_gunluk` | > 0 m³/gün | `SEED_BAAT_GIRIS_NODE_ID` ayarlanmadıysa boş |
    | `tesis_toplam_debi_olculen_gunluk` | AOT + BAAT toplamı | Bileşenlerden farklıysa formül yanlış |
+   | `tesis_toplam_debi_hesaplanan_gunluk` | ≈ aot + baat + kapasite fazlası; işaret pozitif, büyüklük makul olmalı | Yalnızca `SEED_BAAT_GIRIS_NODE_ID` + `SEED_AOT_DESIGN_CAPACITY_M3` ayarlıysa oluşur; yoksa değişken yoktur |
    | `genel_toplam_debi_gunluk` | Günlük anlamlı değer | Çok büyük → `delta` yerine `last` gerekiyor |
    | `giris_7gun_ort_debi` | 7 günlük ortalama, yaklaşık günlük değerlere yakın | Tuhaf sapma → pencere hesabı kontrol |
 
