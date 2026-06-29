@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Dashboard and Live Metrics merged into one tabbed page** — the standalone
+  `/metrics` ("Canlı Metrikler") page was folded into the Dashboard. The tab bar
+  is now **Overview · Watchlist · Tags · System · Database**. `Metrics.tsx` was
+  removed, `/metrics` redirects to `/`, and the sidebar "Canlı Metrikler" entry
+  is gone. Each tab fetches only while open (`active`-gated): the **System** tab
+  (poller stats, deadband savings, PLC read-latency table, live log console)
+  polls 2s/10s and streams the console only when active; the **Database** tab
+  keeps its manual "Yenile" refresh. New tab labels `tab_system`/`tab_database`
+  in 5 languages (EN/TR/DE/RU/AR).
+
 ### Added
 
 - **Database statistics on Live Metrics** — `GET /api/dashboard/database` (any
