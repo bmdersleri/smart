@@ -54,5 +54,15 @@ class ExcelTemplateColumn(Base):
     agg: Mapped[str] = mapped_column(String(8), default="avg")
     source_code: Mapped[str] = mapped_column(String(64), default="")
     enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    source_type: Mapped[str] = mapped_column(String(8), default="tag", nullable=False)  # tag|var
+    variable_id: Mapped[int | None] = mapped_column(
+        ForeignKey("facility_variables.id", ondelete="SET NULL"), nullable=True
+    )
+    write_mode: Mapped[str | None] = mapped_column(String(8), nullable=True)  # series|reduce
+    reduce_op: Mapped[str | None] = mapped_column(String(8), nullable=True)  # sum|avg|min|max
+    # column|cell
+    target_mode: Mapped[str] = mapped_column(String(8), default="column", nullable=False)
+    target_cell: Mapped[str | None] = mapped_column(String(8), nullable=True)
+    variable_code_snapshot: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
     template: Mapped[ExcelTemplate] = relationship(back_populates="columns")
