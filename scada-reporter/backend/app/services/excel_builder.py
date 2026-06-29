@@ -11,6 +11,17 @@ HEADER_FONT = Font(color="FFFFFF", bold=True)
 FLOAT_FMT = "#,##0.000"
 
 
+def _excel_safe(value):
+    """Excel formül enjeksiyonunu etkisizleştir: =, +, -, @ ile başlayan metni ' ile ön-ekle.
+
+    Kullanıcı tarafından yönetilen serbest metin (değişken kod/ad/birim/uyarı) hücreye
+    yazılırken Excel'in formül olarak yorumlamasını önler. Sayısal/None değerler dokunulmaz.
+    """
+    if isinstance(value, str) and value[:1] in ("=", "+", "-", "@"):
+        return "'" + value
+    return value
+
+
 def _header_row(ws, cols: list[str], row: int = 1):
     for col_idx, label in enumerate(cols, start=1):
         cell = ws.cell(row=row, column=col_idx, value=label)
@@ -231,12 +242,12 @@ def build_advanced_excel(
             else:
                 pts = v.get("points") or []
                 val_str = f"{len(pts)} nokta"
-            vws.cell(row=r, column=1, value=v["code"])
-            vws.cell(row=r, column=2, value=v["name"])
-            vws.cell(row=r, column=3, value=v["unit"])
-            vws.cell(row=r, column=4, value=v["kind"])
-            vws.cell(row=r, column=5, value=val_str)
-            vws.cell(row=r, column=6, value=v.get("warning") or "")
+            vws.cell(row=r, column=1, value=_excel_safe(v["code"]))
+            vws.cell(row=r, column=2, value=_excel_safe(v["name"]))
+            vws.cell(row=r, column=3, value=_excel_safe(v["unit"]))
+            vws.cell(row=r, column=4, value=_excel_safe(v["kind"]))
+            vws.cell(row=r, column=5, value=_excel_safe(val_str))
+            vws.cell(row=r, column=6, value=_excel_safe(v.get("warning") or ""))
             r += 1
 
     buf = BytesIO()

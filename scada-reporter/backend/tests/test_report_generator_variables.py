@@ -191,6 +191,21 @@ async def test_excel_output_has_variables_sheet(db_session, tmp_path, monkeypatc
     assert "var_orch" in codes
 
 
+def test_excel_safe_neutralizes_formula_prefixes():
+    from app.services.excel_builder import _excel_safe
+
+    # Formül başlatan karakterler ' ile ön-eklenmeli
+    assert _excel_safe("=SUM(A1:A2)") == "'=SUM(A1:A2)"
+    assert _excel_safe("+1") == "'+1"
+    assert _excel_safe("-1") == "'-1"
+    assert _excel_safe("@cmd") == "'@cmd"
+    # Zararsız metin ve sayısal/None değerler dokunulmamalı
+    assert _excel_safe("Debi") == "Debi"
+    assert _excel_safe("") == ""
+    assert _excel_safe(42) == 42
+    assert _excel_safe(None) is None
+
+
 @pytest.mark.asyncio
 async def test_pdf_output_renders_with_variables(db_session, tmp_path, monkeypatch):
     """PDF çıktısında tesis değişkenleri bölümü üretilmeli (duman testi)."""
