@@ -6,7 +6,7 @@ import json
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -30,6 +30,7 @@ from app.services.facility_variables.service import (
     deactivate_variable,
     update_variable,
 )
+from app.services.facility_variables.units import unit_warnings
 
 router = APIRouter(prefix="/facility-variables", tags=["facility-variables"])
 
@@ -73,6 +74,7 @@ class VariableResponse(BaseModel):
     is_active: bool
     version: int
     dependency_count: int
+    warnings: list[str] = Field(default_factory=list)
 
     @classmethod
     def of(cls, v: FacilityVariable) -> VariableResponse:
@@ -162,7 +164,10 @@ async def create(
     except IntegrityError as e:
         await db.rollback()
         raise HTTPException(409, "Bu code zaten var") from e
-    return VariableResponse.of(var)
+    warns = await unit_warnings(db, body.expression)
+    resp = VariableResponse.of(var)
+    resp.warnings = warns
+    return resp
 
 
 @router.get("/{var_id}", response_model=VariableResponse)
@@ -198,7 +203,10 @@ async def update(
         )
     except VariableError as e:
         raise HTTPException(422, str(e)) from e
-    return VariableResponse.of(var)
+    warns = await unit_warnings(db, body.expression)
+    resp = VariableResponse.of(var)
+    resp.warnings = warns
+    return resp
 
 
 @router.delete("/{var_id}", status_code=204)
