@@ -38,18 +38,24 @@ async def test_seed_excel_template_binds_columns(db_session, tmp_path, monkeypat
         (
             await db_session.execute(
                 select(ExcelTemplateColumn)
-                .where(ExcelTemplateColumn.col_letter == "E")
+                .where(ExcelTemplateColumn.col_letter == "I")
                 .where(ExcelTemplateColumn.template_id == tid)
             )
         )
         .scalars()
         .all()
     )
-    # column E binds to the aot variable (always seeded)
-    assert cols, "column E binding not found for the created template"
-    e_col = cols[0]
-    assert e_col.source_type == "variable"
-    assert e_col.variable_code_snapshot == "aot_giris_debi_gunluk"
+    # column I binds per-day to the Terfi 1 tag (gtuTP02DB01.GUNLUK), agg last
+    assert cols, "column I binding not found for the created template"
+    i_col = cols[0]
+    assert i_col.source_type == "tag"
+    assert i_col.source_code == "gtuTP02DB01.GUNLUK"
+    assert i_col.agg == "last"
+    assert i_col.variable_id is None
+    terfi1 = (
+        await db_session.execute(select(Tag.id).where(Tag.node_id == "gtuTP02DB01.GUNLUK"))
+    ).scalar_one()
+    assert i_col.tag_id == terfi1
 
     # idempotent: second call skips, returns same id
     again = await mod.seed_excel_template(db_session, code_to_id=code_to_id)
