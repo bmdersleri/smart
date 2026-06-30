@@ -84,8 +84,9 @@ SEED_AOT_DESIGN_CAPACITY_M3=5000
 
 ## 4. Gerçek Çalışma Kitabını Ekleme
 
-Varsayılan `seed-excel-template` sentetik bir örnek şablonla çalışır.
-Üretim raporunu değişken bağlamalarıyla eşleştirmek için:
+Varsayılan bağlamalar gerçek `gunluk_rapor.xlsx` HAZİRAN-tipi aylık sayfasına göre
+ayarlıdır. Çalışma kitabı yoksa `seed-excel-template` sessizce atlar. Üretim raporunu
+eşleştirmek için:
 
 ### Adım 4.1 — Çalışma kitabını depoya ekleyin
 
@@ -99,33 +100,47 @@ git add scada-reporter/backend/app/seed_data/gunluk_rapor.xlsx
 git commit -m "chore(seed-data): commit real gunluk_rapor.xlsx for excel template seeding"
 ```
 
-### Adım 4.2 — `SHEET_META` ve `COLUMN_BINDINGS` düzenleyin
+### Adım 4.2 — `SHEET_META` ve kolon bağlamalarını düzenleyin
 
 `app/seed_excel_template.py` içindeki sabitler gerçek çalışma sayfası geometrisine
-göre ayarlanmalıdır:
+göre ayarlanır. Varsayılanlar gerçek HAZİRAN-tipi sayfaya göredir:
 
 ```python
 # app/seed_excel_template.py — düzenlenecek bölümler
 
 SHEET_META = dict(
-    sheet_name="Günlük Rapor",   # ← gerçek sekme adı
-    header_row=3,                # ← başlık satırı (1-tabanlı)
-    date_col="A",                # ← tarih sütunu (date_col, date_column değil)
-    data_start_row=4,            # ← veri başlangıç satırı
-    date_mode="write",           # ← "write" veya "read"
+    sheet_name="HAZİRAN 2026",   # ← fill_template'in yazacağı SABİT sekme; hedef aya göre değiştirin
+    header_row=2,                # ← kolon adı başlık satırı
+    date_col="D",                # ← tarih sütunu (date_col, date_column değil)
+    data_start_row=5,            # ← ilk veri satırı (başlık satırları 1-4)
+    date_mode="write",           # ← ZORUNLU: tarih kolonu formül (=D5+1); "match" formülleri tanımaz
 )
 
-COLUMN_BINDINGS: list[tuple[str, str]] = [
-    # (excel_sütunu, değişken_kodu)
-    ("E", "aot_giris_debi_gunluk"),
-    ("F", "kapasite_fazlasi_gunluk"),
-    ("K", "baat_giris_debi_gunluk"),
-    ("M", "tesis_toplam_debi_hesaplanan_gunluk"),
+# Günlük ham totalizer kolonları → doğrudan TAG (per-gün daily_values).
+# Scalar değişken günlük kolon DOLDURAMAZ (binding._is_cell_target) — bu yüzden tag+agg.
+TAG_COLUMN_BINDINGS: list[tuple[str, str, str]] = [
+    # (excel_sütunu, tag_node_id, agg)
+    ("I", "gtuTP02DB01.GUNLUK", "last"),   # Terfi 1 çıkış debi
+    ("J", "gtuTP01DB01.GUNLUK", "last"),   # Terfi 2 çıkış debi
 ]
+
+# Opsiyonel özet-hücre değişken kolonları → (excel_sütunu, değişken_kodu, target_cell).
+# Scalar değişken TEK hücreye yazılır; örn. aylık AÖT toplamını bir özet hücreye:
+#   ("E", "aot_giris_debi_gunluk", "E40"),
+VARIABLE_COLUMN_BINDINGS: list[tuple[str, str, str]] = []
 ```
 
-Gerçek çalışma kitabınızdaki sütun harflerini ve satır numaralarını doğrulayın;
-yukarıdaki değerler referans örneğe dayanmaktadır.
+**Önemli kurallar:**
+
+- **K (=I+J), M (=E+K+F)** türetilmiş kolonlardır — sayfanın KENDİ Excel formülleridir,
+  bağlanmaz. I/J dolunca Excel kendi hesaplar. (İş mantığını backend değişkenine taşımak
+  isterseniz: bu kolonu series-kind bir değişkene bağlayın; scalar değişken çalışmaz.)
+- **Günlük kolonlar** (her satır bir gün) → tag ya da series-kind değişken ister.
+- **Özet hücreler** (tek değer) → scalar değişken + `target_mode="cell"` + `target_cell`.
+- **`date_mode="write"`** zorunludur: gerçek sayfada tarih kolonu `=D5+1` formülüdür;
+  `match` modu yalnız literal datetime hücrelerini eşler, formülleri atlar.
+
+Gerçek çalışma kitabınızdaki sütun harflerini, satır numaralarını ve sekme adını doğrulayın.
 
 ---
 
@@ -200,6 +215,10 @@ Plan-4 önizleme arayüzü aktif ve erişilebilir olmalıdır (geliştirme sunuc
 1. **Raporlar** sayfasından günlük rapor şablonuyla bir ön izleme oluşturun.
 2. Excel/PDF çıktısındaki değerleri doğrudan veritabanı sorgusuyla karşılaştırın.
 3. Sütun kaymalarını tespit etmek için birkaç farklı tarihi test edin.
+
+> **Not:** I/J kolonları tag'lerden günlük doldurulur; K/M sayfanın kendi formülleriyle
+> (=I+J, =E+K+F) yeniden hesaplanır. Tag verisi olmayan günler boş bırakılır (0 uydurma yok)
+> — gerçek geçmiş veri o satırlarda korunur.
 
 ---
 
