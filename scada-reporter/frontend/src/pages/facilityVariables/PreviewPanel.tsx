@@ -5,7 +5,7 @@ import type { AxiosError } from 'axios'
 import { previewVariable } from '../../api/client'
 import type { PreviewResult } from '../../api/client'
 
-export default function PreviewPanel({ variableId, kind }: { variableId: number; kind: 'scalar' | 'series' }) {
+export default function PreviewPanel({ variableId }: { variableId: number }) {
   const { t } = useTranslation('facilityVariables')
   const now = new Date()
   const [year, setYear] = useState(now.getFullYear())

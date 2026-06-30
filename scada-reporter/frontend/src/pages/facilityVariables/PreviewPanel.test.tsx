@@ -17,7 +17,7 @@ describe('PreviewPanel', () => {
 
   it('renders a scalar preview value', async () => {
     previewMock.mockResolvedValue({ data: { kind: 'scalar', value: 42.5, unit: 'm3' } })
-    wrap(<PreviewPanel variableId={3} kind="scalar" />)
+    wrap(<PreviewPanel variableId={3} />)
     fireEvent.click(screen.getByRole('button', { name: /Preview/i }))
     await waitFor(() => expect(previewMock).toHaveBeenCalledWith(3, expect.objectContaining({ window: expect.objectContaining({ type: 'month' }) })))
     expect(await screen.findByText(/42.5/)).toBeInTheDocument()
@@ -25,7 +25,7 @@ describe('PreviewPanel', () => {
 
   it('renders the series point count', async () => {
     previewMock.mockResolvedValue({ data: { kind: 'series', points: [{ ts: 'x', value: 1 }, { ts: 'y', value: 2 }], unit: 'm3' } })
-    wrap(<PreviewPanel variableId={5} kind="series" />)
+    wrap(<PreviewPanel variableId={5} />)
     fireEvent.click(screen.getByRole('button', { name: /Preview/i }))
     expect(await screen.findByText(/2 points/i)).toBeInTheDocument()
   })

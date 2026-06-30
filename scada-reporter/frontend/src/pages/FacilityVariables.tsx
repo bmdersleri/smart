@@ -102,7 +102,7 @@ export function VariableEditorModal({ initial, onClose }: { initial?: FacilityVa
         {initial && (
           <section className="space-y-2">
             <h3 className="text-xs uppercase text-gray-500">{t('step_preview')}</h3>
-            <PreviewPanel variableId={initial.id} kind={kind} />
+            <PreviewPanel variableId={initial.id} />
           </section>
         )}
 

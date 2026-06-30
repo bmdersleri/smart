@@ -981,10 +981,10 @@ export interface VariableDependency {
   depends_on_variable_id: number | null
 }
 
-export const listFacilityVariables = () => api.get<FacilityVariable[]>('/facility-variables/')
+export const listFacilityVariables = () => api.get<FacilityVariable[]>('/facility-variables')
 export const getFacilityVariable = (id: number) => api.get<FacilityVariable>(`/facility-variables/${id}`)
 export const createFacilityVariable = (data: FacilityVariableCreate) =>
-  api.post<FacilityVariable>('/facility-variables/', data)
+  api.post<FacilityVariable>('/facility-variables', data)
 export const updateFacilityVariable = (id: number, data: FacilityVariableUpdate) =>
   api.put<FacilityVariable>(`/facility-variables/${id}`, data)
 export const deleteFacilityVariable = (id: number, force = false) =>

@@ -4,16 +4,16 @@ import { api, listFacilityVariables, createFacilityVariable, updateFacilityVaria
 describe('facility variable client', () => {
   beforeEach(() => vi.restoreAllMocks())
 
-  it('GET list hits /facility-variables/', async () => {
+  it('GET list hits /facility-variables (no trailing slash — avoids cross-origin 307)', async () => {
     const spy = vi.spyOn(api, 'get').mockResolvedValue({ data: [] })
     await listFacilityVariables()
-    expect(spy).toHaveBeenCalledWith('/facility-variables/')
+    expect(spy).toHaveBeenCalledWith('/facility-variables')
   })
-  it('POST create hits /facility-variables/ with body', async () => {
+  it('POST create hits /facility-variables with body (no trailing slash)', async () => {
     const spy = vi.spyOn(api, 'post').mockResolvedValue({ data: {} })
     const body = { code: 'v', name: 'V', kind: 'scalar' as const, expression: { op: 'const', value: 1 } }
     await createFacilityVariable(body)
-    expect(spy).toHaveBeenCalledWith('/facility-variables/', body)
+    expect(spy).toHaveBeenCalledWith('/facility-variables', body)
   })
   it('PUT update hits /facility-variables/{id}', async () => {
     const spy = vi.spyOn(api, 'put').mockResolvedValue({ data: {} })
