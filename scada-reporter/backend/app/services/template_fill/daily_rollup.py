@@ -38,7 +38,11 @@ def reduce_values(values: list[float], agg: str) -> float | None:
     if agg == "last":
         return vals[-1]
     if agg == "delta":
-        return vals[-1] - vals[0] if len(vals) >= 2 else None
+        # delta = tüketim (last − first). Kümülatif sayaç düşerse (reset/glitch)
+        # negatif çıkar; tüketim negatif olamaz → 0'a kırp.
+        if len(vals) < 2:
+            return None
+        return max(0.0, vals[-1] - vals[0])
     raise ValueError(f"Bilinmeyen agg: {agg}")
 
 

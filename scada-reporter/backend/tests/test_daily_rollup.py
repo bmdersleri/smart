@@ -4,7 +4,16 @@ import pytest
 import pytest_asyncio
 
 from app.models.tag import Tag, TagReading
-from app.services.template_fill.daily_rollup import daily_values
+from app.services.template_fill.daily_rollup import daily_values, reduce_values
+
+
+def test_delta_clamps_negative_to_zero():
+    # delta = tüketim; kümülatif sayaç düşerse (reset/glitch) negatif anlamsız → 0'a kırp
+    assert reduce_values([15.611, 15.565], "delta") == 0.0
+    # normal pozitif tüketim değişmez
+    assert reduce_values([10.0, 12.0, 12.5], "delta") == 2.5
+    # <2 nokta → None (değişmez)
+    assert reduce_values([5.0], "delta") is None
 
 
 @pytest_asyncio.fixture(autouse=True)
