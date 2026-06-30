@@ -148,7 +148,8 @@ html.light .bg-red-900\/50,
 html.light .bg-red-900\/30,
 html.light .bg-red-500\/10 { background-color: #fee2e2; }
 html.light .text-red-400,
-html.light .text-red-500 { color: #b91c1c; }
+html.light .text-red-500,
+html.light .text-red-200 { color: #b91c1c; }
 
 /* indigo / mor */
 html.light .bg-indigo-900\/40 { background-color: #e0e7ff; }
@@ -160,7 +161,8 @@ html.light .text-purple-300 { color: #7e22ce; }
 /* cyan / emerald (canlı + deadband) */
 html.light .text-cyan-300,
 html.light .text-cyan-400,
-html.light .text-cyan-500 { color: #0e7490; }
+html.light .text-cyan-500,
+html.light .text-cyan-200 { color: #0e7490; }
 html.light .bg-emerald-950\/40 { background-color: #d1fae5; }
 html.light .text-emerald-300,
 html.light .text-emerald-400 { color: #047857; }
@@ -172,7 +174,8 @@ html.light .from-emerald-950\/40 {
 
 /* sarı / amber */
 html.light .text-yellow-400,
-html.light .text-yellow-300 { color: #a16207; }
+html.light .text-yellow-300,
+html.light .text-yellow-200 { color: #a16207; }
 html.light .bg-yellow-900\/30,
 html.light .bg-yellow-900\/40,
 html.light .bg-yellow-900\/50 { background-color: #fef9c3; }
@@ -201,6 +204,24 @@ html.light .bg-gray-700 { background-color: #cbd5e1; }
 html.light .hover\:bg-gray-600:hover { background-color: #94a3b8; }
 html.light .bg-green-800 { background-color: #dcfce7; }
 html.light .hover\:bg-green-700:hover { background-color: #bbf7d0; }
+
+/* ── içerik yüzeyleri (bg-black/20·/30): tema-bağımsız koyu leke ───────────────
+   bg-black/* her temada %X siyah → light modda koyu kutu üstüne (remap'li) koyu
+   metin = düşük kontrast (ExpressionBuilder/PreviewPanel/Overview/QuickReport iç
+   kutuları). Light'ta hafif slate tint'e çek; metin remap'leri okunur olsun.
+   bg-black/60·/70 = modal overlay → DOKUNULMAZ (koyu kalmalı). */
+html.light .bg-black\/20 { background-color: rgba(15, 23, 42, 0.05); }
+html.light .bg-black\/30 { background-color: rgba(15, 23, 42, 0.07); }
+/* Login kartı her temada koyu hero → içindeki bg-black/20 girdileri koyu kalsın */
+html.light .login-card .bg-black\/20 { background-color: rgba(0, 0, 0, 0.2); }
+
+/* ── cam paneller (bg-surface-raised/40): light'ta neredeyse opak ─────────────
+   /40 + backdrop-blur light modda arka planı sızdırıp modal/kartları bulanık
+   gösteriyordu. Light'ta %94 opak beyaza çek (dark tema cam efekti korunur).
+   .login-page .login-card daha spesifik → login koyu kalır. */
+html.light .bg-surface-raised\/40 { background-color: rgba(255, 255, 255, 0.94); }
+html.light .bg-surface-raised\/60 { background-color: rgba(255, 255, 255, 0.92); }
+html.light .bg-surface-raised\/50 { background-color: rgba(255, 255, 255, 0.9); }
 
 @keyframes scan {
   0%   { transform: translateX(-100%); }
