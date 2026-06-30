@@ -21,6 +21,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import AsyncSessionLocal
 from app.models.facility_variable import FacilityVariable
 from app.models.tag import Tag
+from app.models.user import User  # noqa: F401  # users tablosunu metadata'ya kaydeder (FK)
 from app.services.facility_variables.service import VariableError, create_variable
 
 
